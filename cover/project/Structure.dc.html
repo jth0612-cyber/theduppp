@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>구조</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif; background: #05070c; }
+    a { color: #54EBE0; } a:hover { color: #BD8CFC; }
+  </style>
+</helmet>
+<div style="width: 1305px; height: 560px; position: relative; overflow: hidden; background: #05070c;">
+  <img src="/_blob/c1fe6a9af3ab1e686104962a190eb6ad" alt="오브제를 옆에서 본 구조" style="position: absolute; left: 0px; top: 0px; width: 1305px; height: 560px; display: block; object-fit: cover;">
+  <sc-if value="{{showGuides}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; left: 0px; top: 0px; width: 1305px; height: 560px; pointer-events: none;">
+      <div style="position: absolute; left: 60px; bottom: 20px; width: 200px; text-align: center; font-size: 10px; letter-spacing: 0.2em; color: rgba(255,255,255,0.42);">정육면체</div>
+      <div style="position: absolute; left: 330px; bottom: 20px; width: 460px; text-align: center; font-size: 10px; letter-spacing: 0.2em; color: rgba(255,255,255,0.42);">갈라지며 꼬이는 두 가닥</div>
+      <div style="position: absolute; left: 880px; bottom: 20px; width: 330px; text-align: center; font-size: 10px; letter-spacing: 0.2em; color: rgba(255,255,255,0.42);">결정</div>
+      <div style="position: absolute; left: 42px; top: 14px; font-size: 11px; letter-spacing: 0.28em; color: rgba(255,255,255,0.42);">구조 — 정육면체 · 두 가닥 · 결정</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"showGuides":{"editor":"boolean","default":true,"section":"판형 가이드"},"$preview":{"width":1305,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { showGuides: this.props.showGuides ?? true };
+  }
+}
+</script>
+</body>
+</html>

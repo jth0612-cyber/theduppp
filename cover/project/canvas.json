@@ -1,0 +1,76 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1305,
+      "h": 891,
+      "title": "B · 앞면 완결형 (다크)"
+    },
+    "Spread-Light.dc.html": {
+      "x": 1385,
+      "y": 0,
+      "w": 1305,
+      "h": 891,
+      "title": "B · 앞면 완결형 (라이트)"
+    },
+    "Front-Dark.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 630,
+      "h": 891,
+      "title": "앞표지 (다크)"
+    },
+    "Front-Light.dc.html": {
+      "x": 710,
+      "y": 1320,
+      "w": 630,
+      "h": 891,
+      "title": "앞표지 (라이트)"
+    },
+    "Structure.dc.html": {
+      "x": 1420,
+      "y": 1485,
+      "w": 1305,
+      "h": 560,
+      "title": "구조"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-18T15:41:16Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 2690,
+      "text": "B안 · 전개도 — 앞표지에서 수열이 완결되고, 뒤표지는 비워 둔다",
+      "w": 240,
+      "x": 0,
+      "y": -330
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 2725,
+      "text": "앞표지 단독 컷 · 구조",
+      "w": 240,
+      "x": 0,
+      "y": 990
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Spread-Light.dc.html",
+    "Front-Dark.dc.html",
+    "Front-Light.dc.html",
+    "Structure.dc.html"
+  ],
+  "pages": [],
+  "title": "SEQUENCE 표지 오브제"
+}

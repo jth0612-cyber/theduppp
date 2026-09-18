@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>앞표지 라이트</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif; background: #f7f8fb; }
+    a { color: #54EBE0; } a:hover { color: #BD8CFC; }
+  </style>
+</helmet>
+<div style="width: 630px; height: 891px; position: relative; overflow: hidden; background: #f7f8fb;">
+  <img src="/_blob/b8aa6c61b2b256a7bb64364575cbdd2a" alt="정육면체에서 결정으로 이어지는 유리 오브제, 라이트" style="position: absolute; left: 0px; top: 0px; width: 630px; height: 891px; display: block; object-fit: cover;">
+  <sc-if value="{{showGuides}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; left: 0px; top: 0px; width: 630px; height: 891px; pointer-events: none;">
+      <div style="position: absolute; left: 42px; top: 42px; width: 546px; height: 807px; border: 1px dashed rgba(22,24,38,0.26); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 0px; bottom: 16px; width: 630px; text-align: center; font-size: 11px; letter-spacing: 0.24em; color: rgba(22,24,38,0.50);">앞표지 210 × 297</div>
+      <div style="position: absolute; left: 42px; top: 14px; font-size: 11px; letter-spacing: 0.28em; color: rgba(22,24,38,0.50);">앞표지 · 라이트</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"showGuides":{"editor":"boolean","default":true,"section":"판형 가이드"},"$preview":{"width":630,"height":891}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { showGuides: this.props.showGuides ?? true };
+  }
+}
+</script>
+</body>
+</html>

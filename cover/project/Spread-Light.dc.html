@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>B 전개도 라이트</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif; background: #f7f8fb; }
+    a { color: #54EBE0; } a:hover { color: #BD8CFC; }
+  </style>
+</helmet>
+<div style="width: 1305px; height: 891px; position: relative; overflow: hidden; background: #f7f8fb;">
+  <img src="/_blob/485e18d4ba4088e3f4a060504567003b" alt="앞표지에 놓인 유리 오브제 전개도, 라이트" style="position: absolute; left: 0px; top: 0px; width: 1305px; height: 891px; display: block; object-fit: cover;">
+  <sc-if value="{{showGuides}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; left: 0px; top: 0px; width: 1305px; height: 891px; pointer-events: none;">
+      <div style="position: absolute; left: 630px; top: 0px; width: 45px; height: 891px; background: rgba(22,24,38,0.045); border-left: 1px dashed rgba(22,24,38,0.26); border-right: 1px dashed rgba(22,24,38,0.26); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 42px; top: 42px; width: 546px; height: 807px; border: 1px dashed rgba(22,24,38,0.26); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 717px; top: 42px; width: 546px; height: 807px; border: 1px dashed rgba(22,24,38,0.26); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 0px; bottom: 16px; width: 630px; text-align: center; font-size: 11px; letter-spacing: 0.24em; color: rgba(22,24,38,0.50);">뒤표지 210 × 297</div>
+      <div style="position: absolute; left: 675px; bottom: 16px; width: 630px; text-align: center; font-size: 11px; letter-spacing: 0.24em; color: rgba(22,24,38,0.50);">앞표지 210 × 297</div>
+      <div style="position: absolute; left: 630px; top: 14px; width: 45px; text-align: center; font-size: 9px; color: rgba(22,24,38,0.50);">책등<br>15</div>
+      <div style="position: absolute; left: 42px; top: 14px; font-size: 11px; letter-spacing: 0.28em; color: rgba(22,24,38,0.50);">OPTION B — 라이트</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"showGuides":{"editor":"boolean","default":true,"section":"판형 가이드"},"$preview":{"width":1305,"height":891}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { showGuides: this.props.showGuides ?? true };
+  }
+}
+</script>
+</body>
+</html>
