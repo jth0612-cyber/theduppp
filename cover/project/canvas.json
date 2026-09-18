@@ -1,49 +1,25 @@
 {
   "v": 3,
-  "createdOnFiles": {
-    "v": 1,
-    "at": "2026-09-18T15:41:16Z"
-  },
-  "title": "SEQUENCE 표지 오브제",
-  "launch": {
-    "view": "canvas"
-  },
-  "pages": [],
+  "attachments": {},
   "boards": {
     "Main.dc.html": {
       "x": 0,
       "y": 0,
       "w": 1305,
       "h": 891,
-      "title": "A · 관통형 (다크)",
-      "is_interactive": true
-    },
-    "Spread-B.dc.html": {
-      "x": 1385,
-      "y": 0,
-      "w": 1305,
-      "h": 891,
       "title": "B · 앞면 완결형 (다크)",
       "is_interactive": true
     },
-    "Spread-C.dc.html": {
-      "x": 2770,
+    "Spread-Light.dc.html": {
+      "x": 1385,
       "y": 0,
       "w": 1305,
       "h": 891,
-      "title": "C · 책등 확산형 (다크)",
-      "is_interactive": true
-    },
-    "Spread-A-Light.dc.html": {
-      "x": 0,
-      "y": 1320,
-      "w": 1305,
-      "h": 891,
-      "title": "A · 관통형 (라이트)",
+      "title": "B · 앞면 완결형 (라이트)",
       "is_interactive": true
     },
     "Front-Dark.dc.html": {
-      "x": 1385,
+      "x": 0,
       "y": 1320,
       "w": 630,
       "h": 891,
@@ -51,37 +27,55 @@
       "is_interactive": true
     },
     "Front-Light.dc.html": {
-      "x": 2095,
+      "x": 710,
       "y": 1320,
       "w": 630,
       "h": 891,
       "title": "앞표지 단독 (라이트)",
       "is_interactive": true
+    },
+    "Stages.dc.html": {
+      "x": 1420,
+      "y": 1585,
+      "w": 1305,
+      "h": 360,
+      "title": "진화 단계 01 → 07",
+      "is_interactive": true
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-18T15:41:16Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 2690,
+      "text": "B안 · 전개도 — 앞표지에서 수열이 완결되고, 뒤표지에는 최초의 정육면체만",
+      "w": 240,
+      "x": 0,
+      "y": -330
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 2725,
+      "text": "앞표지 단독 컷 · 진화 단계",
+      "w": 240,
+      "x": 0,
+      "y": 990
     }
   },
   "order": [
     "Main.dc.html",
-    "Spread-B.dc.html",
-    "Spread-C.dc.html",
-    "Spread-A-Light.dc.html",
+    "Spread-Light.dc.html",
     "Front-Dark.dc.html",
-    "Front-Light.dc.html"
+    "Front-Light.dc.html",
+    "Stages.dc.html"
   ],
-  "notes": {
-    "t1": {
-      "x": 0,
-      "y": -330,
-      "text": "전개도 3안 — 뒤표지 · 책등 · 앞표지 (다크)",
-      "kind": "title1",
-      "maxW": 4075
-    },
-    "t2": {
-      "x": 0,
-      "y": 990,
-      "text": "라이트 버전 · 앞표지 단독 컷",
-      "kind": "title1",
-      "maxW": 2725
-    }
-  },
-  "designSystems": []
+  "pages": [],
+  "title": "SEQUENCE 표지 오브제"
 }
