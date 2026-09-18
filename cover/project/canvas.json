@@ -1,0 +1,87 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-18T15:41:16Z"
+  },
+  "title": "SEQUENCE 표지 오브제",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1305,
+      "h": 891,
+      "title": "A · 관통형 (다크)",
+      "is_interactive": true
+    },
+    "Spread-B.dc.html": {
+      "x": 1385,
+      "y": 0,
+      "w": 1305,
+      "h": 891,
+      "title": "B · 앞면 완결형 (다크)",
+      "is_interactive": true
+    },
+    "Spread-C.dc.html": {
+      "x": 2770,
+      "y": 0,
+      "w": 1305,
+      "h": 891,
+      "title": "C · 책등 확산형 (다크)",
+      "is_interactive": true
+    },
+    "Spread-A-Light.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1305,
+      "h": 891,
+      "title": "A · 관통형 (라이트)",
+      "is_interactive": true
+    },
+    "Front-Dark.dc.html": {
+      "x": 1385,
+      "y": 1320,
+      "w": 630,
+      "h": 891,
+      "title": "앞표지 단독 (다크)",
+      "is_interactive": true
+    },
+    "Front-Light.dc.html": {
+      "x": 2095,
+      "y": 1320,
+      "w": 630,
+      "h": 891,
+      "title": "앞표지 단독 (라이트)",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Spread-B.dc.html",
+    "Spread-C.dc.html",
+    "Spread-A-Light.dc.html",
+    "Front-Dark.dc.html",
+    "Front-Light.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -330,
+      "text": "전개도 3안 — 뒤표지 · 책등 · 앞표지 (다크)",
+      "kind": "title1",
+      "maxW": 4075
+    },
+    "t2": {
+      "x": 0,
+      "y": 990,
+      "text": "라이트 버전 · 앞표지 단독 컷",
+      "kind": "title1",
+      "maxW": 2725
+    }
+  },
+  "designSystems": []
+}

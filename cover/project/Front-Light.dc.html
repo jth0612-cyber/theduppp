@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>앞표지 단독 라이트</title>
+<script src="./support.js"></script>
+<script src="/_blob/68eb73d0a76003504b636bb586dc6b08"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif; background: #f6f7fb; }
+    a { color: #7FE7DC; } a:hover { color: #C4A9F4; }
+  </style>
+</helmet>
+<div style="width: 630px; height: 891px; position: relative; overflow: hidden; background: #f6f7fb;">
+  <canvas ref="{{bind}}" width="630" height="891" style="position: absolute; left: 0px; top: 0px; width: 630px; height: 891px; display: block; cursor: grab; touch-action: none;"></canvas>
+  <sc-if value="{{showGuides}}" hint-placeholder-val="{{true}}">
+    <sc-if value="{{lightTheme}}" hint-placeholder-val="{{true}}">
+      <div style="position: absolute; left: 0px; top: 0px; width: 630px; height: 891px; pointer-events: none;">
+      <div style="position: absolute; left: 42px; top: 42px; width: 546px; height: 807px; border: 1px dashed rgba(22,24,38,0.26); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 0px; bottom: 16px; width: 630px; text-align: center; font-size: 11px; letter-spacing: 0.24em; color: rgba(22,24,38,0.48);">앞표지 210 × 297</div>
+      <div style="position: absolute; left: 42px; top: 14px; font-size: 11px; letter-spacing: 0.28em; color: rgba(22,24,38,0.48);">앞표지 · 라이트</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{darkTheme}}" hint-placeholder-val="{{true}}">
+      <div style="position: absolute; left: 0px; top: 0px; width: 630px; height: 891px; pointer-events: none;">
+      <div style="position: absolute; left: 42px; top: 42px; width: 546px; height: 807px; border: 1px dashed rgba(255,255,255,0.20); box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 0px; bottom: 16px; width: 630px; text-align: center; font-size: 11px; letter-spacing: 0.24em; color: rgba(255,255,255,0.40);">앞표지 210 × 297</div>
+      <div style="position: absolute; left: 42px; top: 14px; font-size: 11px; letter-spacing: 0.28em; color: rgba(255,255,255,0.40);">앞표지 · 라이트</div>
+      </div>
+    </sc-if>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"light","section":"1 배경"},"accentA":{"editor":"color","default":"#7FE7DC","options":["#7FE7DC","#8FD8F5","#A6F0CE","#B9E6FF"],"section":"2 컬러"},"accentB":{"editor":"color","default":"#C4A9F4","options":["#C4A9F4","#A78BFA","#DCB8F2","#93A9F7"],"section":"2 컬러"},"glow":{"editor":"range","min":0,"max":2,"step":0.05,"default":1,"section":"2 컬러"},"stages":{"editor":"int","min":3,"max":9,"step":1,"default":6,"section":"3 진화"},"twist":{"editor":"range","min":0,"max":1.4,"step":0.05,"default":0.55,"section":"3 진화"},"spin":{"editor":"range","min":0,"max":2.5,"step":0.05,"default":1,"section":"3 진화"},"fuse":{"editor":"range","min":0.01,"max":0.7,"step":0.01,"default":0.18,"section":"3 진화"},"yaw":{"editor":"range","min":-75,"max":75,"step":1,"default":-10,"unit":"deg","section":"4 카메라"},"pitch":{"editor":"range","min":-50,"max":50,"step":1,"default":8,"unit":"deg","section":"4 카메라"},"zoom":{"editor":"range","min":0.6,"max":1.6,"step":0.02,"default":1,"section":"4 카메라"},"autoSpin":{"editor":"boolean","default":false,"section":"4 카메라"},"showGuides":{"editor":"boolean","default":true,"section":"5 판형 가이드"},"$preview":{"width":630,"height":891}}'>
+class Component extends DCLogic {
+  opts() {
+    return {
+      layout: 'portrait',
+      theme: this.props.theme ?? 'light',
+      accentA: this.props.accentA ?? '#7FE7DC',
+      accentB: this.props.accentB ?? '#C4A9F4',
+      glow: this.props.glow ?? 1,
+      stages: this.props.stages ?? 6,
+      twist: this.props.twist ?? 0.55,
+      spin: this.props.spin ?? 1,
+      fuse: this.props.fuse ?? 0.18,
+      yaw: this.props.yaw ?? -10,
+      pitch: this.props.pitch ?? 8,
+      zoom: this.props.zoom ?? 1,
+      autoSpin: this.props.autoSpin ?? false
+    };
+  }
+  componentDidUpdate() {
+    if (this.seq) this.seq.update(this.opts());
+  }
+  componentWillUnmount() {
+    if (this.seq) { this.seq.destroy(); this.seq = null; }
+  }
+  attach(el) {
+    if (!el) return;
+    if (this.seq && this.el === el) return;
+    if (this.seq) this.seq.destroy();
+    this.el = el;
+    if (window.SEQ3D) {
+      this.seq = window.SEQ3D.mount(el, this.opts());
+    } else {
+      var self = this;
+      setTimeout(function () {
+        if (window.SEQ3D && !self.seq) self.seq = window.SEQ3D.mount(el, self.opts());
+      }, 400);
+    }
+  }
+  renderVals() {
+    var self = this;
+    var theme = this.props.theme ?? 'light';
+    return {
+      bind: function (el) { self.attach(el); },
+      showGuides: this.props.showGuides ?? true,
+      lightTheme: theme === 'light',
+      darkTheme: theme !== 'light'
+    };
+  }
+}
+</script>
+</body>
+</html>
