@@ -34,12 +34,12 @@
       "title": "앞표지 단독 (라이트)",
       "is_interactive": true
     },
-    "Stages.dc.html": {
+    "Structure.dc.html": {
       "x": 1420,
-      "y": 1585,
+      "y": 1555,
       "w": 1305,
-      "h": 360,
-      "title": "진화 단계 01 → 07",
+      "h": 420,
+      "title": "구조",
       "is_interactive": true
     }
   },
@@ -55,7 +55,7 @@
     "t1": {
       "kind": "title1",
       "maxW": 2690,
-      "text": "B안 · 전개도 — 앞표지에서 수열이 완결되고, 뒤표지에는 최초의 정육면체만",
+      "text": "B안 · 전개도 — 앞표지에서 수열이 완결되고, 뒤표지는 비워 둔다",
       "w": 240,
       "x": 0,
       "y": -330
@@ -63,7 +63,7 @@
     "t2": {
       "kind": "title1",
       "maxW": 2725,
-      "text": "앞표지 단독 컷 · 진화 단계",
+      "text": "앞표지 단독 컷 · 구조",
       "w": 240,
       "x": 0,
       "y": 990
@@ -74,7 +74,7 @@
     "Spread-Light.dc.html",
     "Front-Dark.dc.html",
     "Front-Light.dc.html",
-    "Stages.dc.html"
+    "Structure.dc.html"
   ],
   "pages": [],
   "title": "SEQUENCE 표지 오브제"

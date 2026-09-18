@@ -1,8 +1,7 @@
-/* SEQUENCE — cube-to-snow-crystal glass chain (raymarched SDF, WebGL1).
-   The distance field below was tuned against a CPU reference render; the
-   constants are load-bearing, in particular the fold weights in stageDE:
-   a fold applied at partial strength shatters the solid into dust, so the
-   schedule is set up to land on exactly two fully-applied folds at m = 1. */
+/* SEQUENCE — cover object: glass cube, twisted split band, crystal cluster.
+   Raymarched SDF, WebGL1. The field mirrors reference/form2.js, which is the
+   CPU renderer the shape was developed against; change one, change the other.
+   No bloom or halo anywhere: the object is lit, never emissive. */
 (function () {
   'use strict';
 
@@ -14,161 +13,161 @@
 'uniform vec3  uCam;',
 'uniform vec3  uTgt;',
 'uniform vec2  uFov;',
-'uniform int   uCount;',
-'uniform vec3  uC0;',
-'uniform vec3  uC1;',
-'uniform vec3  uC2;',
-'uniform vec3  uC3;',
-'uniform float uMorphMode;',
-'uniform vec2  uScaleRange;',
+'uniform vec2  uTilt;',      /* az, ay — how the object lies on the cover */
+'uniform float uScale;',
+'uniform float uL;',
+'uniform float uBend;',
+'uniform float uNOpen;',
+'uniform vec2  uHW;',
+'uniform vec2  uHH;',
+'uniform float uThick;',
 'uniform float uTwist;',
-'uniform float uSpin;',
+'uniform float uTwistPhase;',
+'uniform float uSlotW;',
+'uniform float uWeld;',
+'uniform vec3  uHead;',
+'uniform float uHeadRot;',
+'uniform float uCSize;',
+'uniform float uCScale;',
+'uniform float uCBase;',
+'uniform float uCRot;',
+'uniform vec4  uCube;',      /* xyz position, w half-size */
+'uniform vec2  uCubeRot;',   /* about z, about y */
+'uniform vec4  uEcho;',      /* the lone cube on the back cover; w<=0 = off */
 'uniform vec3  uColA;',
 'uniform vec3  uColB;',
-'uniform float uGlow;',
+'uniform vec3  uColC;',
 'uniform float uTheme;',
-'uniform vec4  uOrphan;',
-'uniform float uFuse;',
 'uniform float uSteps;',
 '',
+'#define PI 3.14159265',
 'float gT;',
+'mat3  gCM;',
 '',
-'mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c);}',
-'mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c);}',
-'mat3 rotZ(float a){float c=cos(a),s=sin(a);return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0);}',
-'',
-'vec3 bez(float t){float u=1.0-t;return u*u*u*uC0+3.0*u*u*t*uC1+3.0*u*t*t*uC2+t*t*t*uC3;}',
 'float smin(float a,float b,float k){float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}',
 '',
-'float rbox(vec3 p,float b,float r){',
-'  vec3 q=abs(p)-vec3(b-r);',
+'float rbox3(vec3 p,vec3 b,float r){',
+'  vec3 q=abs(p)-(b-r);',
 '  return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0)-r;',
 '}',
-'',
-/* The solid every scale of the fractal is built from.
-     open  0 solid            -> 1 bored through by a thick gyroid channel
-     soft  0 crisp cube edges -> 1 pillowed
-     sharp 0 rounded          -> 1 faceted, with octahedral spikes */
-'float baseSolid(vec3 p,float open,float soft,float sharp,float tw){',
-'  float ct=cos(p.y*tw), st=sin(p.y*tw);',
-'  p.xz=mat2(ct,st,-st,ct)*p.xz;',
-'  float b=mix(1.0,1.05,open)*(1.0+0.16*sharp);',
-'  float r=mix(0.06,0.62,soft)*(1.0-0.86*sharp)+0.03;',
-'  float shell=rbox(p,b,r);',
-'  float oct=(abs(p.x)+abs(p.y)+abs(p.z)-b*1.86)*0.57735;',
-'  shell=min(shell,mix(1.0e4,oct,sharp));',
-'  float f=mix(1.02,1.55,open);',
-'  float g=sin(p.x*f)*cos(p.y*f)+sin(p.y*f)*cos(p.z*f)+sin(p.z*f)*cos(p.x*f);',
-'  float thick=mix(1.75,0.82,open);',
-'  return max(shell,(abs(g)-thick)/(f*1.75));',
+'float rrect(vec2 p,vec2 h,float r){',
+'  r=min(r,min(h.x,h.y)*0.95);',
+'  vec2 d=abs(p)-(h-r);',
+'  return length(max(d,0.0))+min(max(d.x,d.y),0.0)-r;',
 '}',
 '',
-/* m = 0 : plain cube.  m = 1 : dendritic snow crystal (3D Vicsek, spiked cells). */
-'float stageDE(vec3 p,float m){',
+/* Kaleidoscopic IFS with a rotation inside the fold. The rotation is what
+   takes the lattice off the world axes and gives facets at many angles —
+   without it the result reads as a stack of boxes, not a crystal. */
+'float crystalDE(vec3 p){',
 '  float s=1.0;',
-'  for(int n=0;n<3;n++){',
-'    float a=clamp(m*7.333-5.133-float(n)*1.15,0.0,1.0);',
-'    if(a<=0.002) break;',
+'  for(int i=0;i<3;i++){',
 '    vec3 q=abs(p);',
 '    if(q.x<q.y) q.xy=q.yx;',
 '    if(q.x<q.z) q.xz=q.zx;',
 '    if(q.y<q.z) q.yz=q.zy;',
-'    q*=3.0;',
-'    if(q.x>1.0) q.x-=2.0;',
-'    p=mix(p,q,a);',
-'    s*=mix(1.0,3.0,a);',
+'    q=gCM*q;',
+'    p=uCScale*q-vec3(uCScale-1.0);',
+'    s*=uCScale;',
 '  }',
-'  float sharp=smoothstep(0.70,1.0,m);',
-'  float open =smoothstep(0.0,0.50,m)*(1.0-0.62*sharp);',
-'  float soft =smoothstep(0.0,0.38,m)*(1.0-0.30*sharp);',
-'  float tw   =uTwist*smoothstep(0.05,0.60,m)*(1.0-0.55*sharp);',
-'  return baseSolid(p,open,soft,sharp,tw)/s;',
+'  return rbox3(p,vec3(uCBase),0.03)/s;',
 '}',
 '',
-'float stageM(float t){ return (uMorphMode>0.5)?abs(2.0*t-1.0):t; }',
+/* The band: a rounded rectangular section swept along x, twisting, with a
+   through-slot that splits it into two braiding strands. uNOpen splits, each
+   sitting inside a widened section. */
+'float bandDE(vec3 p){',
+'  float u=clamp((p.x+uL)/(2.0*uL),0.0,1.0);',
+'  float yy=p.y-uBend*sin(u*PI);',
+'  float w=abs(sin(u*PI*uNOpen));',
+'  float grow=mix(0.86,1.0,smoothstep(0.0,0.6,u))*uThick;',
+'  float hw=mix(uHW.x,uHW.y,w)*grow;',
+'  float hh=mix(uHH.x,uHH.y,w)*grow;',
+'  float th=uTwist*p.x+uTwistPhase;',
+'  float ct=cos(th), st=sin(th);',
+'  vec2 q=vec2(ct*yy+st*p.z, -st*yy+ct*p.z);',
+'  float d=rrect(q,vec2(hw,hh),min(hw,hh)*0.85);',
+'  float sw=hw*uSlotW*w;',
+'  if(sw>0.004) d=max(d,-rrect(q,vec2(sw,hh*2.4),sw*0.6+0.01));',
+'  float ex=abs(p.x)-uL;',
+'  return min(max(d,ex),0.0)+length(max(vec2(d,ex),0.0));',
+'}',
+'',
+'float headDE(vec3 p){',
+'  vec3 d=(p-uHead)/uCSize;',
+'  float c=cos(uHeadRot), s=sin(uHeadRot);',
+'  return crystalDE(vec3(c*d.x-s*d.z, d.y, s*d.x+c*d.z))*uCSize;',
+'}',
+'',
+/* The cube carries its own z rotation so that once the whole object is tilted
+   onto the cover diagonal it still reads as a cube in three-quarter view. */
+'float cubeAt(vec3 p,vec4 C,vec2 rot){',
+'  vec3 d=p-C.xyz;',
+'  float cz=cos(rot.x), sz=sin(rot.x);',
+'  vec2 a=vec2(cz*d.x-sz*d.y, sz*d.x+cz*d.y);',
+'  float cy=cos(rot.y), sy=sin(rot.y);',
+'  return rbox3(vec3(cy*a.x-sy*d.z, a.y, sy*a.x+cy*d.z)/C.w, vec3(1.0), 0.05)*C.w;',
+'}',
+'',
+'float objDE(vec3 p){',
+'  return min(smin(bandDE(p),headDE(p),uWeld), cubeAt(p,uCube,uCubeRot));',
+'}',
 '',
 'float map(vec3 p){',
-'  float d=1e9;',
-'  float N=max(float(uCount)-1.0,1.0);',
-'  for(int i=0;i<10;i++){',
-'    if(i>=uCount) break;',
-'    float t=float(i)/N;',
-'    float m=stageM(t);',
-'    vec3 c=bez(t);',
-'    float sc=mix(uScaleRange.x,uScaleRange.y,m);',
-'    float bd=length(p-c)-sc*2.35;',
-'    if(bd>0.25){ d=min(d,bd); continue; }',
-'    mat3 R=rotY(uSpin*(t*2.3+float(i)*0.31))*rotX(uSpin*(t*1.25+float(i)*0.19))*rotZ(float(i)*0.26);',
-'    float di=stageDE(R*(p-c)/sc,m)*sc;',
-'    if(di<d) gT=t;',
-'    d=smin(d,di,uFuse);',
-'  }',
-'  if(uOrphan.w>0.0){',
-'    float bd=length(p-uOrphan.xyz)-uOrphan.w*2.35;',
-'    if(bd>0.25){ d=min(d,bd); }',
-'    else {',
-'      float di=stageDE(rotY(0.62)*rotX(0.30)*(p-uOrphan.xyz)/uOrphan.w,0.0)*uOrphan.w;',
-'      if(di<d) gT=0.0;',
-'      d=min(d,di);',
-'    }',
+'  float cz=cos(uTilt.x), sz=sin(uTilt.x), cy=cos(uTilt.y), sy=sin(uTilt.y);',
+'  float x1=cy*p.x-sy*p.z, z1=sy*p.x+cy*p.z;',
+'  float x2=cz*x1+sz*p.y,  y2=-sz*x1+cz*p.y;',
+'  vec3 q=vec3(x2,y2,z1)/uScale;',
+'  gT=clamp((q.x-uCube.x)/(uHead.x+0.6-uCube.x),0.0,1.0);',
+'  float bs=(length(q-vec3(-0.3,0.0,0.0))-4.3)*uScale;',
+'  float d=(bs>0.35)?bs:objDE(q)*uScale;',
+'  if(uEcho.w>0.0){',
+'    float e=cubeAt(p,uEcho,vec2(0.0,0.42));',
+'    if(e<d){ d=e; gT=0.0; }',
 '  }',
 '  return d;',
 '}',
 '',
 'vec3 nrm(vec3 p){',
-'  vec2 e=vec2(1.0,-1.0)*0.0016;',
+'  vec2 e=vec2(1.0,-1.0)*0.0018;',
 '  return normalize(e.xyy*map(p+e.xyy)+e.yyx*map(p+e.yyx)+e.yxy*map(p+e.yxy)+e.xxx*map(p+e.xxx));',
 '}',
 '',
-/* Lighting dome is bright even on the dark cover: the backdrop is drawn
-   separately, so the glass reads as glass instead of chrome. */
+/* cyan through most of the band, violet at the head, teal only on the tip */
+'vec3 tintAt(float t){',
+'  if(t<0.52) return mix(uColA,uColB,t/0.52);',
+'  if(t<0.86) return uColB;',
+'  return mix(uColB,uColC,clamp((t-0.86)/0.16,0.0,1.0));',
+'}',
+'',
+/* The lighting dome stays bright on the dark cover too — the backdrop is drawn
+   separately. Sharing them makes the glass read as chrome. */
 'vec3 envMap(vec3 rd){',
 '  float y=rd.y*0.5+0.5;',
 '  vec3 base=(uTheme>0.5)',
-'    ? mix(vec3(0.34,0.37,0.46),vec3(1.00,1.01,1.08),y)',
-'    : mix(vec3(0.26,0.30,0.40),vec3(0.92,0.95,1.06),y);',
-'  base+=pow(max(dot(rd,normalize(vec3(-0.50,0.78,-0.38))),0.0),26.0)*vec3(3.4,3.5,3.8);',
-'  base+=pow(max(dot(rd,normalize(vec3(0.78,0.12,0.52))),0.0),14.0)*mix(uColA,uColB,0.55)*2.4;',
-'  base+=pow(max(dot(rd,normalize(vec3(0.15,-0.88,0.26))),0.0),9.0)*uColA*0.70;',
+'    ? mix(vec3(0.40,0.43,0.50),vec3(1.00,1.02,1.08),y)',
+'    : mix(vec3(0.30,0.34,0.44),vec3(0.94,0.97,1.06),y);',
+'  base+=pow(max(dot(rd,normalize(vec3(-0.46,0.80,-0.36))),0.0),20.0)*vec3(2.8,2.85,3.05);',
+'  base+=pow(max(dot(rd,normalize(vec3(0.74,0.10,0.56))),0.0),12.0)*mix(uColA,uColB,0.5)*1.5;',
+'  base+=pow(max(dot(rd,normalize(vec3(0.12,-0.90,0.22))),0.0),8.0)*uColA*0.45;',
 '  return base;',
 '}',
 '',
 'vec3 bg(vec2 uv){',
-'  float r=clamp(length(uv*vec2(1.0,1.25))*1.15,0.0,1.0);',
+'  float r=clamp(length(uv*vec2(1.0,1.25))*1.2,0.0,1.0);',
 '  return (uTheme>0.5)',
-'    ? mix(vec3(0.985,0.985,0.995),vec3(0.880,0.890,0.930),r)',
-'    : mix(vec3(0.045,0.052,0.080),vec3(0.006,0.008,0.016),r);',
-'}',
-'',
-/* Halo from the analytic ray-to-object closest approach. Accumulating it
-   along the march instead puts visible step-contour rings in the backdrop. */
-'vec3 halo(vec3 ro,vec3 rd){',
-'  vec3 h=vec3(0.0);',
-'  float N=max(float(uCount)-1.0,1.0);',
-'  for(int i=0;i<10;i++){',
-'    if(i>=uCount) break;',
-'    float t=float(i)/N;',
-'    vec3 oc=bez(t)-ro;',
-'    float proj=dot(oc,rd);',
-'    if(proj<=0.0) continue;',
-'    float sc=mix(uScaleRange.x,uScaleRange.y,stageM(t));',
-'    float dd=max(sqrt(max(dot(oc,oc)-proj*proj,0.0))-sc*1.05,0.0);',
-'    h+=mix(uColA,uColB,clamp(t,0.0,1.0))*(exp(-dd*4.4)*0.40+exp(-dd*1.7)*0.055);',
-'  }',
-'  if(uOrphan.w>0.0){',
-'    vec3 oc=uOrphan.xyz-ro;',
-'    float proj=dot(oc,rd);',
-'    if(proj>0.0){',
-'      float dd=max(sqrt(max(dot(oc,oc)-proj*proj,0.0))-uOrphan.w*1.05,0.0);',
-'      h+=uColA*(exp(-dd*4.4)*0.40+exp(-dd*1.7)*0.055);',
-'    }',
-'  }',
-'  return h;',
+'    ? mix(vec3(0.985,0.987,0.995),vec3(0.930,0.938,0.960),r)',
+'    : mix(vec3(0.043,0.055,0.078),vec3(0.008,0.012,0.020),r);',
 '}',
 '',
 'vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}',
 '',
 'void main(){',
+'  {',
+'    float a=uCRot, c=cos(a), s=sin(a), t=1.0-c, k=0.57735027;',
+'    float tk=t*k*k, sk=s*k;',
+'    gCM=mat3(tk+c, tk+sk, tk-sk,  tk-sk, tk+c, tk+sk,  tk+sk, tk-sk, tk+c);',
+'  }',
 '  vec2 uv=(gl_FragCoord.xy-0.5*uRes)/uRes;',
 '  vec3 fw=normalize(uTgt-uCam);',
 '  vec3 rt=normalize(cross(fw,vec3(0.0,1.0,0.0)));',
@@ -176,26 +175,25 @@
 '  vec3 rd=normalize(fw+rt*(uv.x*uFov.x)+up*(uv.y*uFov.y));',
 '  vec3 ro=uCam;',
 '',
-'  float ABS  =(uTheme>0.5)?1.60:1.10;',
-'  float MILK =(uTheme>0.5)?0.13:0.22;',
-'  float GLW  =((uTheme>0.5)?0.40:1.00)*uGlow;',
-'  const float IOR=1.47;',
-'  const float DISP=0.018;',
+'  float ABSb=(uTheme>0.5)?2.10:1.70;',
+'  float MILK=(uTheme>0.5)?0.08:0.10;',
+'  const float IOR=1.46;',
+'  const float DISP=0.016;',
 '',
 '  float t=0.0; bool hit=false; float hitT=0.0; gT=0.0;',
-'  for(int i=0;i<150;i++){',
+'  for(int i=0;i<190;i++){',
 '    if(float(i)>uSteps) break;',
 '    float d=map(ro+rd*t);',
 '    if(d<0.0016){ hit=true; hitT=gT; break; }',
-'    t+=d*0.50;',
-'    if(t>48.0) break;',
+'    t+=d*0.42;',
+'    if(t>46.0) break;',
 '  }',
 '',
 '  vec3 col;',
 '  if(hit){',
 '    vec3 p=ro+rd*t;',
 '    vec3 n=nrm(p);',
-'    vec3 tint=mix(uColA,uColB,clamp(hitT,0.0,1.0));',
+'    vec3 tc=tintAt(clamp(hitT,0.0,1.0));',
 '    float fres=0.035+0.965*pow(1.0-clamp(dot(-rd,n),0.0,1.0),5.0);',
 '    vec3 refl=envMap(reflect(rd,n));',
 '    vec3 refr=refl;',
@@ -206,8 +204,8 @@
 '      for(int j=0;j<40;j++){',
 '        float dd=-map(ip+rdIn*it);',
 '        if(dd<0.0018) break;',
-'        it+=max(dd*0.82,0.006);',
-'        if(it>8.0) break;',
+'        it+=max(dd*0.80,0.006);',
+'        if(it>9.0) break;',
 '      }',
 '      vec3 ep=ip+rdIn*it;',
 '      vec3 en=-nrm(ep);',
@@ -219,44 +217,39 @@
 '      vec3 e2=(dot(o2,o2)>0.0001)?envMap(o2):envMap(tir);',
 '      vec3 e3=(dot(o3,o3)>0.0001)?envMap(o3):envMap(tir);',
 '      refr=vec3(e1.r,e2.g,e3.b);',
-'      refr=refr*exp(-ABS*it*(vec3(1.0)-tint))+tint*it*0.17;',
-'      refr=mix(refr,tint*1.15,MILK);',
+'      refr=refr*exp(-ABSb*it*(vec3(1.0)-tc))+tc*it*0.14;',
+'      refr=mix(refr,tc*1.10,MILK);',
 '    }',
 '    col=mix(refr,refl,fres);',
-'    col+=pow(max(dot(reflect(rd,n),normalize(vec3(-0.50,0.78,-0.38))),0.0),110.0)*2.8;',
-'    col+=tint*pow(1.0-clamp(dot(-rd,n),0.0,1.0),3.0)*0.42;',
-'    col+=halo(ro,rd)*GLW*0.30;',
+'    col+=pow(max(dot(reflect(rd,n),normalize(vec3(-0.46,0.80,-0.36))),0.0),42.0)*0.85;',
+'    col+=tc*pow(1.0-clamp(dot(-rd,n),0.0,1.0),3.0)*0.50;',
 '  } else {',
-'    col=bg(uv)+halo(ro,rd)*GLW;',
+'    col=bg(uv);',
 '  }',
-'  col=aces(col*1.02);',
-'  float vig=1.0-0.20*pow(length(uv*vec2(1.05,1.25))*1.25,2.2);',
-'  col*=clamp(vig,0.0,1.0);',
+'  col=aces(col);',
+'  float vg=(uTheme>0.5)?0.08:0.16;',
+'  col*=clamp(1.0-vg*pow(length(uv*vec2(1.05,1.25))*1.25,2.2),0.0,1.0);',
 '  col+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-0.5)/255.0;',
 '  gl_FragColor=vec4(col,1.0);',
 '}'
   ].join('\n');
 
-  /* ---------- layout presets (world units, camera distance 17) ---------- */
-  var LAYOUTS = {
-    /* Option B — the whole sequence resolves inside the front cover,
-       with the opening cube left alone on the back cover. */
-    front: {
-      c0: [0.95, -2.70, 0.35], c1: [2.10, -1.70, -0.90],
-      c2: [3.60, 0.70, 0.85],  c3: [4.60, 2.15, -0.30],
-      scale: [0.40, 0.88], morphMode: 0, orphan: [-3.05, -0.25, 0.0, 0.55], frameH: 8.2
-    },
-    /* Front cover on its own — portrait diagonal, no orphan. */
-    portrait: {
-      c0: [-1.55, -2.90, 0.40], c1: [-0.70, -1.80, -0.90],
-      c2: [0.55, 0.90, 0.85],   c3: [1.50, 2.40, -0.30],
-      scale: [0.40, 0.88], morphMode: 0, orphan: [0, 0, 0, 0], frameH: 8.2
-    },
-    /* Straight even row, for reading the morph stage by stage. */
-    strip: {
-      c0: [-5.40, 0, 0], c1: [-1.80, 0, 0], c2: [1.80, 0, 0], c3: [5.40, 0, 0],
-      scale: [0.44, 0.62], morphMode: 0, orphan: [0, 0, 0, 0], frameH: 3.6
-    }
+  /* ---------- how the object sits on each board ---------- */
+  var VIEWS = {
+    /* front cover on its own, and option B's spread: the object resolves inside
+       the front cover, with a lone cube left on the back */
+    portrait: { az: 0.86, ay: -0.34, scale: 0.70, tgt: [0, 0, 0], frameH: 8.2, yaw: -4, pitch: 4, echo: [0, 0, 0, 0] },
+    spread:   { az: 0.86, ay: -0.34, scale: 0.70, tgt: [-3.25, 0, 0], frameH: 8.2, yaw: -4, pitch: 4, echo: [0, 0, 0, 0] },
+    /* the whole form laid out flat, for reading the structure */
+    strip:    { az: 0.0, ay: -0.30, scale: 0.95, tgt: [0, 0, 0], frameH: 3.05, yaw: 0, pitch: 6, echo: [0, 0, 0, 0] }
+  };
+
+  var SHAPE = {
+    L: 2.30, bend: 0.18,
+    hw: [0.42, 0.78], hh: [0.38, 0.54],
+    twistPhase: 0.35, weld: 0.16,
+    head: [2.35, 0.16, 0.0], headRot: 0.55,
+    cube: [-3.20, -0.42, 0.10, 0.56], cubeRot: [0, 0.42]
   };
 
   function hex2rgb(h) {
@@ -312,15 +305,16 @@
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-    ['uRes', 'uCam', 'uTgt', 'uFov', 'uCount', 'uC0', 'uC1', 'uC2', 'uC3', 'uMorphMode',
-     'uScaleRange', 'uTwist', 'uSpin', 'uColA', 'uColB', 'uGlow', 'uTheme', 'uOrphan',
-     'uFuse', 'uSteps'
+    ['uRes', 'uCam', 'uTgt', 'uFov', 'uTilt', 'uScale', 'uL', 'uBend', 'uNOpen', 'uHW', 'uHH',
+     'uThick', 'uTwist', 'uTwistPhase', 'uSlotW', 'uWeld', 'uHead', 'uHeadRot', 'uCSize',
+     'uCScale', 'uCBase', 'uCRot', 'uCube', 'uCubeRot', 'uEcho', 'uColA', 'uColB', 'uColC',
+     'uTheme', 'uSteps'
     ].forEach(function (k) { U[k] = gl.getUniformLocation(prog, k); });
 
     function sizeBuffer(quality) {
       var cssW = canvas.clientWidth || parseInt(canvas.getAttribute('width'), 10) || 800;
       var cssH = canvas.clientHeight || parseInt(canvas.getAttribute('height'), 10) || 600;
-      var maxW = quality === 'low' ? 420 : 960;
+      var maxW = quality === 'low' ? 420 : 940;
       var s = Math.min(1, maxW / cssW);
       var w = Math.max(64, Math.round(cssW * s));
       var h = Math.max(64, Math.round(cssH * s));
@@ -329,35 +323,48 @@
     }
 
     function setUniforms(size, quality) {
-      var L = LAYOUTS[opts.layout] || LAYOUTS.front;
+      var V = VIEWS[opts.view] || VIEWS.portrait;
       var aspect = size[0] / size[1];
-      var dist = 17.0;
+      var dist = 19.0;
       var yaw = (opts.yaw || 0) * Math.PI / 180;
       var pit = (opts.pitch || 0) * Math.PI / 180;
+      var T = V.tgt;
       var cam = [
-        dist * Math.sin(yaw) * Math.cos(pit),
-        dist * Math.sin(pit),
-        dist * Math.cos(yaw) * Math.cos(pit)
+        T[0] + dist * Math.sin(yaw) * Math.cos(pit),
+        T[1] + dist * Math.sin(pit),
+        T[2] + dist * Math.cos(yaw) * Math.cos(pit)
       ];
-      var fH = L.frameH * (opts.zoom || 1);
+      var fH = V.frameH * (opts.zoom || 1);
       gl.uniform2f(U.uRes, size[0], size[1]);
       gl.uniform3f(U.uCam, cam[0], cam[1], cam[2]);
-      gl.uniform3f(U.uTgt, 0, 0, 0);
+      gl.uniform3f(U.uTgt, T[0], T[1], T[2]);
       gl.uniform2f(U.uFov, fH * aspect / dist, fH / dist);
-      gl.uniform1i(U.uCount, Math.max(2, Math.min(10, opts.stages | 0)));
-      gl.uniform3fv(U.uC0, L.c0); gl.uniform3fv(U.uC1, L.c1);
-      gl.uniform3fv(U.uC2, L.c2); gl.uniform3fv(U.uC3, L.c3);
-      gl.uniform1f(U.uMorphMode, L.morphMode);
-      gl.uniform2fv(U.uScaleRange, L.scale);
+      gl.uniform2f(U.uTilt, V.az * (opts.tilt != null ? opts.tilt : 1), V.ay);
+      gl.uniform1f(U.uScale, V.scale);
+      gl.uniform1f(U.uL, SHAPE.L);
+      gl.uniform1f(U.uBend, SHAPE.bend);
+      gl.uniform1f(U.uNOpen, opts.splits);
+      gl.uniform2fv(U.uHW, SHAPE.hw);
+      gl.uniform2fv(U.uHH, SHAPE.hh);
+      gl.uniform1f(U.uThick, opts.thick);
       gl.uniform1f(U.uTwist, opts.twist);
-      gl.uniform1f(U.uSpin, opts.spin);
+      gl.uniform1f(U.uTwistPhase, SHAPE.twistPhase);
+      gl.uniform1f(U.uSlotW, opts.slotW);
+      gl.uniform1f(U.uWeld, SHAPE.weld);
+      gl.uniform3fv(U.uHead, SHAPE.head);
+      gl.uniform1f(U.uHeadRot, SHAPE.headRot);
+      gl.uniform1f(U.uCSize, opts.crystalSize);
+      gl.uniform1f(U.uCScale, opts.crystalScale);
+      gl.uniform1f(U.uCBase, opts.crystalBase);
+      gl.uniform1f(U.uCRot, opts.crystalRot);
+      gl.uniform4fv(U.uCube, SHAPE.cube);
+      gl.uniform2fv(U.uCubeRot, [-V.az, SHAPE.cubeRot[1]]);
+      gl.uniform4fv(U.uEcho, V.echo);
       gl.uniform3fv(U.uColA, hex2rgb(opts.accentA));
       gl.uniform3fv(U.uColB, hex2rgb(opts.accentB));
-      gl.uniform1f(U.uGlow, opts.glow);
+      gl.uniform3fv(U.uColC, hex2rgb(opts.accentC));
       gl.uniform1f(U.uTheme, opts.theme === 'light' ? 1.0 : 0.0);
-      gl.uniform4fv(U.uOrphan, L.orphan);
-      gl.uniform1f(U.uFuse, Math.max(0.005, opts.fuse));
-      gl.uniform1f(U.uSteps, quality === 'low' ? 72.0 : 142.0);
+      gl.uniform1f(U.uSteps, quality === 'low' ? 86.0 : 182.0);
     }
 
     function drawTile(size, i, n) {
@@ -398,8 +405,8 @@
       if (!dragging) return;
       var dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
-      opts.yaw = Math.max(-75, Math.min(75, (opts.yaw || 0) + dx * 0.22));
-      opts.pitch = Math.max(-55, Math.min(55, (opts.pitch || 0) - dy * 0.22));
+      opts.yaw = Math.max(-70, Math.min(70, (opts.yaw || 0) + dx * 0.2));
+      opts.pitch = Math.max(-50, Math.min(50, (opts.pitch || 0) - dy * 0.2));
       render('low');
     }
     function onUp() { if (!dragging) return; dragging = false; render('high'); }
@@ -439,5 +446,5 @@
     return api;
   }
 
-  window.SEQ3D = { mount: mount, layouts: LAYOUTS };
+  window.SEQ3D = { mount: mount, views: VIEWS, shape: SHAPE };
 })();
