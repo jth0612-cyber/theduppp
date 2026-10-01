@@ -11,6 +11,37 @@ beads on a hillside, a carpenter, a mountain, a church spire, a fern, a pigeon o
 and a bee on blossoms. The effect reads as *the subject is touching the grid*. Everything
 below serves that illusion.
 
+## 0. Failure modes (learned the hard way — read first)
+
+A first attempt on 10 photos was rejected as "not sensual at all". The causes:
+
+- **No actor, no contact.** Lines wandered *near* the subject (a little triangle floating
+  above a summit, a wobble beside a facade). Every bent line must hook on ONE precise point
+  that can plausibly grab, lift, hang or tow it: summit, tip, nose, flame, lamp, stem.
+- **Tracing an existing edge.** Copying a roof or ridge line at an offset just draws the
+  photo's own line twice. Do not trace unless the shape is a clean geometric figure that
+  lands on grid intersections.
+- **Timid, local bumps.** A straight line with a small gaussian bump reads as a glitch.
+  The WHOLE line moves, from both fixed endpoints, and the move is bold — at least about a
+  quarter of a cell, usually much more. If the contact sits almost on the original line,
+  pick another line that has to travel to reach it (e.g. pull the bottom line up to a cone
+  tip as a tent, rather than nudging the top line).
+- **Wobbly splines.** Never pass a spline through 5–7 hand-placed points. Build each side
+  as ONE cubic Bézier: endpoint handle along the original grid direction, contact handle
+  along the motion/edge direction, long handles (≈ 1/3 – 1/2 of the span). Angular
+  subjects get straight segments (tent, taut V) instead.
+- **Two moves at once.** One bent line per image unless the pose is truly symmetric.
+- **No verification.** Before showing, put the result next to the references at full
+  size and zoom on the contact.
+
+Moves that worked in the redo: reflection-tip pulls the bottom line into a deep U (lake);
+summit lifts the top line in a Haaland-style long rise and steep drop; pendant lamp hangs
+the top line as a taut V; cone tip holds the bottom line up as a tent; line threaded
+through an apple-shaped window's stem slot; line dives into a fire pit and is hidden by
+the near rim; arc seen only in the sky gap between trees and a curved facade; plane drags
+the vertical line into an S, passing behind the fuselage to the nose; line draped over a
+sea rock like a rope.
+
 ## 1. Base grid
 
 - 3 × 3 rule-of-thirds: 2 vertical lines at 1/3 and 2/3 of the width, 2 horizontal at 1/3
