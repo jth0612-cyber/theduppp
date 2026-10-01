@@ -5,8 +5,9 @@ description: Apply the "trending grid effect" to a photo — a white rule-of-thi
 
 # Grid effect
 
-Learned from reference reels (pixifect Photoshop tutorial; designwith.p_; thekevinpiatek)
-across footballers, a carpenter, a mountain, a church spire, a fern, a pigeon over a roof
+Learned from reference reels (pixifect Photoshop tutorial; rob.sexton.chengdu "bent grid
+effect" tutorial; designwith.p_; thekevinpiatek) across footballers, a monk holding prayer
+beads on a hillside, a carpenter, a mountain, a church spire, a fern, a pigeon over a roof
 and a bee on blossoms. The effect reads as *the subject is touching the grid*. Everything
 below serves that illusion.
 
@@ -15,8 +16,13 @@ below serves that illusion.
 - 3 × 3 rule-of-thirds: 2 vertical lines at 1/3 and 2/3 of the width, 2 horizontal at 1/3
   and 2/3 of the height. Full-bleed, edge to edge. No outer frame.
 - Pure white, 100 % opacity, flat (no glow, no shadow).
-- Stroke ≈ 0.3–0.4 % of the image width (12 px on a 3059 px-wide image). Every line,
-  bent or straight, uses the same stroke.
+- Stroke ≈ 0.25–0.4 % of the image width (12 px on 3059 px; 7.5 px in the monk reel).
+  Every line, bent or straight, uses the same stroke.
+- Grid positions can be taken from the crop tool's rule-of-thirds overlay; cropping to
+  9:16 first is optional. Lines are vector shapes (pen tool, Shape mode, no fill).
+- Bending in Photoshop: Add Anchor Point Tool on the line → drag the new anchor onto the
+  contact point; leave it a corner for a Taut V, or pull its handles for a curve. Repeat
+  per line.
 
 ## 2. Read the photo first
 
@@ -41,7 +47,8 @@ Decide, by looking:
 | **Trace** | an angular silhouette (peak, roof) meets a line | the line becomes straight segments running parallel to the silhouette, a small even offset outside it, kinks at grid intersections | mountain summit |
 | **Sag** | a soft, drooping subject (leaf, cloth, a body resting) lies across a line | the line hangs like a rope beneath it, deepest under the subject's weight | fern |
 | **Flow** | the photo has a strong leading line or direction of motion | a vertical (or horizontal) becomes a long S-curve that follows that direction and passes close to the subject's key point | carpenter (power cable, around the router), pigeon (beak → along the dormer roof) |
-| **Taut / angular pull** | tension, sharp athletic pose | straight segments meeting at the hand in a V instead of a curve | Ronaldo |
+| **Taut / angular pull** | tension, sharp athletic pose, or a hand holding something thin (string, beads, rope, rein) | ONE anchor added on the straight line and dragged onto the hand; the line stays two straight segments meeting there in a sharp V. Both endpoints stay put | Ronaldo, monk |
+| **Converge** | one strong contact point lies between a vertical and a horizontal line | pull BOTH of them to that same point (each as a Taut V or a Grab curve) so two lines meet in the hand — the hand becomes the grid's knot | monk (left vertical + bottom horizontal both meet in the hand holding the beads) |
 | **Depth only** | delicate, busy or centred subject with no natural contact | no bending; the straight grid simply passes *behind* the subject | bee on blossoms |
 
 Choosing: prefer the interaction the subject's action already implies (reaching → grab,
@@ -74,8 +81,14 @@ Stack, bottom to top:
 2. Straight grid lines
 3. Subject cut-out (exact mask; Photoshop's Select › Subject or a background-removal model)
 4. Bent line(s)
-5. Mask on the bent line(s): erase it where the contact part of the subject (fingers,
-   fist, boot, ball, spire ball, leaf) should sit in front
+5. Contact cut-out on top: just the contact part (fingers, fist, boot, ball, spire ball,
+   leaf tip) selected tightly (Object Selection Tool around the hand → Ctrl+J → layer to the
+   top), so it sits in front of the bent line(s)
+
+Minimal variant (rob.sexton.chengdu): skip layer 3 and do only layer 5 — every line runs
+over the photo and only the small contact part is lifted on top. Use it when a full
+cut-out would be messy (hair, fur, low contrast against the background) or when the
+lines crossing the body read well; the grab illusion comes from the contact layer alone.
 
 So straight lines vanish behind the body; the bent line rides over the subject but is
 held, lifted or wrapped by the contact part. Blurred foreground or background elements
