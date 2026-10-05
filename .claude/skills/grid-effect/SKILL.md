@@ -157,3 +157,12 @@ that are not the subject (bokeh blossoms, crowd) are not cut out — lines run o
 - **Perspective grid:** in a one-point-perspective scene the lines converge on the
   vanishing point, so the grid reads as part of the space.
 - Vary the move inside a batch: never use the same kind of interaction twice in a row.
+
+## 9. What landed with the user (batch 19–24, "much better")
+
+Approved: pinch at a tree tip, fisheye lens warp in a sky opening, a lid traced over a
+skyline, gravity lensing around a sun reflection, reins into an upturned face, and a wire
+strung between two traffic lights (chosen over a vanishing-point starburst, which read as
+"tacky", a finish tape and an eye-shaped opening). Lesson: pick a small, concrete object
+in the photo (signal, tip, glare, face) and give the line a believable physical role
+(wire, rein, tape, pinch); avoid purely geometric gimmicks.
