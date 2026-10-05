@@ -139,3 +139,21 @@ that are not the subject (bokeh blossoms, crowd) are not cut out — lines run o
 - Straight lines disappear behind the subject; nothing floats on top of a face.
 - Endpoints sit where the original grid line met the frame edge (or intersection).
 - The bend direction agrees with the subject's action or the photo's leading line.
+
+## 8. More moves (from a second batch of reference reels)
+
+- **Pinch:** fingertips pinch a grid intersection. The crossing point moves to the
+  fingertips and every line through it becomes a straight line to its original
+  endpoints, so the whole grid tilts toward the pinch (statue).
+- **String between two hands:** one straight taut line runs from one hand to the other;
+  the rest of the grid tilts slightly to agree with it (seated Buddha).
+- **Hand with several strings:** two or three lines converge into one hand like reins
+  (standing Buddha).
+- **Hug the outline:** a vertical bends around a heel or limb with a small, tight radius,
+  and a horizontal tucks under the sole, both returning to straight right after (football boot).
+- **Lens warp:** the whole grid bends with the photo's own perspective or fisheye
+  distortion, following curved structures (arches, cables); a foreground hand covers it
+  (fisheye portrait).
+- **Perspective grid:** in a one-point-perspective scene the lines converge on the
+  vanishing point, so the grid reads as part of the space.
+- Vary the move inside a batch: never use the same kind of interaction twice in a row.
