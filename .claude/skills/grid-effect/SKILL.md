@@ -166,3 +166,14 @@ strung between two traffic lights (chosen over a vanishing-point starburst, whic
 "tacky", a finish tape and an eye-shaped opening). Lesson: pick a small, concrete object
 in the photo (signal, tip, glare, face) and give the line a believable physical role
 (wire, rein, tape, pinch); avoid purely geometric gimmicks.
+
+## 10. Redo lesson (07, 10, 12, 13)
+
+Rejected as "all weird": a line burnt into curled ends, a loop for a breaking wave,
+dashed "rain" lines, V-shaped bow waves, and occlusion faked with rough rectangles.
+Picked instead: taut straight lines only, each ending exactly on a real object, with
+real masks so the lines go behind it — a grid crossing pinched into the tallest
+flame tip, two verticals tied to a sea rock like mooring ropes, and a vertical that
+shifts onto a hanging rain chain and becomes the chain. Lesson: never add
+decorative shapes (curls, loops, dashes) to show a story; let one straight line
+touch one real object. If an earlier, simpler version is better, keep it.
