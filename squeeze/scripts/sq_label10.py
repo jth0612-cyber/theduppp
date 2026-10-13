@@ -1,4 +1,4 @@
-# 03-01-10 기준, 짝수쪽 좌상단 '기출 EXTRACT 2' → '과학의 기본량'(영문 없음). 이 글자의 글꼴만 10안.
+# 03-01-10 기준 (1차 01~10 → 2차: 04·06 남기고 11~18로 교체), 짝수쪽 좌상단 '기출 EXTRACT 2' → '과학의 기본량'(영문 없음). 이 글자의 글꼴만 10안.
 # 사용: python sq_label10.py <squeeze.pdf> <resources.pdf> <출력폴더> [01 02 ...] [--full]
 import sys, os
 sys.path.insert(0, '.')
@@ -8,16 +8,17 @@ from sq_lib import f, K
 PT, FS = sq_combo.PT, sq_combo.FS
 TEXT = '과학의 기본량'
 LABELS = {   # 코드: (이름, 글꼴, 크기pt, 자간)
-    '01': ('Pretendard SemiBold', PT.format('SemiBold'), 14, 0),
-    '02': ('Pretendard Light 자간', PT.format('Light'), 14, 60),
-    '03': ('함렛 SemiBold', FS.format('hahmlet-600'), 14, 0),
     '04': ('Noto Serif KR SemiBold', FS.format('noto-serif-kr-600'), 14, 0),
-    '05': ('나눔명조 ExtraBold', FS.format('nanum-myeongjo-800'), 14, 0),
     '06': ('고운바탕 Bold', FS.format('gowun-batang-700'), 14, 20),
-    '07': ('Gothic A1 SemiBold', FS.format('gothic-a1-600'), 14, 0),
-    '08': ('IBM Plex Sans KR Medium', FS.format('ibm-plex-sans-kr-500'), 14, 0),
-    '09': ('송명', FS.format('song-myung-400'), 14.5, 20),
-    '10': ('도현', FS.format('do-hyeon-400'), 14.5, 10),
+    # 2차(04·06 남기고 나머지 교체)
+    '11': ('Noto Serif KR Medium', FS.format('noto-serif-kr-500'), 14, 0),
+    '12': ('Noto Serif KR Bold', FS.format('noto-serif-kr-700'), 14, 0),
+    '13': ('고운바탕 Regular 자간', FS.format('gowun-batang-400'), 14, 40),
+    '14': ('나눔명조 Bold', FS.format('nanum-myeongjo-700'), 14, 0),
+    '15': ('나눔명조 Regular 자간', FS.format('nanum-myeongjo-400'), 14, 40),
+    '16': ('함렛 Medium', FS.format('hahmlet-500'), 14, 0),
+    '17': ('Diphylleia', FS.format('diphylleia-400'), 14.5, 10),
+    '18': ('Grandiflora One', FS.format('grandiflora-one-400'), 14.5, 10),
 }
 CUR = {}
 _old = sq5.label_default

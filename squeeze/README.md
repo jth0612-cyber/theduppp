@@ -1,6 +1,11 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 좌상단 글꼴 10안 (`label10/`, 03-01-11) ← 현재
+## 좌상단 글꼴 2차 (`label10b/`) ← 현재
+1차에서 04(Noto Serif KR SemiBold)·06(고운바탕 Bold)만 남기고 나머지 8개를 교체: 11 Noto Serif KR Medium, 12 Noto Serif KR Bold,
+13 고운바탕 Regular(자간), 14 나눔명조 Bold, 15 나눔명조 Regular(자간), 16 함렛 Medium, 17 Diphylleia, 18 Grandiflora One.
+다시 만들기: `python sq_label10.py <squeeze.pdf> <resources.pdf> label10b` → `python label10_board.py label10b`
+
+## 좌상단 글꼴 10안 (`label10/`, 03-01-11)
 03-01-10 기준, 짝수쪽 좌상단 '기출 EXTRACT 2' → '과학의 기본량'(영문 뺌). 이 글자의 글꼴만 01~10. 비교판 `좌상단_글꼴10안_비교.png`.
 다시 만들기: `python sq_label10.py <squeeze.pdf> <resources.pdf> label10 [01 ...] [--full]` → `python label10_board.py`
 
