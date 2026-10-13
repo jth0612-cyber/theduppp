@@ -1,6 +1,11 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 글꼴 조합 11종 (`combo/`) ← 현재
+## 글꼴 조합 20종 (`combo20/`, 11~30) ← 현재
+고정: Solving·Linking 머리 글자와 하단 'Squeeze'(Million Dreams), 문제 번호(Barlow Condensed Medium).
+바뀌는 것: 한글 제목 / 한글 작은 글자 / 영문 제목(Logic Check·Memo·Contents·단원 글자). 영문 제목은 대문자 높이를 Million Dreams에 맞춰 자동 배율.
+비교판: `글꼴조합20_비교_1~4.png`. 다시 만들기: `python sq_combo20.py <squeeze.pdf> <resources.pdf> combo20 [11 12 ...]` → `python combo20_board.py`.
+
+## 글꼴 조합 11종 (`combo/`, 00~10)
 03-01-09 예시본(14쪽)에서 번호 글꼴(Barlow Condensed Medium)과 'Squeeze' 로고 글자(Million Dreams)는 고정하고, 나머지 글꼴만 조합을 바꿈.
 
 | 조합 | 한글 제목 | 한글 작은 글자 | 영문 제목 |

@@ -16,6 +16,7 @@ MM = 72 / 25.4
 CYAN = (0, 162, 219); DOTC = (0x6E, 0xC8, 0xEC)
 col = lambda c: c and tuple(round(v * 255) for v in c[:3])
 UNIT = {'A': ('A', '고체'), 'B': ('B', '유체'), 'C': ('C', '천체')}
+SOLFONT = 'md'   # Solving·Linking 머리 글자 글꼴 키
 UNIT_FULL = {'A': 'A. 고체', 'B': 'B. 유체', 'C': 'C. 천체'}
 
 # ── 원본 아이콘(리소스 PDF) ─────────────────────────────────
@@ -43,7 +44,7 @@ def draw_icon(d, kind, x0, y0, h):
 
 def section_head(d, word, kind, x0, x1, yc, seed):
     """Solving/Linking 머리: 단어(Million Dreams) | 층 토막 핀 줄 + 회색 | 원본 아이콘. yc = 세로 가운데."""
-    wx = x0 + d.text(x0, yc + 2.4, word, 'md', 14, S())
+    wx = x0 + d.text(x0, yc + 2.4, word, SOLFONT, 14, S())
     rect = icon(kind)[0]; ih = 5.0; iw = rect.width / rect.height * ih
     draw_icon(d, kind, x1 - iw, yc - ih / 2, ih)
     a, b = wx + 3.5, x1 - iw - 4.0
