@@ -1,6 +1,11 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 파형 모양 3안 (`wave3/`, 03-01-15) ← 현재
+## 확정안 03-01-14 D (`finalD/`) ← 현재
+글꼴 조합 11(Pretendard + Cinzel) · Solving·Linking 글자 Space Grotesk · 좌상단 '과학의 기본량' Diphylleia · 상단바 03-01-11 그대로 ·
+Solving·Linking 줄 파형 D(간격 1.1mm, 글자·아이콘·핀 가운데 선 정렬, 위아래 0.5mm 단차, 굵기 0.26mm). 전체 84쪽과 예시 14쪽.
+다시 만들기: `python sq_final14.py <squeeze.pdf> <resources.pdf> finalD`
+
+## 파형 모양 3안 (`wave3/`, 03-01-15)
 D(간격 1.1mm, 가운데 선 정렬, 0.5mm 단차, 굵기 0.26mm) 확정, 파형 모양만 3가지.
 - F 말소리: 둥근 소리 뭉치(6~10칸)와 조용한 쉼(3~5칸)이 번갈아
 - G 박자: 7칸(7.7mm)마다 박이 솟고 뒤로 잦아듦
