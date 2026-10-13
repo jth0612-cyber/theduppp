@@ -1,6 +1,10 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 좌상단 글꼴 2차 (`label10b/`) ← 현재
+## 확정안 03-01-11 좌상단 17 (`final17/`) ← 현재
+03-01-10 + 짝수쪽 좌상단 '과학의 기본량'(Diphylleia 14.5pt, 자간 10). 전체 84쪽과 예시 14쪽.
+다시 만들기: `python sq_label10.py <squeeze.pdf> <resources.pdf> final17 17 --full`
+
+## 좌상단 글꼴 2차 (`label10b/`)
 1차에서 04(Noto Serif KR SemiBold)·06(고운바탕 Bold)만 남기고 나머지 8개를 교체: 11 Noto Serif KR Medium, 12 Noto Serif KR Bold,
 13 고운바탕 Regular(자간), 14 나눔명조 Bold, 15 나눔명조 Regular(자간), 16 함렛 Medium, 17 Diphylleia, 18 Grandiflora One.
 다시 만들기: `python sq_label10.py <squeeze.pdf> <resources.pdf> label10b` → `python label10_board.py label10b`
