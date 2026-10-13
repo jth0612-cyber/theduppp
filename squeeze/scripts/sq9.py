@@ -25,7 +25,7 @@ def orig_dots(src):
 def note(d):
     x0, y0, x1, y1 = NOTE
     sh = d.p.new_shape()
-    for x, y in orig_dots(SRC_DOC):
+    for x, y in orig_dots(globals()["SRC_DOC"]):
         sh.draw_circle(f.Point(m(x), m(y)), m(0.25))
     sh.finish(fill=S(DOT_T), color=None); sh.commit()
     d.line(x0, y0, x1, y0, K(.35), .25)
