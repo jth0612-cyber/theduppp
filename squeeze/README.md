@@ -1,6 +1,13 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 확정안 03-01-14 D (`finalD/`) ← 현재
+## 리소스 PDF (`resources/`) ← 현재
+확정안 03-01-14 D의 디자인 요소만 원본 리소스 PDF(release_point_resources)와 같은 쪽 크기·순서로 분리(53쪽).
+본문 글자는 모두 비우고, 디자인 라벨(Solving·Linking·Memo·Contents·풀이·Logic Check)과 'Squeeze' 로고는 원본처럼 윤곽선.
+빠른 정답 요소(원본 9~15쪽)는 뺌. O·X 표시·아이콘·따옴표·전구는 원본 그대로. 맨 뒤에 Logic Check 쪽 덧붙임.
+쪽 대응표 `Squeeze_resources_03-01-14D_목록.txt`, 한눈에 보기 `한눈에_큰요소.png`·`한눈에_작은요소.png`.
+다시 만들기: `python sq_res.py <squeeze.pdf> <resources.pdf> resources/Squeeze_resources_03-01-14D.pdf`
+
+## 확정안 03-01-14 D (`finalD/`)
 글꼴 조합 11(Pretendard + Cinzel) · Solving·Linking 글자 Space Grotesk · 좌상단 '과학의 기본량' Diphylleia · 상단바 03-01-11 그대로 ·
 Solving·Linking 줄 파형 D(간격 1.1mm, 글자·아이콘·핀 가운데 선 정렬, 위아래 0.5mm 단차, 굵기 0.26mm). 전체 84쪽과 예시 14쪽.
 다시 만들기: `python sq_final14.py <squeeze.pdf> <resources.pdf> finalD`
