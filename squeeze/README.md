@@ -1,6 +1,6 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 글꼴 조합 6종 (`combo/`) ← 현재
+## 글꼴 조합 11종 (`combo/`) ← 현재
 03-01-09 예시본(14쪽)에서 번호 글꼴(Barlow Condensed Medium)과 'Squeeze' 로고 글자(Million Dreams)는 고정하고, 나머지 글꼴만 조합을 바꿈.
 
 | 조합 | 한글 제목 | 한글 작은 글자 | 영문 제목 |
@@ -11,9 +11,14 @@
 | 03 | 고운돋움 | 고운돋움 | Fraunces SemiBold |
 | 04 | Noto Serif KR SemiBold | Noto Serif KR | Playfair Display Medium |
 | 05 | 나눔명조 ExtraBold | IBM Plex Sans KR | Instrument Serif |
+| 06 | 고운바탕 Bold | 고운바탕 | EB Garamond |
+| 07 | 나눔고딕 ExtraBold | 나눔고딕 | Space Grotesk Medium |
+| 08 | 해바라기 Bold | 해바라기 | Big Shoulders Display Medium |
+| 09 | 송명 | Pretendard | Bodoni Moda |
+| 10 | 도현 | Pretendard | Oswald Light |
 
 - 모두 OFL. 한글은 npm @fontsource 조각 woff를 `merge_chunks.py`로 하나의 TTF로 합쳐 씀(쓰는 글자 모두 포함 확인)
-- 비교: `글꼴조합_비교_1(머리·번호·Solving·풀이).png`, `글꼴조합_비교_2(LogicCheck·차례·하단).png`
+- 비교: `글꼴조합_비교_1(머리·번호·Solving·풀이).png`, `글꼴조합_비교_2(LogicCheck·차례·하단).png`(00–05), `글꼴조합_비교_1·2(06-10).png`, 조합별 실제 펼침면 `펼침면_NN.png`
 - 빌드: `python sq_combo.py sq/sq.pdf hb/res.pdf combo [00 01 …]`
 
 ## 전체 시안 (`full/`)

@@ -16,6 +16,11 @@ COMBOS = {
     '03': ('고운돋움 + Fraunces', dict(ps=FS.format('gowun-dodum-400'), pm=FS.format('gowun-dodum-400'), pr=FS.format('gowun-dodum-400'), pl=FS.format('gowun-dodum-400'), md=FS.format('fraunces-600')), 0.98),
     '04': ('Noto Serif KR + Playfair Display', dict(ps=FS.format('noto-serif-kr-600'), pm=FS.format('noto-serif-kr-500'), pr=FS.format('noto-serif-kr-400'), pl=FS.format('noto-serif-kr-300'), md=FS.format('playfair-display-500')), 0.98),
     '05': ('나눔명조 + IBM Plex Sans KR + Instrument Serif', dict(ps=FS.format('nanum-myeongjo-800'), pm=FS.format('ibm-plex-sans-kr-500'), pr=FS.format('ibm-plex-sans-kr-400'), pl=FS.format('ibm-plex-sans-kr-300'), md=FS.format('instrument-serif-400')), 1.1),
+    '06': ('고운바탕 + EB Garamond', dict(ps=FS.format('gowun-batang-700'), pm=FS.format('gowun-batang-400'), pr=FS.format('gowun-batang-400'), pl=FS.format('gowun-batang-400'), md=FS.format('eb-garamond-400')), 1.12),
+    '07': ('나눔고딕 + Space Grotesk', dict(ps=FS.format('nanum-gothic-800'), pm=FS.format('nanum-gothic-700'), pr=FS.format('nanum-gothic-400'), pl=FS.format('nanum-gothic-400'), md=FS.format('space-grotesk-500')), 0.95),
+    '08': ('해바라기 + Big Shoulders Display', dict(ps=FS.format('sunflower-700'), pm=FS.format('sunflower-500'), pr=FS.format('sunflower-300'), pl=FS.format('sunflower-300'), md=FS.format('big-shoulders-display-500')), 1.1),
+    '09': ('송명 + Pretendard + Bodoni Moda', dict(ps=FS.format('song-myung-400'), pm=PT.format('Medium'), pr=PT.format('Regular'), pl=PT.format('Light'), md=FS.format('bodoni-moda-400')), 1.02),
+    '10': ('도현 + Pretendard + Oswald', dict(ps=FS.format('do-hyeon-400'), pm=PT.format('Medium'), pr=PT.format('Regular'), pl=PT.format('Light'), md=FS.format('oswald-300')), 1.0),
 }
 USED = ('고체유체천체기출빠른정답풀이회독학년도월번지대수능시작하기에앞서단원별모아보기 EXTRACT 2 MEMO Memo Contents '
         'Logic Check Solving Linking ABC.-0123456789p Squeeze')
