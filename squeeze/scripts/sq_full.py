@@ -221,7 +221,8 @@ def page_answers(page, src, n):
         y += ((len(pairs) + 4) // 5) * 10 + 12
     foot_default(d, 'even', n)
 
-def build_all(SRC, RESP, OUT):
+def build_all(SRC, RESP, OUT, only=None):
+    """only: 남길 원본 쪽번호 목록(예: 14쪽 예시본). 주면 그 쪽만 그린다."""
     src = f.open(SRC); sq8.RES = f.open(RESP); sq9.SRC_DOC = src
     set_numfont('fs/ttf/barlow-condensed-500.ttf')
     out = f.open(); out.insert_pdf(src)
@@ -229,6 +230,7 @@ def build_all(SRC, RESP, OUT):
     logic_unit = {4: 'A. 고체', 26: 'B. 유체', 56: 'C. 천체'}
     for i in range(len(out)):
         n = i + 1; page = out[i]
+        if only and n not in only: continue
         if n == 1: page_intro(page, n)
         elif n == 2: page_contents(page, n)
         elif n in (3, 84): pass
@@ -238,6 +240,7 @@ def build_all(SRC, RESP, OUT):
         else: page_problem(page, src, n)
         print(n, end=' ', flush=True)
     print()
+    if only: out.select([n - 1 for n in only])
     out.subset_fonts()
     out.save(OUT, garbage=4, deflate=True)
     print(OUT)

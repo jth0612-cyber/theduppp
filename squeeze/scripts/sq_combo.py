@@ -54,9 +54,6 @@ if __name__ == '__main__':
     keep = [1, 2, 3, 4, 5, 6, 25, 26, 55, 56, 81, 82, 83, 84]
     for code in which:
         name = apply(code)
-        full = f'{OUTD}/_tmp_{code}.pdf'
-        sq_full.build_all(SRC, RES, full)
-        d = f.open(full); d.select([n - 1 for n in keep])
         out = f'{OUTD}/Squeeze_내지_03-01-09_글꼴조합{code}({name}).pdf'
-        d.save(out, garbage=4, deflate=True); d.close(); os.remove(full)
+        sq_full.build_all(SRC, RES, out, only=keep)   # 남길 14쪽만 그림
         print('=>', out, flush=True)
