@@ -174,6 +174,14 @@ def head_bottom_rand(X):
     v = 0.55 * float(_RA(X, 0)) + 0.35 * float(_RB(X, 0)) + 0.18 * float(_RC(X, 0))
     return 4.0 + 15.5 * float(sm(-0.75, 0.75, v))
 
+def head_bottom_rand_half(X):
+    """03-01-05: 같은 윤곽, 위아래 편차만 50% (가운데 11.75mm 기준, 7.9~15.6mm)."""
+    return 11.75 + 0.5 * (head_bottom_rand(X) - 11.75)
+
+def H1h(d, side):
+    it = fins(5, 1.1, SW, PITCH, 0, head_bottom_rand_half, MOD, lambda X, y: 0.93, gap=GAP, palette=PAL)
+    draw_fins(d, it, lambda x, y: 0.55 + 0.45 * float(fadeX(x)))
+
 def H1r(d, side):
     it = fins(5, 1.1, SW, PITCH, 0, head_bottom_rand, MOD, lambda X, y: 0.93, gap=GAP, palette=PAL)
     draw_fins(d, it, lambda x, y: 0.55 + 0.45 * float(fadeX(x)))
@@ -203,6 +211,7 @@ SETS = {
     'A': make('03-01-01(A 다듬기·번호 그대로·풀이 위쪽 핀)', H1, N1, P1, solving_hang),
     'B': make('03-01-02(B 외벽 격자·번호 옆 핀 기둥·풀이 왼쪽 기둥)', H2, N2, P2, solving_hang, grid=True),
     'C': make('03-01-03(C 아래서 자람·번호 아래 핀 줄·풀이 장식 없음)', H3, N3, P3, solving_rise, rise=True),
+    'E': make('03-01-05(03-01-04 고정·상단 편차 50%)', H1h, N1, P3, solving_hang, logic=logic_clean),
     'D': make('03-01-04(H1 무작위 윤곽·풀이와 Logic Check 정리)', H1r, N1, P3, solving_hang, logic=logic_clean),
 }
 
