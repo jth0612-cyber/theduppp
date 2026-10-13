@@ -1,6 +1,11 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 글꼴 조합 20종 (`combo20/`, 11~30) ← 현재
+## 확정안 03-01-10 (`final/`) ← 현재
+글꼴 조합 11(한글 제목 Pretendard SemiBold, 한글 작은 글자 Pretendard, 영문 제목 Cinzel) + Solving·Linking 글자는 조합 07의 Space Grotesk Medium(0.95배).
+번호 Barlow Condensed Medium, 하단 'Squeeze' Million Dreams 그대로. 전체 84쪽과 예시 14쪽.
+다시 만들기: `python sq_final11.py <squeeze.pdf> <resources.pdf> final full`
+
+## 글꼴 조합 20종 (`combo20/`, 11~30)
 고정: Solving·Linking 머리 글자와 하단 'Squeeze'(Million Dreams), 문제 번호(Barlow Condensed Medium).
 바뀌는 것: 한글 제목 / 한글 작은 글자 / 영문 제목(Logic Check·Memo·Contents·단원 글자). 영문 제목은 대문자 높이를 Million Dreams에 맞춰 자동 배율.
 비교판: `글꼴조합20_비교_1~4.png`. 다시 만들기: `python sq_combo20.py <squeeze.pdf> <resources.pdf> combo20 [11 12 ...]` → `python combo20_board.py`.
