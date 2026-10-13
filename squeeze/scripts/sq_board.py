@@ -7,16 +7,16 @@ def pg(path, i, z):
 def spread(items, z):
     a, b = [pg(p, i, z) for p, i in items]
     S = Image.new('RGB', (a.width * 2 + 2, a.height), (180, 180, 180)); S.paste(a, (0, 0)); S.paste(b, (a.width + 2, 0)); return S
-V = [('원본', SRC, 3), ('A 루버', f'{OUTD}/A_루버.pdf', 0), ('B 수평선', f'{OUTD}/B_수평선.pdf', 0), ('C 면과 질감', f'{OUTD}/C_면과질감.pdf', 0)]
+V = [('원본', SRC, 3), ('A 루버', f'{OUTD}/A_루버.pdf', 0), ('A2 매듭', f'{OUTD}/A2_매듭.pdf', 0)]
 for tag, (p0, p1) in (('45', (0, 1)), ('67', (2, 3))):
     ims = []
     for name, path, off in V:
         im = spread([(path, p0 + off), (path, p1 + off)], 0.75)
         ims.append((name, im))
     w, h = ims[0][1].size
-    B = Image.new('RGB', (w * 2 + 60, (h + 60) * 2 + 20), (236, 234, 230)); dr = ImageDraw.Draw(B)
+    B = Image.new('RGB', (w + 40, (h + 60) * len(ims) + 20), (236, 234, 230)); dr = ImageDraw.Draw(B)
     for k, (name, im) in enumerate(ims):
-        x, y = 20 + (k % 2) * (w + 20), 10 + (k // 2) * (h + 60)
+        x, y = 20, 10 + k * (h + 60)
         dr.text((x, y + 8), name, font=FT, fill=(30, 30, 30)); B.paste(im, (x, y + 50))
     B.save(f'{OUTD}/비교_{tag}쪽.png')
 # 부분 확대: 상단바 / 문항번호 / Solving / 하단

@@ -198,164 +198,136 @@ def A_logic(d, rows, unit):
 
 
 # ═══════════════════════════════════════════════════════════
-# 시안 B · 수평선  (다니구치 건축관: 긴 처마선, 수면, 절제)
+# 시안 A2 · 매듭  (A 루버의 가는 선 + 꼬이며 매듭짓는 말랑한 리본)
+# 가는 선 여러 가닥이 모인 리본이 고리를 만들며 비틀리고(회전), 교차점마다 위·아래가 갈린다.
+# 리본 면은 비틀림 각도에 따라 별색 농도가 부드럽게 바뀌어 말랑한 고무줄 같은 질감을 낸다.
 # ═══════════════════════════════════════════════════════════
-def B_head(d, side, label):
-    if side == 'even':
-        d.rect(0, 11.6, 96, 13.2, S(), None)
-        d.line(0, 13.2, W, 13.2, K(.8), .3)
-        d.text(19, 24.5, label, 'pl', 15.5, K(), track=40)
-    else:
-        d.rect(W - 96, 11.6, W, 13.2, S(), None)
-        d.line(0, 13.2, W, 13.2, K(.8), .3)
-        d.text(243, 24.5, label, 'pl', 15.5, K(), 'r', track=40)
+def loop_path(x0, x1, yc, loops, a, b, n=900, decay=0.9, phase=0):
+    """x0→x1로 가며 고리를 만드는 경로(트로코이드). 갈수록 고리가 풀린다. (x, y, z) 목록."""
+    sg = 1 if x1 > x0 else -1
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        th = 2 * math.pi * loops * t + phase
+        k = (1 - t) ** decay
+        x = x0 + (x1 - x0) * t - sg * a * k * math.sin(th)
+        y = yc - b * k * math.cos(th)
+        pts.append((x, y, math.sin(th) * k))
+    return pts
 
-def B_foot(d, side, no):
-    d.line(0, 351.2, W, 351.2, K(.3), .25)
-    if side == 'even':
-        d.text(19, 359.4, f'{no:02d}', 'pe', 15, K())
-        d.text(34, 358.8, 'Squeeze', 'md', 11.5, K())
-        d.text(53.2, 358.8, '기출 2', 'pl', 8.6, K(.7))
-    else:
-        d.text(243, 359.4, f'{no:02d}', 'pe', 15, K(), 'r')
-        d.logo(205, 355, 4.2)
+def torus_path(cx, cy, scale, p=3, q=7, r=0.5, tilt=22, rotz=8, n=2400):
+    ct, st = math.cos(math.radians(tilt)), math.sin(math.radians(tilt))
+    cz, sz = math.cos(math.radians(rotz)), math.sin(math.radians(rotz))
+    pts = []
+    for i in range(n + 1):
+        t = 2 * math.pi * i / n
+        X = (1 + r * math.cos(q * t)) * math.cos(p * t); Y = (1 + r * math.cos(q * t)) * math.sin(p * t); Z = r * math.sin(q * t)
+        Y, Z = Y * ct - Z * st, Y * st + Z * ct
+        X, Y = X * cz - Y * sz, X * sz + Y * cz
+        pts.append((cx + scale * X, cy - scale * Y, Z))
+    return pts
 
-def B_num(d, x, y, no, lab, align='l'):
-    if align == 'r':
-        d.text(x, y, no, 'pe', 36, K(), 'r')
-        d.rect(x - 22, y + 2.4, x, y + 3.1, S(), None)
-        d.text(x, y + 8.4, lab, 'pr', 8.6, K(.75), 'r')
-    else:
-        wd = d.text(x, y - 1.2, no, 'pe', 34, K())
-        d.rect(x + wd + 2.5, y - 4.2, x + wd + 3.1, y - .4, S(), None)
-        d.text(x + wd + 5.6, y - 1.2, lab, 'pr', 8.6, K(.75))
-
-def B_note(d):
-    x0, y0, x1, y1 = 20, 190, 244, 347
-    d.rect(x0, y0, x0 + 40, y0 + 1.2, S(), None)
-    d.line(x0, y0 + 1.2, x1, y0 + 1.2, K(.75), .3)
-    d.text(x0, y0 - 2, '풀이', 'pm', 9, S())
-    y = y0 + 9
-    while y < y1 - 1:
-        d.line(x0, y, x1, y, K(.13), .25)
-        y += 8
-    d.line(x0, y1, x1, y1, K(.4), .3)
-
-def B_solving(d):
-    d.rect(134, 274.8, 140, 276.2, S(), None)
-    x = 142 + d.text(142, 277.2, 'Solving', 'ps', 10.5, S(), track=120)
-    d.line(x + 3, 275.5, 241.5, 275.5, K(.5), .25)
-
-def B_logic(d, rows, unit):
-    B_head(d, 'even', '기출 EXTRACT 2')
-    d.text(19, 50, 'Logic Check', 'pe', 30, K())
-    d.text(19, 58.5, unit, 'pr', 10.5, K(.75))
-    d.rect(19, 62.5, 59, 63.7, S(), None)
-    y = 38
-    d.line(134, y - 6, 243, y - 6, K(.75), .3)
-    for r in rows:
-        d.text(134, y, r['no'], 'pl', 13, K())
-        d.text(150, y - .3, r['src'], 'pr', 9.2, K(.8))
-        d.text(219, y - .3, '회독', 'pl', 8.4, K(.65))
-        for k in range(2):
-            d.rect(229 + k * 5.4, y - 3.5, 232.6 + k * 5.4, y - .1, None, K(.7), .4)
-        d.line(134, y + 4.2, 243, y + 4.2, K(.18), .25)
-        y += 10.5
-    B_foot(d, 'even', 4)
-
-
-# ═══════════════════════════════════════════════════════════
-# 시안 C · 면과 질감  (a.presse 아오야마: 절제된 면 분할, 리넨·콘크리트 결)
-# ═══════════════════════════════════════════════════════════
-def hatch(d, x0, y0, x1, y1, step=1.1, ang=60, color=None, w=0.22):
-    """사각 영역 안에 가는 사선 결(리넨/콘크리트 패턴)."""
+def ribbon(d, pts, width, turns, strands=9, lw=0.22, edge=0.42, taper=True, phase=0.6,
+           shade=(0.05, 0.2), line=None):
+    """pts 경로를 따라 비틀리는 리본. 깊이(z) 순서로 면 + 선을 그려 교차의 위·아래를 만든다."""
+    line = line or S()
+    n = len(pts) - 1
+    C = []
+    for i in range(n + 1):
+        x, y, z = pts[i]
+        a, b = pts[max(i - 1, 0)], pts[min(i + 1, n)]
+        tx, ty = b[0] - a[0], b[1] - a[1]; L = math.hypot(tx, ty) or 1
+        t = i / n
+        phi = 2 * math.pi * turns * t + phase
+        hw = width / 2 * ((0.3 + 0.7 * (1 - t) ** 0.6) if taper else 1)
+        C.append((x, y, z, -ty / L, tx / L, hw * math.cos(phi), math.cos(phi)))
+    order = sorted(range(n), key=lambda i: (C[i][2] + C[i + 1][2]) / 2)
     sh = d.p.new_shape()
-    t = math.tan(math.radians(ang))
-    hgt = y1 - y0
-    x = x0 - hgt / t
-    while x < x1:
-        ax, ay, bx, by = x, y1, x + hgt / t, y0
-        # 사각형으로 자르기
-        if ax < x0: ay = y1 - (x0 - ax) * t; ax = x0
-        if bx > x1: by = y0 + (bx - x1) * t; bx = x1
-        if ay > y0 and by < y1 and ax <= bx:
-            sh.draw_line(f.Point(m(ax), m(ay)), f.Point(m(bx), m(by)))
-        x += step
-    sh.finish(color=color or S(.35), width=w); sh.commit()
+    off = [-1 + 2 * k / (strands - 1) for k in range(strands)]
+    for i in order:
+        x0, y0, _, nx0, ny0, h0, c0 = C[i]
+        x1, y1, _, nx1, ny1, h1, c1 = C[i + 1]
+        # 이웃 조각과 이음새가 보이지 않게 앞뒤로 살짝 겹친다
+        ex, ey = (x1 - x0) * 0.35, (y1 - y0) * 0.35
+        q = [(x0 - ex + nx0 * h0, y0 - ey + ny0 * h0), (x1 + ex + nx1 * h1, y1 + ey + ny1 * h1),
+             (x1 + ex - nx1 * h1, y1 + ey - ny1 * h1), (x0 - ex - nx0 * h0, y0 - ey - ny0 * h0)]
+        cc = abs(c0 + c1) / 2
+        tn = shade[0] + (shade[1] - shade[0]) * cc ** 0.7
+        sh.draw_polyline([f.Point(m(px), m(py)) for px, py in q] + [f.Point(m(q[0][0]), m(q[0][1]))])
+        sh.finish(fill=S(tn), color=None, closePath=True)
+        for k, s_ in enumerate(off):
+            sh.draw_line(f.Point(m(x0 + nx0 * h0 * s_), m(y0 + ny0 * h0 * s_)),
+                         f.Point(m(x1 + nx1 * h1 * s_), m(y1 + ny1 * h1 * s_)))
+            sh.finish(color=line, width=edge if k in (0, strands - 1) else lw, lineCap=1, lineJoin=1)
+    sh.commit()
 
-def C_head(d, side, label):
+def K_head(d, side, label):
     if side == 'even':
-        d.rect(0, 0, 128, 22, S(.12), None)
-        hatch(d, 0, 0, 128, 22, color=S(.5))
-        d.rect(19, 16.2, 22, 19.2, S(), None)
-        d.text(25, 19.2, label, 'pb', 13, K())
+        ribbon(d, loop_path(-6, 160, 12, 7, 7.2, 6.8, n=1400, decay=0.45), 4.6, 5, strands=9, shade=(0.06, 0.32))
+        d.text(19, 28, label, 'ps', 15, K(), track=-10)
     else:
-        d.rect(134, 0, W, 22, S(.12), None)
-        hatch(d, 134, 0, W, 22, color=S(.5))
-        d.rect(240, 16.2, 243, 19.2, S(), None)
-        d.text(237, 19.2, label, 'pb', 13, K(), 'r')
+        ribbon(d, loop_path(W + 6, 102, 12, 7, 7.2, 6.8, n=1400, decay=0.45), 4.6, 5, strands=9, shade=(0.06, 0.32))
+        d.text(243, 28, label, 'ps', 15, K(), 'r', track=-10)
 
-def C_foot(d, side, no):
+def K_mark(d, x, y, wd=11, flip=False):
+    """작은 매듭 표식(고리 하나)."""
+    x0, x1 = (x + wd, x) if flip else (x, x + wd)
+    ribbon(d, loop_path(x0, x1, y, 1, wd * 0.3, wd * 0.24, n=260, decay=0.0, phase=-math.pi), wd * 0.2, 1.0,
+           strands=5, lw=0.18, edge=0.32, taper=False, shade=(0.08, 0.3))
+
+def K_foot(d, side, no):
     if side == 'even':
-        d.rect(0, 352, 26, 362, S(), None)
-        d.text(19, 359.2, str(no), 'pb', 10, (1, 1, 1), 'r')
-        d.text(30, 359.4, 'Squeeze', 'md', 12, K())
-        d.text(49.2, 359.2, '기출 2', 'pr', 8.6, K(.7))
+        d.text(19, 359, str(no), 'pm', 10, K())
+        K_mark(d, 25.5, 357.2, 8)
+        x = 37 + d.text(37, 359.2, 'Squeeze', 'md', 13, S())
+        d.text(x + 2.2, 359, '기출 2', 'pl', 9, K(.7))
     else:
-        d.rect(W - 26, 352, W, 362, S(), None)
-        d.text(243, 359.2, str(no), 'pb', 10, (1, 1, 1))
-        d.logo(203, 354.8, 4.4)
+        d.text(243, 359, str(no), 'pm', 10, K(), 'r')
+        K_mark(d, 228, 357.2, 8, flip=True)
+        d.logo(198, 354.6, 4.6)
 
-def C_num(d, x, y, no, lab, align='l'):
-    wd = d.width(no, 'md', 24)
-    bw = wd + 7
-    bx = x - bw if align == 'r' else x
-    d.rect(bx, y - 9.6, bx + bw, y + 1.4, K(), None)
-    d.text(bx + 3.5, y - .9, no, 'md', 24, (1, 1, 1))
-    lw = d.width(lab, 'pr', 8.6) + 5
+def K_num(d, x, y, no, lab, align='l'):
     if align == 'r':
-        lx, ly = bx + bw - lw, y + 1.4
-    else:   # 짝수쪽은 바로 아래에 문제가 붙어서 출처를 오른쪽에
-        lx, ly = bx + bw, y - 4.2
-    d.rect(lx, ly, lx + lw, ly + 5.2, S(.18), None)
-    d.text(lx + 2.5, ly + 3.7, lab, 'pr', 8.6, K(.85))
+        d.text(x, y, no, 'md', 34, S(), 'r')
+        K_mark(d, x - 49, y + 4.4, 8)
+        d.text(x, y + 6.6, lab, 'pr', 8.6, K(.75), 'r')
+    else:
+        wd = d.text(x, y, no, 'md', 34, S())
+        K_mark(d, x + wd + 3.5, y - 4.4, 8)
+        d.text(x + wd + 15, y - 3.1, lab, 'pr', 8.6, K(.75))
 
-def C_note(d):
+def K_note(d):
     x0, y0, x1, y1 = 20, 190, 244, 347
-    d.poly([(x0, y0), (x1 - 8, y0), (x1, y0 + 8), (x1, y1), (x0, y1)], fill=S(.07), color=None)
-    d.dots(x0 + 5, y0 + 13, x1 - 5, y1 - 5, 4.5, .17, S(.4))
-    d.rect(x0, y0, x0 + 22, y0 + 7, K(), None)
-    d.text(x0 + 4, y0 + 5.1, '풀이', 'pm', 9.5, (1, 1, 1))
+    d.p.draw_rect(R(x0, y0, x1, y1), color=None, fill=S(.05), radius=6 / (y1 - y0))
+    d.dots(x0 + 6, y0 + 14, x1 - 6, y1 - 6, 4.5, .17, S(.45))
+    ribbon(d, loop_path(x0 - 4, x0 + 96, y0 + 1, 3, 4.6, 4.2, n=700, decay=0.5), 4, 2, strands=7, shade=(0.06, 0.3))
+    d.text(x0 + 3, y0 + 12, 'Note', 'md', 14, S())
 
-def C_solving(d):
-    d.rect(134, 272.4, 241.5, 280, S(.12), None)
-    hatch(d, 168, 272.4, 241.5, 280, color=S(.5))
-    d.rect(134, 272.4, 159, 280, K(), None)
-    d.text(137.5, 278.2, 'Solving', 'md', 14, (1, 1, 1))
+def K_solving(d):
+    x = 134 + d.text(134, 278.8, 'Solving', 'md', 16, S())
+    ribbon(d, loop_path(x + 3, 243, 275.6, 3, 4.2, 3.6, n=600, decay=0.5), 3.6, 1.8, strands=7, shade=(0.06, 0.3))
 
-def C_logic(d, rows, unit):
-    C_head(d, 'even', '기출 EXTRACT 2')
-    d.rect(19, 34, 120, 92, S(.12), None)
-    hatch(d, 19, 34, 120, 92, color=S(.5))
-    d.text(25, 52, 'Logic Check', 'md', 28, K())
-    d.text(25, 61, unit, 'pr', 10.5, K(.8))
-    y = 40
-    for i, r in enumerate(rows):
-        if i % 2 == 0: d.rect(134, y - 5.5, 243, y + 3.5, S(.07), None)
-        d.rect(134, y - 5.5, 147, y + 3.5, K(), None)
-        d.text(140.5, y + .6, r['no'], 'md', 12.5, (1, 1, 1), 'c')
-        d.text(151, y + .2, r['src'], 'pr', 9.2, K(.85))
-        d.text(220, y + .2, '회독', 'pr', 8.4, K(.7))
+def K_logic(d, rows, unit):
+    K_head(d, 'even', '기출 EXTRACT 2')
+    d.text(19, 52, 'Logic Check', 'md', 30, K())
+    d.text(19, 60.5, unit, 'pl', 11, K(.75))
+    ribbon(d, torus_path(66, 152, 31), 6.2, 9, strands=9, taper=False, shade=(0.05, 0.26))
+    d.line(128, 36, 128, 347, K(.35), .3)
+    y = 42
+    for r in rows:
+        d.text(136, y, r['no'], 'md', 15, S())
+        d.text(152, y - .4, r['src'], 'pr', 9.4, K(.85))
+        d.text(214, y - .4, '회독', 'pl', 8.5, K(.7))
         for k in range(2):
-            d.rect(229 + k * 5.4, y - 3.2, 232.8 + k * 5.4, y + .6, (1, 1, 1), K(.6), .4)
+            d.p.draw_rect(R(223.5 + k * 5.2, y - 3.6, 227.3 + k * 5.2, y - .2), color=S(), width=.5, radius=.3)
+        d.line(136, y + 3.4, 233, y + 3.4, K(.18), .25)
         y += 10.5
-    C_foot(d, 'even', 4)
+    K_foot(d, 'even', 4)
 
 
 VARIANTS = {
     'A_루버': dict(head=A_head, foot=A_foot, num=A_num, note=A_note, solving=A_solving, logic=A_logic),
-    'B_수평선': dict(head=B_head, foot=B_foot, num=B_num, note=B_note, solving=B_solving, logic=B_logic),
-    'C_면과질감': dict(head=C_head, foot=C_foot, num=C_num, note=C_note, solving=C_solving, logic=C_logic),
+    'A2_매듭': dict(head=K_head, foot=K_foot, num=K_num, note=K_note, solving=K_solving, logic=K_logic),
 }
 UNIT = {'A': '고체', 'B': '유체', 'C': '천체'}
 
