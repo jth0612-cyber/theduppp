@@ -166,7 +166,27 @@ def logic_panel(d, grid=False, rise=False):
         draw_fins(d, it, lambda x, y: 1 - 0.6 * float(sm(140, 280, y)))
     logic_list(d)
 
-def make(name, H, N, Pn, solving, grid=False, rise=False):
+
+# ── 03-01-04: 무작위 윤곽(좌우 대칭 아님) + 정리된 풀이·Logic Check ─────────────
+_RA, _RB, _RC = Noise(303, 140, dirs=0.3), Noise(304, 55, dirs=0.4), Noise(305, 18, dirs=0.5)
+def head_bottom_rand(X):
+    """핀 아래 끝: 큰 물결 + 중간 물결 + 잔물결을 섞어 무작위로 내려갔다 올라옴(제본선 대칭 아님)."""
+    v = 0.55 * float(_RA(X, 0)) + 0.35 * float(_RB(X, 0)) + 0.18 * float(_RC(X, 0))
+    return 4.0 + 15.5 * float(sm(-0.75, 0.75, v))
+
+def H1r(d, side):
+    it = fins(5, 1.1, SW, PITCH, 0, head_bottom_rand, MOD, lambda X, y: 0.93, gap=GAP, palette=PAL)
+    draw_fins(d, it, lambda x, y: 0.55 + 0.45 * float(fadeX(x)))
+
+def logic_clean(d):
+    """Logic Check: P3와 같은 언어 - 가는 선 + 작은 핀 표식 + 제목. 큰 장식 없음."""
+    d.text(19, 52, 'Logic Check', 'md', 28, K())
+    d.line(19, 63, 112, 63, K(.35), .25)
+    fin_stack(d, 19.3, 57.4, [(2.6, S_, 1), (2.2, S_, .45)], w=0.5)
+    d.text(21.4, 61.0, 'A. 고체', 'pm', 8.6, S())
+    logic_list(d)
+
+def make(name, H, N, Pn, solving, grid=False, rise=False, logic=None):
     class C:
         pass
     C.name = name
@@ -176,13 +196,14 @@ def make(name, H, N, Pn, solving, grid=False, rise=False):
     C.note = lambda s_, d: Pn(d)
     C.solving = lambda s_, d: solving(d)
     C.foot = lambda s_, d, side, no: foot_default(d, side, no)
-    C.logic = lambda s_, d: logic_panel(d, grid, rise)
+    C.logic = (lambda s_, d: logic(d)) if logic else (lambda s_, d: logic_panel(d, grid, rise))
     return C
 
 SETS = {
     'A': make('03-01-01(A 다듬기·번호 그대로·풀이 위쪽 핀)', H1, N1, P1, solving_hang),
     'B': make('03-01-02(B 외벽 격자·번호 옆 핀 기둥·풀이 왼쪽 기둥)', H2, N2, P2, solving_hang, grid=True),
     'C': make('03-01-03(C 아래서 자람·번호 아래 핀 줄·풀이 장식 없음)', H3, N3, P3, solving_rise, rise=True),
+    'D': make('03-01-04(H1 무작위 윤곽·풀이와 Logic Check 정리)', H1r, N1, P3, solving_hang, logic=logic_clean),
 }
 
 if __name__ == '__main__':
