@@ -1,17 +1,18 @@
 # 03-01-14 D 디자인을 리소스 PDF(release_point_resources) 형식으로: 같은 쪽 크기·순서에 새 디자인 요소만 끼움.
-# - 본문 글자(문항·번호·쪽번호·단원명·'과학의 기본량' 등)는 모두 비움. 디자인 라벨(Solving·Linking·Memo·MEMO·Contents·
-#   풀이·Logic Check)과 'Squeeze' 로고 글자는 원본 리소스처럼 윤곽선(패스)으로 넣음.
+# - 본문 글자(문항·번호·쪽번호·단원명·'과학의 기본량' 등)는 모두 비움. 디자인 라벨(Solving·Linking·MEMO·Logic·Contents·
+#   Logic Check; MEMO·Logic은 Cinzel 별색)과 'Squeeze' 로고 글자는 원본 리소스처럼 윤곽선(패스)으로 넣음.
 # - 빠른 정답 요소(원본 9~15쪽)는 뺌. O·X 표시와 아이콘(17·18·20·21, 30~59쪽)은 원본 그대로.
 # - 맨 뒤에 Squeeze에만 있는 Logic Check 쪽을 덧붙임.
 # 사용: python sq_res.py <squeeze.pdf> <resources.pdf> <출력.pdf>
 import sys
 sys.path.insert(0, '.')
 import sq_wave, sq_label10, sq_full, sq_combo20, sq_lib, sq8, sq9, sq5, sq_combo
-from sq_lib import P, f, m, W, H
+from sq_lib import P, f, m, W, H, S
 from sq_full import head, p3_head, dots, find_dots, page_memo, page_contents, page_logic, section_head
 MM = 72 / 25.4
 
-KEEP_WORDS = {'Solving', 'Linking', 'Memo', 'MEMO', 'Contents', '풀이', 'Logic Check', 'Squeeze'}
+KEEP_WORDS = {'Solving', 'Linking', 'MEMO', 'Logic', 'Contents', 'Logic Check', 'Squeeze'}
+LABEL = dict(font='md', size=10.0)   # MEMO·Logic 라벨: 영문 제목 글꼴(Cinzel), 별색
 _text = P.text
 TEXT = f.open(); _layer = {}            # 쪽마다 글자만 따로 쓰는 층(나중에 윤곽선으로 바꿔 얹음)
 def text_filtered(s, x, y, text, font, size, color, align='l', track=0):
@@ -47,8 +48,11 @@ if __name__ == '__main__':
     pg = blank(new); d = P(pg, res); head(d, 'even'); sq_full.foot_default(d, 'even', 0); add('1 짝수쪽 틀(상단 핀·하단 Squeeze)')
     # 2 홀수쪽 틀: 상단 핀(홀수 쪽) + THedu 로고
     pg = blank(new); d = P(pg, res); head(d, 'odd'); sq_full.foot_default(d, 'odd', 0); add('2 홀수쪽 틀(상단 핀·THedu)')
-    # 3 MEMO 쪽
+    # 3 MEMO 쪽: 큰 'Memo' 제목은 빼고, 선 위 라벨 'MEMO'를 Cinzel 별색으로
+    _p3 = sq_full.p3_head
+    sq_full.p3_head = lambda d, x0, x1, y, label, **k: _p3(d, x0, x1, y, label, color=S(), **LABEL)
     new.insert_pdf(src, from_page=24, to_page=24); page_memo(new[-1], 25, None); add('3 MEMO 쪽')
+    sq_full.p3_head = _p3
     # 4 창작 문항 표식 → 작은 핀 표식(2토막)
     pg = blank(new, 37.7, 5.5); d = P(pg, res); sq8.fin_stack(d, 0.6, 0.0, [(2.6, sq_lib.S_, 1), (2.2, sq_lib.S_, .45)], w=0.5); add('4 표식 → 핀 표식')
     # 5·6 차례(글자 있음/없음)
@@ -77,7 +81,7 @@ if __name__ == '__main__':
         bx = tuple(v / MM for v in box)
         pts = [((r.x0 + r.x1) / 2 / MM, (r.y0 + r.y1) / 2 / MM) for r in (g['rect'] for g in rp.get_drawings() if g.get('fill') and g['rect'].width < 1 * MM)]
         pts = [(x, y) for x, y in pts if bx[0] < x < bx[2] and bx[1] + 3 < y < bx[3]]
-        pg = blank(new); d = P(pg, res); dots(d, pts); p3_head(d, bx[0], bx[2], bx[1], '풀이'); add(f'{i + 1} 풀이 칸(높이 {bx[3] - bx[1]:.0f}mm)')
+        pg = blank(new); d = P(pg, res); dots(d, pts); p3_head(d, bx[0], bx[2], bx[1], 'Logic', color=S(), **LABEL); add(f'{i + 1} 풀이 칸 → Logic 라벨(높이 {bx[3] - bx[1]:.0f}mm)')
     # 30~59 O·X 표시와 아이콘: 원본 그대로
     start = len(new); new.insert_pdf(res, from_page=29, to_page=58)
     for i in range(29, 59): log.append((start + i - 28, f'{i + 1} 원본 그대로'))

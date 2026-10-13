@@ -2,7 +2,8 @@
 
 ## 리소스 PDF (`resources/`) ← 현재
 확정안 03-01-14 D의 디자인 요소만 원본 리소스 PDF(release_point_resources)와 같은 쪽 크기·순서로 분리(53쪽).
-본문 글자는 모두 비우고, 디자인 라벨(Solving·Linking·Memo·Contents·풀이·Logic Check)과 'Squeeze' 로고는 원본처럼 윤곽선.
+본문 글자는 모두 비우고, 디자인 라벨(Solving·Linking·MEMO·Logic·Contents·Logic Check)과 'Squeeze' 로고는 원본처럼 윤곽선.
+MEMO 쪽은 큰 'Memo' 제목을 빼고 선 위 라벨 'MEMO'를 Cinzel 별색으로, 풀이 칸(18~22쪽) 라벨은 '풀이' 대신 'Logic'(Cinzel 별색).
 빠른 정답 요소(원본 9~15쪽)는 뺌. O·X 표시·아이콘·따옴표·전구는 원본 그대로. 맨 뒤에 Logic Check 쪽 덧붙임.
 쪽 대응표 `Squeeze_resources_03-01-14D_목록.txt`, 한눈에 보기 `한눈에_큰요소.png`·`한눈에_작은요소.png`.
 다시 만들기: `python sq_res.py <squeeze.pdf> <resources.pdf> resources/Squeeze_resources_03-01-14D.pdf`
