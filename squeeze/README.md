@@ -10,7 +10,9 @@
 | 03-01-02 (B) | H2 + 옅은 외벽 격자(층 선·창틀) | N2 바깥쪽 핀 기둥 | P2 왼쪽 핀 기둥 | 아래로 매달림 / 격자 외벽 판 |
 | 03-01-03 (C) | H3 아래 기준선에서 위로 자람 | N3 번호 아래 짧은 핀 줄 | P3 장식 없음 | 위로 자람 / 바닥에서 솟는 판 |
 
-- **03-01-05 (현재 고정본)**: 03-01-04 그대로, 상단 핀 아래 끝의 위아래 편차만 50%(가운데 11.75mm 기준 7.9~15.6mm). 빌드 `python sq7.py ... v4 E`. 비교: `Squeeze_내지_03-01-05_상단비교(04 대비).png`, `_비교_67쪽.png`, `_비교_45쪽.png`
+- **03-01-07 (현재)**: 03-01-05 + Solving 연필 아이콘 복원(리소스 24쪽 원본 벡터, 높이 5mm, 'Solving'과 세로 가운데 정렬, 핀 줄은 아이콘 4.2mm 앞에서 끝) + 상단 회색 핀(먹 45/25%: 깊게 내려간 기둥의 아래 끝 토막 위주, 잡음으로 정한 구간에 모여 나옴, 이웃 기둥에 연달아 오지 않음). 빌드 `python sq8.py sq/sq.pdf hb/res.pdf <폴더> base`
+- **번호 글꼴 10종** (`번호글꼴_10종_견본.png`, `python sq8.py ... fonts` / `v7_fonts.py`): Million Dreams 30pt와 대문자 높이를 맞춰 비교. 01 Big Shoulders Display, 02 Barlow Condensed, 03 Oswald, 04 Antonio, 05 Inter Tight, 06 Space Grotesk, 07 Fraunces, 08 Playfair Display, 09 Cormorant Garamond, 10 Instrument Serif (모두 OFL, npm @fontsource)
+- **03-01-05**: 03-01-04 그대로, 상단 핀 아래 끝의 위아래 편차만 50%(가운데 11.75mm 기준 7.9~15.6mm). 빌드 `python sq7.py ... v4 E`. 비교: `Squeeze_내지_03-01-05_상단비교(04 대비).png`, `_비교_67쪽.png`, `_비교_45쪽.png`
 - **03-01-04**: H1 + 핀 아래 끝 윤곽을 좌우 대칭이 아닌 무작위(큰·중간·잔물결 잡음 합)로 내려갔다 올라오게, 풀이 공간과 Logic Check는 P3 형태(가는 선 + 작은 핀 표식 + 라벨)로 정리, 번호 N1, Solving은 매달린 핀 줄. 빌드 `python sq7.py ... v4 D`. 비교: `Squeeze_내지_03-01-04_비교_67쪽.png`(원본 / 03-01-01 / 03-01-04)
 - `후보_상단.png`, `후보_요소.png`, `후보_LogicCheck.png`: 요소별 비교 / `비교_67쪽.png`, `비교_45쪽.png`: 원본 대비 펼침면
 - 빌드: `python sq7.py sq/sq.pdf hb/res.pdf v4 [A B C]` (질감 생성기 `tex.py`, 공용 `sq6.py`·`sq5.py`)
