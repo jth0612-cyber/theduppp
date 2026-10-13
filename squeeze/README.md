@@ -1,6 +1,10 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 확정안 03-01-10 (`final/`) ← 현재
+## 좌상단 글꼴 10안 (`label10/`, 03-01-11) ← 현재
+03-01-10 기준, 짝수쪽 좌상단 '기출 EXTRACT 2' → '과학의 기본량'(영문 뺌). 이 글자의 글꼴만 01~10. 비교판 `좌상단_글꼴10안_비교.png`.
+다시 만들기: `python sq_label10.py <squeeze.pdf> <resources.pdf> label10 [01 ...] [--full]` → `python label10_board.py`
+
+## 확정안 03-01-10 (`final/`)
 글꼴 조합 11(한글 제목 Pretendard SemiBold, 한글 작은 글자 Pretendard, 영문 제목 Cinzel) + Solving·Linking 글자는 조합 07의 Space Grotesk Medium(0.95배).
 번호 Barlow Condensed Medium, 하단 'Squeeze' Million Dreams 그대로. 전체 84쪽과 예시 14쪽.
 다시 만들기: `python sq_final11.py <squeeze.pdf> <resources.pdf> final full`
