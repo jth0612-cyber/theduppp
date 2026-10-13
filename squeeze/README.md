@@ -1,6 +1,22 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 전체 시안 (`full/`) ← 현재
+## 글꼴 조합 6종 (`combo/`) ← 현재
+03-01-09 예시본(14쪽)에서 번호 글꼴(Barlow Condensed Medium)과 'Squeeze' 로고 글자(Million Dreams)는 고정하고, 나머지 글꼴만 조합을 바꿈.
+
+| 조합 | 한글 제목 | 한글 작은 글자 | 영문 제목 |
+|---|---|---|---|
+| 00 현재 | Pretendard SemiBold | Pretendard | Million Dreams |
+| 01 | 함렛 SemiBold | Pretendard | Cormorant Garamond SemiBold |
+| 02 | Gothic A1 SemiBold | Gothic A1 | Barlow Condensed SemiBold |
+| 03 | 고운돋움 | 고운돋움 | Fraunces SemiBold |
+| 04 | Noto Serif KR SemiBold | Noto Serif KR | Playfair Display Medium |
+| 05 | 나눔명조 ExtraBold | IBM Plex Sans KR | Instrument Serif |
+
+- 모두 OFL. 한글은 npm @fontsource 조각 woff를 `merge_chunks.py`로 하나의 TTF로 합쳐 씀(쓰는 글자 모두 포함 확인)
+- 비교: `글꼴조합_비교_1(머리·번호·Solving·풀이).png`, `글꼴조합_비교_2(LogicCheck·차례·하단).png`
+- 빌드: `python sq_combo.py sq/sq.pdf hb/res.pdf combo [00 01 …]`
+
+## 전체 시안 (`full/`)
 - `Squeeze_기출EXTRACT2_내지_03-01-09_예시(A-1 한 문제).pdf`: 84쪽 전체 적용본에서 문제는 A-1(5·6쪽)만 남기고 나머지 문제 쪽을 지운 14쪽 예시(원본 쪽 1·2·3·4·5·6·25·26·55·56·81·82·83·84). 문제 쪽은 2쪽씩 지워 좌우 배치 유지, 쪽번호는 원본 그대로. `Squeeze_03-01-09_예시_썸네일.png`
 - 84쪽 전체본은 `sq_full.py`로 다시 만들 수 있음
 - 빌드: `python sq_full.py sq/sq.pdf hb/res.pdf <출력.pdf>`
