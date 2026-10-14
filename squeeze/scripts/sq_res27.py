@@ -26,13 +26,22 @@ rgb = lambda c: c and tuple(round(v * 255) for v in c[:3])
 
 # ── 글자: 새로 쓰는 글자만 별도 층에 써 두었다가 윤곽선으로 얹음 ─────────────────
 _text = P.text
+def _init(s, page, res=None, dx=0):
+    s.p, s.res, s.dx = page, res, dx               # 글꼴은 글자 층에서만 필요(그림 쪽엔 넣지 않음 → 파일 가벼움)
+P.__init__ = _init
+_fonted = set()
+def _font_page(tp):
+    if tp.number not in _fonted:
+        for k, v in sq_lib.FONTS.items(): tp.insert_font(fontname=k, fontfile=v)
+        _fonted.add(tp.number)
 TEXT = f.open(); _layer = {}
 def text_layer(s, x, y, text, font, size, color, align='l', track=0):
     key = (id(s.p.parent), s.p.number)
     if key not in _layer:
         TEXT.new_page(width=s.p.rect.width, height=s.p.rect.height)
         _layer[key] = (s.p.parent, s.p.number, len(TEXT) - 1)
-    return _text(P(TEXT[_layer[key][2]]), x, y, text, font, size, color, align, track)
+    tp = TEXT[_layer[key][2]]; _font_page(tp)
+    return _text(P(tp), x, y, text, font, size, color, align, track)
 P.text = text_layer
 SILENT = [False]                                   # True면 글자는 쓰지 않고 폭만 계산(쪽 틀의 쪽번호 등)
 def _maybe(s, x, y, text, font, size, color, align='l', track=0):
@@ -460,7 +469,7 @@ if __name__ == '__main__':
         if which and not any(w in name for w in which): continue
         new, log = fn(src, res, f'{IND}/{name}', OUTD)
         out = f'{OUTD}/{name.replace(".pdf", "_03-01-14D.pdf")}'
-        new.save(out, garbage=4, deflate=True)
+        new.subset_fonts(); new.save(out, garbage=4, deflate=True)
         with open(out.replace('.pdf', '_목록.txt'), 'w') as fp:
             for n, desc in log: fp.write(f'{n:>2}쪽: {desc}\n')
         print(len(new), 'pages ->', out, flush=True)
