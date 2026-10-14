@@ -1,6 +1,14 @@
 # Squeeze 내지·표지 리디자인 시안
 
-## 리소스 PDF (`resources/`) ← 현재
+## 2027 리소스 6종 (`res27/`) ← 현재
+sq27_main·pro·sol·toc·ans·off_resources.pdf에 확정안 03-01-14 D를 그대로 입힘. 쪽 수·크기·순서는 원본과 같음.
+상단 탭·띠 → 상단 핀, 로고 → Squeeze/THedu, 탭 줄(Solving·Linking·Fact Check·Flow Point·빈출 선지) → 파형 D,
+풀이 칸 → Logic 라벨, MEMO → Cinzel 별색 라벨, 차례 → Contents + P3 선, Logic Check·회독 줄 → 새 모양.
+규격 안내 쪽은 안내선·치수·견본 본문을 두고 제목(Diphylleia)·번호(Barlow 별색)·출처(회색 글자)만 새 글꼴로.
+O·X·아이콘은 원본 그대로, 나머지 글자는 비움. 쪽마다 바꾼 내용은 `*_목록.txt`.
+다시 만들기: `python sq_res27.py <squeeze.pdf> <release_point_resources.pdf> <sq27 폴더> res27`
+
+## 리소스 PDF (`resources/`)
 확정안 03-01-14 D의 디자인 요소만 원본 리소스 PDF(release_point_resources)와 같은 쪽 크기·순서로 분리(53쪽).
 본문 글자는 모두 비우고, 디자인 라벨(Solving·Linking·MEMO·Logic·Contents·Logic Check)과 'Squeeze' 로고는 원본처럼 윤곽선.
 MEMO 쪽은 큰 'Memo' 제목을 빼고 선 위 라벨 'MEMO'를 Cinzel 별색으로, 풀이 칸(18~22쪽) 라벨은 '풀이' 대신 'Logic'(Cinzel 별색).
