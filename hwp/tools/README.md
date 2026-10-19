@@ -11,6 +11,14 @@ python3 bullpen_finish.py b.hwp inning_ref.hwp c.hwp     # 줄 폭을 INNING 폭
 python3 fit_inner_tables.py c.hwp out.hwp                # 상자 안 전폭 표를 상자 안쪽 폭에 정확히 맞춤
 ```
 
+측주가 있는 BULLPEN(21, 30)은 측주를 지우고 같은 양식으로 맞춘다:
+```sh
+python3 drop_note_marks.py in.hwp a.hwp                  # 본문 속 측주 번호(8pt 청록 굵은 숫자) 삭제
+python3 bullpen_layout.py a.hwp inning_ref.hwp b.hwp
+python3 bullpen_finish.py b.hwp inning_ref.hwp c.hwp --drop-notes   # 측주 단 문단(측주 포함) 삭제, 쪽 감추기 등 쪽 단위 컨트롤 문단은 유지
+python3 fit_inner_tables.py c.hwp out.hwp
+```
+
 확정 폰트 (hwp_fonts2.py RULES):
 | 층위 | 폰트 |
 |---|---|

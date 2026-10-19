@@ -15,10 +15,23 @@ for t, l, r in rs:
             v, = struct.unpack_from('<i', r, s + 28)
             if v > 20000: main_w = v; struct.pack_into('<i', r, s + 28, full)
 side = [i for i, (t, l, r) in enumerate(rs) if t == 69 and l == 1 and 0 < struct.unpack_from('<i', r, 28)[0] < 20000]
+drop_notes = '--drop-notes' in sys.argv
+KEEP_CTRLS = {b'pghd', b'pgnp', b'head', b'foot', b'nwno', b'atno', b'pgct'}   # page-level controls stay
 if side:
     start = side[0] - 2
-    assert rs[start][0] == 66 and rs[start][1] == 0 and not any(t == 67 for t, l, r in rs[start:])
-    del rs[start:]
+    assert rs[start][0] == 66 and rs[start][1] == 0
+    if not drop_notes: assert not any(t == 67 for t, l, r in rs[start:]), 'side column has text; pass --drop-notes'
+    paras = [k for k in range(start, len(rs)) if rs[k][0] == 66 and rs[k][1] == 0] + [len(rs)]
+    keep = []
+    for a, b2 in zip(paras, paras[1:]):
+        ctrls = {bytes(rs[k][2][:4][::-1]) for k in range(a, b2) if rs[k][0] == 71 and rs[k][1] == 1}
+        if ctrls & KEEP_CTRLS:
+            keep += rs[a:b2]
+            for k in range(a, b2):            # put the kept paragraph on the full-width line
+                if rs[k][0] == 69 and rs[k][1] == 1:
+                    for s in range(0, len(rs[k][2]), 36): struct.pack_into('<i', rs[k][2], s + 28, full)
+    del rs[start:]; rs += keep
+    print('kept page-control paragraphs:', sum(1 for t, l, r in keep if t == 66))
     last = max(i for i, (t, l, r) in enumerate(rs) if t == 66 and l == 0)
     n, = struct.unpack_from('<I', rs[last][2], 0); struct.pack_into('<I', rs[last][2], 0, n | 0x80000000)
 st, cl = read_all(src)
