@@ -6,6 +6,8 @@ sq27_main·pro·sol·toc·ans·off_resources.pdf에 확정안 03-01-14 D를 그�
 풀이 칸 → Logic 라벨, MEMO → Cinzel 별색 라벨, 차례 → Contents + P3 선, Logic Check·회독 줄 → 새 모양.
 규격 안내 쪽은 안내선·치수·견본 본문을 두고 제목(Diphylleia)·번호(Barlow 별색)·출처(회색 글자)만 새 글꼴로.
 O·X·아이콘은 원본 그대로, 나머지 글자는 비움. 쪽마다 바꾼 내용은 `*_목록.txt`.
+상단 핀은 머리 글자 자리(짝수 쪽 왼쪽·홀수 쪽 오른쪽, 바깥 여백부터 70mm)에서 같은 리듬을 3.6~7.1mm로 눌러 짧게 갔다가
+7mm에 걸쳐 다시 길어짐(`LABEL_W`·`EASE`로 조절). 확인 그림 `상단바_머리글자자리_확인.png`.
 다시 만들기: `python sq_res27.py <squeeze.pdf> <release_point_resources.pdf> <sq27 폴더> res27`
 
 ## 리소스 PDF (`resources/`)

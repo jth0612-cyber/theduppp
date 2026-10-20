@@ -19,6 +19,24 @@ from sq_full import head, p3_head, dots, page_memo, page_logic, draw_fins, PAL, 
 from sq6 import Noise
 from sq9 import mix_gray
 from sq8 import cap_height
+
+# ── 상단 핀: 좌수(짝수 쪽 왼쪽)·우수(홀수 쪽 오른쪽) 머리 글자 자리에서 잠시 짧아졌다가 다시 길어지게 ─────
+# 펼침면 좌표(짝수 0~262, 홀수 262~524). 글자 자리 = 바깥 여백(18mm)에서 LABEL_W까지.
+LABEL_W = 70.0           # 글자가 들어갈 폭(mm)
+EASE = 7.0               # 짧아지고 길어지는 전환 폭(mm)
+_hb = sq8.head_bottom_rand_half
+def _zone(X):
+    a0, a1 = 18 - 4, 18 + LABEL_W                       # 짝수 쪽 왼쪽
+    b0, b1 = 262 + 244 - LABEL_W, 262 + 244 + 4         # 홀수 쪽 오른쪽
+    za = sm(a0 - EASE, a0, X) * (1 - sm(a1, a1 + EASE, X))
+    zb = sm(b0 - EASE, b0, X) * (1 - sm(b1, b1 + EASE, X))
+    return np.maximum(za, zb)
+def head_bottom_label(X):
+    b = _hb(X)                                          # 원래 무작위 윤곽(7.9~15.6mm)
+    short = 3.6 + 0.45 * (b - 7.9)                      # 같은 리듬을 3.6~7.1mm로 눌러 글자 위를 비움
+    w = float(_zone(X))
+    return b * (1 - w) + short * w
+sq8.head_bottom_rand_half = head_bottom_label
 MM = 72 / 25.4
 CY = (0, 174, 239)
 BLUES = {CY, (0x40, 0x7F, 0xB8), (0x3F, 0x7F, 0xB7), (0xA3, 0xB9, 0xDB)}
