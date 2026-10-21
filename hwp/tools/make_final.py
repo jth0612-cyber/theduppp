@@ -105,7 +105,6 @@ pp = re.search(r'<hh:paraPr id="17".*?</hh:paraPr>', h, re.S).group(0)
 PP = max_id(h, 'paraPr') + 1
 pp = re.sub(r'id="17"', 'id="%d"' % PP, pp, 1).replace('horizontal="RIGHT"', 'horizontal="CENTER"')
 pp = re.sub(r'(<hc:right value=")\d+', r'\g<1>0', pp)
-h = add_item(h, 'paraPr', 'paraProperties', pp)
 files['Contents/header.xml'] = h.encode('utf-8')
 
 # ---------- 3. 본문 ----------
@@ -122,19 +121,28 @@ tb = tb.replace('<hp:t>   SI 단위계의 해석</hp:t>', '<hp:t>      SI 단위
 tb = re.sub(r'<hp:linesegarray>.*?</hp:linesegarray>', '', tb, flags=re.S)
 s = s[:t0] + tb + s[t1:]
 
-# 3-2 TAG: 짝수 번째(0부터)는 좌수, 홀수 번째는 우수
+# 3-2 TAG: 글자까지 그림(EMF)에 넣고, 칸을 왼쪽으로 늘린다 (오른쪽 끝 고정 → 좌수 세로선과 일치)
+#      짝수 번째(0부터) = 좌수, 홀수 번째 = 우수(좌우 대칭, 왼쪽 끝 = 세로선)
+TAG_W = 4200                     # 42pt
+EMF_W, EMF_H = 700, 190          # tag_L/R.emf 의 픽셀 크기 (emf_poly 해상도)
+ODD_OFFSET = 12466 - TAG_W       # 우수: (문단 오른쪽 541.14pt − 세로선 416.48pt)×100 − 칸 폭
 out, pos, k = [], 0, 0
 for m in re.finditer(r'<hp:tbl [^>]*>\s*<hp:sz width="3418"', s):
     st = m.start(); en = s.find('</hp:tbl>', st) + 9
     if '<hp:t>TAG</hp:t>' not in s[st:en]: continue
     seg = s[st:en]
-    seg = re.sub(r'(<hp:p [^>]*paraPrIDRef=")17"', r'\g<1>%d"' % PP, seg, 1)
+    seg = seg.replace('<hp:sz width="3418"', '<hp:sz width="%d"' % TAG_W, 1)
+    seg = seg.replace('<hp:cellSz width="3418"', '<hp:cellSz width="%d"' % TAG_W)
+    seg = seg.replace('<hp:orgSz width="3420"', '<hp:orgSz width="%d"' % TAG_W)
+    seg = seg.replace('<hp:sz width="3420"', '<hp:sz width="%d"' % TAG_W)
+    seg = seg.replace('centerX="1710"', 'centerX="%d"' % (TAG_W // 2))
+    seg = seg.replace('<hc:pt1 x="3420"', '<hc:pt1 x="%d"' % TAG_W).replace('<hc:pt2 x="3420"', '<hc:pt2 x="%d"' % TAG_W)
+    seg = re.sub(r'<hp:imgClip [^>]*/>', '<hp:imgClip left="0" right="%d" top="0" bottom="%d"/>' % ((EMF_W-1)*600, (EMF_H-1)*600), seg)
+    seg = seg.replace('<hp:t>TAG</hp:t>', '')
+    seg = re.sub(r'<hp:linesegarray>.*?</hp:linesegarray>', '', seg, flags=re.S)
     if k % 2 == 1:
         seg = seg.replace('binaryItemIDRef="image9"', 'binaryItemIDRef="image43"')
-        seg = re.sub(r'horzOffset="(\d+)"', lambda mm: 'horzOffset="%d"' % ((int(mm.group(1)) - 2**32 + ODD_SHIFT) % 2**32), seg, 1)
-        seg = re.sub(r'(<hp:cellMargin left=")0(" right=")0"', r'\g<1>0\g<2>450"', seg, 1)
-    else:
-        seg = re.sub(r'(<hp:cellMargin left=")0(" right=")0"', r'\g<1>450\g<2>0"', seg, 1)
+        seg = re.sub(r'horzOffset="\d+"', 'horzOffset="%d"' % ODD_OFFSET, seg, count=1)
     out.append(s[pos:st]); out.append(seg); pos = en; k += 1
 out.append(s[pos:]); s = ''.join(out)
 files['Contents/section0.xml'] = s.encode('utf-8')
