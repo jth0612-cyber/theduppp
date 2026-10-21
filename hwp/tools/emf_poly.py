@@ -3,8 +3,10 @@ shapes: [(hex색, [윤곽1, 윤곽2, ...]), ...]  윤곽 = [(x_mm, y_mm), ...], 
 한 도형 안의 여러 윤곽은 ALTERNATE 규칙으로 채워 글자 속 구멍(A, G)이 뚫린다."""
 import struct
 
-PX_PER_MM = 47.24          # 원본 틀 EMF와 같은 해상도 (약 1200dpi)
-DEV_PX, DEV_MM = 4724, 100
+# 원본 틀 EMF(이미지배경_TAG.emf)와 같은 기준 장치 — 한글은 108바이트 머리의 szlMicrometers까지 읽으므로
+# 머리를 짧게 쓰면 그림이 약 1.1배로 커져 잘린다
+DEV_PX, DEV_MM = (10205, 13181), (216, 279)
+PX_PER_MM = DEV_PX[0] / DEV_MM[0]
 
 
 def _rec(t, payload):
@@ -34,11 +36,13 @@ def write(path, w_mm, h_mm, shapes):
         body.append(_rec(40, struct.pack('<I', 2)))                         # DELETEOBJECT
     body.append(_rec(14, struct.pack('<III', 0, 16, 20)))                   # EOF
     recs = b''.join(body)
-    hdr = struct.pack('<II', 1, 88) + struct.pack('<4i4iIIIIHHIIIiiii',
-                                                  0, 0, W - 1, H - 1,
-                                                  0, 0, int(w_mm * 100) - 1, int(h_mm * 100) - 1,
-                                                  0x464D4520, 0x10000, 88 + len(recs), len(body) + 1, 3, 0, 0, 0, 0,
-                                                  DEV_PX, DEV_PX, DEV_MM, DEV_MM)
+    hdr = struct.pack('<II', 1, 108) + struct.pack('<4i4iIIIIHHIIIiiiiIIIii',
+                                                   0, 0, W - 1, H - 1,
+                                                   0, 0, int(round(w_mm * 100)) - 1, int(round(h_mm * 100)) - 1,
+                                                   0x464D4520, 0x10000, 108 + len(recs), len(body) + 1, 3, 0, 0, 0, 0,
+                                                   DEV_PX[0], DEV_PX[1], DEV_MM[0], DEV_MM[1],
+                                                   0, 0, 0, DEV_MM[0] * 1000, DEV_MM[1] * 1000)
+    assert len(hdr) == 108
     open(path, 'wb').write(hdr + recs)
     return W, H
 
