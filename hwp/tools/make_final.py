@@ -65,6 +65,8 @@ for name in list(files):
 
 h = files['Contents/header.xml'].decode('utf-8')
 h = h.replace('#' + OLD, '#' + NEW)
+HL_OLD, HL_NEW = 'F2D3B3', 'DDD1E8'   # 형광펜: 피치 → 스모키 라일락(단색)
+h = h.replace('shadeColor="#%s"' % HL_OLD, 'shadeColor="#%s"' % HL_NEW)
 
 # ---------- 2. 새 그림 (TAG 오른쪽 리본, 띠) ----------
 files['BinData/image9.emf'] = open(ART + '/tag_L.emf', 'rb').read()
