@@ -111,17 +111,21 @@ files['Contents/header.xml'] = h.encode('utf-8')
 
 # ---------- 3. 본문 ----------
 s = files['Contents/section0.xml'].decode('utf-8')
-# 3-1 중단원 띠
-i = s.find('   SI 단위계의 해석')
-t0 = s.rfind('<hp:tbl ', 0, i); t1 = s.find('</hp:tbl>', i) + 9
-tb = s[t0:t1]
-tb = re.sub(r'(<hp:tc [^>]*borderFillIDRef=")9"', r'\g<1>%d"' % BF, tb, 1)
-tb = tb.replace('<hp:run charPrIDRef="13">', '<hp:run charPrIDRef="%d">' % CP_NUM)
-tb = tb.replace('<hp:run charPrIDRef="12">', '<hp:run charPrIDRef="%d">' % CP_NUM)
-tb = tb.replace('<hp:run charPrIDRef="11">', '<hp:run charPrIDRef="%d">' % CP_TITLE)
-tb = tb.replace('<hp:t>   SI 단위계의 해석</hp:t>', '<hp:t>      SI 단위계의 해석</hp:t>')
-tb = re.sub(r'<hp:linesegarray>.*?</hp:linesegarray>', '', tb, flags=re.S)
-s = s[:t0] + tb + s[t1:]
+# 3-1 중단원 띠: 문서 안의 모든 띠(칸 배경 9번)를 B-4로
+nbar, pos, out = 0, 0, []
+for m in re.finditer(r'<hp:tc [^>]*borderFillIDRef="9"', s):
+    t0 = s.rfind('<hp:tbl ', 0, m.start()); t1 = s.find('</hp:tbl>', m.start()) + 9
+    if t0 < pos: continue
+    tb = s[t0:t1]
+    tb = re.sub(r'(<hp:tc [^>]*borderFillIDRef=")9"', r'\g<1>%d"' % BF, tb, count=1)
+    tb = tb.replace('<hp:run charPrIDRef="13">', '<hp:run charPrIDRef="%d">' % CP_NUM)
+    tb = tb.replace('<hp:run charPrIDRef="12">', '<hp:run charPrIDRef="%d">' % CP_NUM)
+    tb = tb.replace('<hp:run charPrIDRef="11">', '<hp:run charPrIDRef="%d">' % CP_TITLE)
+    tb = re.sub(r'(<hp:run charPrIDRef="%d"><hp:t>)   (?! )' % CP_TITLE, r'\g<1>      ', tb)
+    tb = re.sub(r'<hp:linesegarray>.*?</hp:linesegarray>', '', tb, flags=re.S)
+    out.append(s[pos:t0]); out.append(tb); pos = t1; nbar += 1
+out.append(s[pos:]); s = ''.join(out)
+assert 'borderFillIDRef="9"' not in s
 
 # 3-2 TAG: 글자까지 그림(EMF)에 넣고, 칸을 왼쪽으로 늘린다 (오른쪽 끝 고정 → 좌수 세로선과 일치)
 #      짝수 번째(0부터) = 좌수, 홀수 번째 = 우수(좌우 대칭, 왼쪽 끝 = 세로선)
@@ -156,4 +160,4 @@ for n in order:
     ct = zipfile.ZIP_STORED if n == 'mimetype' else zipfile.ZIP_DEFLATED
     zo.writestr(zipfile.ZipInfo(n, date_time=(2026, 10, 21, 12, 0, 0)) if n not in infos else infos[n], files[n], compress_type=ct)
 zo.close()
-print('TAG', k, 'BF', BF, 'CP', CP_NUM, CP_TITLE, 'PP', PP, 'recolored', len(changed), changed)
+print('BAR', nbar, 'TAG', k, 'BF', BF, 'CP', CP_NUM, CP_TITLE, 'PP', PP, 'recolored', len(changed), changed)
