@@ -264,13 +264,15 @@ if PAPERS:
 else:
     variants = [(v[0], v[1], v[2], None) for v in variants]
 for name, tf, bf, pp in variants:
-    d = fitz.open(SRC); d.select([5, 6, 7])
+    d = fitz.open(SRC)
+    if not os.environ.get("ALL_PAGES"): d.select([5, 6, 7])
     if pp:
         PAPER = C(pp); repaper(d, PAPER)
     else:
         PAPER = OLD_PAPER
     apply(d, tf, bf)
-    for p in d: label(p, name)
+    if not os.environ.get("NO_LABEL"):
+        for p in d: label(p, name)
     book.insert_pdf(d)
     pix = d[0].get_pixmap(dpi=300, clip=fitz.Rect(140, 150, 545, 260))
     crops.append((name, pix))
