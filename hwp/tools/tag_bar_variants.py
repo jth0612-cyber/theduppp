@@ -179,7 +179,12 @@ def label(pg, s):
 # 결과 1: 시안별 6~8쪽을 이어 붙인 PDF, 결과 2: 6쪽 확대 PNG
 os.makedirs(OUT, exist_ok=True)
 book = fitz.open(); crops = []
-variants = [(n, f, None) for n, f in TAGS] + [(n, None, f) for n, f in BARS]
+FIX = os.environ.get('FIXED_TAG')   # 예: FIXED_TAG=C → TAG를 C로 고정하고 막대 시안만
+if FIX:
+    ft = dict(A=tag_A, B=tag_B, C=tag_C, D=tag_D, E=tag_E)[FIX]
+    variants = [('현재 막대 + TAG ' + FIX, ft, None)] + [(n + ' + TAG ' + FIX, ft, f) for n, f in BARS]
+else:
+    variants = [(n, f, None) for n, f in TAGS] + [(n, None, f) for n, f in BARS]
 for name, tf, bf in variants:
     d = fitz.open(SRC); d.select([5, 6, 7])
     apply(d, tf, bf)
