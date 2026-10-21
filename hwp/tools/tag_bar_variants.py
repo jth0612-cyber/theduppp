@@ -81,8 +81,13 @@ def tag_B(pg, R, T, H):   # 원목 명판
         sh = pg.new_shape(); sh.draw_circle((cx, T+H/2), 0.8); sh.finish(fill=INK); sh.commit()
     text(pg, r.x0, mid(T, H, 7.2), 'TAG', 'pblack', 7.2, INK, 'center', r.width, spacing=0.7)
 
-def tag_C(pg, R, T, H):   # 제비꼬리 리본
+def tag_C(pg, R, T, H, mirror=False):   # 제비꼬리 리본 (mirror: 우수, R 대신 왼쪽 끝 L)
     W = 34
+    if mirror:
+        L = R
+        poly(pg, [(L, T), (L+W, T), (L+W-4.5, T+H/2), (L+W, T+H), (L, T+H)], ACC)
+        text(pg, L, mid(T, H, 8), 'TAG', 'pbold', 8, WHITE, 'center', W-3, spacing=0.6)
+        return
     poly(pg, [(R-W, T), (R, T), (R, T+H), (R-W, T+H), (R-W+4.5, T+H/2)], ACC)
     text(pg, R-W+3, mid(T, H, 8), 'TAG', 'pbold', 8, WHITE, 'center', W-3, spacing=0.6)
 
@@ -144,6 +149,40 @@ def bar_E(pg, X0, Y0, X1, Y1):   # 큰 외곽선 숫자
     w = text(pg, X0+2, Y1+1.5, NUM, 'pblack', 34, PAPER, render=1, stroke=ACC, width=0.03)
     text(pg, X0+2+w+8, Y1-8, TITLE, 'gangwon', 13, INK)
 
+import io
+from PIL import Image, ImageDraw
+def tex_poly(pg, pts, fill, overlay=None, alpha=0.0, scale=8):
+    # 나뭇결(사진) 또는 단색으로 다각형을 채운다. 사진은 다각형 모양으로 오려서 넣는다.
+    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+    box = fitz.Rect(min(xs), min(ys), max(xs), max(ys))
+    if fill != 'wood':
+        poly(pg, pts, fill); return
+    W, H = max(1, int(box.width*scale)), max(1, int(box.height*scale))
+    im = Image.open(WOOD).convert('RGB').resize((W, H))
+    if overlay:
+        ov = Image.new('RGB', (W, H), tuple(int(c*255) for c in overlay)); im = Image.blend(im, ov, alpha)
+    m = Image.new('L', (W, H), 0); ImageDraw.Draw(m).polygon([((x-box.x0)*scale, (y-box.y0)*scale) for x, y in pts], fill=255)
+    im.putalpha(m); b = io.BytesIO(); im.save(b, 'PNG'); pg.insert_image(box, stream=b.getvalue())
+
+def make_bar_B(block, body, num_c, title_c, seam=PAPER, bottom=None, ov_block=(None, 0), ov_body=(None, 0)):
+    def f(pg, X0, Y0, X1, Y1):
+        H = Y1 - Y0; W = 36; d = 6
+        tex_poly(pg, [(X0+W-d, Y0), (X1, Y0), (X1, Y1), (X0+W-d, Y1), (X0+W, Y0+H/2)], body, *ov_body)
+        if seam is not None:
+            poly(pg, [(X0+W-d-1.2, Y0), (X0+W-d, Y0), (X0+W, Y0+H/2), (X0+W-d, Y1), (X0+W-d-1.2, Y1), (X0+W-1.2, Y0+H/2)], seam)
+        tex_poly(pg, [(X0, Y0), (X0+W-d-1.2, Y0), (X0+W-1.2, Y0+H/2), (X0+W-d-1.2, Y1), (X0, Y1)], block, *ov_block)
+        if bottom: line(pg, (X0, Y1), (X1, Y1), bottom, 1.0)
+        text(pg, X0+4, mid(Y0, H, 16), NUM, 'pblack', 16, num_c, 'center', W-12)
+        text(pg, X0+W+8, mid(Y0, H, 12), TITLE, 'gangwon', 12, title_c)
+    return f
+
+BARS_B = [('막대 B · 기본 (주황 + 진갈)', make_bar_B(ACC, BAR, WHITE, WHITE)),
+          ('B-1 · 주황 + 원목결', make_bar_B(ACC, 'wood', WHITE, INK, bottom=INK)),
+          ('B-2 · 원목 + 월넛(아주 진한 갈색)', make_bar_B('wood', C('2E1C16'), INK, C('F3E2CC'))),
+          ('B-3 · 진갈 + 탄색 (밝은 바탕)', make_bar_B(BAR, TAN, C('F3D9BE'), INK)),
+          ('B-4 · 톤온톤 크림 + 갈색 밑줄', make_bar_B(ACC, C('EFDFCB'), WHITE, INK, seam=PAPER, bottom=BAR)),
+          ('B-5 · 짙은 원목 + 원목 (나뭇결 두 톤)', make_bar_B('wood', 'wood', C('F3E2CC'), INK, bottom=INK, ov_block=(INK, 0.62)))]
+
 BARS = [('막대 A · 줄자', bar_A), ('막대 B · 주먹장 결합', bar_B), ('막대 C · 명조 제목 + 이중선', bar_C),
         ('막대 D · 원목 슬랫', bar_D), ('막대 E · 큰 외곽선 숫자', bar_E)]
 
@@ -163,7 +202,11 @@ def apply(doc, tagfn=None, barfn=None):
                 pg.add_redact_annot(r, fill=PAPER)
                 pg.apply_redactions(images=0, graphics=1, text=0)
                 rect(pg, fitz.Rect(r.x0-0.2, r.y0-0.2, r.x1-0.25, r.y1+0.2), PAPER)
-                tagfn(pg, r.x1, r.y0, r.height)
+                rule = [d['rect'].x0 for d in pg.get_drawings() if d['rect'].width < 1 and d['rect'].height > 600]
+                if rule and r.x0 > rule[0] and tagfn is tag_C:   # 우수: 세로선 오른쪽에 붙여 대칭
+                    tagfn(pg, rule[0], r.y0, r.height, mirror=True)
+                else:
+                    tagfn(pg, r.x1, r.y0, r.height)
         if barfn:
             for dr in pg.get_drawings():
                 r = dr['rect']; f = dr.get('fill')
@@ -179,10 +222,11 @@ def label(pg, s):
 # 결과 1: 시안별 6~8쪽을 이어 붙인 PDF, 결과 2: 6쪽 확대 PNG
 os.makedirs(OUT, exist_ok=True)
 book = fitz.open(); crops = []
-FIX = os.environ.get('FIXED_TAG')   # 예: FIXED_TAG=C → TAG를 C로 고정하고 막대 시안만
+FIX = os.environ.get('FIXED_TAG')
+BSET = os.environ.get('BAR_SET') == 'B'   # 예: FIXED_TAG=C → TAG를 C로 고정하고 막대 시안만
 if FIX:
     ft = dict(A=tag_A, B=tag_B, C=tag_C, D=tag_D, E=tag_E)[FIX]
-    variants = [('현재 막대 + TAG ' + FIX, ft, None)] + [(n + ' + TAG ' + FIX, ft, f) for n, f in BARS]
+    variants = ([] if BSET else [('현재 막대 + TAG ' + FIX, ft, None)]) + [(n + ' + TAG ' + FIX, ft, f) for n, f in (BARS_B if BSET else BARS)]
 else:
     variants = [(n, f, None) for n, f in TAGS] + [(n, None, f) for n, f in BARS]
 for name, tf, bf in variants:
