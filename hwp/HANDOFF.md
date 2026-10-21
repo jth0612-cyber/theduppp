@@ -98,3 +98,19 @@ python3 tools/fix_hwpx.py in.hwpx out.hwpx   # lxml 필요
 - 공유 링크 (2026-10-21 기준)
   - `v9aQVILEy` = "Logic Build": 파일 1413개, 약 5.0GB. 루트에 `Line up_단위변환_A/B안.hwpx`, `한글마스터.hwpx` 등이 있고, 하위 폴더는 `_생성스크립트/`, `단위변환_필기노트_시안/`이다.
   - `YpF9E7rp6` = "_생성스크립트": 파일 119개, 약 66MB. 파이썬 생성 스크립트(`build.py`, `unit_*.py` 등)와 `tpl/`, `ofl_static/`(폰트)이 들어 있다.
+
+## 9. 산화환원·효소 단원 (LOGIC BUILD 1)
+- 결과는 `hwp/final/산화환원_필기노트_LOGIC BUILD 1.hwpx`(28쪽), `hwp/final/효소_필기노트_LOGIC BUILD 1.hwpx`(57쪽)이다. 보고서는 `hwp/final/작업보고_산화환원·효소.md`.
+- 원고 스크립트: `hwp/gen/unit_redox.py`, `hwp/gen/unit_enzyme.py`.
+  - 단위변환의 `unit_B4.py`와 같은 방식이다(원문 보존 + 반말, 마크업 같음).
+  - 원고 그림은 `hwp/gen/img/`에 있다. 원고 덤프 도구는 `hwp/gen/extract.py`.
+- 생성기 확장: `hwp/gen/lb.py`.
+  - 크기를 지정한 수식 `⟦script|w|h⟧`, 인라인 그림 `⟪path|w|h⟫`, 아래첨자 `_{ }`를 지원한다.
+  - 블록: 가운데 줄, 그림 줄, Mini 예제(그림·표 포함), Arranged KICE.
+  - **자동 쪽 나누기**: 17-27안에서 잰 줄 간격으로 높이를 어림한다. 어림값은 실제보다 약 10% 크다.
+- 사용자 생성기 경로는 기본으로 NAS 받은 사본(`nas/Logic Build/_생성스크립트`)을 쓴다. 환경 변수 `LB_GEN`으로 바꿀 수 있다.
+- `make_final.py`를 일반화했다.
+  - 모든 중단원 띠를 B-4로 바꾼다.
+  - 새 그림 번호는 빈 번호를 자동으로 고른다.
+  - 원고 그림(image40~)의 바탕색은 바꾸지 않는다.
+- 미확인: 한글에서의 실제 쪽 넘침, 날개 주석 높이 정렬(make_aligned 미적용).

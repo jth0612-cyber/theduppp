@@ -1,0 +1,371 @@
+"""LOGIC BUILD 단원 원고용 확장 — 사용자의 생성기(_생성스크립트/build.py) 위에 얹어 쓴다.
+
+추가하는 것
+- 인라인 마크업: ⟦수식|폭|높이⟧(크기 지정 수식), ⟪그림경로|폭|높이⟫(글자처럼 넣는 작은 그림), _{아래첨자}
+- 블록: center(가운데 줄), figure(가운데 그림 줄), mini(그림·표가 들어가는 Mini 예제), kice(Arranged KICE)
+- 자동 쪽 나누기: 블록마다 높이를 어림해서 한 쪽(본문 단·날개 단)이 넘치지 않게 pages 목록을 만든다.
+  (한글 렌더러가 없어 실제 높이를 잴 수 없으므로, 17-27안 미리보기에서 잰 값으로 넉넉하게 어림한다)
+"""
+import os, re, sys, math
+
+GEN = os.environ.get('LB_GEN', '/home/user/theduppp/nas/Logic Build/_생성스크립트')
+sys.path.insert(0, GEN)
+from unit_common import *            # noqa: F401,F403  (build의 블록 함수들)
+from styles_more import theme as _theme, point as _point
+import build as B
+from PIL import Image
+
+HP = B.NS
+HC = '{http://www.hancom.co.kr/hwpml/2011/core}'
+COL_W = 31000          # 본문 단에 넣는 그림의 최대 폭 (HWPUNIT, 본문 단 32570)
+
+# ---------------------------------------------------------------- 글자 모양: 아래첨자 지원
+_orig_cpr_xml = B.cpr_xml
+
+
+def _cpr_xml(h):
+    out = _orig_cpr_xml(h)
+    for (base, mods), i in B.NEWCPR.items():
+        if dict(mods).get('sub'):
+            out = re.sub(r'(<hh:charPr id="%s".*?)</hh:charPr>' % i,
+                         lambda m: m.group(1) + ('<hh:subscript/>' if '<hh:subscript/>' not in m.group(1) else '') + '</hh:charPr>',
+                         out, count=1, flags=re.S)
+    return out
+
+
+B.cpr_xml = _cpr_xml
+
+
+# ---------------------------------------------------------------- 인라인
+def eq_sized(script, w=None, h=None, unit='1100'):
+    e = B.eq(script, unit)
+    sz = e.find(HP + 'sz')
+    if w: sz.set('width', str(w))
+    if h: sz.set('height', str(h))
+    return e
+
+
+def img_size(path):
+    if path.lower().endswith('.emf'):
+        return None
+    return Image.open(path).size
+
+
+def pic_elem(path, w, h):
+    iid = B.add_image(path)
+    return B.pic(iid, int(w), int(h))
+
+
+TOK = re.compile(r'(\^\{[^}]*\}|_\{[^}]*\}|⟦[^⟧]*⟧|⟪[^⟫]*⟫)')
+
+
+def _inline(text, cpr):
+    out = []
+    for sp in TOK.split(text):
+        if not sp:
+            continue
+        if sp.startswith('^{') or sp.startswith('_{'):
+            c = B.cp(cpr, sup=True) if sp[0] == '^' else B.cp(cpr, sub=True)
+            r = B.E('run', charPrIDRef=c); t = B.E('t'); t.text = sp[2:-1]; r.append(t); out.append(r)
+            continue
+        r = B.E('run', charPrIDRef=cpr)
+        if sp.startswith('⟦'):
+            sc, *wh = sp[1:-1].split('|')
+            r.append(eq_sized(sc, *(int(x) for x in wh)))
+        elif sp.startswith('⟪'):
+            path, w, h = sp[1:-1].split('|')
+            r.append(pic_elem(path, w, h)); r.append(B.E('t'))
+        else:
+            t = B.E('t'); t.text = sp; r.append(t)
+        out.append(r)
+    return out
+
+
+B.inline = _inline
+
+
+# ---------------------------------------------------------------- 높이 어림 (pt)
+def ems(s):
+    """한 줄 폭을 '글자 너비(em)'로 어림. 수식·그림은 지정 폭으로."""
+    total = 0.0
+    for tok in TOK.split(re.sub(r'«[^»]*»|==|\*\*|~~', '', s)):
+        if not tok:
+            continue
+        if tok.startswith('⟦') or tok.startswith('⟪'):
+            parts = tok[1:-1].split('|')
+            total += (int(parts[1]) / 100 / 11 if len(parts) > 1 else 3)
+            continue
+        if tok[0] in '^_':
+            total += 0.6 * len(tok[2:-1]); continue
+        for ch in tok:
+            o = ord(ch)
+            if 0xAC00 <= o <= 0xD7A3 or 0x3131 <= o <= 0x318E or ch in '㉠㉡㉢㉣①②③④⑤ⅠⅡⅢ':
+                total += 1.0
+            elif ch == ' ':
+                total += 0.32
+            elif ch in '.,:;\'"‘’“”()[]·':
+                total += 0.4
+            else:
+                total += 0.6
+    return total
+
+
+def nlines(s, per_line):
+    return max(1, math.ceil(ems(s) / per_line))
+
+
+def notes_of(s):
+    return re.findall(r'«([^»]*)»', s)
+
+
+class Block:
+    def __init__(self, make, h, notes=(), brk=False, keep_next=False):
+        self.make, self.h, self.notes, self.brk, self.keep_next = make, h, list(notes), brk, keep_next
+
+
+def _b(make, h, *texts, **kw):
+    ns = [n for t in texts for n in notes_of(t)]
+    return Block(make, h, ns, **kw)
+
+
+# ---------------------------------------------------------------- 블록 (높이와 함께)
+LINE_NOTE, PER_NOTE = 18.5, 27      # 손글씨 본문 줄 간격, 한 줄 em
+LINE_BOX, PER_BOX = 16.8, 28.5      # 풀이 상자
+LINE_Q, PER_Q = 13.6, 38            # 문제(8pt)
+LINE_CF, PER_CF = 17.6, 26          # Intro·예)·한 줄 정리 상자
+
+
+def note(s): return _b(lambda: B.note(s), LINE_NOTE * nlines('→ ' + s, PER_NOTE) + 1, s)
+def sub(s): return _b(lambda: B.sub(s), LINE_NOTE * nlines('     - ' + s, PER_NOTE) + 1, s)
+def plain(s): return _b(lambda: B.ex(s), LINE_NOTE * nlines(s, PER_NOTE) + 1, s)
+def tip(s): return _b(lambda: B.tip(s), LINE_NOTE * nlines('TIP ' + s, PER_NOTE - 2) + 4, s)
+def cf(s, label='cf.'): return _b(lambda: B.cf(s, label), LINE_CF * nlines(label + ' ' + s, PER_CF) + 24, s)
+def blank(): return Block(B.blank, 18)
+def theme(n, title): return Block(lambda: _theme(n, title), 40, keep_next=True)
+def point(n, title): return Block(lambda: _point(n, title), 24 + 18.5 * (nlines(title, 25) - 1), keep_next=True)
+def bar(num, title): return Block(lambda: B.bar(num, title), 44, brk=True, keep_next=True)
+
+
+def center(markup):
+    """가운데 정렬 한 줄 (반응식·핵심 식)"""
+    def make():
+        p = B.clone(B.P[93]); p.set('paraPrIDRef', '1')
+        return B.set_text(p, markup, cpr=B.BODY())
+    return _b(make, LINE_NOTE * nlines(markup, PER_NOTE) + 8, markup)
+
+
+def key(s, label='핵심'):
+    """핵심 문장 상자 (원고의 굵은 글씨 상자)"""
+    return cf(s, label)
+
+
+def fit(items, max_w=COL_W, gap=600):
+    """[(경로, 폭, 높이)] → 한 줄에 들어가도록 같은 비율로 줄인 크기"""
+    tot = sum(w for _, w, _ in items) + gap * (len(items) - 1)
+    k = min(1.0, max_w / tot)
+    return [(p, int(w * k), int(h * k)) for p, w, h in items], k
+
+
+def figure_para(items, max_w=COL_W):
+    items, _ = fit(items, max_w)
+    p = B.clone(B.P[1]); p.set('paraPrIDRef', '1')
+    for r in p.findall(HP + 'run'):
+        p.remove(r)
+    for i, (path, w, h) in enumerate(items):
+        if i:
+            r = B.E('run', charPrIDRef='0'); t = B.E('t'); t.text = '   '; r.append(t); p.append(r)
+        r = B.E('run', charPrIDRef='0'); r.append(pic_elem(path, w, h)); r.append(B.E('t')); p.append(r)
+    return p
+
+
+def figure_h(items, max_w=COL_W):
+    items, _ = fit(items, max_w)
+    return max(h for _, _, h in items) / 100 + 14
+
+
+def figure(*items, max_w=COL_W):
+    """items: (경로, 폭, 높이) — 원고에 놓인 크기(HWPUNIT). 넓으면 본문 폭에 맞춰 줄인다."""
+    return Block(lambda: figure_para(list(items), max_w), figure_h(list(items), max_w))
+
+
+def table(rows, widths=None):
+    hs = []
+    for ri, row in enumerate(rows):
+        ws = widths or [1] * len(row)
+        tot = sum(ws)
+        hs.append(max(nlines(c, max(4, 46 * w / tot)) for c, w in zip(row, ws)))
+    h = sum(14 + 11 * (n - 1) for n in hs) + 30
+    ns = [n for row in rows for c in row for n in notes_of(c)]
+    return Block(lambda: B.table(rows, widths), h, ns)
+
+
+# ---------------------------------------------------------------- Mini 예제 / Arranged KICE
+def _qpara(s):
+    return B.question(s)
+
+
+def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL_W):
+    """q: 발문(문자열 또는 줄 목록), figs: 그림 줄 목록 [ [(경로,w,h),...], ... ], q_after: 그림 뒤 발문 줄,
+    tables: 발문 사이에 넣을 표 [(rows, widths)], sol: 풀이 줄, ans: 정답(None이면 생략)"""
+    qs = [q] if isinstance(q, str) else list(q)
+    qa = list(q_after)
+    blocks = []
+    h_head = 18 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
+    makes = [lambda: B.small_bar(f'Mini 예제 {n}')] + [(lambda x=x: _qpara(x)) for x in qs]
+    blocks.append(Block(lambda ms=makes: [m() for m in ms], h_head, [m for x in qs for m in notes_of(x)], keep_next=True))
+    for f in figs:
+        blocks.append(Block(lambda f=f: figure_para(f, fig_w), figure_h(f, fig_w), keep_next=True))
+    for rows, widths in tables:
+        tb = table(rows, widths); tb.keep_next = True; blocks.append(tb)
+    if qa:
+        blocks.append(Block(lambda: [_qpara(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
+                            [m for x in qa for m in notes_of(x)], keep_next=True))
+    h_sol = 26 + sum(LINE_BOX * nlines(x, PER_BOX) for x in sol) + 10
+    blocks.append(Block(lambda: B.box(f'{pt} 풀이', sol), h_sol, [m for x in sol for m in notes_of(x)], keep_next=ans is not None))
+    if ans is not None:
+        blocks.append(Block(lambda: B.answer(ans), 26))
+    blocks.append(Block(B.blank, 22))
+    return blocks
+
+
+def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=29000, label='Arranged KICE'):
+    """원고의 Arranged KICE 표: 다시 묶은 질문 → 기출 문항 그림 → 핵심 로직 → 적용 풀이 → 정답"""
+    blocks = []
+    h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
+    blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head,
+                        [m for x in qs for m in notes_of(x)], keep_next=True))
+    blocks.append(Block(lambda: figure_para([fig], fig_w), figure_h([fig], fig_w)))
+    if logic:
+        blocks.append(Block(lambda: B.box('핵심 로직', [logic]), 26 + LINE_BOX * nlines(logic, PER_BOX) + 10, keep_next=True))
+    h_sol = 26 + sum(LINE_BOX * nlines(x, PER_BOX) for x in sol) + 10
+    blocks.append(Block(lambda: B.box('적용 풀이', sol), h_sol, [m for x in sol for m in notes_of(x)], keep_next=ans is not None))
+    if ans:
+        blocks.append(Block(lambda: B.answer(ans), 26))
+    blocks.append(Block(B.blank, 22))
+    return blocks
+
+
+# ---------------------------------------------------------------- 쪽 나누기
+CAP_FIRST, CAP = 548.0, 672.0       # 본문 단 높이 (첫 쪽은 단원 머리 아래부터)
+SIDE_CAP = 600.0                     # 날개 단 높이 (TAG 아래)
+SIDE_PER, SIDE_LINE = 10.5, 15.0     # 날개 주석 한 줄 em, 줄 간격
+
+
+def note_h(s):
+    return SIDE_LINE * max(1, math.ceil(ems(s) / SIDE_PER)) + 18
+
+
+def paginate(blocks, report=None):
+    flat = []
+    for b in blocks:
+        if isinstance(b, (list, tuple)):
+            flat += list(b)
+        else:
+            flat.append(b)
+    pages, cur, used, side, info = [], [], 0.0, 0.0, []
+
+    def close():
+        nonlocal cur, used, side
+        while cur and cur[-1].make is B.blank:
+            used -= cur.pop().h
+        if cur:
+            pages.append(cur); info.append((used, side))
+        cur, used, side = [], 0.0, 0.0
+
+    i = 0
+    while i < len(flat):
+        b = flat[i]
+        cap = CAP_FIRST if not pages else CAP
+        if b.brk and cur:
+            close(); cap = CAP
+        # 함께 붙어 있어야 하는 묶음(keep_next)의 높이
+        j, grp = i, [b]
+        while flat[j].keep_next and j + 1 < len(flat):
+            j += 1; grp.append(flat[j])
+        gh = sum(x.h for x in grp)
+        gs = sum(note_h(n) for x in grp for n in x.notes)
+        if cur and (used + gh > cap or side + gs > SIDE_CAP):
+            close(); cap = CAP
+        if not cur and b.make is B.blank:
+            i += 1; continue
+        for x in grp:
+            cur.append(x); used += x.h; side += sum(note_h(n) for n in x.notes)
+        i = j + 1
+    close()
+    # 짧은 꼬리 쪽(다음이 강제 쪽 나눔이거나 끝)은 앞 쪽에 붙인다 — 높이 어림이 넉넉하므로 6%까지 허용
+    i = 1
+    while i < len(pages):
+        u, s_ = info[i]
+        nxt_brk = i + 1 >= len(pages) or pages[i + 1][0].brk
+        if u < 130 and nxt_brk and not pages[i][0].brk and info[i - 1][0] + u <= CAP * 1.06 and info[i - 1][1] + s_ <= SIDE_CAP:
+            pages[i - 1] += pages[i]; info[i - 1] = (info[i - 1][0] + u, info[i - 1][1] + s_)
+            del pages[i]; del info[i]
+            continue
+        i += 1
+    if report is not None:
+        report.extend(info)
+    out = []
+    for pg in pages:
+        ms = []
+        for x in pg:
+            ms.append(x.make)
+        out.append(ms)
+    return out
+
+
+def flatten_pages(pages):
+    """Block.make가 문단 목록을 돌려줄 수 있으므로, build()가 받을 수 있게 하나씩 편다."""
+    res = []
+    for ms in pages:
+        page = []
+        for m in ms:
+            page.append(m)
+        res.append(page)
+    return res
+
+
+def build(head_p, pages):
+    """build.build와 같되, 블록이 문단 목록을 돌려줘도 되게 한다 (날개 주석은 쪽마다 모은다)."""
+    body = []
+    for k, blocks in enumerate(pages):
+        B.NOTES.clear()
+        ps = []
+        for b in blocks:
+            v = b() if callable(b) else b
+            ps += v if isinstance(v, list) else [v]
+        if k == 0:
+            ps = [head_p] + ps
+        else:
+            first = ps[0]
+            first.set('pageBreak', '1')
+            r0 = first.find(HP + 'run')
+            if r0 is None:
+                r0 = B.E('run', charPrIDRef='0'); first.insert(0, r0)
+            if k == 1:
+                for c in B.HDR2:
+                    c = B.clone(c); ts = list(c.iter(HP + 't'))
+                    ts[0].text, ts[1].text = B.HEADINFO['no'], ' ' + B.HEADINFO['title']
+                    r0.insert(0, c)
+            ln = B.clone(B.LINE)
+            ln.find(HP + 'pos').set('horzAlign', 'RIGHT' if k % 2 else 'LEFT')
+            r0.insert(0, ln)
+            if k == 2 and B.STYLE.get('odd_body'):   # build.build와 같은 처리 (본문 홀수쪽 머리말 그림)
+                path, size, pos = B.STYLE['odd_body']
+                iid = B.add_image(path)
+                B.STYLE['pic_size'] = dict(B.STYLE.get('pic_size', {}), **{iid: size})
+                B.STYLE['pic_pos'] = dict(B.STYLE.get('pic_pos', {}), **{iid: pos})
+                for c in head_p.iter(HP + 'ctrl'):
+                    h = c.find(HP + 'header')
+                    if h is not None and h.get('applyPageType') == 'ODD':
+                        c2 = B.clone(c); c2.find(HP + 'header').set('id', '12')
+                        for im in c2.iter(HC + 'img'):
+                            im.set('binaryItemIDRef', iid)
+                        r0.insert(0, c2)
+        body += ps
+        tag = B.clone(B.TAGP); tag.set('columnBreak', '1')
+        body.append(tag)
+        for n, s in B.NOTES:
+            body.append(B.side_note(n, s))
+            if not B.ALIGN[0]:
+                body.append(B.blank())
+    return body

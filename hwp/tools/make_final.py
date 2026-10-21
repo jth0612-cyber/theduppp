@@ -48,7 +48,7 @@ for name in list(files):
     ext = name.rsplit('.', 1)[-1].lower()
     if ext == 'emf':
         nb = recolor_emf(files[name])
-    elif ext in ('png', 'jpg', 'bmp'):
+    elif ext in ('png', 'jpg', 'bmp') and int(re.sub(r'\D', '', name) or 0) < 40:   # 틀 그림만 (원고 그림 image40~ 은 그대로)
         im = Image.open(io.BytesIO(files[name])); mode = im.mode
         im = im.convert('RGBA'); a = np.asarray(im).astype(float)
         before = a[..., :3].astype(np.uint8).copy()
@@ -69,12 +69,14 @@ HL_OLD, HL_NEW = 'F2D3B3', 'DDD1E8'   # 형광펜: 피치 → 스모키 라일�
 h = h.replace('shadeColor="#%s"' % HL_OLD, 'shadeColor="#%s"' % HL_NEW)
 
 # ---------- 2. 새 그림 (TAG 오른쪽 리본, 띠) ----------
-files['BinData/image9.emf'] = open(ART + '/tag_L.emf', 'rb').read()
-files['BinData/image43.emf'] = open(ART + '/tag_R.emf', 'rb').read()
-files['BinData/image44.emf'] = open(ART + '/bar_B4.emf', 'rb').read()
 hpf = files['Contents/content.hpf'].decode('utf-8')
+_n = max(int(x) for x in re.findall(r'id="image(\d+)"', hpf)) + 1
+IMG_TAG_R, IMG_BAR = 'image%d' % _n, 'image%d' % (_n + 1)     # 생성기가 넣은 그림 번호와 겹치지 않게
+files['BinData/image9.emf'] = open(ART + '/tag_L.emf', 'rb').read()
+files['BinData/%s.emf' % IMG_TAG_R] = open(ART + '/tag_R.emf', 'rb').read()
+files['BinData/%s.emf' % IMG_BAR] = open(ART + '/bar_B4.emf', 'rb').read()
 item = re.search(r'<opf:item id="image9"[^>]*/>', hpf).group(0)
-hpf = hpf.replace(item, item + item.replace('image9', 'image43') + item.replace('image9', 'image44'), 1)
+hpf = hpf.replace(item, item + item.replace('image9', IMG_TAG_R) + item.replace('image9', IMG_BAR), 1)
 files['Contents/content.hpf'] = hpf.encode('utf-8')
 
 def add_item(h, tag, block_tag, xml):
@@ -86,10 +88,14 @@ def add_item(h, tag, block_tag, xml):
 def max_id(h, tag): return max(int(x) for x in re.findall(r'<hh:%s id="(\d+)"' % tag, h))
 
 # 띠 바탕: 그림 채우기 테두리/배경
-bf55 = re.search(r'<hh:borderFill id="55".*?</hh:borderFill>', h, re.S).group(0)
 BF = max_id(h, 'borderFill') + 1
-bf = re.sub(r'id="55"', 'id="%d"' % BF, bf55, count=1).replace('binaryItemIDRef="image40"', 'binaryItemIDRef="image44"')
-bf = re.sub(r'<hh:bottomBorder [^>]*/>', '<hh:bottomBorder type="NONE" width="0.12 mm" color="#000000"/>', bf)
+_side = lambda t: '<hh:%s type="NONE" width="0.12 mm" color="#000000"/>' % t
+bf = ('<hh:borderFill id="%d" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0">'
+      '<hh:slash type="NONE" Crooked="0" isCounter="0"/><hh:backSlash type="NONE" Crooked="0" isCounter="0"/>' % BF
+      + _side('leftBorder') + _side('rightBorder') + _side('topBorder') + _side('bottomBorder')
+      + '<hh:diagonal type="SOLID" width="0.1 mm" color="#000000"/>'
+      '<hc:fillBrush><hc:imgBrush mode="TOTAL"><hc:img binaryItemIDRef="%s" bright="0" contrast="0" effect="REAL_PIC" alpha="0"/></hc:imgBrush></hc:fillBrush>'
+      '</hh:borderFill>' % IMG_BAR)
 h = add_item(h, 'borderFill', 'borderFills', bf)
 
 # 글자 모양: 번호 흰색, 제목 진갈색
@@ -147,7 +153,7 @@ for m in re.finditer(r'<hp:tbl [^>]*>\s*<hp:sz width="3418"', s):
     seg = seg.replace('<hp:t>TAG</hp:t>', '')
     seg = re.sub(r'<hp:linesegarray>.*?</hp:linesegarray>', '', seg, flags=re.S)
     if k % 2 == 1:
-        seg = seg.replace('binaryItemIDRef="image9"', 'binaryItemIDRef="image43"')
+        seg = seg.replace('binaryItemIDRef="image9"', 'binaryItemIDRef="%s"' % IMG_TAG_R)
         seg = re.sub(r'horzOffset="\d+"', 'horzOffset="%d"' % ODD_OFFSET, seg, count=1)
     out.append(s[pos:st]); out.append(seg); pos = en; k += 1
 out.append(s[pos:]); s = ''.join(out)

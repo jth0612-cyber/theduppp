@@ -1,3 +1,4 @@
 nas/
 hwp/preview/*.pdf
 hwp/final/*.zip
+hwp/gen/__pycache__/
