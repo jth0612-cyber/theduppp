@@ -84,3 +84,17 @@ python3 tools/fix_hwpx.py in.hwpx out.hwpx   # lxml 필요
 - 1차 묶음 5개(INNING 4 + BULLPEN 1)를 처리했다.
   - INNING 4개는 이미 1단이라 변경하지 않았다.
   - BULLPEN은 위 산출물과 같은 문서다.
+
+## 8. NAS(시놀로지) 연결
+- NAS: `THedu_NAS`, 주소 `jth4377.synology.me`(443). 사용자가 gofile.me 공유 링크와 비밀번호를 준다. **비밀번호는 저장소에 적지 말 것.**
+- 클라우드 환경의 Allowed domains에 `gofile.me`, `quickconnect.to`, `*.quickconnect.to`, `*.synology.me`가 들어 있어야 한다.
+- 도구: `tools/synoshare.py`
+  - `python3 tools/synoshare.py ls <공유ID> <비번>`: 전체 트리를 출력한다.
+  - `python3 tools/synoshare.py get <공유ID> <비번> <저장폴더> [경로접두어|glob ...]`: 파일을 받는다. 이미 받은 파일은 크기가 같으면 건너뛴다.
+- 요령(삽질 기록):
+  - 로그인은 `SYNO.Core.Sharing.Login`에 JSON 문자열(`"..."`) 형태로 `sharing_id`, `password`를 넘긴다.
+  - 이후 요청에는 헤더 `X-SYNO-SHARING: <공유ID>`를 붙인다.
+  - `SYNO.FolderSharing.List`의 `folder_path`는 `/`가 아니라 **`/<공유폴더이름>`**이다. 공유폴더 이름은 `SYNO.Core.Sharing.Initdata` → `data.Private.filename`에서 얻는다. `/`로 요청하면 407 오류가 난다.
+- 공유 링크 (2026-10-21 기준)
+  - `v9aQVILEy` = "Logic Build": 파일 1413개, 약 5.0GB. 루트에 `Line up_단위변환_A/B안.hwpx`, `한글마스터.hwpx` 등이 있고, 하위 폴더는 `_생성스크립트/`, `단위변환_필기노트_시안/`이다.
+  - `YpF9E7rp6` = "_생성스크립트": 파일 119개, 약 66MB. 파이썬 생성 스크립트(`build.py`, `unit_*.py` 등)와 `tpl/`, `ofl_static/`(폰트)이 들어 있다.
