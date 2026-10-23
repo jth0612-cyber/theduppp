@@ -297,7 +297,7 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     return blocks
 
 
-KICE_SOL = 'Applied Sol.'   # Arranged KICE 풀이 상자 이름 (예전 '적용 풀이')
+KICE_SOL = 'Essentials'     # Arranged KICE 풀이 상자 이름 (예전 '적용 풀이')
 KICE_SCALE = 0.7      # 기출 문항 그림은 LOGIC BUILD 1에 넣던 크기의 70%
 
 

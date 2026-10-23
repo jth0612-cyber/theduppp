@@ -5,7 +5,7 @@ import copy, re
 import build as B
 
 NS = B.NS
-STYLE = ['C']      # 기본 시안 (사용자 선택 전 추천안)
+STYLE = ['E1']     # 풀이 상자 시안 (E 계열 기본: 진한 탭 + 얇은 테두리)
 ACC, INK, LILAC, LILAC_L, WARM = '#A9623A', '#3A241D', '#DDD1E8', '#F1ECF6', '#F7F2EC'
 FULL_W = 46205
 NAMES = {'A': '노트 라인', 'B': '웜 카드', 'C': '단계 표', 'D': '위아래 굵은 선', 'E': '탭 라벨'}
