@@ -117,10 +117,8 @@ B.table = table
 
 # ---------------------------------------------------------------- E14-B 가운데 반응식: 옅은 띠
 def center_p(markup, width_pt):
-    side = max(0, int((462 - width_pt - 60) / 2 / 10) * 1000)   # 띠 폭을 식 길이에 맞춤 (10pt 단위)
-    bf = B.bfc('lk_eq', fill=BAND)
-    return body_p(B.runs(markup, B.BODY()), pp('lk_eq%d' % side, align='CENTER', left=side, right=side, prev=500, nxt=500, ls=160,
-                                            bf=bf, off=(0, 0, 220, 220), connect=False))
+    """가운데 반응식 줄: 음영 없이 가운데 정렬 + 위아래 여백"""
+    return body_p(B.runs(markup, B.BODY()), pp('lk_eq', align='CENTER', prev=450, nxt=450, ls=160))
 
 
 # ---------------------------------------------------------------- E09-A / K1 머리 탭 (풀이 상자 E1 탭과 같은 모양)
@@ -165,6 +163,9 @@ def kice_head(label, lines):
     return [tab_head(label, 2.6)] + q_block(lines)
 
 
+Q_STYLE = ['plain']   # 발문 디자인: 'plain'(음영 없음, 기본) / 'box'(베이지 상자) — 시안 P1~P5 중 선택 대기
+
+
 def q_block(lines):
     """발문: 조건·설명은 베이지 상자, 묻는 문장은 브라운 Q 칩 (Mini 예제와 Arranged KICE 공통)"""
     ctx, qs = split_qs(lines)
@@ -178,7 +179,13 @@ def q_block(lines):
                                pre=B.inline(m.group(1) + ' ', B.cp('16', font=11, h=950, spacing=0, color=INK))))
             else:
                 ps.append(para(c, C_Q(), pp('lk_ctx0', align='JUSTIFY', ls=175, nxt=80)))
-        out.append(grid([[(1, B.bfc('lk_ctxbox', fill=WARM), ps, 1)]], margin=(900, 900, 450, 450), out_gap=(0, 350)))
+        if Q_STYLE[0] == 'box':
+            out.append(grid([[(1, B.bfc('lk_ctxbox', fill=WARM), ps, 1)]], margin=(900, 900, 450, 450), out_gap=(0, 350)))
+        else:   # 음영 없음: 조건 문단을 그대로 (표 칸 문단 → 본문 문단으로 옮김)
+            for p in ps:
+                p.set('paraPrIDRef', pp('lk_ctx_plain', align='JUSTIFY', ls=175, nxt=100) if p.get('paraPrIDRef') == pp('lk_ctx0', align='JUSTIFY', ls=175, nxt=80)
+                      else pp('lk_ctx_plain_lab', align='JUSTIFY', left=2000, intent=-2000, ls=175, nxt=100))
+                out.append(body_p(list(p), p.get('paraPrIDRef')))
     for num, q in qs:
         lab = 'Q%s' % num if num else 'Q'
         out.append(body_p(chip_runs(lab, ACC, h=880) + B.runs(q, C_QB()),

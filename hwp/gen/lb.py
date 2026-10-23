@@ -8,7 +8,8 @@
 """
 import os, re, sys, math
 
-GEN = os.environ.get('LB_GEN', '/home/user/theduppp/nas/Logic Build/_생성스크립트')
+HERE = os.path.dirname(os.path.abspath(__file__))
+GEN = os.environ.get('LB_GEN', os.path.join(HERE, '..', '..', 'nas', 'Logic Build', '_생성스크립트'))   # 사용자 생성기 폴더
 sys.path.insert(0, GEN)
 from unit_common import *            # noqa: F401,F403  (build의 블록 함수들)
 from styles_more import theme as _theme, point as _point
@@ -54,6 +55,8 @@ def img_size(path):
 
 
 def pic_elem(path, w, h):
+    if not os.path.isabs(path):          # ⟪img/…|w|h⟫ 는 hwp/gen 기준 상대 경로
+        path = os.path.join(HERE, path)
     iid = B.add_image(path)
     return B.pic(iid, int(w), int(h))
 
@@ -162,7 +165,7 @@ _WOOD = os.path.join(GEN, 'wood_band_light.jpg')
 _CRACK = ('SOLID', '0.25 mm', '#3A241D')
 
 
-LABEL_W = 12000         # THEME/POINT 라벨 칸 폭 (같게 해서 제목 글자 시작 위치를 세로로 맞춘다)
+LABEL_W = 9500          # THEME/POINT 라벨 칸 폭 (같게 해서 제목 글자 시작 위치를 세로로 맞춘다)
 POINT_W = 44935         # POINT 줄 폭 (P[93] 문단에서 시작)
 THEME_W = FULL_W - 532  # THEME 막대: 왼쪽 = POINT 점선 왼쪽 끝(P[93] 첫 줄 시작 532), 오른쪽 = 본문 오른쪽 끝
 
@@ -181,18 +184,18 @@ def theme_el(n, title, en=''):
 def point_el(n, title):
     """POINT 줄: 라벨 칸(나비 + POINT 01) | 제목 칸, 갈색 점선 밑줄"""
     st = B.STYLE
-    h = fit_h(title, (POINT_W - LABEL_W) / 100 - 22, 1800)   # POINT 줄은 예전의 150% 크기
+    h = fit_h(title, (POINT_W - LABEL_W) / 100 - 22, 1260)   # POINT 줄은 처음 크기의 105% (150% → 70%)
     t = B.styled(title, B.cp('22', font=st.get('title_font', B.HAND), h=h, spacing=0, bold=st.get('point_bold', True), color='#111111'))
     bw = st.get('bowtie', ('bowtie_h.png', 1450, 786))
-    icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), int(bw[1] * 1.5), int(bw[2] * 1.5))
-    lab = icon + B.inline('  POINT %02d' % n, B.LABEL(1200, '#A9623A', 20, 8))
+    icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), int(bw[1] * 1.05), int(bw[2] * 1.05))
+    lab = icon + B.inline('  POINT %02d' % n, B.LABEL(840, '#A9623A', 20, 8))
     dash = ('DASH', '0.3 mm', '#C9986C')
     return B.bar_table([(LABEL_W, B.bfc('p1', bottom=dash), lab, 'L'), (POINT_W - LABEL_W, B.bfc('p1', bottom=dash), t, 'L')],
-                       2000, width=POINT_W, proto_i=93, bottom_gap=480)
+                       1420, width=POINT_W, proto_i=93, bottom_gap=480)
 
 
 def theme(n, title): return Block(lambda: theme_el(n, title), 40, keep_next=True)
-def point(n, title): return Block(lambda: point_el(n, title), 36, keep_next=True)
+def point(n, title): return Block(lambda: point_el(n, title), 28, keep_next=True)
 def h(s): return Block(lambda: B.h1(re.sub(r'==|\*\*|~~', '', s)), 26, keep_next=True)      # 소제목 (틀의 ① 소제목 문단)
 def bar(num, title): return Block(lambda: B.bar(num, title), 44, brk=True, keep_next=True)
 
