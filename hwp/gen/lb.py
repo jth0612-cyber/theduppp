@@ -162,7 +162,7 @@ _WOOD = os.path.join(GEN, 'wood_band_light.jpg')
 _CRACK = ('SOLID', '0.25 mm', '#3A241D')
 
 
-LABEL_W = 9000          # THEME/POINT 라벨 칸 폭 (같게 해서 제목 글자 시작 위치를 세로로 맞춘다)
+LABEL_W = 12000         # THEME/POINT 라벨 칸 폭 (같게 해서 제목 글자 시작 위치를 세로로 맞춘다)
 POINT_W = 44935         # POINT 줄 폭 (P[93] 문단에서 시작)
 THEME_W = FULL_W - 532  # THEME 막대: 왼쪽 = POINT 점선 왼쪽 끝(P[93] 첫 줄 시작 532), 오른쪽 = 본문 오른쪽 끝
 
@@ -181,18 +181,18 @@ def theme_el(n, title, en=''):
 def point_el(n, title):
     """POINT 줄: 라벨 칸(나비 + POINT 01) | 제목 칸, 갈색 점선 밑줄"""
     st = B.STYLE
-    h = fit_h(title, (POINT_W - LABEL_W) / 100 - 22, 1200)
+    h = fit_h(title, (POINT_W - LABEL_W) / 100 - 22, 1800)   # POINT 줄은 예전의 150% 크기
     t = B.styled(title, B.cp('22', font=st.get('title_font', B.HAND), h=h, spacing=0, bold=st.get('point_bold', True), color='#111111'))
     bw = st.get('bowtie', ('bowtie_h.png', 1450, 786))
-    icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), bw[1], bw[2])
-    lab = icon + B.inline('  POINT %02d' % n, B.LABEL(800, '#A9623A', 20, 8))
+    icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), int(bw[1] * 1.5), int(bw[2] * 1.5))
+    lab = icon + B.inline('  POINT %02d' % n, B.LABEL(1200, '#A9623A', 20, 8))
     dash = ('DASH', '0.3 mm', '#C9986C')
     return B.bar_table([(LABEL_W, B.bfc('p1', bottom=dash), lab, 'L'), (POINT_W - LABEL_W, B.bfc('p1', bottom=dash), t, 'L')],
-                       1350, width=POINT_W, proto_i=93, bottom_gap=480)
+                       2000, width=POINT_W, proto_i=93, bottom_gap=480)
 
 
 def theme(n, title): return Block(lambda: theme_el(n, title), 40, keep_next=True)
-def point(n, title): return Block(lambda: point_el(n, title), 26, keep_next=True)
+def point(n, title): return Block(lambda: point_el(n, title), 36, keep_next=True)
 def h(s): return Block(lambda: B.h1(re.sub(r'==|\*\*|~~', '', s)), 26, keep_next=True)      # 소제목 (틀의 ① 소제목 문단)
 def bar(num, title): return Block(lambda: B.bar(num, title), 44, brk=True, keep_next=True)
 
@@ -281,15 +281,14 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     qa = list(q_after)
     sol = _clean(sol)
     blocks = []
-    h_head = 18 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
-    makes = [lambda: B.small_bar(f'Mini 예제 {n}')] + [(lambda x=x: LK().question(x)) for x in qs]
-    blocks.append(Block(lambda ms=makes: [m() for m in ms], h_head, [m for x in qs for m in notes_of(x)], keep_next=True))
+    h_head = 30 + sum(LINE_Q * 1.15 * nlines(x, PER_Q * 0.9) for x in qs) + 6
+    blocks.append(Block(lambda: [B.small_bar(f'Mini 예제 {n}')] + LK().q_block(qs), h_head, [m for x in qs for m in notes_of(x)], keep_next=True))
     for f in figs:
         blocks.append(Block(lambda f=f: figure_para(f, fig_w), figure_h(f, fig_w), keep_next=True))
     for rows, widths in tables:
         tb = table(rows, widths); tb.keep_next = True; blocks.append(tb)
     if qa:
-        blocks.append(Block(lambda: [LK().question(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
+        blocks.append(Block(lambda: LK().q_block(qa), 10 + sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
                             [m for x in qa for m in notes_of(x)], keep_next=True))
     blocks.append(_sol_block('Sol.', 'M%d' % n, sol, False))
     blocks.append(Block(B.blank, 22))

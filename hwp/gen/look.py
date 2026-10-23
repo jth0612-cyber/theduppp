@@ -131,7 +131,8 @@ def tab_head(label, ratio=2.2):
     return grid(rows, margin=(300, 300, 230, 230), out_gap=(500, 350))
 
 
-def C_Q(): return B.cp('16', font=10, h=950, spacing=0, color='#1E1E1E')
+def C_Q(): return B.cp('16', font=10, h=1050, spacing=0, color='#1E1E1E')
+def C_QB(): return B.cp('16', font=11, h=1050, spacing=0, color='#1E1E1E')
 
 
 def question(s):
@@ -139,7 +140,7 @@ def question(s):
 
 
 # ---------------------------------------------------------------- K1 다시 묶은 질문: 조건은 베이지 상자, 질문은 Q 칩
-ASK = re.compile(r'(\(O, X\)|구하시오|쓰시오|찾으시오|비교하시오|서술하시오|\?)\s*\.?\s*$')
+ASK = re.compile(r'(\(O, X\)|시오|\?)\s*\.?\s*$')   # 묻는 문장 (…시오. / …? / (O, X))
 
 
 def split_qs(lines):
@@ -148,9 +149,9 @@ def split_qs(lines):
     for ln in lines:
         parts = [p for p in re.split(r'\s{2,}(?=Q\d+\.)', ln) if p.strip()]
         for p in parts:
-            m = re.match(r'^(?:Q(\d+)\.|(\d+)\.)\s*(.*)$', p)
+            m = re.match(r'^(?:Q(\d*)\.|(\d+)\.)\s*(.*)$', p)
             if m:
-                qs.append((m.group(1) or m.group(2), m.group(3)))
+                qs.append((m.group(1) or m.group(2) or '', m.group(3)))
             elif ASK.search(p):
                 qs.append((None, p))
             else:
@@ -161,8 +162,13 @@ def split_qs(lines):
 
 
 def kice_head(label, lines):
+    return [tab_head(label, 2.6)] + q_block(lines)
+
+
+def q_block(lines):
+    """발문: 조건·설명은 베이지 상자, 묻는 문장은 브라운 Q 칩 (Mini 예제와 Arranged KICE 공통)"""
     ctx, qs = split_qs(lines)
-    out = [tab_head(label, 2.6)]
+    out = []
     if ctx:
         ps = []
         for c in ctx:
@@ -175,6 +181,6 @@ def kice_head(label, lines):
         out.append(grid([[(1, B.bfc('lk_ctxbox', fill=WARM), ps, 1)]], margin=(900, 900, 450, 450), out_gap=(0, 350)))
     for num, q in qs:
         lab = 'Q%s' % num if num else 'Q'
-        out.append(body_p(chip_runs(lab, ACC, h=820) + B.runs(q, B.cp('16', font=11, h=950, spacing=0, color='#1E1E1E')),
-                          pp('lk_kq', align='JUSTIFY', left=2300, intent=-2300, ls=170, nxt=200)))
+        out.append(body_p(chip_runs(lab, ACC, h=880) + B.runs(q, C_QB()),
+                          pp('lk_kq', align='JUSTIFY', left=2400, intent=-2400, ls=170, nxt=200)))
     return out
