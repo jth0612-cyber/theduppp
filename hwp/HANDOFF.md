@@ -114,3 +114,17 @@ python3 tools/fix_hwpx.py in.hwpx out.hwpx   # lxml 필요
   - 새 그림 번호는 빈 번호를 자동으로 고른다.
   - 원고 그림(image40~)의 바탕색은 바꾸지 않는다.
 - 미확인: 한글에서의 실제 쪽 넘침, 날개 주석 높이 정렬(make_aligned 미적용).
+
+## 10. LOGIC BUILD 2 (1단 전체 폭, 2026-10-23)
+- 사용자 지시 사항:
+  - TAG, 각주, 세로선을 모두 없애고 기존 디자인을 좌우로 늘린다.
+  - 바탕은 흰색으로 한다.
+  - 제목은 무조건 한 줄로 한다(글자 크기를 줄여서라도).
+  - 기출 그림은 70% 크기로 넣는다.
+- 결과: `hwp/final/*_LOGIC BUILD 2.hwpx` 3개, 보고서 `hwp/final/작업보고_LOGIC_BUILD_2.md`.
+- 만드는 순서:
+  - `gen/lb.py`: 1단용으로 바꿨다. 날개 주석 제거, `build()`에서 TAG·세로선 제거, `fit_h`로 THEME/POINT 글자 크기 맞춤, `h()` 소제목.
+  - `gen/unit_unit.py`: 단위변환 원고(`_생성스크립트/unit_B4.py`)를 그대로 읽어 lb 블록으로 다시 짠다.
+  - `tools/make_wide.py`: 2단→1단, 세로선·TAG 삭제, 325.7pt 상자 → 462pt, 흰 바탕, 전체 폭 B-4 띠.
+  - `tools/check_wide.py`: 결과를 검사한다.
+- 남은 일: 기출 썸네일 폴더(`Squeeze_2028학년도_기출`)의 공유 링크를 받아 대조하고 교체한다.

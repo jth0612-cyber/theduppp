@@ -1,4 +1,5 @@
-nas/
-hwp/preview/*.pdf
+__pycache__/
 hwp/final/*.zip
 hwp/gen/__pycache__/
+hwp/preview/*.pdf
+nas/

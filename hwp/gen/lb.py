@@ -17,7 +17,9 @@ from PIL import Image
 
 HP = B.NS
 HC = '{http://www.hancom.co.kr/hwpml/2011/core}'
-COL_W = 31000          # 본문 단에 넣는 그림의 최대 폭 (HWPUNIT, 본문 단 32570)
+COL_W = 31000          # 그림의 기본 최대 폭 (HWPUNIT). 원고 크기보다 키우지는 않는다
+FULL_W = 46205         # 1단 전체 폭 (쪽 폭 61228 − 좌 7937 − 우 7086)
+WIDE = 46205 / 32570   # 예전 본문 단 대비 넓어진 비율
 
 # ---------------------------------------------------------------- 글자 모양: 아래첨자 지원
 _orig_cpr_xml = B.cpr_xml
@@ -115,7 +117,17 @@ def nlines(s, per_line):
 
 
 def notes_of(s):
-    return re.findall(r'«([^»]*)»', s)
+    return []          # 날개 단(각주)을 쓰지 않는다
+
+
+_orig_runs = B.runs
+
+
+def _runs(markup, cpr, ref=True):
+    return _orig_runs(re.sub(r'«[^»]*»', '', markup), cpr, ref)
+
+
+B.runs = _runs
 
 
 class Block:
@@ -129,10 +141,10 @@ def _b(make, h, *texts, **kw):
 
 
 # ---------------------------------------------------------------- 블록 (높이와 함께)
-LINE_NOTE, PER_NOTE = 18.5, 27      # 손글씨 본문 줄 간격, 한 줄 em
-LINE_BOX, PER_BOX = 16.8, 28.5      # 풀이 상자
-LINE_Q, PER_Q = 13.6, 38            # 문제(8pt)
-LINE_CF, PER_CF = 17.6, 26          # Intro·예)·한 줄 정리 상자
+LINE_NOTE, PER_NOTE = 18.5, 27 * WIDE      # 손글씨 본문 줄 간격, 한 줄 em (1단 전체 폭)
+LINE_BOX, PER_BOX = 16.8, 28.5 * WIDE      # 풀이 상자
+LINE_Q, PER_Q = 13.6, 38 * WIDE            # 문제(8pt)
+LINE_CF, PER_CF = 17.6, 26 * WIDE          # Intro·예)·한 줄 정리 상자
 
 
 def note(s): return _b(lambda: B.note(s), LINE_NOTE * nlines('→ ' + s, PER_NOTE) + 1, s)
@@ -141,8 +153,39 @@ def plain(s): return _b(lambda: B.ex(s), LINE_NOTE * nlines(s, PER_NOTE) + 1, s)
 def tip(s): return _b(lambda: B.tip(s), LINE_NOTE * nlines('TIP ' + s, PER_NOTE - 2) + 4, s)
 def cf(s, label='cf.'): return _b(lambda: B.cf(s, label), LINE_CF * nlines(label + ' ' + s, PER_CF) + 24, s)
 def blank(): return Block(B.blank, 18)
-def theme(n, title): return Block(lambda: _theme(n, title), 40, keep_next=True)
-def point(n, title): return Block(lambda: _point(n, title), 24 + 18.5 * (nlines(title, 25) - 1), keep_next=True)
+def fit_h(title, avail_pt, h_max):
+    """제목이 avail_pt 폭 한 줄에 들어가는 글자 크기(HWPUNIT, 1/100pt)"""
+    return int(min(h_max, avail_pt * 100 / max(1.0, ems(title) * 1.04)) // 25 * 25)
+
+
+_WOOD = os.path.join(GEN, 'wood_band_light.jpg')
+_CRACK = ('SOLID', '0.25 mm', '#3A241D')
+
+
+def theme_el(n, title, en=''):
+    """styles_more.theme(우드·사진)와 같고, 제목 칸(폭의 23/32 ≈ 325pt)에 한 줄로 맞춘다"""
+    st = B.STYLE
+    body = B.bfc('t2', img=B.add_image(_WOOD), bottom=_CRACK)
+    c1 = B.inline('THEME %02d' % n, B.LABEL(800, '#3A241D', 25, 8))
+    h = fit_h(title, 305, 1450)
+    c2 = B.styled(title, B.cp('20', font=st.get('title_font', B.HAND), h=h, spacing=0, color=st['ink'], bold=st.get('title_bold', False)))
+    return B.bar_table([(9, B.bfc('t1', fill='#D7A77E', bottom=_CRACK), c1, 'C'), (23, body, c2, 'L')], 1900, proto_i=1)
+
+
+def point_el(n, title):
+    """styles_more.point(우드·사진)와 같고, 제목을 한 줄(약 345pt)에 맞춘다"""
+    st = B.STYLE
+    h = fit_h(title, 345, 1200)
+    t = B.styled(title, B.cp('22', font=st.get('title_font', B.HAND), h=h, spacing=0, bold=st.get('point_bold', True), color='#111111'))
+    bw = st.get('bowtie', ('bowtie_h.png', 1450, 786))
+    icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), bw[1], bw[2])
+    rs = icon + B.inline('  POINT %02d   ' % n, B.LABEL(800, '#A9623A', 20, 8)) + t
+    return B.bar_table([(1, B.bfc('p1', bottom=('DASH', '0.3 mm', '#C9986C')), rs, 'L')], 1350, width=31300, proto_i=93, bottom_gap=170)
+
+
+def theme(n, title): return Block(lambda: theme_el(n, title), 40, keep_next=True)
+def point(n, title): return Block(lambda: point_el(n, title), 26, keep_next=True)
+def h(s): return Block(lambda: B.h1(re.sub(r'==|\*\*|~~', '', s)), 26, keep_next=True)      # 소제목 (틀의 ① 소제목 문단)
 def bar(num, title): return Block(lambda: B.bar(num, title), 44, brk=True, keep_next=True)
 
 
@@ -193,7 +236,7 @@ def table(rows, widths=None):
     for ri, row in enumerate(rows):
         ws = widths or [1] * len(row)
         tot = sum(ws)
-        hs.append(max(nlines(c, max(4, 46 * w / tot)) for c, w in zip(row, ws)))
+        hs.append(max(nlines(c, max(4, 46 * WIDE * w / tot)) for c, w in zip(row, ws)))
     h = sum(14 + 11 * (n - 1) for n in hs) + 30
     ns = [n for row in rows for c in row for n in notes_of(c)]
     return Block(lambda: B.table(rows, widths), h, ns)
@@ -204,11 +247,16 @@ def _qpara(s):
     return B.question(s)
 
 
+def _clean(lines):
+    return [re.sub(r'\*\*', '', x) for x in lines]
+
+
 def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL_W):
     """q: 발문(문자열 또는 줄 목록), figs: 그림 줄 목록 [ [(경로,w,h),...], ... ], q_after: 그림 뒤 발문 줄,
     tables: 발문 사이에 넣을 표 [(rows, widths)], sol: 풀이 줄, ans: 정답(None이면 생략)"""
     qs = [q] if isinstance(q, str) else list(q)
     qa = list(q_after)
+    sol = _clean(sol)
     blocks = []
     h_head = 18 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
     makes = [lambda: B.small_bar(f'Mini 예제 {n}')] + [(lambda x=x: _qpara(x)) for x in qs]
@@ -228,8 +276,15 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     return blocks
 
 
-def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=29000, label='Arranged KICE'):
+KICE_SCALE = 0.7      # 기출 문항 그림은 LOGIC BUILD 1에 넣던 크기의 70%
+
+
+def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=None, label='Arranged KICE'):
     """원고의 Arranged KICE 표: 다시 묶은 질문 → 기출 문항 그림 → 핵심 로직 → 적용 풀이 → 정답"""
+    sol = _clean(sol)
+    k = min(1.0, 29000 / fig[1]) * KICE_SCALE      # 지금까지 넣던 크기(본문 단 29000 안으로 줄인 것)의 70%
+    fig = (fig[0], int(fig[1] * k), int(fig[2] * k))
+    fig_w = FULL_W
     blocks = []
     h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
     blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head,
@@ -325,7 +380,7 @@ def flatten_pages(pages):
 
 
 def build(head_p, pages):
-    """build.build와 같되, 블록이 문단 목록을 돌려줘도 되게 한다 (날개 주석은 쪽마다 모은다)."""
+    """1단 전체 폭용: 쪽마다 TAG·세로선·날개 주석을 넣지 않는다 (블록이 문단 목록을 돌려줘도 됨)."""
     body = []
     for k, blocks in enumerate(pages):
         B.NOTES.clear()
@@ -346,9 +401,6 @@ def build(head_p, pages):
                     c = B.clone(c); ts = list(c.iter(HP + 't'))
                     ts[0].text, ts[1].text = B.HEADINFO['no'], ' ' + B.HEADINFO['title']
                     r0.insert(0, c)
-            ln = B.clone(B.LINE)
-            ln.find(HP + 'pos').set('horzAlign', 'RIGHT' if k % 2 else 'LEFT')
-            r0.insert(0, ln)
             if k == 2 and B.STYLE.get('odd_body'):   # build.build와 같은 처리 (본문 홀수쪽 머리말 그림)
                 path, size, pos = B.STYLE['odd_body']
                 iid = B.add_image(path)
@@ -362,10 +414,4 @@ def build(head_p, pages):
                             im.set('binaryItemIDRef', iid)
                         r0.insert(0, c2)
         body += ps
-        tag = B.clone(B.TAGP); tag.set('columnBreak', '1')
-        body.append(tag)
-        for n, s in B.NOTES:
-            body.append(B.side_note(n, s))
-            if not B.ALIGN[0]:
-                body.append(B.blank())
     return body
