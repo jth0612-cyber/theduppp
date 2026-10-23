@@ -14,11 +14,13 @@ NAMES = {'A': '노트 라인', 'B': '웜 카드', 'C': '단계 표', 'D': '위�
 _PP = {}      # 이름 -> (id, spec)
 
 
-def pp(name, align='LEFT', left=0, intent=0, prev=0, nxt=0, ls=160):
+def pp(name, align='LEFT', left=0, intent=0, prev=0, nxt=0, ls=160, right=0, bf=None, off=(0, 0, 0, 0), keep=False, connect=True):
+    """새 문단 모양 id. bf: 문단 테두리/배경 borderFill id, off: 테두리 안쪽 여백(왼, 오, 위, 아래), keep: 다음 문단과 함께"""
     if name not in _PP:
         key = ('solbox', name)
         B.NEWPP[key] = str(70 + len(B.NEWPP))
-        _PP[name] = (B.NEWPP[key], dict(align=align, left=left, intent=intent, prev=prev, nxt=nxt, ls=ls))
+        _PP[name] = (B.NEWPP[key], dict(align=align, left=left, intent=intent, prev=prev, nxt=nxt, ls=ls, right=right,
+                                         bf=bf, off=off, keep=keep, connect=connect))
     return _PP[name][0]
 
 
@@ -36,9 +38,15 @@ def _pp_xml(h):
     for i, s in _PP.values():
         x = base.replace('id="29"', 'id="%s"' % i, 1)
         x = re.sub(r'<hh:align horizontal="[A-Z_]+"', '<hh:align horizontal="%s"' % s['align'], x, 1)
-        for tag, v in (('intent', s['intent']), ('left', s['left']), ('prev', s['prev']), ('next', s['nxt'])):
+        for tag, v in (('intent', s['intent']), ('left', s['left']), ('right', s['right']), ('prev', s['prev']), ('next', s['nxt'])):
             x = re.sub(r'<hc:%s value="-?\d+"' % tag, '<hc:%s value="%d"' % (tag, v), x, 1)
         x = re.sub(r'<hh:lineSpacing type="PERCENT" value="\d+"', '<hh:lineSpacing type="PERCENT" value="%d"' % s['ls'], x, 1)
+        if s['keep']:
+            x = x.replace('keepWithNext="0"', 'keepWithNext="1"', 1)
+        if s['bf']:
+            o = s['off']
+            x = re.sub(r'<hh:border [^>]*/>', '<hh:border borderFillIDRef="%s" offsetLeft="%d" offsetRight="%d" offsetTop="%d" offsetBottom="%d" connect="%d" ignoreMargin="0"/>'
+                       % (s['bf'], o[0], o[1], o[2], o[3], 1 if s['connect'] else 0), x, 1)
         out += x
     return out
 
@@ -48,23 +56,34 @@ B.pp_xml = _pp_xml
 # ---------------------------------------------------------------- 글자 모양
 def C_BODY(): return B.cp('33', font=B.HAND, h=1000, spacing=0, color='#202020')
 def C_EQ(): return B.cp('33', font=B.HAND, h=1000, spacing=0, color=INK)
-def C_STEP(color=ACC): return B.cp('16', font=8, h=880, spacing=0, color=color, bold=True)
+def C_STEP(color=ACC): return B.cp('16', font=11, h=900, spacing=0, color=color)
 def C_HEAD(color=ACC): return B.cp('16', font=8, h=850, spacing=10, color=color, bold=True)
 def C_CONC(color=INK): return B.cp('33', font=B.HAND, h=1050, spacing=0, color=color, bold=True)
 def C_LBL(color='#FFFFFF'): return B.cp('16', font=8, h=800, spacing=15, color=color, bold=True)
+def C_CHIP(fill, color='#FFFFFF', h=780): return B.cp('16', font=8, h=h, spacing=5, color=color, bold=True, shade=fill)
+def C_GAP(): return B.cp('16', font=8, h=780, spacing=0)
+
+
+def chip_runs(label, fill, color='#FFFFFF', h=780):
+    """글자 배경으로 만든 작은 라벨 칩 + 뒤 여백"""
+    return B.inline('\u2002%s\u2002' % label, C_CHIP(fill, color, h)) + B.inline('\u2002 ', C_GAP())
+
+
+STEP_RE = re.compile(r'^(STEP \d+|Logic \d+|부가 Logic|Q\d+|\d+)[.]?\s+(.*)$')
 
 
 # ---------------------------------------------------------------- 표 만들기
 _SRC_TBL = B.P[206].find('.//' + NS + 'tbl')
 
 
-def para(markup, cpr, pp_id):
+def para(markup, cpr, pp_id, pre=()):
+    """표 칸 안 문단. pre: 앞에 붙일 run 목록(칩 등)"""
     tc0 = _SRC_TBL.find('.//' + NS + 'tc')
     p = copy.deepcopy(tc0.find(NS + 'subList').find(NS + 'p'))
     for x in list(p):
         p.remove(x)
     p.set('paraPrIDRef', pp_id)
-    rs = B.runs(markup, cpr)
+    rs = list(pre) + B.runs(markup, cpr)
     if not rs:
         r = B.E('run', charPrIDRef=cpr); r.append(B.E('t')); rs = [r]
     for r in rs:
@@ -105,6 +124,7 @@ def grid(rows, width=FULL_W, margin=(850, 850, 400, 400), out_gap=(0, 283)):
             tr.append(tc); ci += span
         src.append(tr)
     src.set('rowCnt', str(len(rows))); src.set('colCnt', str(ncol))
+    src.set('pageBreak', 'NONE'); src.set('repeatHeader', '0')
     src.set('borderFillIDRef', B.bfc('sb_none'))
     src.find(NS + 'sz').set('width', str(width)); src.find(NS + 'sz').set('height', str(600 * len(rows)))
     im = src.find(NS + 'inMargin')
@@ -139,10 +159,13 @@ def _body_paras(items, left=0):
     out = []
     for kind, s in items:
         if kind == 'eq':
-            out.append(para(s, C_EQ(), pp('eq%d' % left, left=left + 1200, prev=40, nxt=40)))
+            out.append(para(s, C_EQ(), pp('eq%d' % left, left=left + 1200, prev=60, nxt=60, ls=175)))
         else:
-            out.append(para(s, C_BODY(), pp('t%d' % left, left=left, prev=0, nxt=0)))
+            out.append(para(s, C_BODY(), pp('t%d' % left, left=left, prev=0, nxt=0, ls=175)))
     return out
+
+
+CHIPS = [True]
 
 
 def _stack(steps, numbered=False, step_color=ACC, left=0, gap=380):
@@ -150,8 +173,13 @@ def _stack(steps, numbered=False, step_color=ACC, left=0, gap=380):
     ps = []
     for k, (title, items) in enumerate(steps):
         if title:
-            mark = ('%d  ' % (k + 1)) if numbered else ''
-            ps.append(para(mark + title, C_STEP(step_color), pp('st%d_%d' % (left, 1 if k else 0), left=left, prev=gap if k else 0, nxt=80)))
+            ppid = pp('st%d_%d' % (left, 1 if k else 0), left=left, prev=gap if k else 0, nxt=120, ls=175)
+            m = STEP_RE.match(title)
+            if CHIPS[0] and m:   # E05-A: 'STEP 1' / '1' 같은 머리 번호는 브라운 칩으로
+                ps.append(para(m.group(2), C_STEP(INK), ppid, pre=chip_runs(m.group(1), ACC)))
+            else:
+                mark = ('%d  ' % (k + 1)) if numbered else ''
+                ps.append(para(mark + title, C_STEP(step_color), ppid))
         ps += _body_paras(items, left + (0 if title is None else 0))
     return ps
 
@@ -242,8 +270,8 @@ def box_e(header, steps, concl, st):
     rows = [[(2, B.bfc(k + '_tab', fill=tab_fill), tab(), 1), (9, B.bfc(k + '_tabr', bottom=thin if st != 'E4' else None), blank(), 1)],
             [(11, B.bfc(k + '_body', bottom=None if concl else (thin if st != 'E4' else None), **side), _stack(steps, step_color=step_c), 2)]]
     if concl:
-        rows.append([(11, B.bfc(k + '_conc', fill=conc_fill, top=dot, bottom=thin if st != 'E4' else None, **side),
-                      _concl_paras(concl, conc_c, prefix='→ '), 2)])
+        cps = [para(c, C_CONC(INK), pp('cc_r', align='RIGHT', ls=170), pre=chip_runs('결론', INK)) for c in concl]
+        rows.append([(11, B.bfc(k + '_conc_b', top=dot, bottom=thin if st != 'E4' else None, **side), cps, 2)])
     return grid(rows, margin=(900, 900, 320, 320))
 
 

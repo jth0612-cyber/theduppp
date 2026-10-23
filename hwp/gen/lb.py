@@ -188,7 +188,7 @@ def point_el(n, title):
     lab = icon + B.inline('  POINT %02d' % n, B.LABEL(800, '#A9623A', 20, 8))
     dash = ('DASH', '0.3 mm', '#C9986C')
     return B.bar_table([(LABEL_W, B.bfc('p1', bottom=dash), lab, 'L'), (POINT_W - LABEL_W, B.bfc('p1', bottom=dash), t, 'L')],
-                       1350, width=POINT_W, proto_i=93, bottom_gap=170)
+                       1350, width=POINT_W, proto_i=93, bottom_gap=480)
 
 
 def theme(n, title): return Block(lambda: theme_el(n, title), 40, keep_next=True)
@@ -198,11 +198,8 @@ def bar(num, title): return Block(lambda: B.bar(num, title), 44, brk=True, keep_
 
 
 def center(markup):
-    """가운데 정렬 한 줄 (반응식·핵심 식)"""
-    def make():
-        p = B.clone(B.P[93]); p.set('paraPrIDRef', '1')
-        return B.set_text(p, markup, cpr=B.BODY())
-    return _b(make, LINE_NOTE * nlines(markup, PER_NOTE) + 8, markup)
+    """가운데 반응식 줄 (E14-B: 식 길이에 맞춘 옅은 띠)"""
+    return _b(lambda: LK().center_p(markup, ems(markup) * 11), LINE_NOTE * nlines(markup, PER_NOTE) + 18, markup)
 
 
 def key(s, label='핵심'):
@@ -251,6 +248,11 @@ def table(rows, widths=None):
 
 
 # ---------------------------------------------------------------- Mini 예제 / Arranged KICE
+def LK():
+    import look
+    return look
+
+
 def _qpara(s):
     return B.question(s)
 
@@ -280,14 +282,14 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     sol = _clean(sol)
     blocks = []
     h_head = 18 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
-    makes = [lambda: B.small_bar(f'Mini 예제 {n}')] + [(lambda x=x: _qpara(x)) for x in qs]
+    makes = [lambda: LK().tab_head(f'Mini 예제 {n}')] + [(lambda x=x: LK().question(x)) for x in qs]
     blocks.append(Block(lambda ms=makes: [m() for m in ms], h_head, [m for x in qs for m in notes_of(x)], keep_next=True))
     for f in figs:
         blocks.append(Block(lambda f=f: figure_para(f, fig_w), figure_h(f, fig_w), keep_next=True))
     for rows, widths in tables:
         tb = table(rows, widths); tb.keep_next = True; blocks.append(tb)
     if qa:
-        blocks.append(Block(lambda: [_qpara(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
+        blocks.append(Block(lambda: [LK().question(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
                             [m for x in qa for m in notes_of(x)], keep_next=True))
     ans = SOLS['ANS'].get('M%d' % n, ans)
     blocks.append(_sol_block(f'{pt} Sol.', 'M%d' % n, sol, ans is not None))
@@ -325,7 +327,7 @@ def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=None, label='Arranged KICE
         fig = (fig[0], w, int(fig[2] * k))
     blocks = []
     h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
-    blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head, keep_next=True))
+    blocks.append(Block(lambda: LK().kice_head(f'{label} {n}', qs), h_head + 40, keep_next=True))
     blocks.append(Block(lambda: figure_para([fig], FULL_W), figure_h([fig], FULL_W)))
     blocks.append(_sol_block(KICE_SOL, key, sol, bool(ans)))
     if ans:
@@ -342,6 +344,10 @@ SIDE_PER, SIDE_LINE = 10.5, 15.0     # 날개 주석 한 줄 em, 줄 간격
 
 def note_h(s):
     return SIDE_LINE * max(1, math.ceil(ems(s) / SIDE_PER)) + 18
+
+
+PAGE_BRK = []      # 쪽마다 중단원 띠로 시작하는지
+FLOW_FROM = 3      # 이 쪽부터는 띠가 아니면 강제 쪽 나눔 없이 이어 붙인다 (빈 공간 방지)
 
 
 def paginate(blocks, report=None):
@@ -393,6 +399,7 @@ def paginate(blocks, report=None):
         i += 1
     if report is not None:
         report.extend(info)
+    PAGE_BRK[:] = [bool(pg[0].brk) for pg in pages]
     out = []
     for pg in pages:
         ms = []
@@ -426,6 +433,9 @@ def build(head_p, pages):
             ps = [head_p] + ps
         else:
             first = ps[0]
+            if k >= FLOW_FROM and k < len(PAGE_BRK) and not PAGE_BRK[k]:
+                body += ps
+                continue
             first.set('pageBreak', '1')
             r0 = first.find(HP + 'run')
             if r0 is None:
@@ -449,3 +459,6 @@ def build(head_p, pages):
                         r0.insert(0, c2)
         body += ps
     return body
+
+
+import look  # noqa: E402,F401  (요소 디자인: build.py 블록 함수 바꿔 끼우기)
