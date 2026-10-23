@@ -282,7 +282,7 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     sol = _clean(sol)
     blocks = []
     h_head = 18 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
-    makes = [lambda: LK().tab_head(f'Mini 예제 {n}')] + [(lambda x=x: LK().question(x)) for x in qs]
+    makes = [lambda: B.small_bar(f'Mini 예제 {n}')] + [(lambda x=x: LK().question(x)) for x in qs]
     blocks.append(Block(lambda ms=makes: [m() for m in ms], h_head, [m for x in qs for m in notes_of(x)], keep_next=True))
     for f in figs:
         blocks.append(Block(lambda f=f: figure_para(f, fig_w), figure_h(f, fig_w), keep_next=True))
@@ -291,10 +291,7 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     if qa:
         blocks.append(Block(lambda: [LK().question(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
                             [m for x in qa for m in notes_of(x)], keep_next=True))
-    ans = SOLS['ANS'].get('M%d' % n, ans)
-    blocks.append(_sol_block(f'{pt} Sol.', 'M%d' % n, sol, ans is not None))
-    if ans is not None:
-        blocks.append(Block(lambda: B.answer(ans), 26))
+    blocks.append(_sol_block('Sol.', 'M%d' % n, sol, False))
     blocks.append(Block(B.blank, 22))
     return blocks
 
@@ -329,9 +326,7 @@ def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=None, label='Arranged KICE
     h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
     blocks.append(Block(lambda: LK().kice_head(f'{label} {n}', qs), h_head + 40, keep_next=True))
     blocks.append(Block(lambda: figure_para([fig], FULL_W), figure_h([fig], FULL_W)))
-    blocks.append(_sol_block(KICE_SOL, key, sol, bool(ans)))
-    if ans:
-        blocks.append(Block(lambda: B.answer(ans), 26))
+    blocks.append(_sol_block(KICE_SOL, key, sol, False))
     blocks.append(Block(B.blank, 22))
     return blocks
 

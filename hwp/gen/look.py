@@ -1,5 +1,6 @@
-"""LOGIC BUILD 2 요소 디자인 (사용자 선택: K1, E01-현재, E02-C, E03-C, E04-A, E05-A, E06-A, E07-B,
-E08-A, E09-A, E10-B, E11-A, E12-C, E13-A, E14-B). 색은 진갈색·브라운·베이지·라일락 네 가지만 쓴다.
+"""LOGIC BUILD 2 요소 디자인. 사용자 선택: KICE 머리 K1, 줄 간격 현재, 설명 줄 N2, 번호 소제목 H5, 본문 STEP E04-A,
+풀이 STEP E05-A, 식 줄 E06-A, 결론 E07-B(Ans 줄은 없앰), Intro 상자 E10-B, 표 T3, 강조 E12-C, TIP E13-A, 반응식 E14-B.
+Mini 예제 라벨은 틀의 밑줄 라벨 그대로. 색은 진갈색·브라운·베이지·라일락 네 가지만 쓴다.
 build.py의 블록 함수(B.note, B.cf, B.table …)를 바꿔 끼운다."""
 import re
 import build as B
@@ -30,20 +31,17 @@ def _hl(s):
 _orig_runs = B.runs
 B.runs = lambda markup, cpr, ref=True: _orig_runs(_hl(markup), cpr, ref)
 
-# ---------------------------------------------------------------- E02-C 설명 줄: 왼쪽 옅은 세로선
-NOTE_BF = lambda: B.bfc('lk_note', left=('SOLID', '0.7 mm', '#DCCDBE'))
-
-
+# ---------------------------------------------------------------- N2 설명 줄: → 화살표, 둘째 줄부터 매달린 들여쓰기 (세로선 없음)
 def _note_pp(depth):
-    return pp('lk_note%d' % depth, align='JUSTIFY', left=1300 + 1500 * depth, ls=168, bf=NOTE_BF(), off=(700, 0, 60, 60))
+    return pp('lk_note%d' % depth, align='JUSTIFY', left=1700 + 1500 * depth, intent=-1300, ls=168, nxt=60)
 
 
 def note(s):
-    return body_p(B.runs(s, B.BODY()), _note_pp(0))
+    return body_p(B.runs('→\u2002' + s, B.BODY()), _note_pp(0))
 
 
 def sub(s):
-    return body_p(B.inline('– ', B.BODY()) + B.runs(s, B.BODY()), _note_pp(1))
+    return body_p(B.runs('–\u2002' + s, B.BODY()), _note_pp(1))
 
 
 B.note, B.sub, B.ex = note, sub, note
@@ -58,8 +56,12 @@ def heading(s):
     if m and not m.group(1).isdigit():   # STEP 1. … / Logic 1. … → 진한 칩 + 제목
         return body_p(chip_runs(m.group(1), INK, h=820) + B.inline(m.group(2), C_H()),
                       pp('lk_hstep', left=0, prev=900, nxt=250, ls=160, keep=True))
-    bf = B.bfc('lk_h', fill=WARM, left=('SOLID', '1.0 mm', ACC))
-    return body_p(B.inline(s, C_H()), pp('lk_h', left=0, prev=1100, nxt=450, ls=160, bf=bf, off=(900, 0, 260, 260), keep=True, connect=False))
+    bf = B.bfc('lk_h5', fill='#FAF7F3')
+    ppid = pp('lk_h5', left=0, prev=1100, nxt=450, ls=160, bf=bf, off=(600, 0, 240, 240), keep=True, connect=False)
+    m = re.match(r'^(\d+|\[\d+\])[.]?\s+(.*)$', s)
+    if m:   # 1. 제목 → 진한 번호 칩 + 제목
+        return body_p(chip_runs(m.group(1).strip('[]'), INK, h=820) + B.inline(m.group(2), C_H()), ppid)
+    return body_p(B.inline(s, C_H()), ppid)
 
 
 B.h1 = heading
@@ -91,18 +93,22 @@ def cf(s, label='cf.'):
 
 B.cf = cf
 
-# ---------------------------------------------------------------- E11-A 표: 진한 머리 행, 가로선만
+# ---------------------------------------------------------------- T3 표: 첫 열 강조 (베이지 칸·브라운 글자), 머리 행은 브라운 글자 + 밑줄
 def table(rows, widths=None, total=None):
     n = len(rows[0]); widths = widths or [1] * n
-    hc = B.cp('16', font=11, h=900, spacing=0, color='#FFFFFF')
+    hc = B.cp('16', font=11, h=900, spacing=0, color=ACC)
+    fc = B.cp(B.CELL(), color=ACC)
+    ppc = pp('lk_td', align='CENTER', ls=150)
     out = []
     for ri, row in enumerate(rows):
         cells = []
         for ci, val in enumerate(row):
             if ri == 0:
-                cells.append((widths[ci], B.bfc('lk_th', fill=INK), [para(val, hc, pp('lk_td', align='CENTER', ls=150))], 1))
+                cells.append((widths[ci], B.bfc('lk_th3', bottom=('SOLID', '0.3 mm', ACC)), [para(val, hc, ppc)], 1))
+            elif ci == 0:
+                cells.append((widths[ci], B.bfc('lk_tf3', fill=WARM, bottom=('SOLID', '0.12 mm', '#FFFFFF')), [para(val, fc, ppc)], 1))
             else:
-                cells.append((widths[ci], B.bfc('lk_td', bottom=('SOLID', '0.12 mm', LINE)), [para(val, B.CELL(), pp('lk_td', align='CENTER', ls=150))], 1))
+                cells.append((widths[ci], B.bfc('lk_td3', bottom=('SOLID', '0.12 mm', '#EADFD3')), [para(val, B.CELL(), ppc)], 1))
         out.append(cells)
     return grid(out, margin=(400, 400, 220, 220), out_gap=(300, 500))
 
