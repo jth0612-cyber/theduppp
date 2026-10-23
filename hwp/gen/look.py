@@ -163,7 +163,12 @@ def kice_head(label, lines):
     return [tab_head(label, 2.6)] + q_block(lines)
 
 
-Q_STYLE = ['plain']   # 발문 디자인: 'plain'(음영 없음, 기본) / 'box'(베이지 상자) — 시안 P1~P5 중 선택 대기
+Q_STYLE = ['p5']      # 발문 디자인: 'p5'(얇은 베이지 테두리 상자, 바탕 없음 — 사용자 선택) / 'plain'(상자 없음) / 'box'(베이지 음영 상자)
+
+
+def P5_LINE():
+    t = ('SOLID', '0.12 mm', LINE)
+    return dict(left=t, right=t, top=t, bottom=t)
 
 
 def q_block(lines):
@@ -179,13 +184,19 @@ def q_block(lines):
                                pre=B.inline(m.group(1) + ' ', B.cp('16', font=11, h=950, spacing=0, color=INK))))
             else:
                 ps.append(para(c, C_Q(), pp('lk_ctx0', align='JUSTIFY', ls=175, nxt=80)))
-        if Q_STYLE[0] == 'box':
+        if Q_STYLE[0] == 'p5':   # P5: 얇은 베이지 테두리 상자 (바탕 없음) 안에 조건, 질문은 상자 아래
+            out.append(grid([[(1, B.bfc('lk_p5box', **P5_LINE()), ps, 1)]], margin=(900, 900, 420, 420), out_gap=(0, 350)))
+        elif Q_STYLE[0] == 'box':
             out.append(grid([[(1, B.bfc('lk_ctxbox', fill=WARM), ps, 1)]], margin=(900, 900, 450, 450), out_gap=(0, 350)))
         else:   # 음영 없음: 조건 문단을 그대로 (표 칸 문단 → 본문 문단으로 옮김)
             for p in ps:
                 p.set('paraPrIDRef', pp('lk_ctx_plain', align='JUSTIFY', ls=175, nxt=100) if p.get('paraPrIDRef') == pp('lk_ctx0', align='JUSTIFY', ls=175, nxt=80)
                       else pp('lk_ctx_plain_lab', align='JUSTIFY', left=2000, intent=-2000, ls=175, nxt=100))
                 out.append(body_p(list(p), p.get('paraPrIDRef')))
+    if Q_STYLE[0] == 'p5' and not ctx and qs:   # 조건 없이 질문만 있으면 질문을 상자 안에
+        ps = [para(q, C_QB(), pp('lk_kq_in', align='JUSTIFY', left=2400, intent=-2400, ls=170, nxt=60), pre=chip_runs('Q%s' % n if n else 'Q', ACC, h=880))
+              for n, q in qs]
+        return out + [grid([[(1, B.bfc('lk_p5box', **P5_LINE()), ps, 1)]], margin=(900, 900, 420, 420), out_gap=(0, 400))]
     for num, q in qs:
         lab = 'Q%s' % num if num else 'Q'
         out.append(body_p(chip_runs(lab, ACC, h=880) + B.runs(q, C_QB()),
