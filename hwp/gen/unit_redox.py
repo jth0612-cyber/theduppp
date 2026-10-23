@@ -4,6 +4,8 @@
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb as L
+import sol_redox
+L.use_solutions(sol_redox)      # 읽기 쉽게 다시 쓴 풀이
 
 IMG = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img', 'redox') + '/'
 def I(n, w, h): return (IMG + 'image%d.png' % n, w, h)

@@ -2,6 +2,8 @@
 # 1단 전체 폭 블록(lb.py)으로 다시 조판한다. 날개 주석·TAG 없이 쪽은 자동으로 나눈다.
 import os, re, sys
 import lb as L
+import sol_unit
+L.use_solutions(sol_unit)      # 읽기 쉽게 다시 쓴 풀이
 
 SRC = os.path.join(L.GEN, 'unit_B4.py')
 
@@ -19,14 +21,15 @@ def load():
     src = common + '\n' + open(SRC, encoding='utf-8').read()
     src = src[:src.index('\nout = sys.argv[1]')]
     src = re.sub(r'^(from|import) .*$', '', src, flags=re.M)
+    src = src.replace('def mini(', 'def _mini_orig(').replace('mini(', 'L.mini(').replace('def _L.mini_orig(', 'def _mini_orig(')
     ns = {k: getattr(L, k) for k in ('note', 'sub', 'tip', 'cf', 'blank', 'theme', 'point', 'bar', 'table')}
-    ns.update(head=L.B.head, h1=L.h, question=question, small_bar=small_bar, answer=answer, box=box, sys=sys, os=os)
+    ns.update(L=L, head=L.B.head, h1=L.h, question=question, small_bar=small_bar, answer=answer, box=box, sys=sys, os=os)
     exec(compile(src, SRC, 'exec'), ns)
     # Mini 예제의 풀이 상자 뒤 정답까지는 한 묶음으로
     blocks = []
     for page in ns['pages']:
         for x in page:
-            b = x()
+            b = x if isinstance(x, L.Block) else x()
             blocks += b if isinstance(b, list) else [b]
     for a, b in zip(blocks, blocks[1:]):
         if b.make.__qualname__.startswith('answer'):

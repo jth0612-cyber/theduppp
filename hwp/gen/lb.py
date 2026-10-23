@@ -162,25 +162,33 @@ _WOOD = os.path.join(GEN, 'wood_band_light.jpg')
 _CRACK = ('SOLID', '0.25 mm', '#3A241D')
 
 
+LABEL_W = 9000          # THEME/POINT 라벨 칸 폭 (같게 해서 제목 글자 시작 위치를 세로로 맞춘다)
+POINT_W = 44935         # POINT 줄 폭 (P[93] 문단에서 시작)
+THEME_W = FULL_W - 532  # THEME 막대: 왼쪽 = POINT 점선 왼쪽 끝(P[93] 첫 줄 시작 532), 오른쪽 = 본문 오른쪽 끝
+
+
 def theme_el(n, title, en=''):
-    """styles_more.theme(우드·사진)와 같고, 제목 칸(폭의 23/32 ≈ 325pt)에 한 줄로 맞춘다"""
+    """우드 THEME 막대. POINT와 같은 문단 위치·같은 라벨 칸 폭, 제목은 한 줄에 맞춘다"""
     st = B.STYLE
     body = B.bfc('t2', img=B.add_image(_WOOD), bottom=_CRACK)
     c1 = B.inline('THEME %02d' % n, B.LABEL(800, '#3A241D', 25, 8))
-    h = fit_h(title, 305, 1450)
+    h = fit_h(title, (THEME_W - LABEL_W) / 100 - 22, 1450)
     c2 = B.styled(title, B.cp('20', font=st.get('title_font', B.HAND), h=h, spacing=0, color=st['ink'], bold=st.get('title_bold', False)))
-    return B.bar_table([(9, B.bfc('t1', fill='#D7A77E', bottom=_CRACK), c1, 'C'), (23, body, c2, 'L')], 1900, proto_i=1)
+    return B.bar_table([(LABEL_W, B.bfc('t1', fill='#D7A77E', bottom=_CRACK), c1, 'C'), (THEME_W - LABEL_W, body, c2, 'L')],
+                       1900, width=THEME_W, proto_i=93)
 
 
 def point_el(n, title):
-    """styles_more.point(우드·사진)와 같고, 제목을 한 줄(약 345pt)에 맞춘다"""
+    """POINT 줄: 라벨 칸(나비 + POINT 01) | 제목 칸, 갈색 점선 밑줄"""
     st = B.STYLE
-    h = fit_h(title, 345, 1200)
+    h = fit_h(title, (POINT_W - LABEL_W) / 100 - 22, 1200)
     t = B.styled(title, B.cp('22', font=st.get('title_font', B.HAND), h=h, spacing=0, bold=st.get('point_bold', True), color='#111111'))
     bw = st.get('bowtie', ('bowtie_h.png', 1450, 786))
     icon = B.pic_run(B.add_image(os.path.join(GEN, bw[0])), bw[1], bw[2])
-    rs = icon + B.inline('  POINT %02d   ' % n, B.LABEL(800, '#A9623A', 20, 8)) + t
-    return B.bar_table([(1, B.bfc('p1', bottom=('DASH', '0.3 mm', '#C9986C')), rs, 'L')], 1350, width=31300, proto_i=93, bottom_gap=170)
+    lab = icon + B.inline('  POINT %02d' % n, B.LABEL(800, '#A9623A', 20, 8))
+    dash = ('DASH', '0.3 mm', '#C9986C')
+    return B.bar_table([(LABEL_W, B.bfc('p1', bottom=dash), lab, 'L'), (POINT_W - LABEL_W, B.bfc('p1', bottom=dash), t, 'L')],
+                       1350, width=POINT_W, proto_i=93, bottom_gap=170)
 
 
 def theme(n, title): return Block(lambda: theme_el(n, title), 40, keep_next=True)
@@ -247,6 +255,19 @@ def _qpara(s):
     return B.question(s)
 
 
+import solbox as SB
+SOLS = {'SOL': {}, 'ANS': {}, 'QS': {}}     # 다시 쓴 풀이 (sol_*.py) — 키 'M3', 'K2' 등
+
+
+def use_solutions(mod):
+    SOLS.update(SOL=mod.SOL, ANS=getattr(mod, 'ANS', {}), QS=getattr(mod, 'QS', {}))
+
+
+def _sol_block(header, key, sol, keep):
+    lines = SOLS['SOL'].get(key) or _clean(sol)
+    return Block(lambda: SB.box(header, lines), SB.height(lines), keep_next=keep)
+
+
 def _clean(lines):
     return [re.sub(r'\*\*', '', x) for x in lines]
 
@@ -268,8 +289,8 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
     if qa:
         blocks.append(Block(lambda: [_qpara(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
                             [m for x in qa for m in notes_of(x)], keep_next=True))
-    h_sol = 26 + sum(LINE_BOX * nlines(x, PER_BOX) for x in sol) + 10
-    blocks.append(Block(lambda: B.box(f'{pt} 풀이', sol), h_sol, [m for x in sol for m in notes_of(x)], keep_next=ans is not None))
+    ans = SOLS['ANS'].get('M%d' % n, ans)
+    blocks.append(_sol_block(f'{pt} 풀이', 'M%d' % n, sol, ans is not None))
     if ans is not None:
         blocks.append(Block(lambda: B.answer(ans), 26))
     blocks.append(Block(B.blank, 22))
@@ -279,21 +300,33 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
 KICE_SCALE = 0.7      # 기출 문항 그림은 LOGIC BUILD 1에 넣던 크기의 70%
 
 
+KICE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img', 'kice')
+try:
+    import json as _json
+    KICE_IMG = _json.load(open(os.path.join(KICE_DIR, 'index.json'), encoding='utf-8'))   # 원고 그림 경로 끝부분 → 썸네일 그림
+except FileNotFoundError:
+    KICE_IMG = {}
+
+
 def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=None, label='Arranged KICE'):
-    """원고의 Arranged KICE 표: 다시 묶은 질문 → 기출 문항 그림 → 핵심 로직 → 적용 풀이 → 정답"""
-    sol = _clean(sol)
-    k = min(1.0, 29000 / fig[1]) * KICE_SCALE      # 지금까지 넣던 크기(본문 단 29000 안으로 줄인 것)의 70%
-    fig = (fig[0], int(fig[1] * k), int(fig[2] * k))
-    fig_w = FULL_W
+    """Arranged KICE: 다시 묶은 질문 → 기출 문항 그림(썸네일, 70%) → 적용 풀이 → 정답 (핵심 로직 상자는 뺐다)"""
+    key = 'K%d' % n
+    qs = SOLS['QS'].get(key, qs)
+    ans = SOLS['ANS'].get(key, ans)
+    k = min(1.0, 29000 / fig[1]) * KICE_SCALE      # LOGIC BUILD 1에 넣던 크기(29000 안으로 줄인 것)의 70%
+    w = int(fig[1] * k)
+    rel = '/'.join(fig[0].split('/')[-2:])
+    if rel in KICE_IMG:                            # 썸네일 폴더의 교육과정 맞춤 그림 (출처 라벨을 붙여 둔 것)
+        path = os.path.join(KICE_DIR, KICE_IMG[rel])
+        pw, ph = Image.open(path).size
+        fig = (path, w, int(w * ph / pw))
+    else:
+        fig = (fig[0], w, int(fig[2] * k))
     blocks = []
     h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
-    blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head,
-                        [m for x in qs for m in notes_of(x)], keep_next=True))
-    blocks.append(Block(lambda: figure_para([fig], fig_w), figure_h([fig], fig_w)))
-    if logic:
-        blocks.append(Block(lambda: B.box('핵심 로직', [logic]), 26 + LINE_BOX * nlines(logic, PER_BOX) + 10, keep_next=True))
-    h_sol = 26 + sum(LINE_BOX * nlines(x, PER_BOX) for x in sol) + 10
-    blocks.append(Block(lambda: B.box('적용 풀이', sol), h_sol, [m for x in sol for m in notes_of(x)], keep_next=ans is not None))
+    blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head, keep_next=True))
+    blocks.append(Block(lambda: figure_para([fig], FULL_W), figure_h([fig], FULL_W)))
+    blocks.append(_sol_block('적용 풀이', key, sol, bool(ans)))
     if ans:
         blocks.append(Block(lambda: B.answer(ans), 26))
     blocks.append(Block(B.blank, 22))
