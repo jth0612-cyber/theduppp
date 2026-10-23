@@ -4,7 +4,6 @@ import os, re, sys
 from PIL import Image, ImageDraw, ImageFont
 
 FD, OUT = sys.argv[1:3]
-os.makedirs(OUT, exist_ok=True)
 K = 2.2; W = int(462 * K); PAD = int(14 * K)
 ACC, INK, LILAC, LILAC_L, WARM, LINE, RED, BLUE = '#A9623A', '#3A241D', '#DDD1E8', '#F1ECF6', '#F7F2EC', '#C9B8A6', '#C0392B', '#1E5AA8'
 F = lambda n, pt: ImageFont.truetype(os.path.join(FD, n), int(pt * K))
@@ -41,6 +40,7 @@ def text(cv, x, s, w=None, lh=1.68, font=None, color='#202020', indent=0, after=
     """줄바꿈하며 출력 (글자 단위 근사). x: 왼쪽, indent: 둘째 줄부터 들여쓰기"""
     font = font or fb
     w = w or cv.w - x
+    s = s.replace('−', '-')     # 대체 글꼴에 유니코드 빼기 기호가 없어서
     rs = runs(s, font, None, color, bold_color)
     line_h = int(font.size * lh)
     cx, first = x, True
@@ -402,6 +402,7 @@ def sheet(items, path):
     out.save(path); return out.size
 
 
-groups = [ELEMENTS[0:3], ELEMENTS[3:6], ELEMENTS[6:10], ELEMENTS[10:14]]
-for i, g in enumerate(groups):
+if __name__ == '__main__':
+  groups = [ELEMENTS[0:3], ELEMENTS[3:6], ELEMENTS[6:10], ELEMENTS[10:14]]
+  for i, g in enumerate(groups):
     print(sheet(g, os.path.join(OUT, '요소시안_%d_%s.png' % (i + 1, '-'.join(c for c, *_ in g)))))
