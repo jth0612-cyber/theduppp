@@ -208,7 +208,43 @@ def box(header, lines, style=None):
             rows.append([(11, B.bfc('sbE_conc', fill=WARM, left=thin, right=thin, bottom=thin, top=('DOT', '0.12 mm', '#C9B8A6')),
                           _concl_paras(concl, ACC, prefix='→ '), 2)])
         return grid(rows, margin=(900, 900, 320, 320))
+    if st in ('E1', 'E2', 'E3', 'E4', 'E5'):
+        return box_e(header, steps, concl, st)
     raise ValueError(st)
+
+
+E_NAMES = {'E1': '탭 라벨 (기본)', 'E2': '브라운 탭', 'E3': '열린 상자', 'E4': '왼쪽 굵은 띠', 'E5': '머리 띠 전체 폭'}
+
+
+def box_e(header, steps, concl, st):
+    """시안 E 변형 5개: 진한 탭 + 상자의 조합을 바꾼 것"""
+    thin = ('SOLID', '0.12 mm', '#C9B8A6')
+    dot = ('DOT', '0.12 mm', '#C9B8A6')
+    blank = lambda: [para('', C_BODY(), pp('hd'))]
+    tab = lambda: [para(header, C_LBL(), pp('tab', align='CENTER'))]
+    if st == 'E5':   # 머리 띠가 전체 폭, 몸통은 얇은 진한 선 상자
+        ink = ('SOLID', '0.12 mm', INK)
+        rows = [[(1, B.bfc('e5_head', fill=INK), [para('  ' + header, C_LBL(), pp('hd'))], 1)],
+                [(1, B.bfc('e5_body', left=ink, right=ink, bottom=None if concl else ink), _stack(steps, step_color=INK), 1)]]
+        if concl:
+            rows.append([(1, B.bfc('e5_conc', fill=WARM, left=ink, right=ink, bottom=ink, top=dot), _concl_paras(concl, ACC), 1)])
+        return grid(rows, margin=(900, 900, 320, 320))
+    tab_fill, step_c, conc_fill, conc_c = INK, INK, WARM, ACC
+    side = dict(left=thin, right=thin)
+    if st == 'E2':   # 탭·단계 제목 브라운, 결론 라일락
+        tab_fill, step_c, conc_fill, conc_c = ACC, ACC, LILAC_L, INK
+        br = ('SOLID', '0.12 mm', '#D9B79A'); thin = br; side = dict(left=br, right=br)
+    elif st == 'E3':   # 옆선 없이 위·아래 선만
+        side = {}
+    elif st == 'E4':   # 왼쪽만 굵은 진한 띠
+        side = dict(left=('SOLID', '1.0 mm', INK))
+    k = st
+    rows = [[(2, B.bfc(k + '_tab', fill=tab_fill), tab(), 1), (9, B.bfc(k + '_tabr', bottom=thin if st != 'E4' else None), blank(), 1)],
+            [(11, B.bfc(k + '_body', bottom=None if concl else (thin if st != 'E4' else None), **side), _stack(steps, step_color=step_c), 2)]]
+    if concl:
+        rows.append([(11, B.bfc(k + '_conc', fill=conc_fill, top=dot, bottom=thin if st != 'E4' else None, **side),
+                      _concl_paras(concl, conc_c, prefix='→ '), 2)])
+    return grid(rows, margin=(900, 900, 320, 320))
 
 
 def height(lines, style=None, per=27 * 46205 / 32570):

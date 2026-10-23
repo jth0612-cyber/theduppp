@@ -290,13 +290,14 @@ def mini(n, q, sol, ans, pt='Point 1', figs=(), q_after=(), tables=(), fig_w=COL
         blocks.append(Block(lambda: [_qpara(x) for x in qa], sum(LINE_Q * nlines(x, PER_Q) for x in qa) + 4,
                             [m for x in qa for m in notes_of(x)], keep_next=True))
     ans = SOLS['ANS'].get('M%d' % n, ans)
-    blocks.append(_sol_block(f'{pt} 풀이', 'M%d' % n, sol, ans is not None))
+    blocks.append(_sol_block(f'{pt} Sol.', 'M%d' % n, sol, ans is not None))
     if ans is not None:
         blocks.append(Block(lambda: B.answer(ans), 26))
     blocks.append(Block(B.blank, 22))
     return blocks
 
 
+KICE_SOL = 'Applied Sol.'   # Arranged KICE 풀이 상자 이름 (예전 '적용 풀이')
 KICE_SCALE = 0.7      # 기출 문항 그림은 LOGIC BUILD 1에 넣던 크기의 70%
 
 
@@ -326,7 +327,7 @@ def kice(n, qs, fig, sol, ans=None, logic=None, fig_w=None, label='Arranged KICE
     h_head = 20 + sum(LINE_Q * nlines(x, PER_Q) for x in qs) + 6
     blocks.append(Block(lambda: [B.small_bar(f'{label} {n}', rnd=True)] + [_qpara(x) for x in qs], h_head, keep_next=True))
     blocks.append(Block(lambda: figure_para([fig], FULL_W), figure_h([fig], FULL_W)))
-    blocks.append(_sol_block('적용 풀이', key, sol, bool(ans)))
+    blocks.append(_sol_block(KICE_SOL, key, sol, bool(ans)))
     if ans:
         blocks.append(Block(lambda: B.answer(ans), 26))
     blocks.append(Block(B.blank, 22))

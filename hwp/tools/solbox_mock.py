@@ -1,5 +1,5 @@
 """풀이 상자 시안 A~E 근사 미리보기 PNG (한글 렌더러가 없어 PIL로 그림; 글꼴은 비슷한 것으로 대체).
-Usage: python3 solbox_mock.py <폰트폴더> <out.png>"""
+Usage: python3 solbox_mock.py <폰트폴더> <out.png> [시안,시안,...] [머리1] [머리2]"""
 import os, re, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'gen'))
 from PIL import Image, ImageDraw, ImageFont
@@ -15,7 +15,10 @@ f_conc = ImageFont.truetype(os.path.join(FD, 'Pretendard-SemiBold.ttf'), int(10 
 f_step = ImageFont.truetype(os.path.join(FD, 'Pretendard-Bold.ttf'), int(8.8 * K))
 f_head = ImageFont.truetype(os.path.join(FD, 'Pretendard-Bold.ttf'), int(8.5 * K))
 f_title = ImageFont.truetype(os.path.join(FD, 'Pretendard-Bold.ttf'), int(12 * K))
-NAMES = {'A': '노트 라인', 'B': '웜 카드', 'C': '단계 표', 'D': '위아래 굵은 선', 'E': '탭 라벨'}
+NAMES = {'A': '노트 라인', 'B': '웜 카드', 'C': '단계 표', 'D': '위아래 굵은 선', 'E': '탭 라벨',
+         'E1': '탭 라벨 (기본)', 'E2': '브라운 탭', 'E3': '열린 상자', 'E4': '왼쪽 굵은 띠', 'E5': '머리 띠 전체 폭'}
+STYLES = sys.argv[3].split(',') if len(sys.argv) > 3 else list('ABCDE')
+H1, H2 = (sys.argv[4], sys.argv[5]) if len(sys.argv) > 5 else ('Point 3 풀이', '적용 풀이')
 
 
 def clean(s):
@@ -124,12 +127,45 @@ def render(st, header, lines):
             d.rectangle((0, cy, W - 1, ye), fill=WARM)
             conc(pad, cy + int(5 * K), W - 2 * pad, ACC, prefix='→ '); y = ye
         d.rectangle((0, top, W - 1, y), outline='#C9B8A6')
+    elif st in ('E1', 'E2', 'E3', 'E4', 'E5'):
+        y = render_e(d, st, header, steps, concl, text_block, conc, pad)
     return im.crop((0, 0, W, y + 2))
 
 
+def render_e(d, st, header, steps, concl, text_block, conc, pad):
+    thin, dotc = '#C9B8A6', '#C9B8A6'
+    tab_fill, step_c, conc_fill, conc_c = INK, INK, WARM, ACC
+    if st == 'E2':
+        tab_fill, step_c, conc_fill, conc_c, thin = ACC, ACC, LILAC_L, INK, '#D9B79A'
+    th = int(17 * K)
+    if st == 'E5':
+        d.rectangle((0, 0, W - 1, th), fill=INK); d.text((pad, int(4 * K)), header, font=f_head, fill='white')
+    else:
+        tw = int(W * 2 / 11)
+        d.rectangle((0, 0, tw, th), fill=tab_fill)
+        hw = d.textlength(header, font=f_head); d.text(((tw - hw) / 2, int(4 * K)), header, font=f_head, fill='white')
+        if st != 'E4':
+            d.line((tw, th, W, th), fill=thin)
+    y = text_block(pad, th + int(6 * K), W - 2 * pad, None, step_color=step_c) + int(5 * K)
+    if concl:
+        cy = y; ye = cy + len(concl) * int(16 * K) + int(10 * K)
+        d.rectangle((0, cy, W - 1, ye), fill=conc_fill)
+        for xx in range(0, W, 5): d.point((xx, cy), fill=dotc)
+        conc(pad, cy + int(5 * K), W - 2 * pad, conc_c, prefix='→ '); y = ye
+    if st in ('E1', 'E2'):
+        d.rectangle((0, th, W - 1, y), outline=thin)
+    elif st == 'E3':
+        d.line((0, y, W, y), fill=thin)
+    elif st == 'E4':
+        d.rectangle((0, th, int(2.8 * K), y), fill=INK)
+    elif st == 'E5':
+        d.rectangle((0, th, W - 1, y), outline=INK)
+    return y
+
+
 cards = []
-for st in 'ABCDE':
-    a = render(st, 'Point 3 풀이', SE.SOL['M6']); b = render(st, '적용 풀이', SE.SOL['K1'])
+for st in STYLES:
+    a = render(st, H1, SE.SOL['M6']); b = render(st, H2, SE.SOL['K1'])
     hdr = int(26 * K)
     card = Image.new('RGB', (W + 2 * int(14 * K), hdr + a.height + b.height + int(40 * K)), 'white')
     dd = ImageDraw.Draw(card)
