@@ -37,8 +37,8 @@
 
 ## 2. 빌드
 ```
-python hwp/build_all.py              # 세 단원 모두 → hwp/final/
-python hwp/build_all.py redox        # 한 단원만 (unit | redox | enzyme)
+python hwp/build_all.py              # 여섯 단원 모두 → hwp/final/
+python hwp/build_all.py redox        # 한 단원만 (unit | redox | enzyme | gravity | neutral | dna)
 ```
 `build_all.py`는 단원마다 다음 순서로 돌아요.
 1. `hwp/gen/unit_<단원>.py raw.hwpx`
@@ -53,7 +53,7 @@ python hwp/build_all.py redox        # 한 단원만 (unit | redox | enzyme)
 
 단원별 원고 스크립트:
 - `unit_unit.py` (단위변환): 사용자 원고 `_생성스크립트/unit_B4.py`를 그대로 읽어 다시 짜요. 원고 문장은 거기서 고쳐요.
-- `unit_redox.py`, `unit_enzyme.py`: 원고를 DSL로 옮긴 것이에요. 원고 덤프 도구는 `gen/extract.py`, 그림은 `gen/img/`에 있어요.
+- `unit_redox.py`, `unit_enzyme.py`, `unit_gravity.py`(중력장), `unit_neutral.py`(중화 반응), `unit_dna.py`(샤가프): 원고를 DSL로 옮긴 것이에요. 새 원고 그림은 `gen/extract_img.py <hwpx> <단원>`으로 뽑고, 어두운 손글씨 그림은 `gen/lighten_notes.py`로 밝혀요. 원고 덤프 도구는 `gen/extract.py`, 그림은 `gen/img/`에 있어요.
 - 풀이 문장은 `sol_redox.py`, `sol_enzyme.py`, `sol_unit.py`에 따로 있어요(5절).
 
 ## 3. 파일 지도

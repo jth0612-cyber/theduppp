@@ -8,6 +8,7 @@ import solbox as SB
 from solbox import ACC, INK, LILAC, LILAC_L, WARM, pp, para, grid, chip_runs, STEP_RE
 
 HP = B.NS
+solbox_full = lambda: 46205
 LINE = '#C9B8A6'
 BAND = '#F4EFEA'
 
@@ -94,7 +95,7 @@ def cf(s, label='cf.'):
 B.cf = cf
 
 # ---------------------------------------------------------------- T3 표: 첫 열 강조 (베이지 칸·브라운 글자), 머리 행은 브라운 글자 + 밑줄
-def table(rows, widths=None, total=None):
+def table(rows, widths=None, total=None, width=None):
     n = len(rows[0]); widths = widths or [1] * n
     hc = B.cp('16', font=11, h=900, spacing=0, color=ACC)
     fc = B.cp(B.CELL(), color=ACC)
@@ -110,7 +111,7 @@ def table(rows, widths=None, total=None):
             else:
                 cells.append((widths[ci], B.bfc('lk_td3', bottom=('SOLID', '0.12 mm', '#EADFD3')), [para(val, B.CELL(), ppc)], 1))
         out.append(cells)
-    return grid(out, margin=(400, 400, 220, 220), out_gap=(300, 500))
+    return grid(out, width=width or solbox_full(), margin=(400, 400, 220, 220), out_gap=(300, 500))
 
 
 B.table = table

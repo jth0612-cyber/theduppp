@@ -150,6 +150,12 @@ def parse(lines):
                 steps.append((None, []))
             if ln.startswith('= '):
                 steps[-1][1].append(('eq', ln[2:]))
+            elif ln.startswith('| '):        # 표 한 행: '| a | b | c'
+                row = [c.strip() for c in ln[2:].split('|')]
+                if steps[-1][1] and steps[-1][1][-1][0] == 'tbl':
+                    steps[-1][1][-1][1].append(row)
+                else:
+                    steps[-1][1].append(('tbl', [row]))
             else:
                 steps[-1][1].append(('t', ln))
     return steps, concl
@@ -160,6 +166,10 @@ def _body_paras(items, left=0):
     for kind, s in items:
         if kind == 'eq':
             out.append(para(s, C_EQ(), pp('eq%d' % left, left=left + 1200, prev=60, nxt=60, ls=175)))
+        elif kind == 'tbl':   # 풀이 안 이온 표 등: 본문 표(T3)와 같은 모양, 열 수에 맞춘 폭
+            import look
+            ncol = max(len(r) for r in s)
+            out.append(look.table(s, None, width=min(40000, 6200 * ncol)))
         else:
             out.append(para(s, C_BODY(), pp('t%d' % left, left=left, prev=0, nxt=0, ls=175)))
     return out
@@ -281,6 +291,6 @@ def height(lines, style=None, per=27 * 46205 / 32570):
     steps, concl = parse(lines)
     h = 30
     for title, items in steps:
-        h += (22 if title else 0) + sum(17 * lb.nlines(s, per) for _, s in items)
+        h += (22 if title else 0) + sum((18 * len(s) + 14) if k == 'tbl' else 17 * lb.nlines(s, per) for k, s in items)
     h += sum(20 * lb.nlines(c, per) for c in concl) + (12 if concl else 0)
     return h + (len(steps) * 10 if (style or STYLE[0]) == 'C' else 0)
