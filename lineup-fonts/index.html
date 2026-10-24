@@ -1,0 +1,251 @@
+<title>LINE_UP 제목 폰트 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Jost:wght@600&family=League+Spartan:wght@700&family=Outfit:wght@600&family=Urbanist:wght@700&family=Lexend:wght@600&family=Poppins:wght@600&family=Montserrat:wght@700&family=Red+Hat+Display:wght@700&family=Kumbh+Sans:wght@700&family=Figtree:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700&family=Schibsted+Grotesk:wght@700&family=Hanken+Grotesk:wght@700&family=Instrument+Sans:wdth,wght@100,700&family=Bricolage+Grotesque:wght@700&family=Manrope:wght@700&family=Onest:wght@700&family=Sora:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Saira:wdth,wght@125,600&family=Chakra+Petch:wght@600&family=Oxanium:wght@700&family=JetBrains+Mono:wght@700&family=Syncopate:wght@700&family=Michroma&family=Unbounded:wght@600&family=Krona+One&family=Syne:wght@700&family=Bodoni+Moda:wght@700&display=swap">
+<style>
+/* 레이아웃: 목업 배경과 같은 어두운 바닥 위에 표지 카드 그리드. 표지 위 제목만 폰트별로 바뀐다. */
+:root {
+  --ground: #1f1f1f;
+  --panel: #2a2a2c;
+  --line: #3a3a3e;
+  --ink: #ececee;
+  --muted: #9a9aa2;
+  --blue: #6095cb;
+  --purple: #8a7fb7;
+  --tone: var(--blue);
+  --pick: #e9d27a;
+  --ui: "Noto Sans KR", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+:root.vol2 { --tone: var(--purple); }
+body { background: var(--ground); color: var(--ink); font-family: var(--ui); }
+.wrap {
+  max-width: 1320px; margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px;
+}
+header { display: grid; gap: 14px; max-width: 72ch; }
+h1 { margin: 0; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+h1 span { font-family: var(--mono); font-weight: 500; color: var(--tone); letter-spacing: 0.04em; }
+header p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 0.95rem; }
+
+.picks { display: grid; gap: 10px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.picks h2 { margin: 0; font-size: 0.8rem; font-family: var(--mono); font-weight: 500; letter-spacing: 0.08em; color: var(--pick); text-transform: uppercase; }
+.picks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; line-height: 1.6; font-size: 0.92rem; }
+.picks b { font-weight: 700; }
+.picks small { color: var(--muted); font-size: 0.82rem; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ground); padding-block: 10px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button, .chips button {
+  font: 500 0.82rem var(--ui); color: var(--muted); background: transparent; border: 0;
+  padding: 7px 14px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--tone); color: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.chips button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+.count { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 32px 22px; }
+.card { display: grid; gap: 10px; min-width: 0; align-content: start; }
+.card button.open { all: unset; cursor: zoom-in; display: block; border-radius: 2px; }
+.card button.open:focus-visible { outline: 2px solid var(--pick); outline-offset: 3px; }
+.meta { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; align-items: baseline; }
+.meta .no { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta .name { font-weight: 700; font-size: 0.95rem; }
+.meta .tag { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+.meta .tag.star { color: var(--pick); }
+.meta .note { grid-column: 2 / 4; color: var(--muted); font-size: 0.8rem; line-height: 1.55; }
+
+/* 표지 */
+.cover {
+  container-type: inline-size; position: relative; aspect-ratio: 864 / 1232; max-width: 100%;
+  background: #f4f4f4 url(bg-blue.jpg) center / cover no-repeat;
+  box-shadow: 0 18px 40px rgba(0,0,0,.45); overflow: hidden;
+}
+:root.vol2 .cover { background-image: url(bg-purple.jpg); aspect-ratio: 844 / 1232; }
+.title {
+  /* 글자마다 캡 높이와 베이스라인을 측정해(--fs, --b) 원본과 같은 높이·위치에 놓는다 */
+  position: absolute; left: 3.6%; right: 5.2%; top: 0;
+  display: flex; justify-content: space-between; align-items: baseline;
+  color: var(--tone); font-size: var(--fs, 10cqw); line-height: 1;
+  margin-top: calc(13.6cqw - var(--b, 0.9) * 1em);
+  white-space: nowrap;
+}
+.title i { font-style: normal; }
+.title .us { display: inline-block; width: 1.1em; height: var(--bar, 0.15em); background: currentColor; }
+.sub { position: absolute; left: 3.6%; top: 11.7%; font: 700 1.6cqw/1.5 var(--ui); color: #3b3b3d; }
+.sub span { display: block; font-weight: 400; }
+
+dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 560px); width: 100%; }
+dialog::backdrop { background: rgba(10,10,12,.82); }
+dialog .cover { box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+dialog .cap { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); padding-top: 12px; font-size: 0.9rem; }
+dialog .cap button { font: 500 0.82rem var(--ui); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+
+footer { color: var(--muted); font-size: 0.82rem; line-height: 1.7; max-width: 72ch; border-top: 1px solid var(--line); padding-top: 18px; }
+@media (max-width: 520px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; } .meta .note { display: none; } .count { margin-left: 0; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span>LINE_UP</span> 제목 폰트 시안 30</h1>
+    <p>기존 표지에서 제목만 지우고 같은 자리, 같은 자간 배치로 폰트를 바꿔 얹었습니다. 글자 높이(캡 하이트)를 맞춰 두어서 폰트 차이만 보이게 했어요. 표지를 누르면 크게 볼 수 있습니다. 모두 Google Fonts(OFL)라 인쇄·상업 사용이 무료입니다.</p>
+  </header>
+
+  <section class="picks" aria-labelledby="picks-h">
+    <h2 id="picks-h">먼저 볼 다섯 개</h2>
+    <ol>
+      <li><b>Jost</b> <small>(01)</small> — 지금 시안의 Futura 느낌을 그대로 이어가는 가장 안전한 선택. 원형 U·P가 줄무늬와 잘 어울립니다.</li>
+      <li><b>League Spartan</b> <small>(02)</small> — 같은 기하 계열인데 더 단단하고 굵어서, 멀리서 서가에 꽂혔을 때 잘 읽힙니다.</li>
+      <li><b>Archivo Expanded</b> <small>(11)</small> — 가로로 넓은 그로테스크. 넓은 자간 배치와 맞물려 표지 상단이 꽉 찬 느낌이 납니다.</li>
+      <li><b>Michroma</b> <small>(26)</small> — 과학·기술 교재다운 정밀한 인상. 수능 과학 브랜드로 차별화하고 싶을 때.</li>
+      <li><b>Red Hat Display</b> <small>(08)</small> — 기하 계열보다 살짝 따뜻하고 현대적. 시리즈 로고로 오래 쓰기 좋습니다.</li>
+    </ol>
+  </section>
+
+  <div class="bar" role="toolbar" aria-label="보기 설정">
+    <div class="seg" aria-label="권 선택">
+      <button type="button" id="v1" aria-pressed="true">통합과학 Ⅰ</button>
+      <button type="button" id="v2" aria-pressed="false">통합과학 Ⅱ</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <span class="count" id="count"></span>
+  </div>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>
+    유료 폰트로 같은 방향을 가져가려면: Jost·League Spartan 계열은 <b>Futura PT</b>, Archivo·Hanken 계열은 <b>Neue Haas Grotesk</b>·<b>Aktiv Grotesk</b>, Barlow·Saira 계열은 <b>DIN Next</b>, Michroma·Syncopate 계열은 <b>Eurostile Extended</b>가 대응합니다. 언더스코어(_)는 원본처럼 막대로 그렸고, 두께는 각 폰트의 획 굵기에 맞췄습니다.
+  </footer>
+</div>
+
+<dialog id="dlg">
+  <div id="dlg-cover"></div>
+  <div class="cap"><span id="dlg-name"></span><button type="button" id="dlg-close">닫기</button></div>
+</dialog>
+
+<script>
+const FONTS = [
+  ["Jost", "'Jost'", 600, "기하", "Futura 계열. 현재 시안과 가장 가까운 형태", 0.15, true],
+  ["League Spartan", "'League Spartan'", 700, "기하", "굵고 단단한 Futura 변형. 서가에서 눈에 잘 띔", 0.17, true],
+  ["Outfit", "'Outfit'", 600, "기하", "둥근 마감의 깔끔한 기하체. 부드러운 인상", 0.15],
+  ["Urbanist", "'Urbanist'", 700, "기하", "좁은 원형. 가볍고 세련된 느낌", 0.15],
+  ["Lexend", "'Lexend'", 600, "기하", "가독성 연구로 만든 서체. 넓은 글자폭", 0.15],
+  ["Poppins", "'Poppins'", 600, "기하", "익숙한 기하체. 무난하지만 개성은 약함", 0.15],
+  ["Montserrat", "'Montserrat'", 700, "기하", "넓은 기하체. 포스터용으로 힘이 있음", 0.16],
+  ["Red Hat Display", "'Red Hat Display'", 700, "기하", "따뜻한 기하체. 시리즈 로고로 오래 쓰기 좋음", 0.16, true],
+  ["Kumbh Sans", "'Kumbh Sans'", 700, "기하", "각진 끝처리. 단정하고 차분함", 0.16],
+  ["Figtree", "'Figtree'", 700, "기하", "친근한 기하체. 교재보다는 브랜드 톤", 0.16],
+  ["Archivo Expanded", "'Archivo'", 700, "그로테스크", "가로로 넓은 그로테스크. 상단을 꽉 채움", 0.16, true, "125%"],
+  ["Schibsted Grotesk", "'Schibsted Grotesk'", 700, "그로테스크", "신문 계열 그로테스크. 신뢰감 있는 톤", 0.16],
+  ["Hanken Grotesk", "'Hanken Grotesk'", 700, "그로테스크", "중립적인 스위스풍. Helvetica 대안", 0.16],
+  ["Instrument Sans", "'Instrument Sans'", 700, "그로테스크", "날렵한 현대 그로테스크. 좁은 P·N", 0.15],
+  ["Bricolage Grotesque", "'Bricolage Grotesque'", 700, "그로테스크", "잉크 트랩이 있는 개성형. 젊은 느낌", 0.16],
+  ["Manrope", "'Manrope'", 700, "그로테스크", "반기하 그로테스크. 차갑고 정돈됨", 0.15],
+  ["Onest", "'Onest'", 700, "그로테스크", "부드러운 모서리. 화면·인쇄 모두 안정적", 0.16],
+  ["Sora", "'Sora'", 700, "그로테스크", "넓고 둥근 테크 그로테스크", 0.16],
+  ["Barlow", "'Barlow'", 600, "기술", "DIN·도로표지판 계열. 공학적인 인상", 0.14],
+  ["Saira Expanded", "'Saira'", 600, "기술", "넓은 사각형 곡선. 계기판 같은 느낌", 0.14, false, "125%"],
+  ["Chakra Petch", "'Chakra Petch'", 600, "기술", "모서리를 깎은 사각형. 디지털 톤", 0.14],
+  ["Oxanium", "'Oxanium'", 700, "기술", "각진 SF 서체. 강한 미래 지향", 0.15],
+  ["JetBrains Mono", "'JetBrains Mono'", 700, "기술", "고정폭. 코드·실험 노트 같은 분위기", 0.14],
+  ["IBM Plex Mono", "'IBM Plex Mono'", 600, "기술", "고정폭 세리프 기운. 연구 보고서 톤", 0.13],
+  ["Syncopate", "'Syncopate'", 700, "와이드", "아주 넓은 대문자체. 제목이 띠처럼 보임", 0.15],
+  ["Michroma", "'Michroma'", 400, "와이드", "Eurostile 계열. 정밀한 과학·기술 인상", 0.13, true],
+  ["Unbounded", "'Unbounded'", 600, "와이드", "넓고 둥근 디스플레이. 강한 존재감", 0.16],
+  ["Krona One", "'Krona One'", 400, "와이드", "넓은 저대비 서체. 레트로 테크", 0.14],
+  ["Syne", "'Syne'", 700, "와이드", "독특한 비례의 아트북 서체. 실험적", 0.15],
+  ["Bodoni Moda", "'Bodoni Moda'", 700, "세리프", "고대비 세리프. 과학서보다는 잡지 느낌", 0.07],
+];
+const CATS = ["전체", "추천", "기하", "그로테스크", "기술", "와이드", "세리프"];
+const grid = document.getElementById("grid");
+const root = document.documentElement;
+let cat = "전체";
+
+function coverHTML(f) {
+  const [, family, w, , , bar, , stretch] = f;
+  const m = f.m || {};
+  const st = `font-family:${family}, system-ui, sans-serif;font-weight:${w};${stretch ? `font-stretch:${stretch};` : ""}--bar:${bar}em;${m.fs ? `--fs:${m.fs}cqw;--b:${m.b}` : ""}`;
+  const L = ["L","I","N","E"].map(c => `<i>${c}</i>`).join("") + `<span class="us"></span>` + ["U","P"].map(c => `<i>${c}</i>`).join("");
+  return `<div class="cover"><div class="title" style="${st}" aria-label="LINE_UP">${L}</div>
+    <div class="sub">2028학년도<span>대학수학능력시험 대비</span></div></div>`;
+}
+
+FONTS.forEach((f, i) => {
+  const [name, , w, c, note, , star] = f;
+  const el = document.createElement("article");
+  el.className = "card"; el.dataset.cat = c; el.dataset.star = star ? "1" : "";
+  el.innerHTML = `<button type="button" class="open" aria-label="${name} 크게 보기">${coverHTML(f)}</button>
+    <div class="meta"><span class="no">${String(i + 1).padStart(2, "0")}</span><span class="name">${name}</span>
+    <span class="tag${star ? " star" : ""}">${star ? "추천 · " : ""}${c} ${w}</span><span class="note">${note}</span></div>`;
+  el.querySelector(".open").addEventListener("click", () => openDlg(f, i));
+  grid.appendChild(el);
+});
+
+const chips = document.getElementById("chips");
+CATS.forEach(c => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = c; b.setAttribute("aria-pressed", c === cat);
+  b.addEventListener("click", () => { cat = c; chips.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); filter(); });
+  chips.appendChild(b);
+});
+function filter() {
+  let n = 0;
+  grid.querySelectorAll(".card").forEach(el => {
+    const show = cat === "전체" || (cat === "추천" ? el.dataset.star : el.dataset.cat === cat);
+    el.hidden = !show; if (show) n++;
+  });
+  document.getElementById("count").textContent = `${n} / ${FONTS.length}`;
+}
+filter();
+
+// 폰트마다 캡 높이·글자폭·어센트가 달라서, 로드 뒤 캔버스로 재고 크기와 위치를 맞춘다.
+const CAP = 7.2, AVAIL = 91.2 * 0.84;
+const ctx = document.createElement("canvas").getContext("2d");
+document.fonts.ready.then(() => Promise.all(FONTS.map(f =>
+  document.fonts.load(`${f[2]} 100px ${f[1]}`, "LINEUP").catch(() => {})
+))).then(() => {
+  const cards = grid.querySelectorAll(".card .title");
+  FONTS.forEach((f, i) => {
+    ctx.font = `${f[2]} 100px ${f[1]}, sans-serif`;
+    ctx.fontStretch = f[7] ? "expanded" : "normal";
+    const t = ctx.measureText("LINEUP");
+    const cap = t.actualBoundingBoxAscent / 100, fa = t.fontBoundingBoxAscent / 100, fd = t.fontBoundingBoxDescent / 100;
+    if (!cap || !fa) return;
+    const widthEm = t.width / 100 + 1.1;
+    const fs = Math.min(CAP / cap, AVAIL / widthEm);
+    f.m = { fs: fs.toFixed(2), b: ((1 - fa - fd) / 2 + fa).toFixed(3) };
+    cards[i].style.setProperty("--fs", f.m.fs + "cqw");
+    cards[i].style.setProperty("--b", f.m.b);
+  });
+});
+
+const v1 = document.getElementById("v1"), v2 = document.getElementById("v2");
+function setVol(two) {
+  root.classList.toggle("vol2", two);
+  v1.setAttribute("aria-pressed", !two); v2.setAttribute("aria-pressed", two);
+  try { localStorage.setItem("lineup-vol", two ? "2" : "1"); } catch (e) {}
+}
+v1.addEventListener("click", () => setVol(false));
+v2.addEventListener("click", () => setVol(true));
+try { if (localStorage.getItem("lineup-vol") === "2") setVol(true); } catch (e) {}
+
+const dlg = document.getElementById("dlg");
+function openDlg(f, i) {
+  document.getElementById("dlg-cover").innerHTML = coverHTML(f);
+  document.getElementById("dlg-name").textContent = `${String(i + 1).padStart(2, "0")}  ${f[0]} · ${f[2]}`;
+  dlg.showModal();
+}
+document.getElementById("dlg-close").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+</script>
