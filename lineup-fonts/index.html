@@ -5,6 +5,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Jost:wght@600&family=League+Spartan:wght@700&family=Outfit:wght@600&family=Urbanist:wght@700&family=Lexend:wght@600&family=Poppins:wght@600&family=Montserrat:wght@700&family=Red+Hat+Display:wght@700&family=Kumbh+Sans:wght@700&family=Figtree:wght@700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700&family=Schibsted+Grotesk:wght@700&family=Hanken+Grotesk:wght@700&family=Instrument+Sans:wdth,wght@100,700&family=Bricolage+Grotesque:wght@700&family=Manrope:wght@700&family=Onest:wght@700&family=Sora:wght@700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Saira:wdth,wght@125,600&family=Chakra+Petch:wght@600&family=Oxanium:wght@700&family=JetBrains+Mono:wght@700&family=Syncopate:wght@700&family=Michroma&family=Unbounded:wght@600&family=Krona+One&family=Syne:wght@700&family=Bodoni+Moda:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300&family=Raleway:wght@200&family=Comfortaa:wght@300&family=Quicksand:wght@400&family=Didact+Gothic&family=Tenor+Sans&family=Bebas+Neue&family=Oswald:wght@500&family=Anton&family=Antonio:wght@700&family=Barlow+Condensed:wght@600&family=Saira+Extra+Condensed:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Cormorant+Garamond:wght@600&family=DM+Serif+Display&family=Instrument+Serif&family=Fraunces:wght@600&family=Cinzel:wght@600&family=Nunito:wght@800&family=M+PLUS+Rounded+1c:wght@800&family=Fredoka:wght@600&family=Baloo+2:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Major+Mono+Display&family=Stardos+Stencil:wght@700&family=Rubik+Mono+One&family=Bungee+Hairline&family=Archivo+Black&family=Lexend+Giga:wght@200&family=Poiret+One&display=swap">
 <style>
 /* 레이아웃: 목업 배경과 같은 어두운 바닥 위에 표지 카드 그리드. 표지 위 제목만 폰트별로 바뀐다. */
 :root {
@@ -49,6 +52,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding: 7px 14px; cursor: pointer;
 }
 .seg button[aria-pressed="true"] { background: var(--tone); color: #fff; }
+.sets { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.sets button { font: 700 0.95rem var(--ui); color: var(--muted); background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 4px 2px; cursor: pointer; }
+.sets button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--tone); }
+.sets small { font: 400 0.75rem var(--mono); margin-left: 6px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
 .chips button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
@@ -82,7 +89,9 @@ button:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
   white-space: nowrap;
 }
 .title i { font-style: normal; }
-.title .us { display: inline-block; width: 1.1em; height: var(--bar, 0.15em); background: currentColor; }
+.title .us { display: inline-block; width: var(--bw, 1.1em); height: var(--bar, 0.15em); background: currentColor; }
+.title.outline i { color: transparent; -webkit-text-stroke: max(1px, 0.022em) var(--tone); }
+.title.outline .us { background: transparent; box-shadow: inset 0 0 0 max(1px, 0.022em) var(--tone); }
 .sub { position: absolute; left: 3.6%; top: 11.7%; font: 700 1.6cqw/1.5 var(--ui); color: #3b3b3d; }
 .sub span { display: block; font-weight: 400; }
 
@@ -98,19 +107,14 @@ footer { color: var(--muted); font-size: 0.82rem; line-height: 1.7; max-width: 7
 
 <div class="wrap">
   <header>
-    <h1><span>LINE_UP</span> 제목 폰트 시안 30</h1>
+    <h1><span>LINE_UP</span> 제목 폰트 시안 60</h1>
+    <div class="sets" role="group" aria-label="시안 묶음"><button type="button" id="s1" aria-pressed="false">1차 · 굵은 산세리프<small>01–30</small></button><button type="button" id="s2" aria-pressed="true">2차 · 다른 느낌<small>31–60</small></button></div>
     <p>기존 표지에서 제목만 지우고 같은 자리, 같은 자간 배치로 폰트를 바꿔 얹었습니다. 글자 높이(캡 하이트)를 맞춰 두어서 폰트 차이만 보이게 했어요. 표지를 누르면 크게 볼 수 있습니다. 모두 Google Fonts(OFL)라 인쇄·상업 사용이 무료입니다.</p>
   </header>
 
   <section class="picks" aria-labelledby="picks-h">
     <h2 id="picks-h">먼저 볼 다섯 개</h2>
-    <ol>
-      <li><b>Jost</b> <small>(01)</small> — 지금 시안의 Futura 느낌을 그대로 이어가는 가장 안전한 선택. 원형 U·P가 줄무늬와 잘 어울립니다.</li>
-      <li><b>League Spartan</b> <small>(02)</small> — 같은 기하 계열인데 더 단단하고 굵어서, 멀리서 서가에 꽂혔을 때 잘 읽힙니다.</li>
-      <li><b>Archivo Expanded</b> <small>(11)</small> — 가로로 넓은 그로테스크. 넓은 자간 배치와 맞물려 표지 상단이 꽉 찬 느낌이 납니다.</li>
-      <li><b>Michroma</b> <small>(26)</small> — 과학·기술 교재다운 정밀한 인상. 수능 과학 브랜드로 차별화하고 싶을 때.</li>
-      <li><b>Red Hat Display</b> <small>(08)</small> — 기하 계열보다 살짝 따뜻하고 현대적. 시리즈 로고로 오래 쓰기 좋습니다.</li>
-    </ol>
+    <ol id="picks"></ol>
   </section>
 
   <div class="bar" role="toolbar" aria-label="보기 설정">
@@ -124,9 +128,7 @@ footer { color: var(--muted); font-size: 0.82rem; line-height: 1.7; max-width: 7
 
   <main class="grid" id="grid"></main>
 
-  <footer>
-    유료 폰트로 같은 방향을 가져가려면: Jost·League Spartan 계열은 <b>Futura PT</b>, Archivo·Hanken 계열은 <b>Neue Haas Grotesk</b>·<b>Aktiv Grotesk</b>, Barlow·Saira 계열은 <b>DIN Next</b>, Michroma·Syncopate 계열은 <b>Eurostile Extended</b>가 대응합니다. 언더스코어(_)는 원본처럼 막대로 그렸고, 두께는 각 폰트의 획 굵기에 맞췄습니다.
-  </footer>
+  <footer id="foot"></footer>
 </div>
 
 <dialog id="dlg">
@@ -135,7 +137,9 @@ footer { color: var(--muted); font-size: 0.82rem; line-height: 1.7; max-width: 7
 </dialog>
 
 <script>
-const FONTS = [
+// [이름, CSS family, 굵기, 계열, 메모, 막대 두께(em), 추천, font-stretch, 옵션]
+const SETS = {
+  1: { fonts: [
   ["Jost", "'Jost'", 600, "기하", "Futura 계열. 현재 시안과 가장 가까운 형태", 0.15, true],
   ["League Spartan", "'League Spartan'", 700, "기하", "굵고 단단한 Futura 변형. 서가에서 눈에 잘 띔", 0.17, true],
   ["Outfit", "'Outfit'", 600, "기하", "둥근 마감의 깔끔한 기하체. 부드러운 인상", 0.15],
@@ -166,39 +170,98 @@ const FONTS = [
   ["Krona One", "'Krona One'", 400, "와이드", "넓은 저대비 서체. 레트로 테크", 0.14],
   ["Syne", "'Syne'", 700, "와이드", "독특한 비례의 아트북 서체. 실험적", 0.15],
   ["Bodoni Moda", "'Bodoni Moda'", 700, "세리프", "고대비 세리프. 과학서보다는 잡지 느낌", 0.07],
-];
-const CATS = ["전체", "추천", "기하", "그로테스크", "기술", "와이드", "세리프"];
+  ],
+  picks: [
+    ["Jost", 1, "지금 시안의 Futura 느낌을 그대로 이어가는 가장 안전한 선택. 원형 U·P가 줄무늬와 잘 어울립니다."],
+    ["League Spartan", 2, "같은 기하 계열인데 더 단단하고 굵어서, 멀리서 서가에 꽂혔을 때 잘 읽힙니다."],
+    ["Archivo Expanded", 11, "가로로 넓은 그로테스크. 넓은 자간 배치와 맞물려 표지 상단이 꽉 찬 느낌이 납니다."],
+    ["Michroma", 26, "과학·기술 교재다운 정밀한 인상. 수능 과학 브랜드로 차별화하고 싶을 때."],
+    ["Red Hat Display", 8, "기하 계열보다 살짝 따뜻하고 현대적. 시리즈 로고로 오래 쓰기 좋습니다."],
+  ],
+  foot: "유료 폰트로 같은 방향을 가져가려면: Jost·League Spartan 계열은 <b>Futura PT</b>, Archivo·Hanken 계열은 <b>Neue Haas Grotesk</b>·<b>Aktiv Grotesk</b>, Barlow·Saira 계열은 <b>DIN Next</b>, Michroma·Syncopate 계열은 <b>Eurostile Extended</b>가 대응합니다." },
+  2: { fonts: [
+    ["Josefin Sans", "'Josefin Sans'", 300, "얇은", "가는 기하체. 흐릿한 그라데이션과 같은 공기감", 0.05, true],
+    ["Raleway", "'Raleway'", 200, "얇은", "아주 가는 우아한 산세리프. 여백이 주인공", 0.04],
+    ["Comfortaa", "'Comfortaa'", 300, "얇은", "가늘고 둥근 획. 부드럽고 맑은 인상", 0.06],
+    ["Quicksand", "'Quicksand'", 400, "얇은", "둥근 끝의 가는 기하체. 친근하지만 단정함", 0.08],
+    ["Didact Gothic", "'Didact Gothic'", 400, "얇은", "교과서용 손글씨 기반 산세리프. 교육 톤", 0.08],
+    ["Tenor Sans", "'Tenor Sans'", 400, "얇은", "획 대비가 살짝 있는 휴머니스트. 고급스러움", 0.07],
+    ["Bebas Neue", "'Bebas Neue'", 400, "압축", "좁고 높은 대문자. 포스터 같은 긴장감", 0.12, true, null, { bw: "0.8em" }],
+    ["Oswald", "'Oswald'", 500, "압축", "고딕 압축체. 단단하고 실용적", 0.12, false, null, { bw: "0.8em" }],
+    ["Anton", "'Anton'", 400, "압축", "아주 굵은 압축체. 가장 큰 무게감", 0.17, false, null, { bw: "0.8em" }],
+    ["Antonio", "'Antonio'", 700, "압축", "직선적인 압축체. 차갑고 정밀함", 0.13, false, null, { bw: "0.8em" }],
+    ["Barlow Condensed", "'Barlow Condensed'", 600, "압축", "DIN 계열 압축체. 공학 도면 느낌", 0.12, false, null, { bw: "0.8em" }],
+    ["Saira Extra Condensed", "'Saira Extra Condensed'", 700, "압축", "극압축 사각형 곡선. 계측기 눈금 같음", 0.12, false, null, { bw: "0.7em" }],
+    ["Playfair Display", "'Playfair Display'", 700, "세리프", "고대비 디스플레이 세리프. 잡지·인문서 톤", 0.07],
+    ["Cormorant Garamond", "'Cormorant Garamond'", 600, "세리프", "섬세한 가라몬드. 고전적이고 조용함", 0.05],
+    ["DM Serif Display", "'DM Serif Display'", 400, "세리프", "굵은 획의 따뜻한 세리프. 무게 있는 권위", 0.08],
+    ["Instrument Serif", "'Instrument Serif'", 400, "세리프", "좁고 가는 현대 세리프. 세련된 에디토리얼", 0.045, true, null, { bw: "0.85em" }],
+    ["Fraunces", "'Fraunces'", 600, "세리프", "부드러운 올드스타일. 개성 있는 곡선", 0.08],
+    ["Cinzel", "'Cinzel'", 600, "세리프", "로마 비문 대문자. 장엄하고 클래식함", 0.07],
+    ["Nunito", "'Nunito'", 800, "라운드", "끝이 둥근 굵은 산세리프. 편안하고 밝음", 0.16],
+    ["M PLUS Rounded 1c", "'M PLUS Rounded 1c'", 800, "라운드", "일본 라운드 고딕 계열. 과하지 않게 둥긂", 0.17],
+    ["Fredoka", "'Fredoka'", 600, "라운드", "통통한 라운드. 친근한 입문서 톤", 0.15],
+    ["Baloo 2", "'Baloo 2'", 700, "라운드", "말랑한 디스플레이. 가장 캐주얼함", 0.15],
+    ["Major Mono Display", "'Major Mono Display'", 400, "실험", "기하학 모노. 수식·기호 같은 낯선 형태", 0.07],
+    ["Stardos Stencil", "'Stardos Stencil'", 700, "실험", "스텐실 세리프. 실험 장비 라벨 느낌", 0.1],
+    ["Rubik Mono One", "'Rubik Mono One'", 400, "실험", "굵은 고정폭. 블록처럼 쌓인 제목", 0.18],
+    ["Monoton", "'Monoton'", 400, "라인", "여러 줄 선으로 그린 글자. LINE이라는 이름과 직결", 0.03, true],
+    ["Bungee Hairline", "'Bungee Hairline'", 400, "라인", "헤어라인 대문자. 세로 줄무늬와 겹쳐 보임", 0.025],
+    ["Archivo Black 외곽선", "'Archivo Black'", 400, "라인", "굵은 글자의 외곽선만. 표지 위에 투명하게 얹힘", 0.17, false, null, { fx: "outline" }],
+    ["Lexend Giga", "'Lexend Giga'", 200, "라인", "넓고 가는 기하체. 띠처럼 가로로 흐름", 0.04, true],
+    ["Poiret One", "'Poiret One'", 400, "라인", "아르데코 가는 선. 장식적이고 우아함", 0.03],
+  ],
+  picks: [
+    ["Josefin Sans", 31, "가는 기하체로 바꾸면 굵은 제목이 물러나고 그라데이션이 주인공이 됩니다. 표지 분위기와 가장 잘 섞여요."],
+    ["Monoton", 56, "글자 자체가 여러 줄의 선이라 LINE_UP이라는 이름을 그대로 보여줍니다. 시리즈 정체성이 가장 강합니다."],
+    ["Lexend Giga", 59, "넓고 가는 글자가 가로 띠처럼 흘러서, 세로 줄무늬와 직교하는 구도가 생깁니다."],
+    ["Bebas Neue", 37, "압축체로 키를 세우면 줄무늬의 세로 리듬과 맞물립니다. 힘 있는 수능 교재 톤."],
+    ["Instrument Serif", 46, "세리프로 가면 인문적인 고급감이 생깁니다. 다른 과학 교재와 가장 다르게 보여요."],
+  ],
+  foot: "유료 폰트로 같은 방향을 가져가려면: 얇은 기하체는 <b>Futura PT Light</b>·<b>Neue Haas Unica Thin</b>, 압축체는 <b>DIN Condensed</b>·<b>Knockout</b>, 세리프는 <b>Canela</b>·<b>GT Super</b>, 가는 와이드는 <b>Eurostile Extended Light</b>가 대응합니다. 외곽선(58)은 폰트가 아니라 처리 방식이라 다른 굵은 폰트에도 적용할 수 있습니다." },
+};
 const grid = document.getElementById("grid");
 const root = document.documentElement;
-let cat = "전체";
+let cat = "전체", setNo = 2, FONTS = SETS[2].fonts, base = 30;
 
 function coverHTML(f) {
-  const [, family, w, , , bar, , stretch] = f;
+  const [, family, w, , , bar, , stretch, o = {}] = f;
   const m = f.m || {};
-  const st = `font-family:${family}, system-ui, sans-serif;font-weight:${w};${stretch ? `font-stretch:${stretch};` : ""}--bar:${bar}em;${m.fs ? `--fs:${m.fs}cqw;--b:${m.b}` : ""}`;
+  const st = `font-family:${family}, system-ui, sans-serif;font-weight:${w};${stretch ? `font-stretch:${stretch};` : ""}--bar:${bar}em;${o.bw ? `--bw:${o.bw};` : ""}${m.fs ? `--fs:${m.fs}cqw;--b:${m.b}` : ""}`;
   const L = ["L","I","N","E"].map(c => `<i>${c}</i>`).join("") + `<span class="us"></span>` + ["U","P"].map(c => `<i>${c}</i>`).join("");
-  return `<div class="cover"><div class="title" style="${st}" aria-label="LINE_UP">${L}</div>
+  return `<div class="cover"><div class="title${o.fx ? " " + o.fx : ""}" style="${st}" aria-label="LINE_UP">${L}</div>
     <div class="sub">2028학년도<span>대학수학능력시험 대비</span></div></div>`;
 }
 
+function render() {
+FONTS = SETS[setNo].fonts; base = setNo === 1 ? 0 : 30; cat = "전체";
+grid.innerHTML = "";
 FONTS.forEach((f, i) => {
   const [name, , w, c, note, , star] = f;
   const el = document.createElement("article");
   el.className = "card"; el.dataset.cat = c; el.dataset.star = star ? "1" : "";
   el.innerHTML = `<button type="button" class="open" aria-label="${name} 크게 보기">${coverHTML(f)}</button>
-    <div class="meta"><span class="no">${String(i + 1).padStart(2, "0")}</span><span class="name">${name}</span>
+    <div class="meta"><span class="no">${String(base + i + 1).padStart(2, "0")}</span><span class="name">${name}</span>
     <span class="tag${star ? " star" : ""}">${star ? "추천 · " : ""}${c} ${w}</span><span class="note">${note}</span></div>`;
   el.querySelector(".open").addEventListener("click", () => openDlg(f, i));
   grid.appendChild(el);
 });
 
 const chips = document.getElementById("chips");
-CATS.forEach(c => {
+chips.innerHTML = "";
+["전체", "추천", ...new Set(FONTS.map(f => f[3]))].forEach(c => {
   const b = document.createElement("button");
   b.type = "button"; b.textContent = c; b.setAttribute("aria-pressed", c === cat);
   b.addEventListener("click", () => { cat = c; chips.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); filter(); });
   chips.appendChild(b);
 });
+document.getElementById("picks").innerHTML = SETS[setNo].picks.map(([n, no, t]) => `<li><b>${n}</b> <small>(${no})</small> — ${t}</li>`).join("");
+document.getElementById("foot").innerHTML = SETS[setNo].foot + " 언더스코어(_)는 원본처럼 막대로 그렸고, 두께는 각 폰트의 획 굵기에 맞췄습니다.";
+filter();
+measure();
+document.getElementById("s1").setAttribute("aria-pressed", setNo === 1);
+document.getElementById("s2").setAttribute("aria-pressed", setNo === 2);
+}
 function filter() {
   let n = 0;
   grid.querySelectorAll(".card").forEach(el => {
@@ -207,28 +270,36 @@ function filter() {
   });
   document.getElementById("count").textContent = `${n} / ${FONTS.length}`;
 }
-filter();
 
 // 폰트마다 캡 높이·글자폭·어센트가 달라서, 로드 뒤 캔버스로 재고 크기와 위치를 맞춘다.
 const CAP = 7.2, AVAIL = 91.2 * 0.84;
 const ctx = document.createElement("canvas").getContext("2d");
-document.fonts.ready.then(() => Promise.all(FONTS.map(f =>
+function measure() {
+const list = FONTS;
+document.fonts.ready.then(() => Promise.all(list.map(f =>
   document.fonts.load(`${f[2]} 100px ${f[1]}`, "LINEUP").catch(() => {})
 ))).then(() => {
+  if (list !== FONTS) return;
   const cards = grid.querySelectorAll(".card .title");
-  FONTS.forEach((f, i) => {
+  list.forEach((f, i) => {
     ctx.font = `${f[2]} 100px ${f[1]}, sans-serif`;
     ctx.fontStretch = f[7] ? "expanded" : "normal";
     const t = ctx.measureText("LINEUP");
     const cap = t.actualBoundingBoxAscent / 100, fa = t.fontBoundingBoxAscent / 100, fd = t.fontBoundingBoxDescent / 100;
     if (!cap || !fa) return;
-    const widthEm = t.width / 100 + 1.1;
+    const widthEm = t.width / 100 + parseFloat((f[8] && f[8].bw) || "1.1");
     const fs = Math.min(CAP / cap, AVAIL / widthEm);
     f.m = { fs: fs.toFixed(2), b: ((1 - fa - fd) / 2 + fa).toFixed(3) };
     cards[i].style.setProperty("--fs", f.m.fs + "cqw");
     cards[i].style.setProperty("--b", f.m.b);
   });
 });
+}
+function setSet(n) { setNo = n; render(); try { history.replaceState(null, "", "#set" + n); } catch (e) {} }
+document.getElementById("s1").addEventListener("click", () => setSet(1));
+document.getElementById("s2").addEventListener("click", () => setSet(2));
+if (location.hash === "#set1") setNo = 1;
+render();
 
 const v1 = document.getElementById("v1"), v2 = document.getElementById("v2");
 function setVol(two) {
@@ -243,7 +314,7 @@ try { if (localStorage.getItem("lineup-vol") === "2") setVol(true); } catch (e) 
 const dlg = document.getElementById("dlg");
 function openDlg(f, i) {
   document.getElementById("dlg-cover").innerHTML = coverHTML(f);
-  document.getElementById("dlg-name").textContent = `${String(i + 1).padStart(2, "0")}  ${f[0]} · ${f[2]}`;
+  document.getElementById("dlg-name").textContent = `${String(base + i + 1).padStart(2, "0")}  ${f[0]} · ${f[2]}`;
   dlg.showModal();
 }
 document.getElementById("dlg-close").addEventListener("click", () => dlg.close());
