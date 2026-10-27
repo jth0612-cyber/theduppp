@@ -241,60 +241,71 @@ def wave(x, *terms):
     return sum(A * np.sin(2 * np.pi * x / L + p) for A, L, p in terms)
 
 
+class Mass:
+    """위 외곽선 top(x) 과 아래 외곽선 bot(x) 사이를 채운 넓은 면.
+
+    원본처럼 왼쪽 빨강 → 가운데 자주 → 오른쪽 빨강으로 가로 그라데이션을
+    깔고, lobes 로 준 자리에 라벤더(또는 다른 색) 기운을 얹는다.
+    """
+
+    def __init__(self, top, bot, soft, colors, lobes=()):
+        self.top, self.bot, self.soft = top, bot, soft
+        self.colors, self.lobes = colors, lobes
+
+    def render(self, X, Y):
+        x = X[0]
+        st = np.sqrt(1 + np.gradient(self.top) ** 2)[None, :]
+        sb = np.sqrt(1 + np.gradient(self.bot) ** 2)[None, :]
+        a = 1 / (1 + np.exp(-(Y - self.top[None, :]) / st / self.soft))
+        b = 1 / (1 + np.exp(-(self.bot[None, :] - Y) / sb / self.soft))
+        dens = a * b
+        col = np.broadcast_to(ramp(x, self.colors)[None], X.shape + (3,)).copy()
+        for cx, cy, rx, ry, c, k in self.lobes:
+            g = k * np.exp(-(((X - cx) / rx) ** 2 + ((Y - cy) / ry) ** 2))
+            col = col * (1 - g[..., None]) + np.asarray(c) * g[..., None]
+        return dens, col
+
+
+# 원본 면의 색 배치
+MASS_COLORS = [(0, RED * 0.97), (450, CRIMSON), (950, MAGENTA), (1400, CRIMSON),
+               (1800, RED), (2000, RED)]
+
+
 def variant_a(h, w):
-    """A. 두 번 크게 출렁이는 한 줄기 띠."""
+    """A. 면 전체가 크게 두 번 출렁인다 — 위아래 외곽선이 함께 물결친다."""
     x = np.arange(w, dtype=float)
-    # 마루(위로 솟은 곳)가 책등 바로 오른쪽에 와서 책등 제목 뒤를 덮는다.
-    yc = 690 + wave(x, (215, 1270, -0.48), (30, 560, 1.1))
-    tw = np.cos(2 * np.pi * x / 1270 - 0.48)
-    width = 125 + 80 * np.abs(tw) + 18 * np.sin(x / 240)
-    colors = [(0, RED), (450, CRIMSON), (950, MAGENTA), (1250, MAGENTA),
-              (1650, CRIMSON), (2000, RED)]
-    return [Ribbon(yc, width, 48, colors, sheen=0.6, sheen_shift=-0.8 * tw)]
+    yc = 700 + wave(x, (170, 1300, -0.6), (25, 520, 1.0))
+    half = 290 + wave(x, (40, 900, 0.4))
+    lobes = [(1350, 430, 340, 200, LAVENDER, 0.95), (300, 950, 260, 150, LAVENDER, 0.35)]
+    return [Mass(yc - half, yc + half, 65, MASS_COLORS, lobes)]
 
 
 def variant_b(h, w):
-    """B. 세 줄기가 엇갈려 흐르는 물결 — LINE 이 여러 줄로 선다."""
+    """B. 뒤표지에서 낮게 깔렸다가 앞표지에서 높이 솟는 너울."""
     x = np.arange(w, dtype=float)
-    out = []
-    specs = [
-        (500, (140, 1500, 0.3), 58, [(0, CRIMSON), (900, MAGENTA), (2000, LAVENDER * 0.92)], 0.35),
-        (700, (155, 1500, 1.15), 64, [(0, RED), (1000, CRIMSON), (2000, RED)], 0.15),
-        (900, (140, 1500, 2.0), 58, [(0, MAGENTA), (1000, CRIMSON), (2000, RED)], 0.25),
-    ]
-    for base, (A, L, p), ww, colors, sh in specs:
-        yc = base + wave(x, (A, L, p), (22, 610, p * 2))
-        width = ww + 14 * np.sin(2 * np.pi * x / 900 + p)
-        out.append(Ribbon(yc, width, 24, colors, sheen=sh,
-                          sheen_shift=-0.7 * np.cos(2 * np.pi * x / L + p)))
-    return out
+    top = 600 - 330 * np.exp(-((x - 1500) / 420) ** 2) - 150 * np.exp(-((x - 900) / 300) ** 2) \
+        + wave(x, (35, 700, 0.8))
+    bot = 1080 - 120 * np.exp(-((x - 300) / 350) ** 2) + wave(x, (45, 1100, 2.4))
+    lobes = [(1500, 380, 320, 190, LAVENDER, 0.95), (700, 1050, 300, 120, LAVENDER, 0.3)]
+    return [Mass(top, bot, 65, MASS_COLORS, lobes)]
 
 
 def variant_c(h, w):
-    """C. 두 줄기가 꼬이며 교차하는 띠."""
+    """C. 책등에서 잘록해지고 양쪽 표지에서 크게 부푸는 면."""
     x = np.arange(w, dtype=float)
-    # x = 350, 1650 에서 교차하고, 책등에서 가장 크게 벌어진다.
-    # 위 줄기는 책등에서 가장 넓어져 책등 제목 뒤를 덮고, 아래 줄기는 거기서
-    # 가장 가늘어져 뒤집히는 것처럼 보인다.
-    mid = 718 + wave(x, (35, 2200, 0.5))
-    swing = 255 * np.sin(2 * np.pi * (x - 350) / 2600)
-    pinch = 26 * np.cos((x - 1000) / 280)
-    r1 = Ribbon(mid - swing + wave(x, (25, 640, 0.0)),
-                86 + pinch, 34,
-                [(0, RED), (700, CRIMSON), (1300, MAGENTA), (2000, CRIMSON)],
-                sheen=0.45, sheen_shift=0.7 * np.sin(x / 280))
-    r2 = Ribbon(mid + swing + wave(x, (25, 640, 2.0)),
-                86 - pinch, 34,
-                [(0, MAGENTA), (800, CRIMSON), (1400, RED), (2000, RED)],
-                sheen=0.25, sheen_shift=-0.7 * np.cos(x / 280))
-    return [r1, r2]
+    pinch = np.exp(-((x - 1000) / 330) ** 2)
+    yc = 700 - 230 * pinch + wave(x, (60, 1600, 0.3))
+    half = 380 - 200 * pinch + wave(x, (35, 700, 1.7))
+    lobes = [(1000, 450, 280, 170, LAVENDER, 0.8), (1650, 900, 260, 180, LAVENDER, 0.35),
+             (250, 450, 250, 150, LAVENDER, 0.3)]
+    return [Mass(yc - half, yc + half, 60, MASS_COLORS, lobes)]
 
 
 VARIANTS = {"a": variant_a, "b": variant_b, "c": variant_c}
 TITLES = {
-    "a": "A  더블 웨이브",
-    "b": "B  세 줄 물결",
-    "c": "C  교차하는 두 줄기",
+    "a": "A  면 전체가 두 번 출렁임",
+    "b": "B  앞표지로 솟는 너울",
+    "c": "C  책등에서 잘록한 면",
 }
 
 
@@ -332,7 +343,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     paths = []
     for key, make in VARIANTS.items():
-        field = paint(make(h, w), h, w, blur=22)
+        field = paint(make(h, w), h, w, blur=30)
         cover = composite(reeded(field, shade), img, layers)
         path = os.path.join(OUT, f"variant-{key}.png")
         to_image(cover, seed=ord(key)).save(path)
