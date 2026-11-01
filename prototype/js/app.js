@@ -118,9 +118,9 @@
     const pts = c.avgs.map((v, i) => `${(i * (W - 4) / (c.avgs.length - 1) + 2).toFixed(1)},${(H - 14 - ((v - lo) / (hi - lo)) * (H - 20)).toFixed(1)}`).join(' ');
     return `<span class="sym" aria-hidden="true">${c.letter}</span>
       <div><h3>${c.name} · 학생 ${c.studentIds.length}명</h3>
-        <p class="num">8회 평균 <b>${nf1.format(c.last)}</b> (7회 대비 <span class="${c.delta <= -2 ? 'neg' : ''}">${sign1(c.delta)}</span>) · 답변 대기 <b>${q}건</b></p>
+        <p class="num">8회 평균 <b>${nf1.format(c.last)}</b> <span class="nb">(7회 대비 <span class="${c.delta <= -2 ? 'neg' : ''}">${sign1(c.delta)}</span>)</span> · <span class="nb">답변 대기 <b>${q}건</b></span></p>
         <p>가장 많이 떨어진 학생 <a href="#/student/${worstS.id}"><b>${esc(worstS.name)}</b></a> <span class="num neg">${sign0(worstS.scores[LAST] - worstS.scores[LAST - 1])}점</span></p></div>
-      <div class="spark-wrap"><svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${c.name} 1–8회 평균 추이"><line class="b" x1="0" x2="${W}" y1="${H - 12}" y2="${H - 12}"/><polyline class="t" points="${pts}"/><text x="0" y="${H}">1회</text><text x="${W}" y="${H}" text-anchor="end">8회</text></svg></div>`;
+      <div class="spark-wrap"><svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${c.name} 1–8회 평균 추이"><line class="b" x1="0" x2="${W}" y1="${H - 12}" y2="${H - 12}"/><polyline class="t" points="${pts}"/><text x="0" y="${H}">1회 ${nf1.format(c.avgs[0])}</text><text x="${W}" y="${H}" text-anchor="end">8회 ${nf1.format(c.last)}</text></svg></div>`;
   }
   function bindDash() {
     const box = $('[data-eldetail]');

@@ -511,8 +511,8 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .spark .b { stroke: var(--edge); }
 .spark text { font-size: 10px; fill: var(--muted); }
 .el.on { border-color: var(--ink); background: var(--raised); }
-.tbl.exam { table-layout: fixed; }
-.tbl.exam col.c-rank { width: 64px; } .tbl.exam col.c-name { width: 22%; } .tbl.exam col.c-no { width: 18%; }
+.tbl.exam { table-layout: fixed; max-width: 760px; }
+.tbl.exam col.c-rank { width: 56px; } .tbl.exam col.c-name { width: 120px; } .tbl.exam col.c-no { width: 112px; }
 .tbl.exam col.c-score { width: 132px; } .tbl.exam col.c-rate { width: 120px; } .tbl.exam col.c-prev { width: 110px; }
 .tbl.exam th.l-score, .tbl.exam td.l-score { text-align: left; }
 .inbox-items .who .pill { margin-left: auto; }
@@ -526,3 +526,6 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .inbox-items .top b { display: inline; margin: 0; font-size: 14px; color: var(--ink); }
 .inbox-items .top span { flex: none; }
 .top-title .sample { font-family: var(--font-ui); font-weight: 400; }
+
+.nb { white-space: nowrap; }
+.spark .v { font-size: 11px; fill: var(--ink); font-weight: 600; }
