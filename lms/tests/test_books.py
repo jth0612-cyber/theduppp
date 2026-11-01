@@ -221,6 +221,40 @@ class BooksTest(unittest.TestCase):
         self.assertNotIn("Google", self.app.test_client().get("/login").data.decode())
         self.assertEqual(self.app.test_client().get("/auth/google/start").status_code, 404)
 
+    def test_notice_pin_search_views_likes_and_public_home(self):
+        with self.app.app_context():
+            cid = query("SELECT id FROM classes", one=True)["id"]
+        self.t.post(f"/t/classes/{cid}/notices", data={"tag": "공지", "title": "시즌2 커리큘럼", "body": "내용", "pinned": "1"})
+        self.t.post(f"/t/classes/{cid}/notices", data={"tag": "정오", "title": "7주차 정오", "body": "3번 정답 ②"})
+        s = self.student(0)
+        page = s.get("/s/notices").data.decode()
+        self.assertLess(page.index("시즌2 커리큘럼"), page.index("7주차 정오"))      # 고정 공지가 위
+        self.assertIn("고정 공지", page)
+        found = s.get("/s/notices?q=정답").data.decode()
+        self.assertIn("7주차 정오", found)
+        self.assertNotIn("시즌2 커리큘럼", found)
+        self.assertNotIn("시즌2", s.get("/s/notices?q=%25").data.decode())          # % 는 글자 그대로 검색
+        with self.app.app_context():
+            nid = query("SELECT id FROM notices WHERE title = '시즌2 커리큘럼'", one=True)["id"]
+        s.get(f"/s/notices/{nid}")
+        s.get(f"/s/notices/{nid}")                                                  # 같은 로그인은 한 번만
+        self.student(1).get(f"/s/notices/{nid}")
+        s2 = self.student(1)
+        s2.get(f"/s/notices/{nid}")
+        s2.post(f"/s/notices/{nid}/like")
+        with self.app.app_context():
+            self.assertEqual(query("SELECT views FROM notices WHERE id = ?", (nid,), one=True)["views"], 3)
+            self.assertEqual(query("SELECT COUNT(*) AS c FROM notice_likes", one=True)["c"], 1)
+        s2.post(f"/s/notices/{nid}/like")                                           # 다시 누르면 취소
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) AS c FROM notice_likes", one=True)["c"], 0)
+        # 로그인 전 첫 화면은 공개, 공지는 로그인 필요
+        anon = self.app.test_client()
+        home = anon.get("/").data.decode()
+        self.assertIn("재원생 전용 Q&amp;A", home)
+        self.assertNotIn("온라인", home)
+        self.assertEqual(anon.get("/s/notices").status_code, 302)
+
 
 if __name__ == "__main__":
     unittest.main()

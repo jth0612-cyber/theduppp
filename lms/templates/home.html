@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}정태혁 통합과학 lab{% endblock %}
+{% block main_class %}home-wrap{% endblock %}
+{% block content %}
+<section class="home-hero">
+  <h1>정태혁 통합과학 lab</h1>
+  <p class="muted">시대인재N 재수종합반 통합과학 재원생을 위한 공간입니다.</p>
+  <div class="row"><a class="btn primary" href="{{ url_for('auth.login') }}">로그인</a><a class="btn" href="{{ url_for('auth.signup') }}">학생 회원가입</a></div>
+</section>
+<nav class="home-cards" aria-label="바로가기">
+  <a class="card home-card" href="{{ url_for('student.notices') }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10H4zM16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg>
+    <b>공지사항</b><span>전체보기 →</span>
+  </a>
+  <a class="card home-card" href="{{ url_for('student.questions') }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v12h-6l-4 4v-4H5z"/><path d="M10 8.5a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4M12 13.5h.01"/></svg>
+    <b>재원생 전용 Q&amp;A</b><span>전체보기 →</span>
+  </a>
+  <a class="card home-card" href="{{ url_for('books.analysis_home') }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <b>분석실</b><span>가채점 · 등급컷 →</span>
+  </a>
+</nav>
+<p class="small muted center">공지사항·Q&amp;A·분석실은 로그인한 재원생만 볼 수 있어요.</p>
+{% endblock %}

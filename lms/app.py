@@ -77,6 +77,12 @@ def create_app(test_config=None):
     app.register_blueprint(books_bp)
     app.jinja_env.globals["google_enabled"] = google_enabled
 
+    def site_contact():
+        # instance/.env 에서 읽는다. 비어 있으면 문의 버튼은 질답 게시판(행정문의)으로 연결된다
+        url = os.environ.get("KAKAO_CHANNEL_URL", "").strip()
+        return {"kakao": url if url.startswith("https://") else "", "note": os.environ.get("CONTACT_NOTE", "").strip()}
+    app.jinja_env.globals["site_contact"] = site_contact
+
     from content import file_kind, host_of, youtube_id
     app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id)
 

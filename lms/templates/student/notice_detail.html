@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import tag_badge %}
+{% block title %}{{ n.title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('student.notices') }}">← 공지 목록</a></p>
+<article class="card post">
+  <h1>{{ n.title }}</h1>
+  <p class="post-meta">{{ tag_badge(n.tag) }} {% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · 조회 {{ n.views }}</p>
+  <div class="pre post-body">{{ n.body }}</div>
+  <form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="mt">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn like{{ ' on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '♥' if liked else '♡' }} 좋아요 {{ likes }}</button>
+  </form>
+</article>
+{% endblock %}

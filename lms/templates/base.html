@@ -61,6 +61,7 @@
       {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
     {% endwith %}
     {% block content %}{% endblock %}
+    {% include "_contact_footer.html" %}
   </main>
 </div>
 {% else %}
@@ -73,8 +74,12 @@
     {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
   {% endwith %}
   {% block content_auth %}{{ self.content() }}{% endblock %}
+  {% include "_contact_footer.html" %}
   <img class="auth-affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">
 </main>
 {% endif %}
+{% set sc = site_contact() %}
+{% if sc.kakao %}<a class="fab" href="{{ sc.kakao }}" target="_blank" rel="noopener noreferrer">문의</a>
+{% elif g.user and g.user.role == 'student' and not g.user.must_change_pw %}<a class="fab" href="{{ url_for('student.questions', ask=1, qtype='행정문의') }}#ask">문의</a>{% endif %}
 </body>
 </html>

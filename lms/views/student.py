@@ -4,7 +4,7 @@
 import os
 
 from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
-                   send_file, url_for)
+                   send_file, session, url_for)
 
 from content import MAX_FOLLOWUPS, NOTICE_TAGS, QUESTION_TYPES
 from db import execute, query
@@ -55,12 +55,50 @@ def notices():
     tag = request.args.get("tag", "")
     if tag not in NOTICE_TAGS:
         tag = ""
+    q = request.args.get("q", "").strip()[:50]
+    sql = """SELECT n.*, (SELECT COUNT(*) FROM notice_likes l WHERE l.notice_id = n.id) AS likes
+             FROM notices n WHERE n.class_id = ?"""
+    args = [me["class_id"]]
     if tag:
-        rows = query("SELECT * FROM notices WHERE class_id = ? AND tag = ? ORDER BY textbook, created_at DESC",
-                     (me["class_id"], tag))
+        sql += " AND n.tag = ?"
+        args.append(tag)
+    if q:
+        like = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        sql += " AND (n.title LIKE ? ESCAPE '\\' OR n.body LIKE ? ESCAPE '\\')"
+        args += [like, like]
+    sql += " ORDER BY n.textbook, n.created_at DESC" if tag == "정오" else " ORDER BY n.pinned DESC, n.created_at DESC"
+    rows = query(sql, tuple(args))
+    return render_template("student/notices.html", me=me, notices=rows, tag=tag, tags=NOTICE_TAGS, q=q)
+
+
+@bp.route("/notices/<int:nid>")
+@student_required
+def notice_detail(nid):
+    me = _me()
+    n = query("SELECT * FROM notices WHERE id = ? AND class_id = ?", (nid, me["class_id"]), one=True)
+    if n is None:
+        abort(404)
+    seen = session.get("seen_notices", [])
+    if nid not in seen:  # 같은 로그인에서는 한 번만 조회수에 센다
+        execute("UPDATE notices SET views = views + 1 WHERE id = ?", (nid,))
+        session["seen_notices"] = (seen + [nid])[-100:]
+        n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
+    likes = query("SELECT COUNT(*) AS c FROM notice_likes WHERE notice_id = ?", (nid,), one=True)["c"]
+    liked = query("SELECT 1 FROM notice_likes WHERE notice_id = ? AND user_id = ?", (nid, g.user["id"]), one=True)
+    return render_template("student/notice_detail.html", n=n, likes=likes, liked=bool(liked))
+
+
+@bp.route("/notices/<int:nid>/like", methods=["POST"])
+@student_required
+def notice_like(nid):
+    me = _me()
+    if query("SELECT 1 FROM notices WHERE id = ? AND class_id = ?", (nid, me["class_id"]), one=True) is None:
+        abort(404)
+    if query("SELECT 1 FROM notice_likes WHERE notice_id = ? AND user_id = ?", (nid, g.user["id"]), one=True):
+        execute("DELETE FROM notice_likes WHERE notice_id = ? AND user_id = ?", (nid, g.user["id"]))
     else:
-        rows = query("SELECT * FROM notices WHERE class_id = ? ORDER BY created_at DESC", (me["class_id"],))
-    return render_template("student/notices.html", me=me, notices=rows, tag=tag, tags=NOTICE_TAGS)
+        execute("INSERT INTO notice_likes (notice_id, user_id) VALUES (?, ?)", (nid, g.user["id"]))
+    return redirect(url_for("student.notice_detail", nid=nid))
 
 
 @bp.route("/materials")

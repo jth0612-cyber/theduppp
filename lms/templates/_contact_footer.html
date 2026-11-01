@@ -1,0 +1,10 @@
+{% set sc = site_contact() %}
+<footer class="contact-foot">
+  {% include "_logo.html" %}
+  <div>
+    <b>행정 관련 문의</b>
+    <p>{% if g.user and g.user.role == 'student' %}<a href="{{ url_for('student.questions', ask=1, qtype='행정문의') }}#ask">질답 게시판의 '행정문의'</a>로 남겨 주세요. 본인과 선생님만 볼 수 있어요.{% else %}로그인한 뒤 질답 게시판의 '행정문의'로 남겨 주세요. 본인과 선생님만 볼 수 있어요.{% endif %}</p>
+    {% if sc.kakao %}<p><a href="{{ sc.kakao }}" target="_blank" rel="noopener noreferrer">카카오톡 채널로 문의</a></p>{% endif %}
+    {% if sc.note %}<p>{{ sc.note }}</p>{% endif %}
+  </div>
+</footer>

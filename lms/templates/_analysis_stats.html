@@ -24,7 +24,7 @@
     <div class="card-head"><h2 id="h-dist">점수 분포</h2><span class="meta">{{ stats.n }}명</span></div>
     {% if stats.dist %}
     {% set maxp = (stats.dist|map(attribute='pct')|max) or 1 %}
-    <svg class="chart-svg" viewBox="0 0 600 240" role="img" aria-label="점수 구간별 학생 비율">
+    <div class="chart-scroll"><svg class="chart-svg dist" viewBox="0 0 600 240" role="img" aria-label="점수 구간별 학생 비율">
       <line class="base" x1="0" x2="600" y1="200" y2="200"></line>
       {% for d in stats.dist %}
         {% set h = (d.pct / maxp * 160)|round(1) %}
@@ -33,7 +33,7 @@
         <text class="val" x="{{ x + 22 }}" y="{{ 194 - h }}" text-anchor="middle">{{ d.pct }}%</text>
         <text class="tick" x="{{ x + 22 }}" y="222" text-anchor="middle">{{ d.label }}</text>
       {% endfor %}
-    </svg>
+    </svg></div>
     {% else %}
     <p class="muted">아직 채점된 학생이 없어요.</p>
     {% endif %}
@@ -44,10 +44,10 @@
   <div class="card-head"><h2 id="h-items">문항별 오답률</h2><span class="meta">막대를 누르면 선지별 선택 비율을 볼 수 있어요 · 답안 입력 {{ stats.n_answers }}명 기준</span></div>
   {% if stats['items'] %}
   {% set n = stats['items']|length %}
-  {% set slot = 600 / n %}
+  {% set slot = 1000 / n %}
   {% set maxw = (stats['items']|map(attribute='wrong_pct')|max) or 1 %}
-  <svg class="chart-svg items" viewBox="0 0 600 250" role="img" aria-label="문항별 오답률(%)">
-    <line class="base" x1="0" x2="600" y1="210" y2="210"></line>
+  <div class="chart-scroll"><svg class="chart-svg items" viewBox="0 0 1000 250" role="img" aria-label="문항별 오답률(%)">
+    <line class="base" x1="0" x2="1000" y1="210" y2="210"></line>
     {% for it in stats['items'] %}
       {% set h = (it.wrong_pct / maxw * 170)|round(1) %}
       {% set x = (loop.index0 * slot + slot * 0.1)|round(1) %}
@@ -59,7 +59,8 @@
       <text class="val" x="{{ x + w / 2 }}" y="{{ 204 - h }}" text-anchor="middle">{{ it.wrong_pct }}</text>
       <text class="tick{{ ' wrong' if it.no in my_wrong }}" x="{{ x + w / 2 }}" y="232" text-anchor="middle">{{ it.no }}</text>
     {% endfor %}
-  </svg>
+  </svg></div>
+  <p class="small muted swipe-hint">그래프를 옆으로 밀면 나머지 문항이 보여요.</p>
   <ul class="legend">
     <li><i class="lg-top"></i>오답률 상위 3문항</li>
     <li><i class="lg-sel"></i>선택한 문항</li>

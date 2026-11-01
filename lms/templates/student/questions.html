@@ -17,7 +17,7 @@
       <div class="field shrink"><label>질문 유형</label>
         <select name="qtype" required>
           <option value="">선택</option>
-          {% for t in qtypes %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          {% for t in qtypes %}<option value="{{ t }}" {{ "selected" if t == qtype }}>{{ t }}</option>{% endfor %}
         </select></div>
       <div class="field wide"><label>제목</label>
         <input type="text" name="title" maxlength="120" required placeholder="[교재-페이지-번호] 예) 개념서 42p 3번"></div>

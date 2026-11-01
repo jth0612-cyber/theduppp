@@ -174,7 +174,9 @@ def class_detail(cid):
                                 ORDER BY e.exam_date DESC, e.id DESC""", (cid,))
         ctx["today"] = date.today().isoformat()
     elif tab == "notices":
-        ctx["notices"] = query("SELECT * FROM notices WHERE class_id = ? ORDER BY created_at DESC", (cid,))
+        ctx["notices"] = query("""SELECT n.*, (SELECT COUNT(*) FROM notice_likes l WHERE l.notice_id = n.id) AS likes
+                                  FROM notices n WHERE n.class_id = ? ORDER BY n.pinned DESC, n.created_at DESC""",
+                               (cid,))
         ctx["tags"] = NOTICE_TAGS
     elif tab == "videos":
         ctx["videos"] = query("SELECT * FROM videos WHERE class_id = ? ORDER BY created_at DESC", (cid,))
@@ -687,11 +689,21 @@ def notice_create(cid):
         tag = request.form.get("tag", "공지")
         if tag not in NOTICE_TAGS:
             tag = "공지"
-        nid = execute("INSERT INTO notices (class_id, tag, textbook, title, body) VALUES (?, ?, ?, ?, ?)",
-                      (cid, tag, textbook, title, body))
+        nid = execute("INSERT INTO notices (class_id, tag, textbook, title, body, pinned) VALUES (?, ?, ?, ?, ?, ?)",
+                      (cid, tag, textbook, title, body, 1 if request.form.get("pinned") else 0))
         audit("notice_create", f"notice:{nid}")
         flash("공지를 등록했습니다.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="notices"))
+
+
+@bp.route("/notices/<int:nid>/pin", methods=["POST"])
+@teacher_required
+def notice_pin(nid):
+    n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
+    if n is None:
+        abort(404)
+    execute("UPDATE notices SET pinned = ? WHERE id = ?", (0 if n["pinned"] else 1, nid))
+    return redirect(url_for("teacher.class_detail", cid=n["class_id"], tab="notices"))
 
 
 @bp.route("/notices/<int:nid>/delete", methods=["POST"])

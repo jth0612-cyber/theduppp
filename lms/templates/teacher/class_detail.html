@@ -150,18 +150,22 @@
       <div class="field"><label>교재명 (정오표일 때)</label><input type="text" name="textbook" maxlength="60" placeholder="예: 개념서 1권"></div>
     </div>
     <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required></textarea></div>
-    <button class="btn primary">등록</button>
+    <label class="consent"><input type="checkbox" name="pinned" value="1"> 목록 맨 위에 고정</label>
+    <button class="btn primary mt">등록</button>
     <p class="small muted">말머리를 '정오'로 하면 학생 화면의 정오표 탭에 교재별로 모입니다.</p>
   </form>
 </div>
 {% for n in notices %}
 <div class="card">
   <div class="page-head">
-    <div><h3>{{ tag_badge(n.tag) }} {{ n.title }}</h3>
-      <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }}</span></div>
-    <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제할까요?">
-      {{ csrf() }}<button class="btn small danger">삭제</button>
-    </form>
+    <div><h3>{% if n.pinned %}<span class="badge">고정</span> {% endif %}{{ tag_badge(n.tag) }} {{ n.title }}</h3>
+      <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · 조회 {{ n.views }} · 좋아요 {{ n.likes }}</span></div>
+    <div class="row">
+      <form method="post" action="{{ url_for('teacher.notice_pin', nid=n.id) }}">{{ csrf() }}<button class="btn small">{{ '고정 해제' if n.pinned else '맨 위 고정' }}</button></form>
+      <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제할까요?">
+        {{ csrf() }}<button class="btn small danger">삭제</button>
+      </form>
+    </div>
   </div>
   <div class="pre">{{ n.body }}</div>
 </div>

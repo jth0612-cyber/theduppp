@@ -107,3 +107,32 @@ python create_teacher.py
 | 모든 학생이 동시에 "로그인 시도가 너무 많습니다" | `X-Forwarded-For` 헤더가 빠져서 모두 같은 IP로 보이는 상태 |
 | 컨테이너가 바로 꺼짐 | Container Manager → 컨테이너 → 로그에서 오류 확인. `Permission denied: '/app/instance/.env'` 이면 2장의 instance 폴더 권한 설정 |
 | 시간이 9시간 다르게 찍힘 | docker-compose.yml의 `TZ: Asia/Seoul` 확인 |
+
+## 9. Google 로그인 켜기 (선택)
+
+학생이 '내 계정'에서 Google 계정을 연결해 두면 다음부터 Google로 로그인할 수 있습니다. 새 가입은 여전히 반 코드 + 승인으로만 받습니다.
+
+1. https://console.cloud.google.com 에 로그인 → 새 프로젝트 만들기 (무료)
+2. **API 및 서비스 → OAuth 동의 화면**: 외부(External), 앱 이름 `정태혁 통합과학 lab`, 지원 이메일 입력, 범위는 `openid`, `email` 만
+3. **사용자 인증 정보 → 사용자 인증 정보 만들기 → OAuth 클라이언트 ID**
+   - 애플리케이션 유형: 웹 애플리케이션
+   - 승인된 리디렉션 URI: `https://lab.jth4377.synology.me/auth/google/callback`
+4. 만들어진 **클라이언트 ID**와 **클라이언트 보안 비밀번호**를 `instance/.env` 맨 아래에 추가합니다 (File Station 텍스트 편집기 또는 터미널).
+   ```
+   GOOGLE_CLIENT_ID=복사한_클라이언트_ID
+   GOOGLE_CLIENT_SECRET=복사한_보안_비밀번호
+   ```
+   이 값은 비밀번호와 같습니다. 다른 곳에 공유하지 마세요.
+5. Container Manager → 컨테이너 → student-lms → **다시 시작**. 로그인 화면에 "Google 계정으로 로그인" 버튼이 생깁니다.
+6. OAuth 동의 화면이 '테스트' 상태면 등록한 테스트 사용자만 로그인됩니다. 학생 전체가 쓰려면 **앱 게시**를 누르세요.
+
+Google 로그인을 켜면 학생의 Google 이메일 주소가 저장됩니다. 개인정보 처리방침의 수집 항목에 "Google 계정 이메일(선택, 연결한 경우)"을 넣으세요.
+
+## 10. 문의 버튼·연락처 (선택)
+
+`instance/.env`에 아래를 넣으면 화면 오른쪽 아래 **문의** 버튼이 카카오톡 채널로 연결되고, 화면 아래 '행정 관련 문의'에 문구가 나옵니다. 비워 두면 문의 버튼은 질답 게시판의 행정문의로 연결됩니다.
+```
+KAKAO_CHANNEL_URL=https://pf.kakao.com/채널주소
+CONTACT_NOTE=행정 문의는 평일 10시~18시에 답변합니다.
+```
+바꾼 뒤 컨테이너를 **다시 시작**하세요.
