@@ -31,6 +31,9 @@ DSM 7.2 이상, **Container Manager**(도커)를 쓸 수 있는 모델 기준입
    - 지금 PC에서 쓰던 데이터를 옮기려면 `instance` 폴더도 같이 복사합니다.
      새로 시작하려면 `instance`는 빼고 복사한 뒤, `docker/student-lms` 안에 **빈 `instance` 폴더를 직접 만드세요.**
      시놀로지는 이 폴더가 없으면 컨테이너를 시작하지 못합니다(`Bind mount failed ... instance does not exist`). 안의 내용(비밀키·DB)은 처음 실행할 때 앱이 만듭니다.
+   - 만든 `instance` 폴더 → 오른쪽 클릭 → 속성 → **권한** → 생성 → `Everyone` / 허용 / 적용 대상 모두 / 읽기·쓰기 전체(관리 제외) → 저장.
+     앱은 보안상 root 가 아닌 전용 사용자(uid 1000)로 실행되는데, 시놀로지 폴더 권한(ACL) 때문에 이 설정이 없으면
+     `PermissionError: [Errno 13] Permission denied: '/app/instance/.env'` 로 컨테이너가 계속 재시작됩니다.
    - `instance/demo.sqlite3`, `instance/DEMO_CREDENTIALS.txt`는 체험용이니 지우고 올리세요.
 
 ## 3. 컨테이너 실행
@@ -102,5 +105,5 @@ python create_teacher.py
 | 로그인하면 "요청이 만료되었습니다" | https 주소로 접속했는지, 리버스 프록시에 `X-Forwarded-Proto` 헤더를 넣었는지 |
 | 로그인 후 다시 로그인 화면으로 돌아감 | http로 접속하고 있지 않은지 (보안 쿠키는 https에서만 저장됨) |
 | 모든 학생이 동시에 "로그인 시도가 너무 많습니다" | `X-Forwarded-For` 헤더가 빠져서 모두 같은 IP로 보이는 상태 |
-| 컨테이너가 바로 꺼짐 | Container Manager → 컨테이너 → 로그에서 오류 확인 |
+| 컨테이너가 바로 꺼짐 | Container Manager → 컨테이너 → 로그에서 오류 확인. `Permission denied: '/app/instance/.env'` 이면 2장의 instance 폴더 권한 설정 |
 | 시간이 9시간 다르게 찍힘 | docker-compose.yml의 `TZ: Asia/Seoul` 확인 |
