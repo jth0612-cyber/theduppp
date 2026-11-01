@@ -94,7 +94,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .brand svg { height: 21px; width: auto; display: block; }
 .brand span { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 13px; line-height: 1.3; letter-spacing: -0.01em; }
 .nav-group + .nav-group { margin-top: 22px; }
-.nav-label { font-size: 12px; color: var(--faint); padding: 0 10px 6px; }
+.nav-label { font-size: 12px; color: var(--muted); padding: 0 10px 6px; }
 .nav a {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   height: 34px; padding: 0 10px; border-radius: var(--r-ctl); color: var(--muted);
@@ -456,11 +456,11 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 }
 
 /* 시안 고르기: 색 견본과 글꼴 견본 */
-.opt:nth-child(2) .c1 { background: #e8ebe5; } .opt:nth-child(2) .c2 { background: #1b1f1a; } .opt:nth-child(2) .c3 { background: #2c6852; }
+.opt:nth-child(2) .c1 { background: #e1e8e0; } .opt:nth-child(2) .c2 { background: #1b1f1a; } .opt:nth-child(2) .c3 { background: #2c6852; }
 .opt:nth-child(3) .c1 { background: #e7e7e5; } .opt:nth-child(3) .c2 { background: #151515; } .opt:nth-child(3) .c3 { background: #b03c27; }
-.opt:nth-child(4) .c1 { background: #e4e7dc; } .opt:nth-child(4) .c2 { background: #20241c; } .opt:nth-child(4) .c3 { background: #5a6a1f; }
-.opt:nth-child(5) .c1 { background: #e3e8ec; } .opt:nth-child(5) .c2 { background: #13202a; } .opt:nth-child(5) .c3 { background: #1c5a80; }
-.opt:nth-child(6) .c1 { background: #e7e2dc; } .opt:nth-child(6) .c2 { background: #28221e; } .opt:nth-child(6) .c3 { background: #74492e; }
+.opt:nth-child(4) .c1 { background: #e0e5d1; } .opt:nth-child(4) .c2 { background: #20241c; } .opt:nth-child(4) .c3 { background: #5a6a1f; }
+.opt:nth-child(5) .c1 { background: #dce5ec; } .opt:nth-child(5) .c2 { background: #13202a; } .opt:nth-child(5) .c3 { background: #1c5a80; }
+.opt:nth-child(6) .c1 { background: #e8ddd1; } .opt:nth-child(6) .c2 { background: #28221e; } .opt:nth-child(6) .c3 { background: #74492e; }
 .ft1 { font-family: "Gothic A1", sans-serif; font-weight: 700; }
 .ft2 { font-family: "Noto Serif KR", serif; font-weight: 600; }
 .ft3 { font-family: "Gowun Batang", serif; font-weight: 700; }

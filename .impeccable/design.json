@@ -1,0 +1,701 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T12:03:33+00:00",
+  "title": "Design System: 정태혁 통합과학 연구소",
+  "extensions": {
+    "colorMeta": {
+      "frame": {
+        "role": "neutral",
+        "displayName": "벽 (Tinted Wall)",
+        "canonical": "#e1e8e0",
+        "oklch": "oklch(92.3% 0.013 141.8)",
+        "tonalRamp": [
+          "#0a0b0a",
+          "#232623",
+          "#3f433f",
+          "#5e635d",
+          "#7f847e",
+          "#a2a6a1",
+          "#c7cac6",
+          "#edefed"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "종이 (Paper Sheet)",
+        "canonical": "#fcfdfc",
+        "oklch": "oklch(99.3% 0.002 145.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a4a5a4",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "한 단 올린 면 (Raised Paper)",
+        "canonical": "#f3f5f0",
+        "oklch": "oklch(96.7% 0.007 124.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#414240",
+          "#60625e",
+          "#81837f",
+          "#a4a5a2",
+          "#c8c9c7",
+          "#eeefed"
+        ]
+      },
+      "active": {
+        "role": "neutral",
+        "displayName": "선택 면 (Selected Tint)",
+        "canonical": "#dfe4dc",
+        "oklch": "oklch(91.3% 0.012 133.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242623",
+          "#40433f",
+          "#5f635c",
+          "#80847d",
+          "#a3a6a1",
+          "#c8cac6",
+          "#eeefed"
+        ]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "테두리 (Edge)",
+        "canonical": "#dde1d8",
+        "oklch": "oklch(90.4% 0.013 126.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242623",
+          "#41433e",
+          "#5f625c",
+          "#80847c",
+          "#a3a6a0",
+          "#c8cac6",
+          "#eeefed"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "구분선 (Rule)",
+        "canonical": "#eaede6",
+        "oklch": "oklch(94.2% 0.010 125.7)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242523",
+          "#41433f",
+          "#60625d",
+          "#81837e",
+          "#a4a6a1",
+          "#c8cac6",
+          "#eeefed"
+        ]
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "조작 테두리 (Control Stroke)",
+        "canonical": "#c3c9bf",
+        "oklch": "oklch(82.8% 0.015 132.5)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242622",
+          "#40433e",
+          "#5e635b",
+          "#7f847c",
+          "#a3a6a0",
+          "#c7cac5",
+          "#edefec"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "먹 (Ink)",
+        "canonical": "#1b1f1a",
+        "oklch": "oklch(23.3% 0.011 139.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242623",
+          "#40433f",
+          "#5e635d",
+          "#7f847e",
+          "#a3a6a2",
+          "#c7cac7",
+          "#edefed"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "보조 글자 (Muted Ink)",
+        "canonical": "#555c53",
+        "oklch": "oklch(46.6% 0.017 138.7)",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#232622",
+          "#3f433e",
+          "#5d635b",
+          "#7e857c",
+          "#a2a7a0",
+          "#c7cac6",
+          "#edefec"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "흐린 글자 (Faint Ink)",
+        "canonical": "#646b61",
+        "oklch": "oklch(51.9% 0.018 136.1)",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#232622",
+          "#3f443d",
+          "#5d635b",
+          "#7e857b",
+          "#a2a79f",
+          "#c7cac5",
+          "#edefec"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "솔잎색 (Pine Needle)",
+        "canonical": "#2c6852",
+        "oklch": "oklch(47.1% 0.073 166.6)",
+        "tonalRamp": [
+          "#050e09",
+          "#142a21",
+          "#264a3c",
+          "#3a6d59",
+          "#5b8f7a",
+          "#88af9e",
+          "#b6d1c4",
+          "#e4f3ec"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "옅은 솔잎 (Pine Wash)",
+        "canonical": "#e2ede7",
+        "oklch": "oklch(93.6% 0.014 162.5)",
+        "tonalRamp": [
+          "#0a0c0b",
+          "#222624",
+          "#3e4440",
+          "#5b645f",
+          "#7c8580",
+          "#a0a7a3",
+          "#c6cac8",
+          "#ecefee"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "짙은 솔잎 (Deep Pine)",
+        "canonical": "#1d4a3a",
+        "oklch": "oklch(37.2% 0.057 167.2)",
+        "tonalRamp": [
+          "#060d0a",
+          "#182922",
+          "#2d493e",
+          "#446b5b",
+          "#658d7c",
+          "#8fada0",
+          "#bacfc6",
+          "#e6f2ec"
+        ]
+      },
+      "positive": {
+        "role": "status",
+        "displayName": "오름 (Rise)",
+        "canonical": "#2c6852",
+        "oklch": "oklch(47.1% 0.073 166.6)",
+        "tonalRamp": [
+          "#050e09",
+          "#142a21",
+          "#264a3c",
+          "#3a6d59",
+          "#5b8f7a",
+          "#88af9e",
+          "#b6d1c4",
+          "#e4f3ec"
+        ]
+      },
+      "negative": {
+        "role": "status",
+        "displayName": "내림 (Drop Red)",
+        "canonical": "#b3261e",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "#1a0403",
+          "#45100b",
+          "#751f18",
+          "#a93026",
+          "#d05548",
+          "#e78679",
+          "#fab5ab",
+          "#ffe4de"
+        ]
+      },
+      "pill-neg-bg": {
+        "role": "status",
+        "displayName": "위험 알약 면",
+        "canonical": "#f9e7e4",
+        "oklch": "oklch(94.2% 0.020 28.9)",
+        "tonalRamp": [
+          "#0d0a0a",
+          "#292322",
+          "#493f3e",
+          "#6b5e5b",
+          "#8d7f7c",
+          "#ada2a0",
+          "#cfc7c6",
+          "#f2edec"
+        ]
+      },
+      "pill-neg-ink": {
+        "role": "status",
+        "displayName": "위험 알약 글자",
+        "canonical": "#7d1d13",
+        "oklch": "oklch(39.1% 0.132 30.0)",
+        "tonalRamp": [
+          "#170604",
+          "#3e1812",
+          "#6a2d24",
+          "#994337",
+          "#bf6557",
+          "#d79084",
+          "#eebbb2",
+          "#ffe7e2"
+        ]
+      },
+      "pill-warn-bg": {
+        "role": "status",
+        "displayName": "경고 알약 면",
+        "canonical": "#f8f0de",
+        "oklch": "oklch(95.7% 0.025 86.9)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#27251f",
+          "#464238",
+          "#676153",
+          "#888273",
+          "#aaa599",
+          "#ccc9c1",
+          "#f0eeea"
+        ]
+      },
+      "pill-warn-ink": {
+        "role": "status",
+        "displayName": "경고 알약 글자",
+        "canonical": "#6e4510",
+        "oklch": "oklch(42.9% 0.086 67.5)",
+        "tonalRamp": [
+          "#110903",
+          "#32210f",
+          "#563c1e",
+          "#7e582e",
+          "#a17a4f",
+          "#be9f7e",
+          "#dbc5ae",
+          "#f8ece0"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "화면 제목. 제목 글꼴(--font-display, --display-weight)."
+      },
+      "element-symbol": {
+        "displayName": "Element Symbol",
+        "purpose": "원소 칸의 반 기호. 큰 칸 48px, 상세 띠 40px, 칩 13px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "질문 스레드 제목."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "KPI 띠 숫자, 고정 폭."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "카드·오른쪽 열 섹션 제목."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "제목 아래 한 줄 요약."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "본문과 표."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "표 머리, 메타, 알약, 원소 칸의 작은 숫자."
+      }
+    },
+    "candidates": {
+      "status": "미결정. 사용자가 색 1안과 글꼴 1안을 아직 고르지 않았다. 기본값 matsu + t1은 결정이 아니다.",
+      "palettes": {
+        "matsu": {
+          "label": "1. 소나무 — 회녹색 벽, 솔잎색",
+          "default": true,
+          "tokens": {
+            "frame": "#e1e8e0",
+            "sheet": "#fcfdfc",
+            "raised": "#f3f5f0",
+            "active": "#dfe4dc",
+            "edge": "#dde1d8",
+            "rule": "#eaede6",
+            "control": "#c3c9bf",
+            "ink": "#1b1f1a",
+            "muted": "#555c53",
+            "faint": "#646b61",
+            "accent": "#2c6852",
+            "accent-soft": "#e2ede7",
+            "accent-ink": "#1d4a3a",
+            "positive": "#2c6852",
+            "negative": "#b3261e"
+          }
+        },
+        "sumi": {
+          "label": "2. 먹과 주홍 — 무채색 벽, 인주색",
+          "default": false,
+          "tokens": {
+            "frame": "#e7e7e5",
+            "sheet": "#ffffff",
+            "raised": "#f4f4f3",
+            "active": "#dededb",
+            "edge": "#e0e0dd",
+            "rule": "#ededeb",
+            "control": "#c7c7c3",
+            "ink": "#151515",
+            "muted": "#595955",
+            "faint": "#64645f",
+            "accent": "#b03c27",
+            "accent-soft": "#f6e5e0",
+            "accent-ink": "#7e2a1b",
+            "positive": "#2f6b48",
+            "negative": "#8e1b2b"
+          }
+        },
+        "koke": {
+          "label": "3. 이끼 — 쑥색 벽, 이끼색",
+          "default": false,
+          "tokens": {
+            "frame": "#e0e5d1",
+            "sheet": "#fbfbfa",
+            "raised": "#f1f2ea",
+            "active": "#d9ddcd",
+            "edge": "#dbdfd1",
+            "rule": "#e8eae0",
+            "control": "#c1c6b4",
+            "ink": "#20241c",
+            "muted": "#555b4c",
+            "faint": "#61675a",
+            "accent": "#5a6a1f",
+            "accent-soft": "#e8ecd6",
+            "accent-ink": "#414d16",
+            "positive": "#5a6a1f",
+            "negative": "#b3261e"
+          }
+        },
+        "umi": {
+          "label": "4. 니가타의 바다 — 청회색 벽, 짙은 바다색",
+          "default": false,
+          "tokens": {
+            "frame": "#dce5ec",
+            "sheet": "#fcfdfe",
+            "raised": "#f1f4f6",
+            "active": "#d6dee4",
+            "edge": "#d9e0e5",
+            "rule": "#e7ecef",
+            "control": "#bfc9d0",
+            "ink": "#13202a",
+            "muted": "#4f5d68",
+            "faint": "#5c6a75",
+            "accent": "#1c5a80",
+            "accent-soft": "#e0ebf3",
+            "accent-ink": "#13435f",
+            "positive": "#2f6b48",
+            "negative": "#b3261e"
+          }
+        },
+        "hojicha": {
+          "label": "5. 호지차 — 볶은 찻잎 벽, 찻물색",
+          "default": false,
+          "tokens": {
+            "frame": "#e8ddd1",
+            "sheet": "#fcfcfb",
+            "raised": "#f4f0eb",
+            "active": "#ddd5cc",
+            "edge": "#e0d9d1",
+            "rule": "#ece7e1",
+            "control": "#c9c0b6",
+            "ink": "#28221e",
+            "muted": "#5e544c",
+            "faint": "#6a5f56",
+            "accent": "#74492e",
+            "accent-soft": "#f0e6dd",
+            "accent-ink": "#573622",
+            "positive": "#2f6b48",
+            "negative": "#a3241b"
+          }
+        }
+      },
+      "typeSets": {
+        "t1": {
+          "fontUi": "\"Gothic A1\", system-ui, sans-serif",
+          "fontDisplay": "\"Gothic A1\", system-ui, sans-serif",
+          "displayWeight": 700,
+          "default": true,
+          "label": "고딕 A1 — 단정한 고딕 하나로"
+        },
+        "t2": {
+          "fontUi": "\"Noto Sans KR\", system-ui, sans-serif",
+          "fontDisplay": "\"Noto Serif KR\", serif",
+          "displayWeight": 600,
+          "default": false,
+          "label": "본고딕 + 본명조 — 제목만 명조"
+        },
+        "t3": {
+          "fontUi": "\"Gothic A1\", system-ui, sans-serif",
+          "fontDisplay": "\"Gowun Batang\", serif",
+          "displayWeight": 700,
+          "default": false,
+          "label": "고딕 A1 + 고운바탕 — 부드러운 바탕 제목"
+        },
+        "t4": {
+          "fontUi": "\"Noto Sans KR\", system-ui, sans-serif",
+          "fontDisplay": "\"Hahmlet\", serif",
+          "displayWeight": 600,
+          "default": false,
+          "label": "본고딕 + 함렛 — 요즘 명조 제목"
+        },
+        "t5": {
+          "fontUi": "\"Nanum Gothic\", system-ui, sans-serif",
+          "fontDisplay": "\"Nanum Myeongjo\", serif",
+          "displayWeight": 700,
+          "default": false,
+          "label": "나눔고딕 + 나눔명조 — 익숙한 고전"
+        }
+      },
+      "fontLoading": {
+        "status": "open",
+        "current": "Google Fonts (fonts.googleapis.com CSS, fonts.gstatic.com files)",
+        "options": [
+          "self-host: 고른 글꼴 파일을 Flask 앱 static에 두고 font-src 'self'",
+          "CSP 허용: style-src https://fonts.googleapis.com, font-src https://fonts.gstatic.com"
+        ]
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating",
+        "value": "0 10px 28px rgb(0 0 0 / .08)",
+        "purpose": "검색 결과, 더보기 메뉴처럼 내용 위에 겹쳐 뜨는 층."
+      },
+      {
+        "name": "picker",
+        "value": "0 14px 36px rgb(0 0 0 / .10)",
+        "purpose": "시안 고르기 팝오버."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px var(--accent-soft)",
+        "purpose": "입력칸 포커스. 오류 시 var(--pill-neg-bg)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.2, .8, .2, 1)",
+        "purpose": "모든 상태 전환."
+      },
+      {
+        "name": "duration-fast",
+        "value": "120ms",
+        "purpose": "버튼 누름, 표 행 hover."
+      },
+      {
+        "name": "duration-base",
+        "value": "150ms",
+        "purpose": "버튼·메뉴 색 전환."
+      },
+      {
+        "name": "duration-cell",
+        "value": "160ms",
+        "purpose": "원소 칸 hover(테두리, 면, 위로 2px)."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0ms",
+        "purpose": "prefers-reduced-motion: reduce 에서 모든 전환 0ms."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1240px",
+        "purpose": "이하: 오른쪽 열 320px, 주기율표 4열"
+      },
+      {
+        "name": "tablet",
+        "value": "1080px",
+        "purpose": "이하: 사이드바 → 메뉴 dialog, 한 열로 쌓기"
+      },
+      {
+        "name": "phone",
+        "value": "760px",
+        "purpose": "이하: 시트 전체 폭, 여백 16px, 조작 44px, 주기율표 3열, KPI 2×2"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "주요 버튼 (Primary Button)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "화면마다 하나, 그 화면의 다음 할 일. 먹색 배경.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">가장 오래된 질문 답하기</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; height:36px; padding:0 14px; border-radius:8px; border:1px solid var(--control, #c3c9bf); background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); font:500 14px/1 'Gothic A1', system-ui, sans-serif; cursor:pointer; transition:background-color 150ms cubic-bezier(.2,.8,.2,1), border-color 150ms cubic-bezier(.2,.8,.2,1), transform 120ms cubic-bezier(.2,.8,.2,1); } .ds-btn-primary { background:var(--ink, #1b1f1a); border-color:var(--ink, #1b1f1a); color:var(--sheet, #fcfdfc); } .ds-btn-primary:hover { background:color-mix(in srgb, var(--ink, #1b1f1a) 86%, var(--sheet, #fcfdfc)); border-color:transparent; } .ds-btn:active { transform:translateY(1px); } .ds-btn:focus-visible { outline:2px solid var(--accent, #2c6852); outline-offset:2px; }"
+    },
+    {
+      "name": "보조 버튼 (Secondary Button)",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "종이 배경, control 테두리. 목록 행의 \"답하기\" 등.",
+      "html": "<button class=\"ds-btn2\">답하기</button>",
+      "css": ".ds-btn2 { display:inline-flex; align-items:center; height:36px; padding:0 14px; border-radius:8px; border:1px solid var(--control, #c3c9bf); background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); font:500 14px/1 'Gothic A1', system-ui, sans-serif; cursor:pointer; transition:background-color 150ms cubic-bezier(.2,.8,.2,1), border-color 150ms cubic-bezier(.2,.8,.2,1); } .ds-btn2:hover { background:var(--raised, #f3f5f0); border-color:var(--muted, #555c53); } .ds-btn2:active { transform:translateY(1px); } .ds-btn2:focus-visible { outline:2px solid var(--accent, #2c6852); outline-offset:2px; }"
+    },
+    {
+      "name": "입력칸 (Input)",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "종이 배경, control 테두리, 포커스 시 ink 테두리 + accent-soft 링.",
+      "html": "<input class=\"ds-input\" placeholder=\"학생 이름 또는 수험번호\">",
+      "css": ".ds-input { height:36px; width:260px; padding:0 12px; border-radius:8px; border:1px solid var(--control, #c3c9bf); background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); font:400 14px 'Gothic A1', system-ui, sans-serif; outline:none; caret-color:var(--accent, #2c6852); } .ds-input::placeholder { color:var(--faint, #646b61); } .ds-input:focus { border-color:var(--ink, #1b1f1a); box-shadow:0 0 0 3px var(--accent-soft, #e2ede7); }"
+    },
+    {
+      "name": "사이드바 메뉴 (Navigation)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "벽 위의 메뉴. 현재 페이지는 active 면 + 강조 점 + accent-ink.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-a\" aria-current=\"page\" href=\"#\"><span>대시보드</span></a><a class=\"ds-nav-a\" href=\"#\"><span>반 관리</span></a><a class=\"ds-nav-a\" href=\"#\"><span>질문답변</span><span class=\"ds-count\">7</span></a></nav>",
+      "css": ".ds-nav { display:grid; width:200px; padding:8px; background:var(--frame, #e1e8e0); font:400 14px 'Gothic A1', system-ui, sans-serif; } .ds-nav-a { display:flex; align-items:center; gap:8px; height:34px; padding:0 10px; border-radius:8px; color:var(--muted, #555c53); text-decoration:none; transition:background-color 150ms cubic-bezier(.2,.8,.2,1), color 150ms cubic-bezier(.2,.8,.2,1); } .ds-nav-a > span:first-child { margin-right:auto; } .ds-nav-a:hover { color:var(--ink, #1b1f1a); background:color-mix(in srgb, var(--active, #dfe4dc) 55%, transparent); } .ds-nav-a:focus-visible { outline:2px solid var(--accent, #2c6852); outline-offset:2px; } .ds-nav-a[aria-current=page] { background:var(--active, #dfe4dc); color:var(--accent-ink, #1d4a3a); font-weight:600; } .ds-nav-a[aria-current=page]::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent, #2c6852); order:-1; } .ds-count { font-size:12px; font-weight:600; color:var(--accent-ink, #1d4a3a); }"
+    },
+    {
+      "name": "알약 (Pill)",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "분류 표시. 기본, 강조, 경고, 위험.",
+      "html": "<span class=\"ds-pill\">답변 완료</span> <span class=\"ds-pill ds-acc\">답변 대기</span> <span class=\"ds-pill ds-warn\">행정문의</span> <span class=\"ds-pill ds-neg\">위험</span>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; height:20px; padding:0 7px; border-radius:4px; font:500 12px 'Gothic A1', system-ui, sans-serif; background:var(--raised, #f3f5f0); color:var(--muted, #555c53); } .ds-acc { background:var(--accent-soft, #e2ede7); color:var(--accent-ink, #1d4a3a); } .ds-warn { background:var(--pill-warn-bg, #f8f0de); color:var(--pill-warn-ink, #6e4510); } .ds-neg { background:var(--pill-neg-bg, #f9e7e4); color:var(--pill-neg-ink, #7d1d13); }"
+    },
+    {
+      "name": "카드 (Card)",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "종이 위의 1px edge 그릇, 모서리 12px, 그림자 없음.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-head\"><h2>답변 대기 질문</h2><a href=\"#\">전체 7건 보기</a></div><p>[수특 통합과학-42-7] 역학적 에너지 보존에서…</p></section>",
+      "css": ".ds-card { width:420px; padding:20px; border:1px solid var(--edge, #dde1d8); border-radius:12px; background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); font:400 14px/1.55 'Gothic A1', system-ui, sans-serif; } .ds-card-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; } .ds-card-head h2 { margin:0; font-size:16px; font-weight:600; letter-spacing:-0.01em; } .ds-card-head a { font-size:12px; color:var(--muted, #555c53); text-decoration:none; } .ds-card-head a:hover { color:var(--ink, #1b1f1a); } .ds-card p { margin:0; }"
+    },
+    {
+      "name": "KPI 띠 (KPI Strip)",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "세로선으로 나뉜 한 줄의 요약 수치. 타일 여러 개가 아니다.",
+      "html": "<dl class=\"ds-kpis\"><div class=\"ds-kpi\"><dt>답변 대기</dt><dd>7<small>건</small></dd><p>학습 6 · 행정 1</p></div><div class=\"ds-kpi\"><dt>재원 학생</dt><dd>551<small>명</small></dd><p>가입 승인 대기 3명</p></div><div class=\"ds-kpi\"><dt>담당 반</dt><dd>12<small>개</small></dd><p>A–K, P</p></div></dl>",
+      "css": ".ds-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:560px; margin:0; border:1px solid var(--edge, #dde1d8); border-radius:12px; background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); font:400 14px 'Gothic A1', system-ui, sans-serif; } .ds-kpi { padding:14px 20px 16px; } .ds-kpi + .ds-kpi { border-left:1px solid var(--edge, #dde1d8); } .ds-kpi dt { font-size:13px; color:var(--muted, #555c53); } .ds-kpi dd { margin:4px 0 0; font-size:24px; font-weight:500; line-height:1.25; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; } .ds-kpi dd small { font-size:14px; font-weight:400; color:var(--muted, #555c53); margin-left:2px; } .ds-kpi p { margin:4px 0 0; font-size:12px; color:var(--muted, #555c53); }"
+    },
+    {
+      "name": "원소 칸 (Element Cell)",
+      "kind": "custom",
+      "refersTo": "element-cell",
+      "description": "반 하나 = 원소 칸 하나. 큰 기호, 모서리에 고정된 고정 폭 숫자. 시그니처.",
+      "html": "<div class=\"ds-pt\"><a class=\"ds-el\" href=\"#\"><span class=\"ds-el-top\"><span>5</span><span class=\"ds-el-q\">1</span></span><span class=\"ds-el-sym\">E</span><span class=\"ds-el-name\">학생 44명</span><span class=\"ds-el-avg\">29.5<small>+0.1</small></span></a><a class=\"ds-el ds-warn\" href=\"#\"><span class=\"ds-el-top\"><span>11</span><span class=\"ds-el-q\">2</span></span><span class=\"ds-el-sym\">K</span><span class=\"ds-el-name\">학생 47명</span><span class=\"ds-el-avg\">26.9<small class=\"ds-neg\">−4.5</small></span></a><a class=\"ds-el\" href=\"#\"><span class=\"ds-el-top\"><span>12</span></span><span class=\"ds-el-sym\">P</span><span class=\"ds-el-name\">학생 38명</span><span class=\"ds-el-avg\">34.3<small>+1.0</small></span></a></div>",
+      "css": ".ds-pt { display:grid; grid-template-columns:repeat(3,116px); gap:8px; font-family:'Gothic A1', system-ui, sans-serif; font-variant-numeric:tabular-nums; } .ds-el { display:grid; grid-template-rows:auto 1fr auto auto; aspect-ratio:1/.92; padding:9px 10px; border:1px solid var(--edge, #dde1d8); border-radius:4px; background:var(--sheet, #fcfdfc); color:var(--ink, #1b1f1a); text-decoration:none; transition:border-color 160ms cubic-bezier(.2,.8,.2,1), background-color 160ms cubic-bezier(.2,.8,.2,1), transform 160ms cubic-bezier(.2,.8,.2,1); } .ds-el:hover, .ds-el:focus-visible { border-color:var(--ink, #1b1f1a); background:var(--raised, #f3f5f0); transform:translateY(-2px); outline:none; } .ds-el:active { transform:translateY(0); } .ds-el.ds-warn { border-color:color-mix(in srgb, var(--negative, #b3261e) 45%, var(--edge, #dde1d8)); } .ds-el-top { display:flex; justify-content:space-between; font-size:11px; line-height:1.2; color:var(--faint, #646b61); } .ds-el-q { color:var(--accent-ink, #1d4a3a); font-weight:600; } .ds-el-q::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent, #2c6852); margin-right:4px; translate:0 -1px; } .ds-el-sym { align-self:center; font:700 38px/1 'Gothic A1', system-ui, sans-serif; letter-spacing:-0.02em; } .ds-el-name { font-size:12px; line-height:1.3; color:var(--muted, #555c53); } .ds-el-avg { display:flex; justify-content:space-between; align-items:baseline; font-size:14px; font-weight:600; line-height:1.3; margin-top:2px; } .ds-el-avg small { font-size:12px; font-weight:500; color:var(--muted, #555c53); } .ds-el-avg small.ds-neg { color:var(--negative, #b3261e); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "편집샵 벽의 주기율표 (The Select-Shop Periodic Table)",
+    "overview": "일본의 차분한 편집샵처럼, 옅게 색이 든 벽(프레임) 위에 흰 종이 한 장(시트)을 8px 안쪽에 걸어 둔다. 프레임은 왼쪽 사이드바와 위쪽 48px 바가 만드는 L자이고, 내용은 모두 종이 위에 놓인다. 그림자로 띄우지 않고 1px 테두리와 면의 밝기 차이만으로 층을 나눈다. 차분함은 장식을 빼서가 아니라 정돈된 정보로 만든다.\n\n이 연구소의 반(A–K, P)은 원소다. 반은 정사각에 가까운 \"원소 칸\"으로 그리며, 큰 반 글자가 원소 기호 자리에, 작은 숫자(순번, 답변 대기 수, 학생 수, 평균, 변화)가 정해진 모서리에 고정 폭 숫자로 놓인다. 같은 원소 칸이 대시보드에서는 표로, 반 상세에서는 큰 칸으로, 학생 옆에서는 작은 칩으로 다시 나온다.\n\n강조색은 한 가지뿐이고 데이터와 \"지금 선택된 것\"에만 쓴다. 주요 버튼은 강조색이 아니라 먹색(잉크)이다. 빨강은 점수 하락, 오래된 질문, 입력 오류에만 쓴다. 한 강사가 1000명을 다루는 밀도라 화면은 촘촘하되, 숫자는 항상 고정 폭으로 줄이 맞는다.",
+    "keyCharacteristics": [
+      "색이 든 L자 프레임 + 8px 안쪽에 놓인 흰 시트(모서리 16px, 1px 테두리), 그림자 없음",
+      "반 = 원소 칸: 큰 기호, 모서리에 고정된 작은 고정 폭 숫자",
+      "강조색 하나, 데이터와 선택 상태에만",
+      "주요 버튼은 먹색, 빨강은 하락·지연·오류에만",
+      "둥근 모서리는 바깥에서 안으로 16 → 12 → 8 → 4px로 작아진다",
+      "모든 문구는 한국어, `word-break: keep-all`"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "강조색(accent 계열)은 한 가지이고 데이터(점수 선, 대기 수, 점)와 선택·포커스 상태에만 쓴다. 장식, 제목, 아이콘 색, 주요 버튼에는 쓰지 않는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Means Drop Rule",
+        "body": "negative는 점수 하락, 오래 기다린 질문, 2점 넘게 떨어진 반, 입력 오류에만 쓴다. 그 외의 강조에 빨강을 빌려 쓰지 않는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wall Carries the Palette Rule",
+        "body": "팔레트의 성격은 벽(frame)과 강조색 두 곳에서만 드러난다. 시트와 카드는 거의 흰 종이로 남겨 둔다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Display Face Is for Names Rule",
+        "body": "제목 글꼴은 이름에만 쓴다: 화면 제목, 반 기호, 연구소 이름, 질문 제목. 섹션 제목·버튼·숫자·본문은 본문 글꼴이다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "점수, 인원, 날짜, 순번, 질문 번호는 모두 고정 폭 숫자(`tnum`)로 쓴다. 표와 원소 칸에서 숫자 자리가 줄마다 맞아야 한다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Keep-All Rule",
+        "body": "한국어 문장은 `word-break: keep-all`로 어절 단위로 줄을 바꾼다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper on the Wall Rule",
+        "body": "종이 위에 놓인 것(카드, 원소 칸, KPI, 표)은 그림자를 갖지 않는다. 그림자는 내용 위로 겹쳐 뜨는 임시 층만의 것이다.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Nesting Radius Rule",
+        "body": "안에 든 것은 담는 것보다 모서리가 크지 않다(16 → 12 → 8 → 4).",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do 새 화면도 벽(frame) 위 8px 안쪽에 모서리 16px, 1px edge의 시트 한 장으로 시작한다.",
+      "Do 반은 언제나 원소 칸(또는 22px 원소 칩)으로 표시하고, 숫자는 정해진 모서리에 고정 폭으로 둔다.",
+      "Do 요약 수치는 1px 세로선으로 나뉜 KPI 띠 한 줄로 묶는다.",
+      "Do 화면마다 주요(먹색) 버튼은 하나만 두고, 그 화면의 다음 할 일을 문구로 쓴다.",
+      "Do 색·글꼴은 토큰(`--frame`, `--accent`, `--font-display` 등)으로만 쓴다. 그래야 5안 전환과 최종 1안 확정이 한 곳에서 끝난다.",
+      "Do 본문 대비 4.5:1 이상을 지킨다. 벽(frame) 위의 12px 글자는 muted를 쓴다(matsu·umi에서 faint는 벽 위에서 4.5:1에 못 미친다).",
+      "Do 휴대폰(760px 이하)에서 누르는 것은 모두 44px 이상으로 키운다."
+    ],
+    "donts": [
+      "Don't 카드, 시트, 원소 칸, KPI에 그림자를 넣지 않는다. 그림자는 떠서 겹치는 층에만.",
+      "Don't 강조색을 주요 버튼, 제목, 아이콘, 장식 면에 쓰지 않는다.",
+      "Don't 빨강(negative)을 하락·지연·오류 외의 강조에 쓰지 않는다.",
+      "Don't 아이콘이 든 색깔 KPI 타일 여러 개와 큰 차트를 나열하는 대시보드 틀로 바꾸지 않는다.",
+      "Don't 이모지, 아이콘 글꼴, 글자 기호를 아이콘 대신 쓰지 않는다. 아이콘은 16px 선 SVG.",
+      "Don't 시대인재 N 재수종합 로고를 크게 쓰거나 색을 바꾸지 않는다. 사이드바 아래 13px 높이, 공식 색 그대로의 소속 표시로만 둔다. 주 로고는 THedu(currentColor)다.",
+      "Don't 후보 5안 중 하나를 이 문서만 보고 확정된 것으로 다루지 않는다. 사용자가 고르기 전까지 matsu + t1은 기본값일 뿐이다."
+    ]
+  }
+}
