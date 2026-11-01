@@ -6,7 +6,7 @@
 /* ---------- 색 시안 5개 ---------- */
 :root,
 :root[data-palette="matsu"] {           /* 1. 소나무 — 회녹색 벽, 솔잎색 */
-  --frame: #e8ebe5; --sheet: #fdfdfb; --raised: #f3f5f0; --active: #dfe4dc;
+  --frame: #e1e8e0; --sheet: #fcfdfc; --raised: #f3f5f0; --active: #dfe4dc;
   --edge: #dde1d8; --rule: #eaede6; --control: #c3c9bf;
   --ink: #1b1f1a; --muted: #555c53; --faint: #646b61;
   --accent: #2c6852; --accent-soft: #e2ede7; --accent-ink: #1d4a3a;
@@ -20,21 +20,21 @@
   --positive: #2f6b48; --negative: #8e1b2b;
 }
 :root[data-palette="koke"] {            /* 3. 이끼 — 쑥색 벽, 이끼색 */
-  --frame: #e4e7dc; --sheet: #fbfbf7; --raised: #f1f2ea; --active: #d9ddcd;
+  --frame: #e0e5d1; --sheet: #fbfbfa; --raised: #f1f2ea; --active: #d9ddcd;
   --edge: #dbdfd1; --rule: #e8eae0; --control: #c1c6b4;
   --ink: #20241c; --muted: #555b4c; --faint: #61675a;
   --accent: #5a6a1f; --accent-soft: #e8ecd6; --accent-ink: #414d16;
   --positive: #5a6a1f; --negative: #b3261e;
 }
 :root[data-palette="umi"] {             /* 4. 니가타의 바다 — 청회색 벽, 짙은 바다색 */
-  --frame: #e3e8ec; --sheet: #fcfdfe; --raised: #f1f4f6; --active: #d6dee4;
+  --frame: #dce5ec; --sheet: #fcfdfe; --raised: #f1f4f6; --active: #d6dee4;
   --edge: #d9e0e5; --rule: #e7ecef; --control: #bfc9d0;
   --ink: #13202a; --muted: #4f5d68; --faint: #5c6a75;
   --accent: #1c5a80; --accent-soft: #e0ebf3; --accent-ink: #13435f;
   --positive: #2f6b48; --negative: #b3261e;
 }
 :root[data-palette="hojicha"] {         /* 5. 호지차 — 볶은 찻잎 벽, 찻물색 */
-  --frame: #e7e2dc; --sheet: #fdfcfa; --raised: #f4f0eb; --active: #ddd5cc;
+  --frame: #e8ddd1; --sheet: #fcfcfb; --raised: #f4f0eb; --active: #ddd5cc;
   --edge: #e0d9d1; --rule: #ece7e1; --control: #c9c0b6;
   --ink: #28221e; --muted: #5e544c; --faint: #6a5f56;
   --accent: #74492e; --accent-soft: #f0e6dd; --accent-ink: #573622;
@@ -359,7 +359,8 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .msg-head b { font-weight: 600; }
 .msg-head time { color: var(--muted); font-size: 12px; }
 .msg p { line-height: 1.7; }
-.msg.t { padding-left: 16px; border-left: 2px solid var(--accent); }
+.msg.t { padding: 12px 16px; background: var(--accent-soft); border-radius: var(--r-card); }
+.msg.t .msg-head b { color: var(--accent-ink); }
 .attach {
   display: inline-flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border: 1px solid var(--edge); border-radius: var(--r-ctl);
   font-size: 13px; width: fit-content; background: var(--sheet); cursor: pointer;
@@ -467,3 +468,61 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .ft5 { font-family: "Nanum Myeongjo", serif; font-weight: 700; }
 .opt small { display: block; font-family: var(--font-ui); font-weight: 400; }
 .class-head h1 { font: var(--display-weight) var(--fs-title)/1.25 var(--font-display); letter-spacing: -0.02em; }
+
+/* ---------- 1차 점검 후 수정 ---------- */
+[hidden] { display: none !important; }
+.topbar .menu-btn { display: none; }
+.brand { align-items: flex-start; }
+.lede b.neg { color: var(--negative); }
+.class-head { align-items: start; }
+.class-head .actions { align-self: end; }
+.back { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+.back:hover { color: var(--ink); }
+.sm-only { display: none; }
+@media (max-width: 1080px) { .topbar .menu-btn { display: inline-flex; } }
+@media (max-width: 760px) {
+  .sm-only { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tbl td.id small:not(.sm-only) { display: none; }
+  .class-head { gap: 14px; }
+  .class-head .facts { gap: 18px; }
+}
+@media (max-width: 760px) {
+  .tbl td.id { white-space: normal; }
+  .tbl td.id .sm-only { line-height: 1.45; }
+}
+.chart .gap { font-size: 11px; fill: var(--faint); }
+
+/* ---------- 검토 후 수정 ---------- */
+.nav a[aria-current="page"] { color: var(--accent-ink); }
+.nav a[aria-current="page"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: -2px; order: -1; }
+.nav a[aria-current="page"] > span:first-of-type { margin-right: auto; }
+.sample { font-size: 12px; color: var(--muted); }
+.sample b { font-weight: 600; color: var(--ink); }
+.el-detail {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) 220px; gap: 20px; align-items: center;
+  margin-top: 12px; padding: 14px 16px; border-radius: var(--r-ctl); background: var(--raised); min-height: 92px;
+}
+.el-detail .sym { font: var(--display-weight) 40px/1 var(--font-display); text-align: center; }
+.el-detail h3 { font-size: 15px; font-weight: 600; }
+.el-detail p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.el-detail p b { color: var(--ink); font-weight: 600; }
+.spark { width: 100%; height: 56px; display: block; overflow: visible; }
+.spark .t { fill: none; stroke: var(--accent); stroke-width: 2; }
+.spark .b { stroke: var(--edge); }
+.spark text { font-size: 10px; fill: var(--muted); }
+.el.on { border-color: var(--ink); background: var(--raised); }
+.tbl.exam { table-layout: fixed; }
+.tbl.exam col.c-rank { width: 64px; } .tbl.exam col.c-name { width: 22%; } .tbl.exam col.c-no { width: 18%; }
+.tbl.exam col.c-score { width: 132px; } .tbl.exam col.c-rate { width: 120px; } .tbl.exam col.c-prev { width: 110px; }
+.tbl.exam th.l-score, .tbl.exam td.l-score { text-align: left; }
+.inbox-items .who .pill { margin-left: auto; }
+@media (max-width: 760px) {
+  .el-detail { grid-template-columns: 48px minmax(0, 1fr); }
+  .el-detail .spark-wrap { grid-column: 1 / -1; }
+  .tbl.exam col.c-no, .tbl.exam col.c-rate, .tbl.exam col.c-prev { width: 0; }
+  .tbl.exam col.c-name { width: auto; } .tbl.exam col.c-score { width: 110px; }
+}
+.inbox-items .top { align-items: baseline; }
+.inbox-items .top b { display: inline; margin: 0; font-size: 14px; color: var(--ink); }
+.inbox-items .top span { flex: none; }
+.top-title .sample { font-family: var(--font-ui); font-weight: 400; }

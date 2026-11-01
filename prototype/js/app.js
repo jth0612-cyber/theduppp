@@ -95,7 +95,7 @@
   const elCell = (c, opts = {}) => {
     const q = qByClass(c.id);
     const drop = c.delta <= -2;
-    return `<a class="el${drop ? ' warn' : ''}${opts.big ? ' el-big' : ''}" href="#/class/${c.id}" aria-label="${c.name}, 학생 ${c.studentIds.length}명, 8회 평균 ${nf1.format(c.last)}점, 7회보다 ${sign1(c.delta)}점${q ? `, 답변 대기 ${q}건` : ''}">
+    return `<a class="el${drop ? ' warn' : ''}${opts.big ? ' el-big' : ''}" data-cid="${c.id}" href="#/class/${c.id}" aria-label="${c.name}, 학생 ${c.studentIds.length}명, 8회 평균 ${nf1.format(c.last)}점, 7회보다 ${sign1(c.delta)}점${q ? `, 답변 대기 ${q}건` : ''}">
       <span class="el-top"><span class="num">${c.order}</span>${q ? `<span class="el-q num">${q}</span>` : ''}</span>
       <span class="el-sym">${c.letter}</span>
       <span class="el-name num">학생 ${c.studentIds.length}명</span>
@@ -107,6 +107,26 @@
   const placeholder = (title, line) => `
     <div class="title-row"><div><h1>${title}</h1><p class="lede">${line}</p></div></div>
     <div class="empty"><b>이 화면은 다음 시안에서 만듭니다.</b><span>이번 시안은 대시보드, 반 상세, 학생 상세, 시험·성적 입력, 질문답변 다섯 화면입니다.</span><a class="btn btn-sm" href="#/">대시보드로 돌아가기</a></div>`;
+
+
+  /* 원소 칸에 올리면 보이는 반 상세 띠: 1–8회 평균 추이, 답변 대기, 가장 많이 떨어진 학생 */
+  function elDetail(c) {
+    const q = qByClass(c.id);
+    const studs = c.studentIds.map((id) => L.byId[id]).filter((s) => s.scores[LAST] != null && s.scores[LAST - 1] != null);
+    const worstS = studs.sort((a, b) => (a.scores[LAST] - a.scores[LAST - 1]) - (b.scores[LAST] - b.scores[LAST - 1]))[0];
+    const W = 220, H = 56, lo = 20, hi = 40;
+    const pts = c.avgs.map((v, i) => `${(i * (W - 4) / (c.avgs.length - 1) + 2).toFixed(1)},${(H - 14 - ((v - lo) / (hi - lo)) * (H - 20)).toFixed(1)}`).join(' ');
+    return `<span class="sym" aria-hidden="true">${c.letter}</span>
+      <div><h3>${c.name} · 학생 ${c.studentIds.length}명</h3>
+        <p class="num">8회 평균 <b>${nf1.format(c.last)}</b> (7회 대비 <span class="${c.delta <= -2 ? 'neg' : ''}">${sign1(c.delta)}</span>) · 답변 대기 <b>${q}건</b></p>
+        <p>가장 많이 떨어진 학생 <a href="#/student/${worstS.id}"><b>${esc(worstS.name)}</b></a> <span class="num neg">${sign0(worstS.scores[LAST] - worstS.scores[LAST - 1])}점</span></p></div>
+      <div class="spark-wrap"><svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${c.name} 1–8회 평균 추이"><line class="b" x1="0" x2="${W}" y1="${H - 12}" y2="${H - 12}"/><polyline class="t" points="${pts}"/><text x="0" y="${H}">1회</text><text x="${W}" y="${H}" text-anchor="end">8회</text></svg></div>`;
+  }
+  function bindDash() {
+    const box = $('[data-eldetail]');
+    const show = (a) => { $$('[data-cid]').forEach((x) => x.classList.toggle('on', x === a)); box.innerHTML = elDetail(L.classById[a.dataset.cid]); };
+    $$('[data-cid]').forEach((a) => { a.addEventListener('mouseenter', () => show(a)); a.addEventListener('focus', () => show(a)); });
+  }
 
   /* ---------- 대시보드 ---------- */
   function dashboard() {
@@ -135,7 +155,8 @@
       <div class="stack">
         <section class="card" aria-labelledby="h-classes">
           <div class="card-head"><h2 id="h-classes">담당 반</h2><span class="meta">${lastExam.name} 평균 · ${lastExam.full}점 만점</span></div>
-          <div class="ptable">${L.classes.map((c) => elCell(c)).join('')}</div>
+          <div class="ptable" data-ptable>${L.classes.map((c) => elCell(c)).join('')}</div>
+          <div class="el-detail" data-eldetail aria-live="polite">${elDetail(worst)}</div>
           <div class="key"><span><i></i>답변 대기 질문</span><span>오른쪽 아래: 7회 대비 평균 변화</span><span>테두리가 붉은 칸: 2점 넘게 떨어진 반</span></div>
         </section>
         <section class="card" aria-labelledby="h-q">
@@ -180,7 +201,7 @@
     const studs = c.studentIds.map((id) => L.byId[id]);
     const q = qByClass(c.id);
     return `
-    <div class="crumb"><a href="#/">반 관리</a><span class="sep">/</span></div>
+    <a class="back" href="#/"><svg class="i" viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>반 관리</a>
     <div class="class-head">
       <div class="el el-big" aria-hidden="true"><span class="el-top"><span class="num">${c.order}</span>${q ? `<span class="el-q num">${q}</span>` : ''}</span><span class="el-sym">${c.letter}</span><span></span><span></span></div>
       <div>
@@ -207,7 +228,7 @@
       <thead><tr><th>이름</th><th class="hide-sm">수험번호</th><th class="r">8회 점수</th><th class="r hide-sm">반 평균 대비</th><th class="r hide-sm">누적 접속</th><th class="r hide-sm">포인트</th><th class="hide-sm">계정</th></tr></thead>
       <tbody>${studs.map((s) => ({ s, v: s.scores[LAST] })).sort((a, b) => (a.v ?? -1) - (b.v ?? -1)).map(({ s, v }) => `
         <tr data-name="${esc(s.name)}" data-no="${s.examNo}">
-          <td class="id"><a href="#/student/${s.id}">${esc(s.name)}</a><small>${esc(s.nick)}</small></td>
+          <td class="id"><a href="#/student/${s.id}">${esc(s.name)}</a><small>${esc(s.nick)}</small><span class="sm-only num">${s.examNo} · 반 평균 대비 ${v == null ? '—' : sign1(v - c.last)} · 접속 ${s.days}일 · ${nf0.format(s.points)}P${s.account === '미발급' ? ' · 계정 미발급' : ''}</span></td>
           <td class="num hide-sm">${s.examNo}</td>
           <td class="r num">${v == null ? '<span class="dash">결시</span>' : `${v}<span class="unit"> /${L.FULL}</span>`}</td>
           <td class="r num hide-sm">${v == null ? '<span class="dash">—</span>' : `<span class="${v - c.last <= -10 ? 'neg' : ''}">${sign1(v - c.last)}</span>`}</td>
@@ -323,7 +344,7 @@
   /* 성적 추이: 한 학생 선(강조색)과 반 평균 선(회색). 0–50점 고정 눈금 */
   function drawTrend(svg, mine, avgs) {
     const NS = 'http://www.w3.org/2000/svg';
-    const W = Math.max(280, svg.clientWidth || 600), H = 210, pl = 28, pr = 56, pt = 22, pb = 26;
+    const W = Math.max(280, svg.clientWidth || 600), H = 210, pl = 28, pr = 74, pt = 22, pb = 26;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.innerHTML = '';
     const add = (tag, attrs, txt) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (txt != null) n.textContent = txt; svg.appendChild(n); return n; };
@@ -339,9 +360,13 @@
     const path = (vals) => vals.map((v, i) => (v == null ? null : [x(i), y(v)])).reduce((d, p, i, arr) => (p ? d + `${d && arr[i - 1] ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}` : d), '');
     add('path', { d: path(avgs), class: 'l-avg' });
     add('path', { d: path(mine), class: 'l-me' });
+    mine.forEach((v, i) => { if (v == null) add('text', { x: x(i), y: y(avgs[i]) - 10, 'text-anchor': 'middle', class: 'gap' }, '결시'); });
     const li = n - 1;
-    if (mine[li] != null) { add('circle', { cx: x(li), cy: y(mine[li]), r: 3.5, class: 'dot' }); add('text', { x: x(li) + 8, y: y(mine[li]) + 4, class: 'end num' }, `${mine[li]}점`); }
-    add('text', { x: x(li) + 8, y: y(avgs[li]) + 4 + (Math.abs(y(avgs[li]) - y(mine[li] ?? 0)) < 14 ? 14 : 0), class: 'end a num' }, nf1.format(avgs[li]));
+    // 끝 값 표시: 두 값이 14px 안에 붙으면 위쪽 값은 위로, 아래쪽 값은 아래로 벌린다
+    let ym = mine[li] != null ? y(mine[li]) + 4 : null, ya = y(avgs[li]) + 4;
+    if (ym != null && Math.abs(ym - ya) < 15) { const mid = (ym + ya) / 2; if (mine[li] >= avgs[li]) { ym = mid - 8; ya = mid + 8; } else { ym = mid + 8; ya = mid - 8; } }
+    if (mine[li] != null) { add('circle', { cx: x(li), cy: y(mine[li]), r: 3.5, class: 'dot' }); add('text', { x: x(li) + 8, y: ym, class: 'end num' }, `${mine[li]}점`); }
+    add('text', { x: x(li) + 8, y: ya, class: 'end a num' }, `평균 ${nf1.format(avgs[li])}`);
     const d = mine[li] != null && mine[li - 1] != null ? mine[li] - mine[li - 1] : 0;
     if (d <= -5) {
       const mx = (x(li) + x(li - 1)) / 2;
@@ -366,14 +391,15 @@
     </div>
     <dl class="kpis k5" data-stats></dl>
     <div class="toolbar"><span class="save-stamp" data-stamp>자동 저장 안 됨 · 저장을 눌러야 반영됩니다</span><span class="muted">수험번호 순</span></div>
-    <div class="tbl-wrap"><table class="tbl sticky-head">
-      <thead><tr><th class="r">석차</th><th>이름</th><th class="hide-sm">수험번호</th><th class="r">점수</th><th class="r hide-sm">득점률</th><th class="r hide-sm">지난 8회</th></tr></thead>
+    <div class="tbl-wrap"><table class="tbl exam">
+      <colgroup><col class="c-rank"><col class="c-name"><col class="c-no"><col class="c-score"><col class="c-rate"><col class="c-prev"></colgroup>
+      <thead><tr><th class="r">석차</th><th>이름</th><th class="hide-sm">수험번호</th><th class="l-score">점수</th><th class="r hide-sm">득점률</th><th class="r hide-sm">지난 8회</th></tr></thead>
       <tbody>${studs.map((s, i) => `
         <tr data-i="${i}">
           <td class="r num" data-rank><span class="dash">—</span></td>
           <td class="id"><a href="#/student/${s.id}">${esc(s.name)}</a></td>
           <td class="num hide-sm">${s.examNo}</td>
-          <td class="r"><label class="sr" for="sc${i}">${esc(s.name)} 점수</label><input class="score-in num" id="sc${i}" inputmode="numeric" autocomplete="off" value="${c.draft[i]}" data-score="${i}"><span class="err" data-err hidden></span></td>
+          <td class="l-score"><label class="sr" for="sc${i}">${esc(s.name)} 점수</label><input class="score-in num" id="sc${i}" inputmode="numeric" autocomplete="off" value="${c.draft[i]}" data-score="${i}"><span class="err" data-err hidden></span></td>
           <td class="r num hide-sm" data-rate><span class="dash">—</span></td>
           <td class="r num hide-sm">${s.scores[LAST] ?? '<span class="dash">결시</span>'}</td>
         </tr>`).join('')}</tbody>
@@ -444,13 +470,13 @@
         <div class="inbox-filter"><label class="sr" for="qtype">유형</label><select class="select" id="qtype" data-qtype>${['전체', '학습', '행정'].map((t) => `<option value="${t}"${qFilter.type === t ? ' selected' : ''}>${t === '전체' ? '모든 유형' : t === '학습' ? '학습질문' : '행정문의'}</option>`).join('')}</select></div>
         <div class="inbox-items">${list.length ? list.map((q) => { const st = L.byId[q.studentId]; return `
           <a href="#/qna/${q.id}"${cur && q.id === cur.id ? ' aria-current="true"' : ''}>
-            <div class="top"><span>${q.type === '행정' ? '행정문의' : '학습질문'}${q.status === '완료' ? ' · 답변 완료' : ''}</span><span class="${q.status === '대기' && isOld(q) ? 'old' : ''}">${esc(q.ago)}</span></div>
-            <b class="num">${esc(q.title)}</b><p>${esc(q.body)}</p>
-            <div class="who">${who(st)}</div>
+            <div class="top"><b class="num">${esc(q.title)}</b><span class="${q.status === '대기' && isOld(q) ? 'old' : ''}">${esc(q.ago)}</span></div>
+            <p>${esc(q.body)}</p>
+            <div class="who">${who(st)}${q.type === '행정' ? '<span class="pill warn">행정문의</span>' : q.status === '완료' ? '<span class="pill">답변 완료</span>' : ''}</div>
           </a>`; }).join('') : '<p class="inbox-empty">이 조건에 맞는 질문이 없습니다.</p>'}</div>
       </div>
       ${cur ? `<article class="thread" aria-labelledby="h-thread">
-        <a class="back-link" href="#/qna">‹ 목록</a>
+        <a class="back-link" href="#/qna"><svg class="i" viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>목록</a>
         <div class="thread-head">
           <div><h2 id="h-thread" class="num">${esc(cur.title)}</h2><div class="meta-line">${who(s)}<span>·</span><span class="num">질문 횟수 ${cur.asks}/3</span>${cur.type === '행정' ? '<span class="pill warn">행정문의 · 비공개</span>' : '<span class="pill">학습질문 · 닉네임 공개</span>'}</div></div>
           <a class="btn btn-sm" href="#/student/${s.id}">학생 보기</a>
@@ -492,7 +518,7 @@
     const [r, arg] = parts;
     let html = '', active = 'home', bind = null;
     switch (r) {
-      case '': html = dashboard(); break;
+      case '': html = dashboard(); bind = bindDash; break;
       case 'class': html = classView(arg); active = 'class'; bind = bindClass; break;
       case 'student': html = studentView(arg); active = 'students'; bind = () => bindStudent(arg); break;
       case 'exams': html = examView(arg); active = 'exams'; bind = () => bindExam(arg); break;
