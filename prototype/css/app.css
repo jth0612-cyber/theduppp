@@ -391,7 +391,7 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .opt input { accent-color: var(--ink); margin: 0; }
 .opt small { color: var(--muted); font-size: 12px; }
 .sw { display: flex; }
-.sw i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .08); margin-left: -4px; display: block; }
+.sw i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--edge); margin-left: -4px; display: block; }
 .fs { font-size: 15px; }
 
 /* ---------- 휴대폰 메뉴 ---------- */
@@ -509,7 +509,7 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .spark { width: 100%; height: 56px; display: block; overflow: visible; }
 .spark .t { fill: none; stroke: var(--accent); stroke-width: 2; }
 .spark .b { stroke: var(--edge); }
-.spark text { font-size: 10px; fill: var(--muted); }
+.spark text { font-size: 11px; fill: var(--muted); }
 .el.on { border-color: var(--ink); background: var(--raised); }
 .tbl.exam { table-layout: fixed; max-width: 760px; }
 .tbl.exam col.c-rank { width: 56px; } .tbl.exam col.c-name { width: 120px; } .tbl.exam col.c-no { width: 112px; }

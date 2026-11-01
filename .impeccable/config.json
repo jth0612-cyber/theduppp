@@ -1,0 +1,158 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "noto serif kr",
+        "createdAt": "2026-11-01T12:04:31.740Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "gowun batang",
+        "createdAt": "2026-11-01T12:04:31.756Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "hahmlet",
+        "createdAt": "2026-11-01T12:04:31.775Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "nanum myeongjo",
+        "createdAt": "2026-11-01T12:04:31.792Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "noto sans kr",
+        "createdAt": "2026-11-01T12:04:31.879Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "nanum gothic",
+        "createdAt": "2026-11-01T12:04:31.894Z",
+        "reason": "user's brief: asked for 5 typeface proposals; these are the undecided candidates t2-t5 listed in design.json extensions.candidates"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(21, 21, 21)",
+        "createdAt": "2026-11-01T12:04:50.060Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(176, 60, 39)",
+        "createdAt": "2026-11-01T12:04:50.076Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(224, 229, 209)",
+        "createdAt": "2026-11-01T12:04:50.092Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(90, 106, 31)",
+        "createdAt": "2026-11-01T12:04:50.107Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(220, 229, 236)",
+        "createdAt": "2026-11-01T12:04:50.122Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(19, 32, 42)",
+        "createdAt": "2026-11-01T12:04:50.139Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(28, 90, 128)",
+        "createdAt": "2026-11-01T12:04:50.155Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(232, 221, 209)",
+        "createdAt": "2026-11-01T12:04:50.177Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(116, 73, 46)",
+        "createdAt": "2026-11-01T12:04:50.192Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#151515",
+        "createdAt": "2026-11-01T12:04:50.206Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#b03c27",
+        "createdAt": "2026-11-01T12:04:50.220Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e0e5d1",
+        "createdAt": "2026-11-01T12:04:50.234Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#5a6a1f",
+        "createdAt": "2026-11-01T12:04:50.254Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#dce5ec",
+        "createdAt": "2026-11-01T12:04:50.271Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#13202a",
+        "createdAt": "2026-11-01T12:04:50.289Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1c5a80",
+        "createdAt": "2026-11-01T12:04:50.304Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e8ddd1",
+        "createdAt": "2026-11-01T12:04:50.321Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#74492e",
+        "createdAt": "2026-11-01T12:04:50.337Z",
+        "reason": "user's brief: asked for 5 colour proposals; these are the undecided palette candidates (sumi/koke/umi/hojicha) in design.json extensions.candidates, used as picker swatches"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(0 0 0 / .2)",
+        "createdAt": "2026-11-01T12:04:50.359Z",
+        "reason": "dialog backdrop scrim for the mobile menu sheet, a floating layer"
+      }
+    ]
+  }
+}
