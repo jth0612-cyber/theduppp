@@ -1,4 +1,4 @@
-/* 정태혁 통합과학 연구소 — 강사 화면 시안.
+/* 정태혁 통합과학 lab — 강사 화면 시안.
    CSP를 지키기 위해 인라인 스크립트·style 속성을 쓰지 않는다(크기는 CSSOM으로만 지정). */
 (function () {
   'use strict';
@@ -24,10 +24,8 @@
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
   root.dataset.palette = params.get('palette') || store.get('lab.palette') || 'matsu';
-  root.dataset.type = params.get('type') || store.get('lab.type') || 't1';
   const picker = $('[data-picker]');
   picker.palette.value = root.dataset.palette;
-  picker.type.value = root.dataset.type;
   picker.addEventListener('change', (e) => {
     const { name, value } = e.target;
     root.dataset[name] = value;
@@ -533,7 +531,7 @@
     renderNav(active);
     view.innerHTML = html;
     if (bind) bind();
-    document.title = `${(view.querySelector('h1') || {}).textContent || '대시보드'} · 정태혁 통합과학 연구소`;
+    document.title = `${(view.querySelector('h1') || {}).textContent || '대시보드'} · 정태혁 통합과학 lab`;
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', render);

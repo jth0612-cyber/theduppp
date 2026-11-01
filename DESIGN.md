@@ -1,5 +1,5 @@
 ---
-name: 정태혁 통합과학 연구소
+name: 정태혁 통합과학 lab
 description: 통합과학 강사 한 명이 반·학생·성적·질문을 다루는 개인 연구소의 관리 도구. 색이 든 편집샵 벽 위에 흰 종이 한 장, 그 위의 작은 주기율표.
 colors:
   frame: "#e1e8e0"
@@ -23,48 +23,48 @@ colors:
   pill-warn-ink: "#6e4510"
 typography:
   display:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Serif KR, Noto Sans KR, serif"
     fontSize: "24px"
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.25
     letterSpacing: "-0.02em"
   element-symbol:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Serif KR, Noto Sans KR, serif"
     fontSize: "38px"
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1
     letterSpacing: "-0.02em"
   headline:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Serif KR, Noto Sans KR, serif"
     fontSize: "20px"
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.35
     letterSpacing: "-0.01em"
   figure:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Sans KR, system-ui, sans-serif"
     fontSize: "24px"
     fontWeight: 500
     lineHeight: 1.25
     letterSpacing: "-0.01em"
     fontFeature: "\"tnum\""
   title:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Sans KR, system-ui, sans-serif"
     fontSize: "16px"
     fontWeight: 600
     letterSpacing: "-0.01em"
   lede:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Sans KR, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.55
   body:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Sans KR, system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "-0.005em"
   label:
-    fontFamily: "Gothic A1, system-ui, sans-serif"
+    fontFamily: "Noto Sans KR, system-ui, sans-serif"
     fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.3
@@ -160,7 +160,7 @@ components:
     textColor: "{colors.pill-neg-ink}"
 ---
 
-# Design System: 정태혁 통합과학 연구소
+# Design System: 정태혁 통합과학 lab
 
 ## Overview
 
@@ -172,7 +172,7 @@ components:
 
 강조색은 한 가지뿐이고 데이터와 "지금 선택된 것"에만 쓴다. 주요 버튼은 강조색이 아니라 먹색(잉크)이다. 빨강은 점수 하락, 오래된 질문, 입력 오류에만 쓴다. 한 강사가 1000명을 다루는 밀도라 화면은 촘촘하되, 숫자는 항상 고정 폭으로 줄이 맞는다.
 
-**아직 정하지 않은 것.** 색 5안(소나무·먹과 주홍·이끼·니가타의 바다·호지차)과 글꼴 5안(t1–t5)은 모두 후보다. 현재 기본값은 소나무(matsu) + t1(고딕 A1)이지만 이는 결정이 아니라 시안의 초기값이다. 위 frontmatter의 값은 이 기본값을 기록한 것이며, 사용자가 고르면 그 안의 값으로 바뀐다. 구조(토큰 이름, 역할, 규칙)는 어느 안을 고르든 그대로다.
+**정한 것 (2026-11-01, 사용자 선택).** 색은 소나무(matsu), 글꼴은 Noto 계열(본문 본고딕 Noto Sans KR, 제목·원소 기호 본명조 Noto Serif KR)이다. 이름은 "정태혁 통합과학 lab". 다른 색 4안은 시안의 "색 고르기"에서 비교용으로만 남겨 두었다.
 
 **Key Characteristics:**
 - 색이 든 L자 프레임 + 8px 안쪽에 놓인 흰 시트(모서리 16px, 1px 테두리), 그림자 없음
@@ -207,9 +207,9 @@ components:
 - **오름 (positive)** / **내림 (negative)**: 점수 변화의 부호. negative는 하락 수치, 2일 이상 지난 질문, 2점 넘게 떨어진 반의 칸 테두리(negative 45% 섞음), 입력 오류에 쓴다.
 - **경고 알약 (pill-warn-bg / pill-warn-ink)**, **위험 알약 (pill-neg-bg / pill-neg-ink)**: 5안 공통 값. "행정문의", "계정 미발급" 같은 분류 표시.
 
-### 색 후보 5안 (미결정, 기본값 = matsu)
+### 색 5안 (소나무 확정, 나머지는 비교용)
 
-| 토큰 | 1. 소나무 matsu (기본) | 2. 먹과 주홍 sumi | 3. 이끼 koke | 4. 니가타의 바다 umi | 5. 호지차 hojicha |
+| 토큰 | 1. 소나무 matsu (확정) | 2. 먹과 주홍 sumi | 3. 이끼 koke | 4. 니가타의 바다 umi | 5. 호지차 hojicha |
 |---|---|---|---|---|---|
 | frame | #e1e8e0 | #e7e7e5 | #e0e5d1 | #dce5ec | #e8ddd1 |
 | sheet | #fcfdfc | #ffffff | #fbfbfa | #fcfdfe | #fcfcfb |
@@ -238,19 +238,12 @@ components:
 
 ## Typography
 
-**Display Font:** 기본 Gothic A1 (t1에서는 본문과 같은 글꼴, 굵기 700)
-**Body Font:** 기본 Gothic A1 (system-ui, sans-serif 대체)
+**Display Font:** Noto Serif KR 600 (본명조) — 화면 제목, 원소 기호, lab 이름, 질문 스레드 제목
+**Body Font:** Noto Sans KR 400/500/600/700 (본고딕, system-ui·sans-serif 대체)
 
-**Character:** 본문은 언제나 단정한 한글 고딕이고, 제목·원소 기호·연구소 이름만 "제목 글꼴"(`--font-display`, 굵기 `--display-weight`)로 바뀐다. 후보 중 넷은 제목에 명조를 써서 편집샵 인쇄물의 결을 더한다.
+**Character:** 본문은 단정한 본고딕이고, 제목·원소 기호·lab 이름만 본명조로 바뀌어 편집샵 인쇄물의 결을 더한다. 같은 Noto 가족이라 두 글꼴의 획 굵기와 비례가 잘 맞는다.
 
-### 글꼴 후보 5안 (미결정, 기본값 = t1)
-- **t1 고딕 A1** (기본): 본문 Gothic A1, 제목 Gothic A1 700. 단정한 고딕 하나로.
-- **t2 본고딕 + 본명조**: 본문 Noto Sans KR, 제목 Noto Serif KR 600.
-- **t3 고딕 A1 + 고운바탕**: 본문 Gothic A1, 제목 Gowun Batang 700.
-- **t4 본고딕 + 함렛**: 본문 Noto Sans KR, 제목 Hahmlet 600.
-- **t5 나눔고딕 + 나눔명조**: 본문 Nanum Gothic, 제목 Nanum Myeongjo 700.
-
-**글꼴 불러오기 (열린 결정).** 시안은 Google Fonts(fonts.googleapis.com / fonts.gstatic.com)에서 글꼴을 받는다. Flask 앱은 CSP가 엄격하므로 옮길 때 둘 중 하나를 정해야 한다. (가) 고른 글꼴 파일을 앱 안에 직접 두고(self-host) `font-src 'self'`로 둔다. (나) CSP에 `style-src https://fonts.googleapis.com`과 `font-src https://fonts.gstatic.com`을 허용한다. 아직 정하지 않았다. 어느 쪽이든 최종 1안만 남기고 나머지 글꼴은 불러오지 않는다.
+**글꼴 불러오기 (열린 결정).** 시안은 Google Fonts(fonts.googleapis.com / fonts.gstatic.com)에서 글꼴을 받는다. Flask 앱은 CSP가 엄격하므로 옮길 때 둘 중 하나를 정해야 한다. (가) 고른 글꼴 파일을 앱 안에 직접 두고(self-host) `font-src 'self'`로 둔다. (나) CSP에 `style-src https://fonts.googleapis.com`과 `font-src https://fonts.gstatic.com`을 허용한다. 아직 정하지 않았다. 시안은 이미 Noto Sans KR과 Noto Serif KR 600만 불러온다.
 
 ### Hierarchy
 - **Display** (제목 글꼴, 24px, 줄 높이 1.25, 자간 -0.02em; 휴대폰 22px): 화면 제목(대시보드, 반 이름, 학생 이름).
@@ -355,4 +348,3 @@ KPI는 카드 여러 개가 아니라 1px 세로선으로 나뉜 한 줄의 띠(
 - **Don't** 아이콘이 든 색깔 KPI 타일 여러 개와 큰 차트를 나열하는 대시보드 틀로 바꾸지 않는다.
 - **Don't** 이모지, 아이콘 글꼴, 글자 기호를 아이콘 대신 쓰지 않는다. 아이콘은 16px 선 SVG.
 - **Don't** 시대인재 N 재수종합 로고를 크게 쓰거나 색을 바꾸지 않는다. 사이드바 아래 13px 높이, 공식 색 그대로의 소속 표시로만 둔다. 주 로고는 THedu(currentColor)다.
-- **Don't** 후보 5안 중 하나를 이 문서만 보고 확정된 것으로 다루지 않는다. 사용자가 고르기 전까지 matsu + t1은 기본값일 뿐이다.

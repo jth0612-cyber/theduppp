@@ -45,13 +45,8 @@
   --pill-warn-bg: #f8f0de; --pill-warn-ink: #6e4510;
 }
 
-/* ---------- 글꼴 시안 5개 (본문 글꼴 / 제목·원소 기호 글꼴) ---------- */
-:root,
-:root[data-type="t1"] { --font-ui: "Gothic A1", system-ui, sans-serif; --font-display: "Gothic A1", system-ui, sans-serif; --display-weight: 700; }
-:root[data-type="t2"] { --font-ui: "Noto Sans KR", system-ui, sans-serif; --font-display: "Noto Serif KR", serif; --display-weight: 600; }
-:root[data-type="t3"] { --font-ui: "Gothic A1", system-ui, sans-serif; --font-display: "Gowun Batang", serif; --display-weight: 700; }
-:root[data-type="t4"] { --font-ui: "Noto Sans KR", system-ui, sans-serif; --font-display: "Hahmlet", serif; --display-weight: 600; }
-:root[data-type="t5"] { --font-ui: "Nanum Gothic", system-ui, sans-serif; --font-display: "Nanum Myeongjo", serif; --display-weight: 700; }
+/* ---------- 글꼴: Noto 계열(확정) — 본문 본고딕(Noto Sans KR), 제목·원소 기호 본명조(Noto Serif KR) ---------- */
+:root { --font-ui: "Noto Sans KR", system-ui, sans-serif; --font-display: "Noto Serif KR", "Noto Sans KR", serif; --display-weight: 600; }
 
 /* ---------- 크기·간격 ---------- */
 :root {
@@ -461,11 +456,6 @@ textarea.input { height: auto; min-height: 112px; padding: 10px 12px; line-heigh
 .opt:nth-child(4) .c1 { background: #e0e5d1; } .opt:nth-child(4) .c2 { background: #20241c; } .opt:nth-child(4) .c3 { background: #5a6a1f; }
 .opt:nth-child(5) .c1 { background: #dce5ec; } .opt:nth-child(5) .c2 { background: #13202a; } .opt:nth-child(5) .c3 { background: #1c5a80; }
 .opt:nth-child(6) .c1 { background: #e8ddd1; } .opt:nth-child(6) .c2 { background: #28221e; } .opt:nth-child(6) .c3 { background: #74492e; }
-.ft1 { font-family: "Gothic A1", sans-serif; font-weight: 700; }
-.ft2 { font-family: "Noto Serif KR", serif; font-weight: 600; }
-.ft3 { font-family: "Gowun Batang", serif; font-weight: 700; }
-.ft4 { font-family: "Hahmlet", serif; font-weight: 600; }
-.ft5 { font-family: "Nanum Myeongjo", serif; font-weight: 700; }
 .opt small { display: block; font-family: var(--font-ui); font-weight: 400; }
 .class-head h1 { font: var(--display-weight) var(--fs-title)/1.25 var(--font-display); letter-spacing: -0.02em; }
 

@@ -6,7 +6,7 @@ related_targets: []
 ---
 
 ## Scope
-Teacher (강사) screens of 정태혁 통합과학 연구소, clickable prototype: 대시보드, 반 상세(학생), 학생 상세, 시험·성적 입력, 질문답변. Mode: Operate. Desktop and phone web. Build path: code-led (Operate).
+Teacher (강사) screens of 정태혁 통합과학 lab, clickable prototype: 대시보드, 반 상세(학생), 학생 상세, 시험·성적 입력, 질문답변. Mode: Operate. Desktop and phone web. Build path: code-led (Operate).
 
 ## Audience and job
 One 통합과학 instructor managing ~12 classes (A–K, P), ~550 students now, up to 1000. Most frequent job: answer the oldest waiting question; second: spot a class or student whose score dropped and open them.
