@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import filesize, kind_badge %}
+{% block title %}자료실 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head"><h1>자료실</h1></div>
+<div class="card">
+  {% for m in materials %}
+  <a class="file-row" href="{{ url_for('student.file', fid=m.file_id) }}">
+    {{ kind_badge(m.original_name) }}
+    <span class="file-main"><b>{{ m.title }}</b><span class="small muted">{{ m.original_name }}</span></span>
+    <span class="small muted num">{{ filesize(m.size) }}<br>{{ m.created_at[:10] }}</span>
+  </a>
+  {% else %}<p class="muted">자료가 없습니다.</p>{% endfor %}
+</div>
+{% endblock %}

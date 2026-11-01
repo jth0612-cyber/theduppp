@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>안녕하세요, {{ g.user.username }} 선생님</h1>
+    <p class="muted small">마지막 로그인 {{ g.user.last_login_at or '-' }}</p>
+  </div>
+  <form method="get" action="{{ url_for('teacher.students') }}" class="row">
+    <input type="search" name="q" placeholder="학생 이름 또는 수험번호">
+    <button class="btn">검색</button>
+  </form>
+</div>
+
+<div class="grid grid-4">
+  <div class="card stat"><div class="num">{{ stats.classes }}</div><div class="label">담당 반</div></div>
+  <div class="card stat"><div class="num">{{ stats.students }}</div><div class="label">재원 학생</div></div>
+  <div class="card stat"><div class="num">{{ stats.open_questions }}</div><div class="label">답변 대기 질문</div></div>
+  <div class="card stat"><div class="num">{{ stats.exams }}</div><div class="label">등록한 시험</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>답변 대기 질문 <a class="small" href="{{ url_for('teacher.questions') }}">전체 보기</a></h2>
+    {% if open_questions %}
+    <div class="table-wrap"><table>
+      {% for q in open_questions %}
+      <tr>
+        <td><a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a><br>
+          <span class="small muted">{{ q.class_name }} · {{ q.name }}</span></td>
+        <td class="small muted num">{{ q.created_at[5:16] }}</td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    {% else %}<p class="muted">밀린 질문이 없습니다.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>최근 시험</h2>
+    {% if recent_exams %}
+    <div class="table-wrap"><table>
+      <tr><th>시험</th><th>반</th><th class="num">응시</th><th class="num">평균</th></tr>
+      {% for e in recent_exams %}
+      <tr>
+        <td><a href="{{ url_for('teacher.exam_detail', eid=e.id) }}">{{ e.name }}</a><br><span class="small muted">{{ e.exam_date }}</span></td>
+        <td>{{ e.class_name }}</td>
+        <td class="num">{{ e.n }}</td>
+        <td class="num">{{ e.avg if e.avg is not none else '-' }} / {{ '%g'|format(e.max_score) }}</td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    {% else %}<p class="muted">아직 등록한 시험이 없습니다.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>담당 반 <a class="small" href="{{ url_for('teacher.classes') }}">반 관리</a></h2>
+  {% if classes %}
+  <div class="table-wrap"><table>
+    <tr><th>반</th><th>설명</th><th class="num">학생 수</th></tr>
+    {% for c in classes %}
+    <tr>
+      <td><a href="{{ url_for('teacher.class_detail', cid=c.id) }}">{{ c.name }}</a></td>
+      <td class="muted">{{ c.description }}</td>
+      <td class="num">{{ c.student_count }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <p class="muted">먼저 <a href="{{ url_for('teacher.classes') }}">반을 만들어</a> 주세요.</p>
+  {% endif %}
+</div>
+{% endblock %}

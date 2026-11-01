@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge %}
+{% block title %}{{ s.name }} · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('teacher.class_detail', cid=s.class_id) }}">{{ s.class_name }}</a> /</p>
+    <h1>{{ s.name }} <span class="muted small">{{ s.student_no }}</span>
+      {% if not s.active %}<span class="badge gray">퇴원</span>{% endif %}</h1>
+    {% if s.target %}<p class="muted small">목표: {{ s.target }}</p>{% endif %}
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>성적 추이 (득점률)</h2>
+    {% if chart %}
+    <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="성적 추이">
+      {% for pct in [0, 50, 100] %}
+        {% set y = chart.pad + (chart.h - 2 * chart.pad) * (1 - pct / 100) %}
+        <line class="grid-line" x1="{{ chart.pad }}" x2="{{ chart.w - chart.pad }}" y1="{{ y }}" y2="{{ y }}"></line>
+        <text x="2" y="{{ y + 4 }}">{{ pct }}</text>
+      {% endfor %}
+      <polyline class="line" points="{{ chart.polyline }}"></polyline>
+      {% for c in chart.coords %}
+        <circle class="dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"><title>{{ c.date }} {{ c.label }}: {{ c.pct }}%</title></circle>
+      {% endfor %}
+    </svg>
+    {% else %}<p class="muted">아직 성적이 없습니다.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>기본 정보</h2>
+    <p><span class="muted small">연락처</span><br>{{ phone or '-' }}</p>
+    <p><span class="muted small">메모</span><br><span class="pre">{{ memo or '-' }}</span></p>
+    <h3 class="mt">로그인 계정</h3>
+    {% if account %}
+      <p class="small">아이디 <b>{{ account.username }}</b> · 닉네임 <b>{{ account.nickname or '-' }}</b> ·
+        {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '아직 접속 안 함' }}
+        {% if account.must_change_pw %}· <span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
+      <div class="row">
+        <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급할까요?">
+          {{ csrf() }}<button class="btn small">비밀번호 초기화</button></form>
+        <form method="post" action="{{ url_for('teacher.student_account_delete', sid=s.id) }}" data-confirm="계정을 삭제하면 학생이 로그인할 수 없습니다. 계속할까요?">
+          {{ csrf() }}<button class="btn small danger">계정 삭제</button></form>
+      </div>
+    {% elif s.active %}
+      <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}">
+        {{ csrf() }}<button class="btn small">계정 발급</button></form>
+    {% else %}<p class="small muted">퇴원 학생은 계정이 없습니다.</p>{% endif %}
+    {% if engagement %}
+    <h3 class="mt">학습 활동</h3>
+    <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b> · 연속 {{ engagement.streak.streak }}일 · 포인트 <b>{{ engagement.points }}P</b></p>
+    <form method="post" action="{{ url_for('teacher.student_points', sid=s.id) }}" class="row">
+      {{ csrf() }}
+      <div class="field shrink"><input type="number" name="amount" min="-1000" max="1000" required placeholder="+50" class="score"></div>
+      <div class="field"><input type="text" name="reason" maxlength="60" required placeholder="사유 (예: 모의고사 성적 향상)"></div>
+      <div class="field shrink"><button class="btn small">포인트 지급</button></div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>시험 기록</h2>
+  {% if scores %}
+  <div class="table-wrap"><table>
+    <tr><th>날짜</th><th>시험</th><th>과목</th><th class="num">점수</th><th class="num">득점률</th><th class="num">반 평균</th><th class="num">석차</th></tr>
+    {% for r in scores|reverse %}
+    <tr>
+      <td class="small">{{ r.exam_date }}</td>
+      <td><a href="{{ url_for('teacher.exam_detail', eid=r.exam_id) }}">{{ r.name }}</a></td>
+      <td class="muted">{{ r.subject }}</td>
+      <td class="num">{{ '%g'|format(r.score) }} / {{ '%g'|format(r.max_score) }}</td>
+      <td class="num">{{ r.pct }}%</td>
+      <td class="num">{{ r.class_avg }}</td>
+      <td class="num">{{ r.rank }} / {{ r.n }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">시험 기록이 없습니다.</p>{% endif %}
+</div>
+
+<div class="card" id="notes">
+  <h2>학습·상담 메모 <span class="small muted">(암호화 저장 · 학생에게 보이지 않음)</span></h2>
+  <form method="post" action="{{ url_for('teacher.note_create', sid=s.id) }}">
+    {{ csrf() }}
+    <div class="row">
+      <div class="field shrink"><label>분류</label>
+        <select name="category">{% for c in note_categories %}<option>{{ c }}</option>{% endfor %}</select></div>
+      <div class="field wide"><label>내용</label><textarea name="body" maxlength="3000" required placeholder="예: 화학 결합 개념 약함. 다음 주까지 2단원 기출 20문항."></textarea></div>
+    </div>
+    <button class="btn primary">메모 추가</button>
+  </form>
+  <div class="mt">
+  {% for n in notes %}
+    <div class="note">
+      <div class="page-head">
+        <span class="small"><span class="badge">{{ n.category }}</span> <span class="muted">{{ n.created_at[:16] }}</span></span>
+        <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제할까요?">
+          {{ csrf() }}<button class="btn link small">삭제</button></form>
+      </div>
+      <div class="pre">{{ n.body }}</div>
+    </div>
+  {% else %}<p class="muted">메모가 없습니다.</p>{% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>질문 기록</h2>
+  {% if questions %}
+  <div class="table-wrap"><table>
+    {% for q in questions %}
+    <tr>
+      <td><a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a></td>
+      <td>{{ status_badge(q.status) }}</td>
+      <td class="small muted num">{{ q.created_at[:16] }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">질문 기록이 없습니다.</p>{% endif %}
+</div>
+
+<details class="card">
+  <summary>학생 정보 수정 · 반 이동 · 퇴원 처리</summary>
+  <form method="post" action="{{ url_for('teacher.student_edit', sid=s.id) }}">
+    {{ csrf() }}
+    <div class="row">
+      <div class="field"><label>이름</label><input type="text" name="name" value="{{ s.name }}" maxlength="40" required></div>
+      <div class="field"><label>수험번호</label><input type="text" name="student_no" value="{{ s.student_no }}" maxlength="30" required></div>
+      <div class="field"><label>반</label>
+        <select name="class_id">{% for c in all_classes %}<option value="{{ c.id }}" {{ 'selected' if c.id == s.class_id }}>{{ c.name }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>목표</label><input type="text" name="target" value="{{ s.target }}" maxlength="60"></div>
+      <div class="field"><label>연락처</label><input type="text" name="phone" value="{{ phone }}" maxlength="30"></div>
+    </div>
+    <div class="field"><label>메모</label><textarea name="memo" maxlength="1000">{{ memo }}</textarea></div>
+    <div class="field"><label><input type="checkbox" name="active" value="1" {{ 'checked' if s.active }}> 재원 중 (해제하면 퇴원 처리되고 로그인 계정이 삭제됩니다)</label></div>
+    <button class="btn primary">저장</button>
+  </form>
+  <hr>
+  <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적·메모·질문을 영구 삭제합니다. 되돌릴 수 없습니다.">
+    {{ csrf() }}
+    <p class="small muted">개인정보 파기: 학생 이름을 입력하면 이 학생의 모든 기록을 영구 삭제합니다.</p>
+    <div class="row">
+      <div class="field"><input type="text" name="confirm_name" placeholder="{{ s.name }}" required></div>
+      <div class="field shrink"><button class="btn danger">영구 삭제</button></div>
+    </div>
+  </form>
+</details>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}회원가입 · 학습 관리{% endblock %}
+{% block main_class %}auth-wrap{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>학생 회원가입</h1>
+  <p class="muted small">선생님께 받은 <b>반 가입 코드</b>로 가입해요. 선생님이 승인하면 로그인할 수 있어요.</p>
+  <form method="post" autocomplete="on">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label for="code">반 가입 코드 (8자리)</label>
+      <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="12" autocomplete="off"
+             autocapitalize="characters" placeholder="예: K7QM2XPA">
+    </div>
+    <div class="field">
+      <label for="name">이름</label>
+      <input type="text" id="name" name="name" value="{{ form.name }}" required maxlength="20" autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="student_no">수험번호 (로그인 아이디가 돼요)</label>
+      <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">비밀번호 (10자 이상, 영문·숫자·특수문자 중 2종류 이상)</label>
+      <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label for="confirm">비밀번호 확인</label>
+      <input type="password" id="confirm" name="confirm" required minlength="10" autocomplete="new-password">
+    </div>
+    <div class="guide small">
+      <b>개인정보 수집·이용 동의 (필수)</b>
+      <ul>
+        <li>수집 항목: 이름, 수험번호, 학습 기록(성적·질문·포인트 등)</li>
+        <li>이용 목적: 수업 학습 관리, 질문 답변</li>
+        <li>보관 기간: 수강이 끝나면 선생님이 파기합니다</li>
+        <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개됩니다. 이름과 수험번호는 공개되지 않아요.</li>
+      </ul>
+      <label class="consent"><input type="checkbox" name="consent" value="1" required> 위 내용에 동의합니다</label>
+    </div>
+    <button class="btn primary" type="submit">가입 신청</button>
+  </form>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
+</div>
+{% endblock %}

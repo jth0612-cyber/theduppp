@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}교육 뉴스 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>교육 뉴스</h1>
+    <p class="muted small">입시 기사나 참고 링크를 올리면 모든 학생의 홈 화면에 최근 4개가 카드로 표시됩니다.</p>
+  </div>
+</div>
+<div class="card">
+  <form method="post">
+    {{ csrf() }}
+    <div class="row">
+      <div class="field wide"><label>제목</label><input type="text" name="title" maxlength="150" required placeholder="예: 2028 교과전형 과목 이수 조건 정리"></div>
+      <div class="field"><label>출처</label><input type="text" name="source" maxlength="40" placeholder="예: 교육신문"></div>
+    </div>
+    <div class="field"><label>링크 (https://)</label><input type="text" name="url" maxlength="500" required></div>
+    <div class="field"><label>한 줄 요약 (선택)</label><input type="text" name="summary" maxlength="300" placeholder="학생들에게 왜 중요한지 한 줄로"></div>
+    <button class="btn primary">올리기</button>
+  </form>
+</div>
+<div class="card">
+  {% if news %}
+  <div class="table-wrap"><table>
+    {% for n in news %}
+    <tr>
+      <td><a href="{{ n.url }}" target="_blank" rel="noopener noreferrer">{{ n.title }}</a>
+        <br><span class="small muted">{{ n.source or (n.url|host_of) }}{% if n.summary %} · {{ n.summary }}{% endif %}</span></td>
+      <td class="small muted">{{ n.created_at[:10] }}</td>
+      <td><form method="post" action="{{ url_for('teacher.news_delete', nid=n.id) }}" data-confirm="이 뉴스를 내릴까요?">
+        {{ csrf() }}<button class="btn small danger">삭제</button></form></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">올린 뉴스가 없습니다.</p>{% endif %}
+</div>
+{% endblock %}

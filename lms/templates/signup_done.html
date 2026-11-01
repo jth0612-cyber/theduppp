@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}가입 신청 완료 · 학습 관리{% endblock %}
+{% block main_class %}auth-wrap{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>가입 신청 완료</h1>
+  <p><b>{{ class_name }}</b>에 가입 신청했어요.</p>
+  <p class="muted small">선생님이 승인하면 수험번호와 방금 정한 비밀번호로 로그인할 수 있어요. 승인 전에 로그인하면 "승인 대기 중"이라고 나와요.</p>
+  <a class="btn primary" href="{{ url_for('auth.login') }}">로그인 화면으로</a>
+</div>
+{% endblock %}

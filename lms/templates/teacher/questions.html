@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, status_badge, qtype_badge %}
+{% block title %}질문답변 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>질문답변</h1>
+  <div class="row small">
+    <a href="{{ url_for('teacher.questions', status=status) }}" class="badge {{ '' if not qtype else 'gray' }}">전체 유형</a>
+    {% for t in qtypes %}
+    <a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="badge {{ '' if qtype == t else 'gray' }}">{{ t }}</a>
+    {% endfor %}
+  </div>
+</div>
+<nav class="tabs">
+  <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
+  <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
+  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' }}">전체</a>
+</nav>
+<div class="card">
+  {% if questions %}
+  <div class="table-wrap"><table>
+    <tr><th>제목</th><th>학생</th><th>반</th><th>상태</th><th class="num">등록</th></tr>
+    {% for q in questions %}
+    <tr>
+      <td>{{ qtype_badge(q.qtype) }} <a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a>
+        {% if q.image_id %} <span class="badge gray">사진</span>{% endif %}
+        {% if q.followup_count %} <span class="badge open">추가질문 {{ q.followup_count }}</span>{% endif %}</td>
+      <td>{{ q.name }}<br><span class="small muted">{{ q.nickname or '' }}</span></td>
+      <td class="muted">{{ q.class_name }}</td>
+      <td>{{ status_badge(q.status) }}</td>
+      <td class="small muted num">{{ q.created_at[5:16] }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None) }}
+  {% else %}<p class="muted">질문이 없습니다.</p>{% endif %}
+</div>
+{% endblock %}

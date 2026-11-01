@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}미니게임 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>미니게임</h1><p class="muted small">오늘 게임으로 받은 포인트 {{ today }} / {{ cap }}P</p></div>
+</div>
+<div class="grid grid-2">
+  {% for key, icon, title, desc, ep in [
+      ('dna', '🧬', '염기 짝 맞추기', 'DNA 한 가닥을 보고 상보적인 가닥을 빠르게 채워요. A–T, G–C!', 'games.dna'),
+      ('chargaff', '⚖️', '샤가프 법칙', '이중 가닥 DNA의 염기 비율과 개수를 계산하는 5문제.', 'games.chargaff'),
+      ('quiz', '✨', '통합과학 퀴즈', '단원을 고르면 4지선다 5문제가 나와요. 틀린 문제는 해설로 복습!', 'games.quiz')] %}
+  <a class="card game-card" href="{{ url_for(ep) }}">
+    <span class="game-icon">{{ icon }}</span>
+    <b>{{ title }}</b>
+    <span class="small muted">{{ desc }}</span>
+    {% if best.get(key) %}<span class="small">최고 {{ best[key].best }}점 · {{ best[key].plays }}판</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}강의 영상 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>강의 영상</h1><p class="muted small">영상은 새 창에서 열립니다. 만료일이 지난 영상은 목록에서 사라져요.</p></div>
+</div>
+<div class="card">
+  {% for v in videos %}
+  {% set yt = v.url|youtube_id %}
+  <a class="video-row" href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
+    {% if yt %}<img class="thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">
+    {% else %}<span class="thumb thumb-empty">▶</span>{% endif %}
+    <span class="file-main">
+      <b>{{ v.title }}</b>
+      <span class="small muted">{% if v.duration %}<span class="badge gray">{{ v.duration }}</span> {% endif %}{{ v.created_at[:10] }}</span>
+    </span>
+    {% if v.expires_on %}<span class="small muted num">{{ v.expires_on[2:] }} 만료</span>{% endif %}
+  </a>
+  {% else %}<p class="muted">볼 수 있는 영상이 없습니다.</p>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge, qtype_badge %}
+{% block title %}{{ q.title }} · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('teacher.questions') }}">질문답변</a> /</p>
+    <h1>{{ q.title }}</h1>
+    <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
+      <span class="muted">{% if g.user.role == 'teacher' %}<a href="{{ url_for('teacher.student_detail', sid=q.sid) }}">{{ q.name }}</a>{% else %}{{ q.name }}{% endif %} (게시판 닉네임: {{ q.nickname or '없음' }}) · {{ q.class_name }} · {{ q.created_at[:16] }}</span></p>
+  </div>
+  {% if q.status == 'answered' %}
+  <form method="post" action="{{ url_for('teacher.question_reopen', qid=q.id) }}">{{ csrf() }}<button class="btn small">답변 대기로 되돌리기</button></form>
+  {% endif %}
+</div>
+<p class="small muted">{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개됩니다.{% else %}행정문의는 이 학생과 선생님·조교만 볼 수 있습니다.{% endif %}</p>
+<div class="card">
+  <div class="pre">{{ q.body }}</div>
+  {% if q.image_id %}
+    <p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=q.image_id, inline=1) }}" alt="질문 첨부 사진"></p>
+  {% endif %}
+</div>
+{% for m in thread %}
+  {% if m.kind == 'answer' %}
+  <div class="answer"><div class="small muted">{{ '조교' if m.author_role == 'assistant' else '선생님' }} 답변{% if m.author_name %} ({{ m.author_name }}){% endif %} · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
+  {% else %}
+  <div class="followup"><div class="small muted">학생 추가 질문 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div>
+    {% if m.image_id %}<p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=m.image_id, inline=1) }}" alt="추가 질문 사진"></p>{% endif %}
+  </div>
+  {% endif %}
+{% endfor %}
+<div class="card">
+  <h2>답변 작성</h2>
+  <form method="post">
+    {{ csrf() }}
+    <div class="field"><textarea name="body" maxlength="5000" required></textarea></div>
+    <div class="row">
+      <button class="btn primary">답변 등록</button>
+      <label class="small"><input type="checkbox" name="go_next" value="1" checked> 등록 후 다음 대기 질문으로 이동</label>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination %}
+{% block title %}학생 검색 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>학생 검색 <span class="muted small">{{ total }}명</span></h1>
+  <form method="get" class="row">
+    <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 수험번호" autofocus>
+    <button class="btn">검색</button>
+  </form>
+</div>
+<div class="card">
+  {% if students %}
+  <div class="table-wrap"><table>
+    <tr><th>이름</th><th>수험번호</th><th>반</th><th>목표</th></tr>
+    {% for s in students %}
+    <tr class="{{ 'inactive' if not s.active }}">
+      <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>
+      <td>{{ s.student_no }}</td>
+      <td>{{ s.class_name }}</td>
+      <td class="muted">{{ s.target }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {{ pagination(page, pages, 'teacher.students', q=q) }}
+  {% else %}<p class="muted">학생이 없습니다.</p>{% endif %}
+</div>
+{% endblock %}

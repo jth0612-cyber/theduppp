@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('games.hub') }}">미니게임</a> /</p>
+    <h1>{{ '✨' if game == 'quiz' else '⚖️' }} {{ title }}</h1>
+    <p class="muted small">{{ intro }}</p>
+  </div>
+</div>
+<div class="card game" id="mc-game" data-game="{{ game }}" data-start="{{ url_for('games.' ~ game ~ '_start') }}">
+  <div data-role="start">
+    {% if topics %}
+    <div class="field"><label>단원</label>
+      <select data-role="topic">{% for k, label in topics %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select></div>
+    {% endif %}
+    <button type="button" class="btn primary" data-role="begin">시작</button>
+  </div>
+  <div class="hidden" data-role="loading"><p class="muted">문제를 준비하고 있어요…</p></div>
+  <div class="hidden" data-role="play">
+    <div class="game-bar"><span data-role="progress"></span></div>
+    <p class="mc-question" data-role="question"></p>
+    <div class="mc-choices" data-role="choices"></div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <div data-role="review"></div>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
+{% endblock %}

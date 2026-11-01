@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, status_badge, qtype_badge, pagination %}
+{% block title %}질답 게시판 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>질답 게시판</h1>
+    <p class="muted small">학습질문과 답변은 전체 학생에게 공개되고, 작성자는 닉네임 <b>{{ g.user.nickname }}</b>(으)로 표시돼요. 행정문의는 나와 선생님·조교만 볼 수 있어요.</p>
+  </div>
+</div>
+
+<details class="card" id="ask" {{ 'open' if request.args.get('ask') }}>
+  <summary>질문 쓰기</summary>
+  <form method="post" enctype="multipart/form-data">
+    {{ csrf() }}
+    <div class="row">
+      <div class="field shrink"><label>질문 유형</label>
+        <select name="qtype" required>
+          <option value="">선택</option>
+          {% for t in qtypes %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select></div>
+      <div class="field wide"><label>제목</label>
+        <input type="text" name="title" maxlength="120" required placeholder="[교재-페이지-번호] 예) 개념서 42p 3번"></div>
+    </div>
+    <div class="guide small">
+      <b>질문 작성 안내</b>
+      <ul>
+        <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식으로 써 주세요. 예) 기출 1단원 42p 3번</li>
+        <li><b>학습질문</b>은 문제 사진(해설 질문이면 해설 사진도)을 꼭 첨부해 주세요.</li>
+        <li>어디까지 생각했고 어디서 막혔는지 적어 주면 더 정확한 답을 받을 수 있어요.</li>
+        <li>답변을 받은 뒤 <b>추가 질문은 2번까지</b> 할 수 있어요.</li>
+        <li>학습질문은 공개됩니다. 이름이나 연락처 같은 개인정보는 적지 마세요.</li>
+      </ul>
+    </div>
+    <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required></textarea></div>
+    <div class="field"><label>사진 첨부 (PNG/JPG · 최대 20MB · 학습질문은 필수)</label><input type="file" name="image" accept=".png,.jpg,.jpeg"></div>
+    <button class="btn primary">질문 등록</button>
+  </form>
+</details>
+
+<nav class="tabs">
+  <a href="{{ url_for('student.questions') }}" class="{{ 'active' if view == 'all' and not qtype }}">전체</a>
+  {% for t in qtypes %}
+  <a href="{{ url_for('student.questions', qtype=t) }}" class="{{ 'active' if qtype == t and view == 'all' }}">{{ t }}</a>
+  {% endfor %}
+  <a href="{{ url_for('student.questions', view='mine') }}" class="{{ 'active' if view == 'mine' }}">내 질문</a>
+</nav>
+
+<div class="card">
+  <div class="page-head">
+    <span class="muted small">{{ total }}개</span>
+    <form method="get" class="row">
+      {% if view == 'mine' %}<input type="hidden" name="view" value="mine">{% endif %}
+      {% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
+      <input type="search" name="q" value="{{ q }}" placeholder="제목·내용 검색">
+      <button class="btn">검색</button>
+    </form>
+  </div>
+  {% if questions %}
+  <div class="table-wrap"><table>
+    <tr><th>제목</th><th>작성자</th><th>상태</th><th class="num">작성</th></tr>
+    {% for item in questions %}
+    <tr>
+      <td>{{ qtype_badge(item.qtype) }} <a href="{{ url_for('student.question_detail', qid=item.id) }}">{{ item.title }}</a>
+        {% if item.image_id %} <span class="badge gray">사진</span>{% endif %}
+        {% if item.answer_count %} <span class="small muted">답변 {{ item.answer_count }}</span>{% endif %}</td>
+      <td class="small">{{ item.nickname }}{% if item.is_mine %} <span class="badge">나</span>{% endif %}</td>
+      <td>{{ status_badge(item.status) }}</td>
+      <td class="small muted num">{{ item.created_at[5:16] }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {{ pagination(page, pages, 'student.questions', view=view if view == 'mine' else None, qtype=qtype or None, q=q or None) }}
+  {% else %}<p class="muted">{{ '검색 결과가 없습니다.' if q else '아직 질문이 없습니다.' }}</p>{% endif %}
+</div>
+{% endblock %}

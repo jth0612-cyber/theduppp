@@ -1,0 +1,17 @@
+services:
+  lms:
+    build: .
+    container_name: student-lms
+    restart: unless-stopped
+    # NAS 내부(127.0.0.1)에만 열고, 외부 접속은 DSM 리버스 프록시(HTTPS)로만 받는다
+    ports:
+      - "127.0.0.1:8050:8000"
+    volumes:
+      # DB, 암호화 키(.env), 업로드 파일. 이 폴더만 백업하면 된다
+      - ./instance:/app/instance
+    environment:
+      TZ: Asia/Seoul
+      BEHIND_PROXY: "1"
+      SESSION_COOKIE_SECURE: "1"
+    security_opt:
+      - no-new-privileges:true

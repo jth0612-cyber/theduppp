@@ -2,3 +2,10 @@
 .impeccable/review/
 .impeccable/config.local.json
 .taste-skill/
+
+# Flask 앱: 실제 데이터·비밀키·가상환경은 절대 올리지 않음
+lms/instance/
+**/.env
+**/.venv/
+**/__pycache__/
+*.sqlite3

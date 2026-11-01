@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}염기 짝 맞추기 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('games.hub') }}">미니게임</a> /</p>
+    <h1>🧬 염기 짝 맞추기</h1>
+    <p class="muted small">위 가닥과 상보적인 염기를 순서대로 눌러요. A–T, G–C. 두 가닥은 방향이 반대(5'↔3')예요. 키보드 A·T·G·C 도 돼요.</p>
+  </div>
+</div>
+<div class="card game" id="dna-game" data-start="{{ url_for('games.dna_start') }}" data-time-limit="{{ time_limit }}">
+  <div class="game-start" data-role="start">
+    <p>난이도</p>
+    <div class="row">
+      {% for lv, n in levels.items() %}
+      <button type="button" class="btn {{ 'primary' if lv == 1 }}" data-level="{{ lv }}">{{ ['', '쉬움', '보통', '어려움'][lv] }} ({{ n }}개)</button>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="hidden" data-role="play">
+    <div class="game-bar"><span data-role="timer">0</span><span data-role="progress"></span></div>
+    <div class="strand-wrap">
+      <div class="strand" data-role="template"></div>
+      <div class="strand" data-role="answer"></div>
+    </div>
+    <div class="base-pad">
+      {% for b in 'ATGC' %}<button type="button" class="base base-{{ b }}" data-base="{{ b }}">{{ b }}</button>{% endfor %}
+      <button type="button" class="base base-back" data-base="back" aria-label="지우기">⌫</button>
+    </div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
+{% endblock %}

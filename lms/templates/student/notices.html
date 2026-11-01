@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import tag_badge %}
+{% block title %}공지 · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ '정오표' if tag == '정오' else '공지' }}</h1></div>
+<nav class="tabs">
+  <a href="{{ url_for('student.notices') }}" class="{{ 'active' if not tag }}">전체</a>
+  {% for t in tags %}
+  <a href="{{ url_for('student.notices', tag=t) }}" class="{{ 'active' if tag == t }}">{{ '정오표' if t == '정오' else t }}</a>
+  {% endfor %}
+</nav>
+{% if tag == '정오' %}
+  {% for book, items in notices|groupby('textbook') %}
+  <div class="card">
+    <h2>{{ book or '교재 미지정' }}</h2>
+    {% for n in items %}
+      <div class="note"><b>{{ n.title }}</b> <span class="small muted">{{ n.created_at[:10] }}</span><div class="pre small">{{ n.body }}</div></div>
+    {% endfor %}
+  </div>
+  {% else %}<p class="muted">정오표가 없습니다.</p>{% endfor %}
+{% else %}
+  {% for n in notices %}
+  <div class="card">
+    <h3>{{ tag_badge(n.tag) }} {{ n.title }}</h3>
+    <p class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }}</p>
+    <div class="pre">{{ n.body }}</div>
+  </div>
+  {% else %}<p class="muted">공지가 없습니다.</p>{% endfor %}
+{% endif %}
+{% endblock %}

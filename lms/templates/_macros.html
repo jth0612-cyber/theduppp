@@ -1,0 +1,28 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro pagination(page, pages, endpoint) %}
+{% if pages > 1 %}
+<nav class="pagination">
+  {% set start = [1, page - 4]|max %}
+  {% set end = [pages, page + 4]|min %}
+  {% if page > 1 %}<a href="{{ url_for(endpoint, page=page-1, **kwargs) }}">이전</a>{% endif %}
+  {% for p in range(start, end + 1) %}
+    {% if p == page %}<span class="current">{{ p }}</span>
+    {% else %}<a href="{{ url_for(endpoint, page=p, **kwargs) }}">{{ p }}</a>{% endif %}
+  {% endfor %}
+  {% if page < pages %}<a href="{{ url_for(endpoint, page=page+1, **kwargs) }}">다음</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro filesize(n) %}{% if n >= 1048576 %}{{ '%.1f'|format(n / 1048576) }}MB{% else %}{{ (n / 1024)|round|int }}KB{% endif %}{% endmacro %}
+
+{% macro qtype_badge(qtype) %}<span class="badge {{ 'gray' if qtype == '행정문의' else 'type' }}">{{ qtype }}</span>{% endmacro %}
+
+{% macro tag_badge(tag) %}<span class="badge tag-{{ {'공지': 'notice', '정오': 'errata', '일정': 'schedule', '시험': 'exam', '자료': 'material'}.get(tag, 'notice') }}">{{ tag }}</span>{% endmacro %}
+
+{% macro kind_badge(name) %}{% set k = name|file_kind %}<span class="file-kind kind-{{ k|lower }}">{{ k }}</span>{% endmacro %}
+
+{% macro status_badge(status) %}
+{% if status == 'open' %}<span class="badge open">답변 대기</span>{% else %}<span class="badge answered">답변 완료</span>{% endif %}
+{% endmacro %}

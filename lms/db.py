@@ -1,0 +1,333 @@
+"""SQLite 연결과 스키마. 모든 쿼리는 파라미터 바인딩(?)만 사용한다."""
+import sqlite3
+
+from flask import current_app, g
+
+# role: teacher(강사), assistant(조교: 질문답변만), student(학생)
+USERS_COLUMNS = """
+    id              INTEGER PRIMARY KEY,
+    role            TEXT NOT NULL CHECK (role IN ('teacher', 'assistant', 'student')),
+    username        TEXT NOT NULL UNIQUE,
+    nickname        TEXT,
+    display_name    TEXT NOT NULL DEFAULT '',
+    password_hash   TEXT NOT NULL,
+    student_id      INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    must_change_pw  INTEGER NOT NULL DEFAULT 0,
+    disabled        INTEGER NOT NULL DEFAULT 0,
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until    TEXT,
+    last_login_at   TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+"""
+
+# 소유자 계정이 지워져도 파일은 남는다 (학습 기록 유지. 파일 자체는 학생 영구 삭제 때 지움)
+FILES_COLUMNS = """
+    id            INTEGER PRIMARY KEY,
+    stored_name   TEXT NOT NULL UNIQUE,
+    original_name TEXT NOT NULL,
+    mime          TEXT NOT NULL,
+    size          INTEGER NOT NULL,
+    owner_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+"""
+
+SCHEMA = """
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (""" + USERS_COLUMNS + """);
+
+CREATE TABLE IF NOT EXISTS classes (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    archived    INTEGER NOT NULL DEFAULT 0,
+    join_code   TEXT,
+    join_open   INTEGER NOT NULL DEFAULT 1,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- phone_enc / memo_enc 는 Fernet 으로 암호화된 값
+CREATE TABLE IF NOT EXISTS students (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    student_no  TEXT NOT NULL UNIQUE,
+    target      TEXT NOT NULL DEFAULT '',
+    phone_enc   TEXT,
+    memo_enc    TEXT,
+    active      INTEGER NOT NULL DEFAULT 1,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_students_class ON students(class_id);
+CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+
+CREATE TABLE IF NOT EXISTS exams (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    subject     TEXT NOT NULL DEFAULT '',
+    exam_date   TEXT NOT NULL,
+    max_score   REAL NOT NULL DEFAULT 100,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_exams_class ON exams(class_id);
+
+CREATE TABLE IF NOT EXISTS scores (
+    id          INTEGER PRIMARY KEY,
+    exam_id     INTEGER NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    score       REAL NOT NULL,
+    UNIQUE (exam_id, student_id)
+);
+CREATE INDEX IF NOT EXISTS idx_scores_student ON scores(student_id);
+
+-- 학습/상담 메모 (본문 암호화)
+CREATE TABLE IF NOT EXISTS notes (
+    id          INTEGER PRIMARY KEY,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    category    TEXT NOT NULL DEFAULT '학습',
+    body_enc    TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_notes_student ON notes(student_id);
+
+CREATE TABLE IF NOT EXISTS questions (
+    id          INTEGER PRIMARY KEY,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL,
+    image_id    INTEGER REFERENCES files(id) ON DELETE SET NULL,
+    qtype       TEXT NOT NULL DEFAULT '학습질문',
+    status      TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'answered')),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
+
+CREATE TABLE IF NOT EXISTS answers (
+    id           INTEGER PRIMARY KEY,
+    question_id  INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    author_id    INTEGER NOT NULL REFERENCES users(id),
+    body         TEXT NOT NULL,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS notices (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    tag         TEXT NOT NULL DEFAULT '공지',
+    textbook    TEXT NOT NULL DEFAULT '',
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 업로드 파일은 웹 루트 밖(instance/uploads)에 무작위 이름으로 저장
+CREATE TABLE IF NOT EXISTS files (""" + FILES_COLUMNS + """);
+
+CREATE TABLE IF NOT EXISTS materials (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL,
+    file_id     INTEGER NOT NULL REFERENCES files(id),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 답변 뒤 학생의 추가 질문 (작성자는 질문한 학생)
+CREATE TABLE IF NOT EXISTS followups (
+    id          INTEGER PRIMARY KEY,
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    body        TEXT NOT NULL,
+    image_id    INTEGER REFERENCES files(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_followups_question ON followups(question_id);
+
+-- 강의 영상은 파일을 직접 올리지 않고 외부(유튜브 일부공개 등) 링크 + 만료일로 관리
+CREATE TABLE IF NOT EXISTS videos (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL,
+    url         TEXT NOT NULL,
+    duration    TEXT NOT NULL DEFAULT '',
+    expires_on  TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 학생 접속일 (출석 관리용이 아니라 학생 본인의 학습 연속 기록용)
+CREATE TABLE IF NOT EXISTS visits (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    PRIMARY KEY (user_id, day)
+);
+
+CREATE TABLE IF NOT EXISTS points (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount      INTEGER NOT NULL,
+    reason      TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_points_user ON points(user_id);
+
+-- 미니게임 한 판. 정답(answer)은 서버에만 두고 채점도 서버에서 한다
+CREATE TABLE IF NOT EXISTS game_rounds (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    game        TEXT NOT NULL,
+    topic       TEXT NOT NULL DEFAULT '',
+    payload     TEXT NOT NULL,
+    answer      TEXT NOT NULL,
+    score       INTEGER,
+    total       INTEGER,
+    started_at  TEXT NOT NULL,
+    finished_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_game_rounds_user ON game_rounds(user_id, started_at);
+
+CREATE TABLE IF NOT EXISTS news (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL,
+    url         TEXT NOT NULL,
+    source      TEXT NOT NULL DEFAULT '',
+    summary     TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 학생 회원가입 신청. 선생님이 승인하면 students/users 로 옮기고 이 행은 지운다
+CREATE TABLE IF NOT EXISTS signup_requests (
+    id            INTEGER PRIMARY KEY,
+    class_id      INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    student_no    TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    consent_at    TEXT NOT NULL,
+    ip            TEXT NOT NULL DEFAULT '',
+    created_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER,
+    username    TEXT,
+    action      TEXT NOT NULL,
+    target      TEXT NOT NULL DEFAULT '',
+    ip          TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+"""
+
+
+def get_db():
+    if "db" not in g:
+        g.db = sqlite3.connect(current_app.config["DATABASE"])
+        g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON")
+    return g.db
+
+
+def close_db(_exc=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+
+def init_db(path):
+    from nickname import generate_nickname
+
+    conn = sqlite3.connect(path)
+    conn.executescript(SCHEMA)
+    # 기존 DB 이전: 새로 생긴 열 추가
+    _add_column(conn, "users", "nickname", "TEXT")
+    _add_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "users", "disabled", "INTEGER NOT NULL DEFAULT 0")
+    _allow_assistant_role(conn)
+    _release_file_owner(conn)
+    _add_column(conn, "questions", "qtype", "TEXT NOT NULL DEFAULT '학습질문'")
+    _add_column(conn, "notices", "tag", "TEXT NOT NULL DEFAULT '공지'")
+    _add_column(conn, "notices", "textbook", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "classes", "join_code", "TEXT")
+    _add_column(conn, "classes", "join_open", "INTEGER NOT NULL DEFAULT 1")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code)")
+    code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
+    for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():
+        conn.execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(code_taken), cid))
+    # 닉네임 없는 학생 계정에 채워 넣기
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname ON users(nickname)")
+    taken = lambda nick: conn.execute("SELECT 1 FROM users WHERE nickname = ?", (nick,)).fetchone() is not None
+    for (uid,) in conn.execute("SELECT id FROM users WHERE role = 'student' AND nickname IS NULL").fetchall():
+        conn.execute("UPDATE users SET nickname = ? WHERE id = ?", (generate_nickname(taken), uid))
+    conn.commit()
+    conn.close()
+
+
+def _rebuild_table(conn, table, columns):
+    """SQLite 는 CHECK·외래키를 바꿀 수 없으므로 표를 새로 만들어 데이터를 옮긴다."""
+    conn.commit()
+    conn.execute("PRAGMA foreign_keys = OFF")
+    col_list = ", ".join(row[1] for row in conn.execute(f"PRAGMA table_info({table})"))
+    conn.executescript(f"""
+        BEGIN;
+        CREATE TABLE {table}_new ({columns});
+        INSERT INTO {table}_new ({col_list}) SELECT {col_list} FROM {table};
+        DROP TABLE {table};
+        ALTER TABLE {table}_new RENAME TO {table};
+        COMMIT;
+    """)
+    conn.execute("PRAGMA foreign_keys = ON")
+
+
+def _table_sql(conn, table):
+    return conn.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)).fetchone()[0]
+
+
+def _allow_assistant_role(conn):
+    """예전 DB 는 users.role 에 'assistant' 가 없다."""
+    if "'assistant'" not in _table_sql(conn, "users"):
+        _rebuild_table(conn, "users", USERS_COLUMNS)
+
+
+def _release_file_owner(conn):
+    """예전 DB 는 파일을 올린 학생의 계정을 지우려 하면 외래키 오류가 났다."""
+    if "ON DELETE SET NULL" not in _table_sql(conn, "files"):
+        _rebuild_table(conn, "files", FILES_COLUMNS)
+
+
+def _add_column(conn, table, column, ddl):
+    cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+
+
+# 헷갈리는 글자(0/O, 1/I/L)를 뺀 대문자·숫자 8자리 → 약 1조 가지
+_JOIN_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def new_join_code(is_taken):
+    import secrets
+    while True:
+        code = "".join(secrets.choice(_JOIN_ALPHABET) for _ in range(8))
+        if not is_taken(code):
+            return code
+
+
+def join_code_taken(code):
+    return query("SELECT 1 FROM classes WHERE join_code = ?", (code,), one=True) is not None
+
+
+def nickname_taken(nick):
+    return query("SELECT 1 FROM users WHERE nickname = ?", (nick,), one=True) is not None
+
+
+def query(sql, args=(), one=False):
+    cur = get_db().execute(sql, args)
+    rows = cur.fetchall()
+    cur.close()
+    return (rows[0] if rows else None) if one else rows
+
+
+def execute(sql, args=()):
+    db = get_db()
+    cur = db.execute(sql, args)
+    db.commit()
+    return cur.lastrowid

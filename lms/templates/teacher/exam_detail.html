@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ exam.name }} · 학습 관리{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('teacher.class_detail', cid=exam.class_id, tab='exams') }}">{{ exam.class_name }}</a> /</p>
+    <h1>{{ exam.name }}</h1>
+    <p class="muted small">{{ exam.exam_date }} · {{ exam.subject or '과목 미지정' }} · 만점 {{ '%g'|format(exam.max_score) }}</p>
+  </div>
+  <div class="row">
+    <a class="btn" href="{{ url_for('teacher.exam_export', eid=exam.id) }}">CSV 내보내기</a>
+    <form method="post" action="{{ url_for('teacher.exam_delete', eid=exam.id) }}" data-confirm="시험과 입력된 점수를 모두 삭제할까요?">
+      {{ csrf() }}<button class="btn danger">시험 삭제</button></form>
+  </div>
+</div>
+
+{% if stats %}
+<div class="grid grid-4">
+  <div class="card stat"><div class="num">{{ stats.n }} / {{ stats.total }}</div><div class="label">입력 / 재원</div></div>
+  <div class="card stat"><div class="num">{{ stats.avg }}</div><div class="label">평균 (표준편차 {{ stats.sd }})</div></div>
+  <div class="card stat"><div class="num">{{ '%g'|format(stats.max) }}</div><div class="label">최고</div></div>
+  <div class="card stat"><div class="num">{{ '%g'|format(stats.min) }}</div><div class="label">최저</div></div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>점수 입력 <span class="small muted">· Enter 로 다음 칸 이동 · 빈칸은 미응시</span></h2>
+  {% if students %}
+  <form method="post">
+    {{ csrf() }}
+    <div class="table-wrap"><table>
+      <tr><th>이름</th><th>수험번호</th><th class="num">점수</th><th class="num">석차</th></tr>
+      {% for s in students %}
+      <tr>
+        <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a></td>
+        <td class="muted">{{ s.student_no }}</td>
+        <td class="num"><input class="score" type="number" name="score_{{ s.id }}" step="any" min="0" max="{{ exam.max_score }}"
+             value="{{ '%g'|format(s.score) if s.score is not none else '' }}" inputmode="decimal"></td>
+        <td class="num muted">{{ ranks.get(s.score, '') }}</td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    <p class="mt"><button class="btn primary">점수 저장</button></p>
+  </form>
+  {% else %}<p class="muted">이 반에 재원 중인 학생이 없습니다.</p>{% endif %}
+</div>
+{% endblock %}
