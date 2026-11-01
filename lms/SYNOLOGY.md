@@ -29,7 +29,8 @@ DSM 7.2 이상, **Container Manager**(도커)를 쓸 수 있는 모델 기준입
 2. 이 프로젝트 폴더의 내용을 `docker/student-lms`에 그대로 복사합니다.
    - **`.venv` 폴더는 복사하지 않아도 됩니다.** (윈도용이라 NAS에서는 쓰지 않아요)
    - 지금 PC에서 쓰던 데이터를 옮기려면 `instance` 폴더도 같이 복사합니다.
-     새로 시작하려면 `instance`는 빼고 복사하세요. 처음 실행할 때 새로 만들어집니다.
+     새로 시작하려면 `instance`는 빼고 복사한 뒤, `docker/student-lms` 안에 **빈 `instance` 폴더를 직접 만드세요.**
+     시놀로지는 이 폴더가 없으면 컨테이너를 시작하지 못합니다(`Bind mount failed ... instance does not exist`). 안의 내용(비밀키·DB)은 처음 실행할 때 앱이 만듭니다.
    - `instance/demo.sqlite3`, `instance/DEMO_CREDENTIALS.txt`는 체험용이니 지우고 올리세요.
 
 ## 3. 컨테이너 실행
