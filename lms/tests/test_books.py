@@ -110,22 +110,22 @@ class BooksTest(unittest.TestCase):
         bid, mid = self.make_book()
         s = self.student(0)
         # 등록 전에는 분석실에 회차가 없다
-        self.assertIn("아직 이용할 수 있는 교재가 없어요", s.get("/s/analysis").data.decode())
-        self.assertEqual(s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "answers": KEY}).status_code, 404)
+        self.assertIn("아직 서가에 등록한 교재가 없어요", s.get("/s/analysis").data.decode())
+        self.assertEqual(s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": KEY}).status_code, 404)
         code = self.shared_code(bid)
         r = s.post("/s/books/register", data={"code": analysis.format_code(code).lower()})
-        self.assertIn("등록 완료", r.data.decode())
+        self.assertIn("서가에 추가했어요", r.data.decode())
         page = s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn("가채점 입력", page)
+        self.assertIn("답안지", page)
         self.assertNotIn(KEY, page)                                     # 정답은 화면에 나가지 않음
         # 부분 입력은 채점하지 않음
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "answers": "14352"})
+        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": "14352"})
         with self.app.app_context():
             e = query("SELECT * FROM mock_entries WHERE mock_id = ?", (mid,), one=True)
             self.assertIsNone(e["score"])
         # 마지막 두 문항(3점짜리)을 틀리면 44점
         wrong = KEY[:18] + ("2" if KEY[18] != "2" else "3") + ("2" if KEY[19] != "2" else "3")
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "answers": " ".join(wrong)})
+        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": " ".join(wrong)})
         with self.app.app_context():
             self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,), one=True)["score"], 44)
         self.assertIn("44", s.get(f"/s/analysis?mock={mid}").data.decode())
@@ -136,11 +136,11 @@ class BooksTest(unittest.TestCase):
         codes = re.findall(r"[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}", r.data.decode("utf-8-sig"))
         self.assertEqual(len(codes), 2)
         a, b = self.student(0), self.student(1)
-        self.assertIn("등록 완료", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
-        self.assertIn("이미 사용된 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
+        self.assertIn("서가에 추가했어요", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
+        self.assertIn("이미 다른 계정에서 쓴 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
         bid2, _ = self.make_book(expires="2000-01-01")
         old = self.shared_code(bid2)
-        self.assertIn("이용 기간이 끝난", b.post("/s/books/register", data={"code": old}).data.decode())
+        self.assertIn("이용 기간이 지난", b.post("/s/books/register", data={"code": old}).data.decode())
 
     def test_code_guessing_is_limited(self):
         s = self.student(0)
@@ -157,15 +157,34 @@ class BooksTest(unittest.TestCase):
             ans = list(KEY)
             for j in range(i % 6):                                      # 학생마다 0~5문항 틀림
                 ans[19 - j] = "5" if ans[19 - j] != "5" else "4"
-            s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "answers": "".join(ans)})
+            s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": "".join(ans)})
         page = s.get(f"/s/analysis?mock={mid}&q=20").data.decode()
         self.assertIn("표준점수", page)
-        self.assertIn("20번 · 선지별 선택 비율", page)
+        self.assertIn("문항 지도", page)
+        self.assertIn("20번 선지별 응답", page)
         self.assertIn("등급", page)
         teacher = self.t.get(f"/t/mocks/{mid}").data.decode()
         self.assertIn("채점 12명", teacher)
         # 다른 학생의 답안은 볼 수 없고, 남의 회차에 제출할 수 없다
         self.assertEqual(self.student(0).get("/t/books").status_code, 403)
+
+    def test_bubble_sheet_submission(self):
+        bid, mid = self.make_book()
+        s = self.student(0)
+        s.post("/s/books/register", data={"code": self.shared_code(bid)})
+        marks = {f"a{i + 1}": KEY[i] for i in range(20)}
+        marks.pop("a7")                                                  # 7번 비움 → 채점 안 함
+        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", **marks})
+        with self.app.app_context():
+            e = query("SELECT * FROM mock_entries WHERE mock_id = ?", (mid,), one=True)
+            self.assertEqual(e["answers"][6], "0")
+            self.assertIsNone(e["score"])
+        marks["a7"] = KEY[6]
+        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", **marks})
+        with self.app.app_context():
+            self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,), one=True)["score"], 50)
+        page = s.get(f"/s/analysis?mock={mid}").data.decode()
+        self.assertIn('name="a7" value="{}" checked'.format(KEY[6]), page)
 
     def test_score_only_mode(self):
         bid, mid = self.make_book()
@@ -251,7 +270,7 @@ class BooksTest(unittest.TestCase):
         # 로그인 전 첫 화면은 공개, 공지는 로그인 필요
         anon = self.app.test_client()
         home = anon.get("/").data.decode()
-        self.assertIn("재원생 전용 Q&amp;A", home)
+        self.assertIn("질문 게시판", home)
         self.assertNotIn("온라인", home)
         self.assertEqual(anon.get("/s/notices").status_code, 302)
 

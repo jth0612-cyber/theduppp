@@ -1,87 +1,82 @@
-{# 회차 통계: 예상 등급컷, 점수 분포, 문항별 오답률, 선지별 선택 비율. 차트는 SVG 속성만 써서 CSP(style-src 'self')를 지킨다. #}
-<div class="an-row">
-  <section class="card an-cuts" aria-labelledby="h-cuts">
-    <div class="card-head"><h2 id="h-cuts">예상 등급컷</h2><span class="meta">제출 전에도 볼 수 있어요</span></div>
+{# 회차 통계: 등급 기준표, 점수대 분포, 문항 지도, 선지 비율. 그림은 SVG 속성·CSS 클래스만 써서 CSP(style-src 'self')를 지킨다. #}
+<div class="stats-grid">
+  <section class="panel" aria-labelledby="h-cuts">
+    <div class="sec-head"><h2 id="h-cuts">등급 기준표</h2><span>응시 {{ stats.n }}명 기준</span></div>
     {% if stats.cuts %}
-    <div class="table-wrap"><table>
-      <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th><th class="num">백분위</th><th class="num">추정 범위</th></tr></thead>
+    <div class="table-wrap"><table class="ledger">
+      <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th><th class="num">백분위</th><th class="num">오차 범위</th></tr></thead>
       <tbody>
       {% for r in stats.cuts %}
         <tr class="{{ 'mine' if my_grade == r.grade }}">
-          <td>{{ r.grade }}</td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
-          <td class="num">{{ r.pct }}</td><td class="num muted">{% if r.lo == r.hi %}{{ fmt(r.lo) }}{% else %}{{ fmt(r.lo) }}–{{ fmt(r.hi) }}{% endif %}</td>
+          <td><span class="chip-el">{{ r.grade }}</span></td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
+          <td class="num">{{ r.pct }}</td><td class="num muted">{% if r.lo == r.hi %}±0{% else %}{{ fmt(r.lo) }}~{{ fmt(r.hi) }}{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>
     </table></div>
-    <p class="small muted mt">함께 입력한 {{ stats.n }}명의 점수로 계산한 추정치예요. 수능 9등급 누적 비율(4·11·23·40·60·77·89·96%) 기준, 표준점수는 평균 50·표준편차 10으로 환산했어요.</p>
+    <p class="fine">수능 9등급 누적 비율(4·11·23·40·60·77·89·96%)을 반 응시자에게 적용한 추정입니다. 표준점수는 평균 50·표준편차 10으로 환산했고, 오차 범위는 누적 비율 ±2%p 안의 원점수입니다. 답안을 내지 않아도 볼 수 있어요.</p>
     {% else %}
-    <p class="muted">함께 입력한 학생이 {{ min_for_cuts }}명 이상이 되면 등급컷이 나와요. (지금 {{ stats.n }}명)</p>
+    <p class="muted">응시자가 {{ min_for_cuts }}명이 되면 기준표를 엽니다. 지금 {{ stats.n }}명.</p>
     {% endif %}
   </section>
 
-  <section class="card an-dist" aria-labelledby="h-dist">
-    <div class="card-head"><h2 id="h-dist">점수 분포</h2><span class="meta">{{ stats.n }}명</span></div>
+  <section class="panel" aria-labelledby="h-dist">
+    <div class="sec-head"><h2 id="h-dist">점수대 분포</h2><span>{{ stats.n }}명</span></div>
     {% if stats.dist %}
+    {% set rows = stats.dist|reverse|list %}
     {% set maxp = (stats.dist|map(attribute='pct')|max) or 1 %}
-    <div class="chart-scroll"><svg class="chart-svg dist" viewBox="0 0 600 240" role="img" aria-label="점수 구간별 학생 비율">
-      <line class="base" x1="0" x2="600" y1="200" y2="200"></line>
-      {% for d in stats.dist %}
-        {% set h = (d.pct / maxp * 160)|round(1) %}
-        {% set x = loop.index0 * 60 + 8 %}
-        <rect class="bar{{ ' bar-me' if my_score is not none and d.label == my_bucket }}" x="{{ x }}" y="{{ 200 - h }}" width="44" height="{{ h }}"><title>{{ d.label }}점: {{ d.pct }}% ({{ d.count }}명)</title></rect>
-        <text class="val" x="{{ x + 22 }}" y="{{ 194 - h }}" text-anchor="middle">{{ d.pct }}%</text>
-        <text class="tick" x="{{ x + 22 }}" y="222" text-anchor="middle">{{ d.label }}</text>
+    <svg class="hbars" viewBox="0 0 400 {{ rows|length * 26 }}" role="img" aria-label="점수대별 응시자 비율">
+      {% for d in rows %}
+        {% set y = loop.index0 * 26 %}
+        {% set w = (d.pct / maxp * 250)|round(1) %}
+        <text class="lab" x="62" y="{{ y + 17 }}" text-anchor="end">{{ d.label }}</text>
+        <line class="axis" x1="72" x2="72" y1="{{ y }}" y2="{{ y + 26 }}"></line>
+        <rect class="hb{{ ' hb-me' if my_bucket and d.label == my_bucket }}" x="72" y="{{ y + 7 }}" width="{{ [w, 0]|max }}" height="12"></rect>
+        <text class="pv" x="{{ 80 + w }}" y="{{ y + 17 }}">{{ d.pct }}%</text>
       {% endfor %}
-    </svg></div>
+    </svg>
+    {% if my_bucket %}<p class="fine"><span class="swatch sw-me"></span> 내 점수가 속한 구간</p>{% endif %}
     {% else %}
-    <p class="muted">아직 채점된 학생이 없어요.</p>
+    <p class="muted">채점된 답안이 아직 없어요.</p>
     {% endif %}
   </section>
 </div>
 
-<section class="card" id="items" aria-labelledby="h-items">
-  <div class="card-head"><h2 id="h-items">문항별 오답률</h2><span class="meta">막대를 누르면 선지별 선택 비율을 볼 수 있어요 · 답안 입력 {{ stats.n_answers }}명 기준</span></div>
+<section class="panel" id="items" aria-labelledby="h-items">
+  <div class="sec-head"><h2 id="h-items">문항 지도</h2><span>답안 제출 {{ stats.n_answers }}명 · 칸을 누르면 선지 비율</span></div>
   {% if stats['items'] %}
-  {% set n = stats['items']|length %}
-  {% set slot = 1000 / n %}
-  {% set maxw = (stats['items']|map(attribute='wrong_pct')|max) or 1 %}
-  <div class="chart-scroll"><svg class="chart-svg items" viewBox="0 0 1000 250" role="img" aria-label="문항별 오답률(%)">
-    <line class="base" x1="0" x2="1000" y1="210" y2="210"></line>
+  <ol class="item-map">
     {% for it in stats['items'] %}
-      {% set h = (it.wrong_pct / maxw * 170)|round(1) %}
-      {% set x = (loop.index0 * slot + slot * 0.1)|round(1) %}
-      {% set w = (slot * 0.8)|round(1) %}
-      <a href="{{ request.path }}?{% if mock_param %}mock={{ mock_param }}&amp;{% endif %}q={{ it.no }}#items" aria-label="{{ it.no }}번 오답률 {{ it.wrong_pct }}%">
-        <rect class="bar{{ ' bar-top' if it.top }}{{ ' bar-sel' if selected and selected.no == it.no }}" x="{{ x }}" y="{{ 210 - h }}" width="{{ w }}" height="{{ [h, 1]|max }}"></rect>
-        <rect class="hit" x="{{ (loop.index0 * slot)|round(1) }}" y="0" width="{{ slot|round(1) }}" height="240"></rect>
-      </a>
-      <text class="val" x="{{ x + w / 2 }}" y="{{ 204 - h }}" text-anchor="middle">{{ it.wrong_pct }}</text>
-      <text class="tick{{ ' wrong' if it.no in my_wrong }}" x="{{ x + w / 2 }}" y="232" text-anchor="middle">{{ it.no }}</text>
+      {% set lv = 0 if it.wrong_pct < 10 else (1 if it.wrong_pct < 25 else (2 if it.wrong_pct < 40 else (3 if it.wrong_pct < 55 else 4))) %}
+      <li><a class="im heat-{{ lv }}{{ ' is-sel' if selected and selected.no == it.no }}{{ ' is-mine' if it.no in my_wrong }}"
+             href="{{ request.path }}?{% if mock_param %}mock={{ mock_param }}&amp;{% endif %}q={{ it.no }}#items"
+             aria-label="{{ it.no }}번, 오답률 {{ it.wrong_pct }}%{{ ', 오답률 상위' if it.top }}{{ ', 내가 틀린 문항' if it.no in my_wrong }}">
+        <span class="im-no">{{ it.no }}</span>{% if it.top %}<span class="im-top" aria-hidden="true"></span>{% endif %}
+        <span class="im-pct">{{ it.wrong_pct }}<small>%</small></span>
+      </a></li>
     {% endfor %}
-  </svg></div>
-  <p class="small muted swipe-hint">그래프를 옆으로 밀면 나머지 문항이 보여요.</p>
-  <ul class="legend">
-    <li><i class="lg-top"></i>오답률 상위 3문항</li>
-    <li><i class="lg-sel"></i>선택한 문항</li>
-    {% if my_wrong %}<li><b class="wrong">굵은 번호</b> 내가 틀린 문항</li>{% endif %}
+  </ol>
+  <ul class="map-key">
+    <li><span class="swatch heat-1"></span><span class="swatch heat-2"></span><span class="swatch heat-3"></span><span class="swatch heat-4"></span> 진할수록 많이 틀린 문항</li>
+    <li><span class="dot-top"></span> 오답률 상위 셋</li>
+    {% if my_wrong %}<li><span class="mark-mine"></span> 내가 틀린 문항</li>{% endif %}
   </ul>
 
   {% if selected %}
-  <div class="choices">
-    <h3>{{ selected.no }}번 · 선지별 선택 비율 <span class="muted small">오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}</span></h3>
-    <svg class="chart-svg choice" viewBox="0 0 600 {{ 5 * 34 }}" role="img" aria-label="{{ selected.no }}번 선지별 선택 비율">
+  <div class="choice-panel">
+    <h3>{{ selected.no }}번 선지별 응답 <span>오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}</span></h3>
+    <svg class="hbars" viewBox="0 0 400 130" role="img" aria-label="{{ selected.no }}번 선지별 응답 비율">
       {% for p in selected.choices %}
-        {% set y = loop.index0 * 34 %}
-        <text class="cno" x="0" y="{{ y + 20 }}">{{ '①②③④⑤'[loop.index0] }}</text>
-        <rect class="track" x="40" y="{{ y + 8 }}" width="500" height="16" rx="3"></rect>
-        <rect class="fill{{ ' fill-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 8 }}" width="{{ (p * 5)|round(1) }}" height="16" rx="3"></rect>
-        <text class="pct" x="600" y="{{ y + 21 }}" text-anchor="end">{{ p }}%</text>
+        {% set y = loop.index0 * 26 %}
+        <text class="lab" x="20" y="{{ y + 17 }}" text-anchor="middle">{{ '①②③④⑤'[loop.index0] }}</text>
+        <line class="axis" x1="40" x2="40" y1="{{ y }}" y2="{{ y + 26 }}"></line>
+        <rect class="hb{{ ' hb-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 7 }}" width="{{ (p * 3)|round(1) }}" height="12"></rect>
+        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%</text>
       {% endfor %}
     </svg>
   </div>
   {% endif %}
   {% else %}
-  <p class="muted">답안을 모두 입력한 학생이 생기면 문항별 오답률이 나와요.</p>
+  <p class="muted">모든 문항을 표시한 답안이 들어오면 문항 지도가 채워집니다.</p>
   {% endif %}
 </section>

@@ -1,15 +1,14 @@
 {% extends "base.html" %}
-{% from "_macros.html" import tag_badge %}
 {% block title %}{{ n.title }} · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('student.notices') }}">← 공지 목록</a></p>
-<article class="card post">
+<article class="narrow article">
+  <p class="fine"><a href="{{ url_for('student.notices') }}">공지 목록</a> / {{ n.tag }}{% if n.textbook %} · {{ n.textbook }}{% endif %}</p>
   <h1>{{ n.title }}</h1>
-  <p class="post-meta">{{ tag_badge(n.tag) }} {% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · 조회 {{ n.views }}</p>
-  <div class="pre post-body">{{ n.body }}</div>
+  <p class="fine">{{ n.created_at[:16]|replace('-', '.') }} · 읽음 {{ n.views }}</p>
+  <div class="pre article-body">{{ n.body }}</div>
   <form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn like{{ ' on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '♥' if liked else '♡' }} 좋아요 {{ likes }}</button>
+    <button class="btn{{ ' is-on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '공감했어요' if liked else '공감' }} · {{ likes }}</button>
   </form>
 </article>
 {% endblock %}

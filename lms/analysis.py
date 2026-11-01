@@ -67,18 +67,36 @@ def parse_points(raw, n_items, full_score):
 
 
 def parse_answers(raw, n_items):
-    """학생 답안: 1~5 숫자만 남기고 최대 n_items 개. (부분 입력 허용)"""
-    return "".join(ch for ch in (raw or "") if ch in "12345")[:n_items]
+    """빠른 입력(숫자를 1번부터 차례로): 1~5만 남기고 n_items 칸으로. 빈 칸은 '0'."""
+    digits = "".join(ch for ch in (raw or "") if ch in "12345")[:n_items]
+    return digits + "0" * (n_items - len(digits))
+
+
+def answers_from_marks(form, n_items):
+    """답안지(문항마다 ①~⑤ 선택): a1..aN 값. 고르지 않은 문항은 '0'."""
+    out = []
+    for i in range(1, n_items + 1):
+        v = (form.get(f"a{i}") or "").strip()
+        out.append(v if v in ("1", "2", "3", "4", "5") else "0")
+    return "".join(out)
+
+
+def is_complete(answers, n_items):
+    return len(answers) == n_items and "0" not in answers
+
+
+def filled_count(answers):
+    return sum(1 for ch in (answers or "") if ch in "12345")
 
 
 def score_answers(answers, key, points):
-    if len(answers) != len(key):
+    if not is_complete(answers, len(key)):
         return None
     return sum(p for a, k, p in zip(answers, key, points) if int(a) == k)
 
 
 def wrong_items(answers, key):
-    return [i + 1 for i, (a, k) in enumerate(zip(answers, key)) if int(a) != k]
+    return [i + 1 for i, (a, k) in enumerate(zip(answers, key)) if a in "12345" and int(a) != k]
 
 
 def _fmt(x):
@@ -180,7 +198,7 @@ def compute(entries, key, full_score):
     """entries: [{'answers': str, 'score': float|None}] (같은 회차의 모든 제출)."""
     complete = [e for e in entries if e["score"] is not None]
     scores = [float(e["score"]) for e in complete]
-    answer_rows = [e["answers"] for e in complete if e["answers"] and len(e["answers"]) == len(key)]
+    answer_rows = [e["answers"] for e in complete if e["answers"] and is_complete(e["answers"], len(key))]
     return {
         "n": len(scores),
         "n_answers": len(answer_rows),

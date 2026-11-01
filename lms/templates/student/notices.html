@@ -2,13 +2,15 @@
 {% from "_macros.html" import tag_badge %}
 {% block title %}공지 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><h1>{{ '정오표' if tag == '정오' else '공지' }} <span class="count-num">{{ notices|length }}</span></h1></div>
-<form method="get" class="search-box" role="search">
-  {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
-  <label for="nq" class="sr">공지 검색</label>
-  <input type="search" id="nq" name="q" value="{{ q }}" placeholder="제목이나 내용으로 검색">
-  <button class="btn" type="submit">검색</button>
-</form>
+<header class="ed-head ed-head-split">
+  <div><h1>{{ '정오표' if tag == '정오' else '공지' }}</h1><p class="ed-lede">{{ notices|length }}건{% if q %} · ‘{{ q }}’ 찾은 결과{% endif %}</p></div>
+  <form method="get" class="find" role="search">
+    {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+    <label for="nq" class="sr">공지에서 찾기</label>
+    <input type="search" id="nq" name="q" value="{{ q }}" placeholder="제목·본문에서 찾기">
+    <button class="btn small" type="submit">찾기</button>
+  </form>
+</header>
 <nav class="tabs">
   <a href="{{ url_for('student.notices', q=q or None) }}" class="{{ 'active' if not tag }}">전체</a>
   {% for t in tags %}
@@ -17,25 +19,31 @@
 </nav>
 {% if tag == '정오' %}
   {% for book, items in notices|groupby('textbook') %}
-  <div class="card">
-    <h2>{{ book or '교재 미지정' }}</h2>
+  <section class="panel">
+    <div class="sec-head"><h2>{{ book or '교재 미지정' }}</h2><span>{{ items|length }}건</span></div>
+    <ol class="ledger-list">
     {% for n in items %}
-      <div class="note"><a href="{{ url_for('student.notice_detail', nid=n.id) }}"><b>{{ n.title }}</b></a> <span class="small muted">{{ n.created_at[:10] }}</span><div class="pre small">{{ n.body }}</div></div>
+      <li><a href="{{ url_for('student.notice_detail', nid=n.id) }}"><time>{{ n.created_at[:10]|replace('-', '.') }}</time><span class="ll-title">{{ n.title }}</span></a></li>
     {% endfor %}
-  </div>
-  {% else %}<p class="muted">{{ "'" ~ q ~ "'에 맞는 정오표가 없습니다." if q else '정오표가 없습니다.' }}</p>{% endfor %}
+    </ol>
+  </section>
+  {% else %}<p class="muted">{{ '찾는 정오표가 없어요.' if q else '정오표가 아직 없어요.' }}</p>{% endfor %}
 {% else %}
-  <ul class="post-list card">
-  {% for n in notices %}
-    <li class="{{ 'pinned' if n.pinned }}">
-      <a href="{{ url_for('student.notice_detail', nid=n.id) }}">
-        <span class="post-title">{% if n.pinned %}<svg class="flag" viewBox="0 0 16 16" aria-label="고정 공지"><path d="M3.5 14.5v-12M3.5 2.5h8l-1.8 3 1.8 3h-8"/></svg>{% else %}{{ tag_badge(n.tag) }}{% endif %} {{ n.title }}</span>
-        <span class="post-meta">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:10] }} · 조회 {{ n.views }} · <span aria-label="좋아요">♡</span> {{ n.likes }}</span>
-      </a>
-    </li>
-  {% else %}
-    <li class="muted empty-li">{{ "'" ~ q ~ "'에 맞는 공지가 없습니다." if q else '공지가 없습니다.' }}</li>
-  {% endfor %}
-  </ul>
+  {% set pinned = notices|selectattr('pinned')|list %}
+  {% set rest = notices|rejectattr('pinned')|list %}
+  {% if pinned %}
+  <section class="panel pinned-panel" aria-label="고정 공지">
+    <div class="sec-head"><h2>고정</h2><span>먼저 읽어 주세요</span></div>
+    <ol class="ledger-list">
+      {% for n in pinned %}{% include "student/_notice_row.html" %}{% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+  <section class="panel">
+    <ol class="ledger-list">
+      {% for n in rest %}{% include "student/_notice_row.html" %}
+      {% else %}<li class="ll-empty">{{ '찾는 공지가 없어요.' if q else ('고정 공지 말고는 아직 없어요.' if pinned else '공지가 아직 없어요.') }}</li>{% endfor %}
+    </ol>
+  </section>
 {% endif %}
 {% endblock %}

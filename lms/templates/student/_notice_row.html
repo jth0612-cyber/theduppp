@@ -1,0 +1,6 @@
+<li><a href="{{ url_for('student.notice_detail', nid=n.id) }}">
+  <time>{{ n.created_at[:10]|replace('-', '.') }}</time>
+  <span class="ll-tag">{{ '정오' if n.tag == '정오' else n.tag }}</span>
+  <span class="ll-title">{{ n.title }}{% if n.textbook %} <small>{{ n.textbook }}</small>{% endif %}</span>
+  <span class="ll-meta">읽음 {{ n.views }} · 공감 {{ n.likes }}</span>
+</a></li>

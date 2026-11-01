@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}교재·분석실 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}교재·모의고사 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>교재·분석실</h1><p class="muted small">교재를 만들고 회차별 정답·배점과 인증 코드를 관리합니다. 학생은 코드를 등록해야 그 교재의 분석실을 볼 수 있어요.</p></div>
+  <div><h1>교재·모의고사</h1><p class="muted small">교재를 만들고 회차별 정답·배점과 인증 코드를 관리합니다. 학생은 코드를 등록해야 그 교재의 모의고사 분석을 열 수 있어요.</p></div>
 </div>
 
 <div class="card">
@@ -12,7 +12,7 @@
     <tbody>
     {% for b in books %}
       <tr class="{{ 'inactive' if b.expires_on < today }}">
-        <td><a href="{{ url_for('books.teacher_book', bid=b.id) }}"><b>{{ b.title }}</b></a>{% if b.is_free %} <span class="badge open">무료 배포</span>{% endif %}{% if b.subject %} <span class="small muted">{{ b.subject }}</span>{% endif %}</td>
+        <td><a href="{{ url_for('books.teacher_book', bid=b.id) }}"><b>{{ b.title }}</b></a>{% if b.is_free %} <span class="small muted">배포본</span>{% endif %}{% if b.subject %} <span class="small muted">{{ b.subject }}</span>{% endif %}</td>
         <td>{{ b.expires_on }}까지</td>
         <td class="num">{{ b.mocks }}</td>
         <td class="num">{{ b.users }}명</td>
@@ -34,8 +34,8 @@
       <div class="field"><label for="subject">과목·표지 글자</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
       <div class="field"><label for="expires_on">이용 기간 (마지막 날)</label><input type="date" id="expires_on" name="expires_on" required></div>
     </div>
-    <div class="field"><label for="notice">분석실 안내 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 11월 배포 모의고사로 분석실을 먼저 엽니다. 배포 코드를 등록하면 12월 31일까지 이용할 수 있어요."></div>
-    <label class="consent"><input type="checkbox" name="is_free" value="1"> 무료 배포 교재 (학생 화면에 '무료 배포' 표시)</label>
+    <div class="field"><label for="notice">학생 화면 알림 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 수업에서 나눠 준 배포 코드로 12월 31일까지 열람할 수 있습니다."></div>
+    <label class="consent"><input type="checkbox" name="is_free" value="1"> 배포본 (학생 화면에 '배포본'으로 표시)</label>
     <button class="btn primary mt" type="submit">만들기</button>
   </form>
 </div>

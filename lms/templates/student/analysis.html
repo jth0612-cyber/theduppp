@@ -1,92 +1,98 @@
 {% extends "base.html" %}
-{% block title %}분석실 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}모의고사 분석 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if not mock %}
-<div class="page-head"><div><h1>분석실</h1><p class="muted small">교재 코드를 등록하면 그 교재의 가채점, 예상 등급컷, 문항별 오답률을 볼 수 있어요.</p></div></div>
-<div class="empty-state card">
-  <h2>아직 이용할 수 있는 교재가 없어요</h2>
-  <p class="muted">교재 앞부속에 인쇄된 12자리 코드나 선생님이 나눠 준 배포 코드를 등록하세요.</p>
-  <a class="btn primary" href="{{ url_for('books.register_book') }}">교재 코드 등록</a>
-</div>
+<header class="ed-head">
+  <h1>모의고사 분석</h1>
+  <p class="ed-lede">교재 코드를 등록하면 그 교재 모의고사의 가채점과 반 전체 통계가 이곳에 열립니다.</p>
+</header>
+<section class="quiet-box">
+  <p>아직 서가에 등록한 교재가 없어요.</p>
+  <a class="btn primary" href="{{ url_for('books.register_book') }}">교재 코드 입력하기</a>
+</section>
 {% else %}
-<div class="page-head">
-  <div><h1>분석실</h1><p class="muted small">{{ stats.computed_at }} 기준 · 5분마다 갱신</p></div>
-  <form method="get" class="mock-pick" data-autosubmit>
-    <label for="mock">시험</label>
-    <div class="row">
+<header class="ed-head ed-head-split">
+  <div>
+    <h1>모의고사 분석</h1>
+    <p class="ed-lede">{{ mock.book_title }} · {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점</p>
+  </div>
+  <form method="get" class="pick" data-autosubmit>
+    <label for="mock">다른 회차 보기</label>
+    <div class="pick-row">
       <select id="mock" name="mock">
         {% for m in mocks %}
-          <option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} · {{ m.round_no }}회{% if m.title %} {{ m.title }}{% endif %} ({{ m.n_items }}문항 · {{ fmt(m.full_score) }}점)</option>
+          <option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회</option>
         {% endfor %}
       </select>
-      <button class="btn js-hide" type="submit">보기</button>
+      <button class="btn small js-hide" type="submit">이동</button>
     </div>
   </form>
-</div>
+</header>
+{% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
 
-{% if mock.notice %}
-<div class="banner"><span class="badge">{{ '무료 배포' if mock.is_free else '안내' }}</span><p>{{ mock.notice }}</p><a class="small" href="{{ url_for('books.register_book') }}">교재 코드 등록 →</a></div>
-{% endif %}
+<div class="sheet-grid">
+  <section class="omr" aria-labelledby="h-omr">
+    <div class="sec-head"><h2 id="h-omr">답안지</h2><span>{{ filled }} / {{ mock.n_items }} 표시</span></div>
+    <form method="post" action="{{ url_for('books.submit_entry', mid=mock.id) }}" id="omr-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="mode" value="answers">
+      <div class="omr-cols">
+        {% for i in range(1, mock.n_items + 1) %}
+        <fieldset class="omr-row{{ ' is-wrong' if i in my_wrong }}">
+          <legend><span class="sr">{{ i }}번</span><span aria-hidden="true">{{ '%02d'|format(i) }}</span></legend>
+          {% for c in range(1, 6) %}
+            <label class="bubble"><input type="radio" name="a{{ i }}" value="{{ c }}" {{ 'checked' if marks[i - 1] == c|string }}><span>{{ c }}</span><span class="sr">번 선택</span></label>
+          {% endfor %}
+        </fieldset>
+        {% endfor %}
+      </div>
+      <details class="quick">
+        <summary>숫자로 한 번에 적기</summary>
+        <label for="quick" class="small">1번부터 차례로 숫자만 적으면 위 답안지를 대신합니다.</label>
+        <input type="text" id="quick" name="quick" inputmode="numeric" autocomplete="off" class="quick-input" placeholder="{{ '1' * 5 }} {{ '2' * 5 }} …" data-quick data-n="{{ mock.n_items }}">
+      </details>
+      <div class="omr-actions">
+        <button class="btn primary" type="submit">채점</button>
+        {% if entry %}<button class="btn link" type="submit" form="clear-form">답안 지우기</button>{% endif %}
+      </div>
+    </form>
+    {% if entry %}<form method="post" action="{{ url_for('books.clear_entry', mid=mock.id) }}" id="clear-form" data-confirm="표시한 답안을 모두 지울까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>{% endif %}
+    <details class="quick">
+      <summary>점수만 기록하기</summary>
+      <form method="post" action="{{ url_for('books.submit_entry', mid=mock.id) }}" class="score-only">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="mode" value="score">
+        <label for="score" class="small">답안 없이 점수만 남기면 등급·분포에는 들어가고, 문항 통계에는 빠집니다.</label>
+        <div class="pick-row">
+          <input type="number" id="score" name="score" min="0" max="{{ mock.full_score }}" step="0.5" inputmode="decimal" required
+                 value="{{ fmt(entry.score) if entry and entry.mode == 'score' and entry.score is not none else '' }}" aria-label="점수">
+          <span class="muted">/ {{ fmt(mock.full_score) }}</span>
+          <button class="btn" type="submit">기록</button>
+        </div>
+      </form>
+    </details>
+  </section>
 
-<section class="card" id="entry" aria-labelledby="h-entry">
-  <div class="card-head">
-    <h2 id="h-entry">가채점 입력</h2>
-    <nav class="seg" aria-label="입력 방식">
-      <a href="{{ url_for('books.analysis_home', mock=mock.id, mode='answers') }}#entry" class="{{ 'on' if mode != 'score' }}">답안 입력</a>
-      <a href="{{ url_for('books.analysis_home', mock=mock.id, mode='score') }}#entry" class="{{ 'on' if mode == 'score' }}">점수만 입력</a>
-    </nav>
-  </div>
-  {% if mode == 'score' %}
-  <form method="post" action="{{ url_for('books.submit_entry', mid=mock.id) }}" class="row">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="mode" value="score">
-    <div class="field"><label for="score">내 점수 (0~{{ fmt(mock.full_score) }})</label>
-      <input type="number" id="score" name="score" min="0" max="{{ mock.full_score }}" step="0.5" inputmode="decimal" required
-             value="{{ fmt(entry.score) if entry and entry.mode == 'score' and entry.score is not none else '' }}"></div>
-    <div class="field shrink"><button class="btn primary" type="submit">저장</button></div>
-  </form>
-  <p class="small muted">점수만 입력하면 등급과 분포에는 반영되지만, 문항별 오답률은 볼 수 없어요.</p>
-  {% else %}
-  <p class="small muted">{{ mock.book_title }} {{ mock.round_no }}회 · 내가 고른 번호를 1번부터 순서대로 입력하면 바로 채점해요.</p>
-  <form method="post" action="{{ url_for('books.submit_entry', mid=mock.id) }}" data-answer-form data-n="{{ mock.n_items }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="mode" value="answers">
-    <div class="field">
-      <div class="label-row"><label for="answers">내 답안</label>
-        {% if entry %}<button class="btn link small" type="submit" form="clear-form">지우기</button>{% endif %}</div>
-      <input type="text" id="answers" name="answers" class="answer-input" inputmode="numeric" autocomplete="off"
-             placeholder="예: 14352 53411 …" value="{{ entry.answers if entry and entry.mode == 'answers' else '' }}"
-             aria-describedby="answers-help">
-      <p class="small muted" id="answers-help"><span data-count>{{ (entry.answers|length) if entry and entry.mode == 'answers' else 0 }}</span> / {{ mock.n_items }} 입력 · 1~5만 입력되고, 다섯 개씩 자동으로 띄어 써져요</p>
+  <section class="report" id="result" aria-labelledby="h-report">
+    <div class="sec-head"><h2 id="h-report">성적표</h2><span>{{ stats.computed_at }} 집계 · 5분 간격</span></div>
+    <div class="report-main">
+      <div class="report-score">
+        <span class="k">원점수</span>
+        <b>{% if my_score is not none %}{{ fmt(my_score) }}{% else %}—{% endif %}</b><span class="of">/ {{ fmt(mock.full_score) }}</span>
+      </div>
+      <div class="el grade-el" aria-label="{{ '예상 ' ~ my_grade ~ '등급' if my_grade else '예상 등급 없음' }}">
+        <span class="el-top">예상</span>
+        <span class="el-sym">{{ my_grade or '–' }}</span>
+        <span class="el-name">등급</span>
+      </div>
     </div>
-    <ol class="cells" aria-hidden="true">
-      {% set ans = entry.answers if entry and entry.mode == 'answers' else '' %}
-      {% for i in range(mock.n_items) %}
-        <li class="{{ 'wrong' if (i + 1) in my_wrong }}{{ ' filled' if i < ans|length }}"><span>{{ i + 1 }}</span><b data-cell>{{ ans[i] if i < ans|length else '·' }}</b></li>
-      {% endfor %}
-    </ol>
-    <button class="btn primary mt" type="submit">채점하기</button>
-  </form>
-  {% if entry %}<form method="post" action="{{ url_for('books.clear_entry', mid=mock.id) }}" id="clear-form" data-confirm="입력한 답안을 지울까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>{% endif %}
-  {% endif %}
-</section>
-
-<div class="kpi-row" id="result">
-  <div class="card stat">
-    <div class="label">내 점수</div>
-    <div class="num">{% if my_score is not none %}{{ fmt(my_score) }}{% else %}—{% endif %}<small> / {{ fmt(mock.full_score) }}</small></div>
-    <div class="small muted">{% if entry and entry.mode == 'answers' %}{{ mock.n_items }}문항 중 {{ entry.answers|length }}문항 입력{% if my_wrong %} · {{ my_wrong|length }}문항 틀림{% endif %}{% elif entry %}점수만 입력{% else %}아직 입력하지 않았어요{% endif %}</div>
-  </div>
-  <div class="card stat">
-    <div class="label">예상 등급</div>
-    <div class="num accent">{% if my_grade %}{{ my_grade }}<small>등급</small>{% else %}—{% endif %}</div>
-    <div class="small muted">{% if my_score is none %}{{ mock.n_items }}문항을 모두 입력하면 나와요{% elif not stats.cuts %}참여 {{ min_for_cuts }}명 이상부터 나와요{% else %}함께 입력한 학생 기준 추정{% endif %}</div>
-  </div>
-  <div class="card stat">
-    <div class="label">함께 입력한 학생</div>
-    <div class="num">{{ stats.n }}<small>명</small></div>
-    <div class="small muted">5분마다 갱신</div>
-  </div>
+    <dl class="report-lines">
+      <div><dt>채점 상태</dt><dd>{% if my_score is not none %}{% if my_wrong %}{{ my_wrong|length }}문항 오답{% elif entry and entry.mode == 'score' %}점수만 기록{% else %}모두 정답{% endif %}{% elif entry %}{{ filled }}문항 표시, 채점 전{% else %}아직 답안 없음{% endif %}</dd></div>
+      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{{ my_wrong|sort|join(' · ') }}</dd></div>{% endif %}
+      <div><dt>등급 산출</dt><dd>{% if my_score is none %}모든 문항을 채점하면 표시{% elif not stats.cuts %}참여 {{ min_for_cuts }}명부터 표시{% else %}반 응시자 기준 추정{% endif %}</dd></div>
+      <div><dt>함께 응시</dt><dd>{{ stats.n }}명</dd></div>
+    </dl>
+  </section>
 </div>
 
 {% include "_analysis_stats.html" %}

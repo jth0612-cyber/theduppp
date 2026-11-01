@@ -86,22 +86,22 @@ def register_book():
         fails = query("SELECT COUNT(*) AS n FROM audit_log WHERE user_id = ? AND action = 'book_code_failed' "
                       "AND created_at >= ?", (g.user["id"], since), one=True)["n"]
         if fails >= MAX_CODE_FAILS_PER_HOUR:
-            flash("코드를 너무 많이 틀렸어요. 1시간 뒤에 다시 시도하세요.", "error")
+            flash("코드 입력이 여러 번 맞지 않아 잠시 막아 두었어요. 1시간 뒤에 다시 시도해 주세요.", "error")
             return render_template("student/book_register.html", step=2), 429
         code = analysis.normalize_code(request.form.get("code"))
         row = query("SELECT c.*, b.title, b.expires_on FROM book_codes c JOIN books b ON b.id = c.book_id "
                     "WHERE c.code = ?", (code,), one=True) if code else None
         error = None
         if row is None:
-            error = "코드를 찾을 수 없어요. 12자리를 다시 확인하세요. (숫자 0과 영문 O, 숫자 1과 영문 I는 쓰지 않아요)"
+            error = "일치하는 코드가 없어요. 12자리를 다시 확인해 주세요. 코드에는 숫자 0·1과 영문 O·I·L이 들어가지 않아요."
         elif row["expires_on"] < _today():
-            error = "이용 기간이 끝난 교재예요."
+            error = "이용 기간이 지난 교재예요."
         elif query("SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",
                    (g.user["id"], row["book_id"]), one=True):
-            flash("이미 등록한 교재예요.", "ok")
+            flash("이미 서가에 있는 교재예요.", "ok")
             return redirect(url_for("books.my_books"))
         elif row["max_uses"] is not None and row["uses"] >= row["max_uses"]:
-            error = "이미 사용된 코드예요. 코드가 잘못되었다면 선생님께 알려 주세요."
+            error = "이미 다른 계정에서 쓴 코드예요. 착오라면 선생님께 알려 주세요."
         if error:
             audit("book_code_failed", f"code:{(code or '')[:4]}")
             flash(error, "error")
@@ -135,12 +135,15 @@ def analysis_home():
     stats = _stats(mock)
     my_score = entry["score"] if entry else None
     my_wrong = set(analysis.wrong_items(entry["answers"], key)) if entry and entry["mode"] == "answers" \
-        and len(entry["answers"]) == len(key) else set()
+        and analysis.is_complete(entry["answers"], len(key)) else set()
     mode = request.args.get("mode") or (entry["mode"] if entry else "answers")
+    marks = entry["answers"] if entry and entry["mode"] == "answers" else ""
+    marks = (marks + "0" * mock["n_items"])[:mock["n_items"]]
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats,
                            my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mode=mode, mock_param=mid,
-                           my_bucket=analysis.bucket_label(my_score, mock["full_score"]),
+                           my_bucket=analysis.bucket_label(my_score, mock["full_score"]), marks=marks,
+                           filled=analysis.filled_count(marks),
                            min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt)
 
 
@@ -154,7 +157,10 @@ def submit_entry(mid):
     mode = request.form.get("mode")
     now = datetime.now().isoformat(sep=" ", timespec="seconds")
     if mode == "answers":
-        answers = analysis.parse_answers(request.form.get("answers"), mock["n_items"])
+        if request.form.get("quick", "").strip():
+            answers = analysis.parse_answers(request.form.get("quick"), mock["n_items"])
+        else:
+            answers = analysis.answers_from_marks(request.form, mock["n_items"])
         score = analysis.score_answers(answers, key, points)
     elif mode == "score":
         answers = ""
@@ -172,9 +178,9 @@ def submit_entry(mid):
                score = excluded.score, updated_at = excluded.updated_at""",
             (mid, g.user["id"], mode, answers, score, now))
     if score is None:
-        flash(f"{len(answers)}/{mock['n_items']}문항을 저장했어요. 모두 입력하면 채점돼요.", "ok")
+        flash(f"{analysis.filled_count(answers)}문항을 적어 두었어요. {mock['n_items']}문항을 모두 고르면 채점합니다.", "ok")
     else:
-        flash(f"채점했어요: {analysis._fmt(score)}점 / {analysis._fmt(mock['full_score'])}점", "ok")
+        flash(f"채점을 마쳤어요. {analysis._fmt(score)}점 / {analysis._fmt(mock['full_score'])}점", "ok")
     return redirect(url_for("books.analysis_home", mock=mid) + "#result")
 
 

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ book.title }} · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·분석실</a></p>
+<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 무료 배포{% endif %}</p></div>
+  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
 </div>
 
 <div class="grid grid-2">
@@ -79,8 +79,8 @@
       <div class="field"><label for="esubject">과목·표지 글자</label><input type="text" id="esubject" name="subject" maxlength="40" value="{{ book.subject }}"></div>
       <div class="field"><label for="eexp">이용 기간 (마지막 날)</label><input type="date" id="eexp" name="expires_on" value="{{ book.expires_on }}"></div>
     </div>
-    <div class="field"><label for="enotice">분석실 안내 문구</label><input type="text" id="enotice" name="notice" maxlength="300" value="{{ book.notice }}"></div>
-    <label class="consent"><input type="checkbox" name="is_free" value="1" {{ 'checked' if book.is_free }}> 무료 배포 교재</label>
+    <div class="field"><label for="enotice">학생 화면 알림 문구</label><input type="text" id="enotice" name="notice" maxlength="300" value="{{ book.notice }}"></div>
+    <label class="consent"><input type="checkbox" name="is_free" value="1" {{ 'checked' if book.is_free }}> 배포본</label>
     <button class="btn mt" type="submit">저장</button>
   </form>
   <form method="post" action="{{ url_for('books.delete_book', bid=book.id) }}" class="mt">

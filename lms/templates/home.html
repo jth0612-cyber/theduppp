@@ -2,24 +2,19 @@
 {% block title %}정태혁 통합과학 lab{% endblock %}
 {% block main_class %}home-wrap{% endblock %}
 {% block content %}
-<section class="home-hero">
+<header class="masthead">
+  <p class="mast-kicker">시대인재N 재수종합 · 통합과학</p>
   <h1>정태혁 통합과학 lab</h1>
-  <p class="muted">시대인재N 재수종합반 통합과학 재원생을 위한 공간입니다.</p>
-  <div class="row"><a class="btn primary" href="{{ url_for('auth.login') }}">로그인</a><a class="btn" href="{{ url_for('auth.signup') }}">학생 회원가입</a></div>
-</section>
-<nav class="home-cards" aria-label="바로가기">
-  <a class="card home-card" href="{{ url_for('student.notices') }}">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10H4zM16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg>
-    <b>공지사항</b><span>전체보기 →</span>
-  </a>
-  <a class="card home-card" href="{{ url_for('student.questions') }}">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v12h-6l-4 4v-4H5z"/><path d="M10 8.5a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4M12 13.5h.01"/></svg>
-    <b>재원생 전용 Q&amp;A</b><span>전체보기 →</span>
-  </a>
-  <a class="card home-card" href="{{ url_for('books.analysis_home') }}">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-    <b>분석실</b><span>가채점 · 등급컷 →</span>
-  </a>
-</nav>
-<p class="small muted center">공지사항·Q&amp;A·분석실은 로그인한 재원생만 볼 수 있어요.</p>
+  <p class="ed-lede">수업 자료와 공지, 질문, 모의고사 분석을 한곳에 모았습니다. 재원생 계정으로 들어와 주세요.</p>
+  <p class="mast-actions"><a class="btn primary" href="{{ url_for('auth.login') }}">로그인</a> <a class="text-link" href="{{ url_for('auth.signup') }}">반 코드로 가입 신청</a></p>
+</header>
+<ol class="index-list" aria-label="둘러보기">
+  <li><a href="{{ url_for('student.notices') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">1</span><span class="el-sym">No</span></span>
+    <span class="idx-body"><b>공지</b><span>수업 일정, 정오표, 자료 안내</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
+  <li><a href="{{ url_for('student.questions') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">2</span><span class="el-sym">Qa</span></span>
+    <span class="idx-body"><b>질문 게시판</b><span>재원생끼리 닉네임으로 묻고, 선생님이 답합니다</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
+  <li><a href="{{ url_for('books.analysis_home') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">3</span><span class="el-sym">Mo</span></span>
+    <span class="idx-body"><b>모의고사 분석</b><span>교재 코드로 열리는 가채점과 반 통계</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
+</ol>
+<p class="fine">세 곳 모두 로그인한 재원생에게만 열립니다.</p>
 {% endblock %}
