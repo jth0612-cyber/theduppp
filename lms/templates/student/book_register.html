@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}교재 등록 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="register">
+  <ol class="steps" aria-label="진행 단계">
+    <li class="done">1 · 로그인</li>
+    <li class="{{ 'done' if step >= 2 }}{{ ' now' if step == 2 }}">2 · 코드 입력</li>
+    <li class="{{ 'done now' if step == 3 }}">3 · 완료</li>
+  </ol>
+
+  {% if step == 3 %}
+  <h1>등록 완료</h1>
+  <p class="muted">이제 이 교재의 분석실을 쓸 수 있어요.</p>
+  <div class="card book-card">
+    <div class="cover"><span>{{ '배포' if book.is_free else '교재' }}</span><b>{{ book.subject or book.title[:10] }}</b></div>
+    <dl>
+      <div><dt>교재</dt><dd><b>{{ book.title }}</b>{% if book.is_free %} <span class="badge open">무료 배포</span>{% endif %}</dd></div>
+      <div><dt>이용 기간</dt><dd>{{ book.expires_on[:4] }}년 {{ book.expires_on[5:7]|int }}월 {{ book.expires_on[8:10]|int }}일까지</dd></div>
+      <div><dt>분석실</dt><dd>가채점 · 예상 등급컷 · 문항별 오답률</dd></div>
+      <div><dt>동시 접속</dt><dd>1대 (다른 기기에서 로그인하면 이전 기기는 로그아웃돼요)</dd></div>
+    </dl>
+  </div>
+  <a class="btn primary wide" href="{{ url_for('books.analysis_home', mock=first_mock.id) if first_mock else url_for('books.analysis_home') }}">분석실 가기</a>
+  <p class="center mt"><a href="{{ url_for('books.register_book') }}">다른 교재 등록하기</a></p>
+  {% else %}
+  <h1>교재 코드 등록</h1>
+  <p class="muted">교재 앞부속(표지를 넘기면 나오는 페이지)에 인쇄된 12자리 코드를 입력하세요. 선생님이 나눠 준 배포 코드도 여기에 입력하면 돼요.</p>
+  <div class="card">
+    <div class="code-sample" aria-hidden="true"><span>교재 앞부속</span><b>XXXX-XXXX-XXXX</b></div>
+    <form method="post" class="mt">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="code">인증 코드 (12자리)</label>
+        <input type="text" id="code" name="code" class="code-input" required maxlength="20" autocomplete="off"
+               autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" aria-describedby="code-help" data-code-input>
+        <p class="small muted" id="code-help">대문자·숫자 12자리예요. 하이픈(-)은 넣지 않아도 돼요. 코드가 빠졌거나 흐려서 읽을 수 없으면 질답 게시판의 행정문의로 알려 주세요.</p>
+      </div>
+      <button class="btn primary" type="submit">등록</button>
+    </form>
+  </div>
+  <p class="mt"><a href="{{ url_for('books.my_books') }}">← 내 교재</a></p>
+  {% endif %}
+</div>
+<script src="{{ url_for('static', filename='analysis.js') }}" defer></script>
+{% endblock %}

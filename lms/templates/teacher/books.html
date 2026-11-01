@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}교재·분석실 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>교재·분석실</h1><p class="muted small">교재를 만들고 회차별 정답·배점과 인증 코드를 관리합니다. 학생은 코드를 등록해야 그 교재의 분석실을 볼 수 있어요.</p></div>
+</div>
+
+<div class="card">
+  {% if books %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>교재</th><th>이용 기간</th><th class="num">회차</th><th class="num">등록 학생</th></tr></thead>
+    <tbody>
+    {% for b in books %}
+      <tr class="{{ 'inactive' if b.expires_on < today }}">
+        <td><a href="{{ url_for('books.teacher_book', bid=b.id) }}"><b>{{ b.title }}</b></a>{% if b.is_free %} <span class="badge open">무료 배포</span>{% endif %}{% if b.subject %} <span class="small muted">{{ b.subject }}</span>{% endif %}</td>
+        <td>{{ b.expires_on }}까지</td>
+        <td class="num">{{ b.mocks }}</td>
+        <td class="num">{{ b.users }}명</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="muted">아직 교재가 없습니다. 아래에서 첫 교재를 만드세요.</p>
+  {% endif %}
+</div>
+
+<div class="card" id="new-book">
+  <h2>교재 만들기</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div class="field wide"><label for="title">교재 이름</label><input type="text" id="title" name="title" required maxlength="100" placeholder="예: 2027 통합과학 파이널 모의고사"></div>
+      <div class="field"><label for="subject">과목·표지 글자</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
+      <div class="field"><label for="expires_on">이용 기간 (마지막 날)</label><input type="date" id="expires_on" name="expires_on" required></div>
+    </div>
+    <div class="field"><label for="notice">분석실 안내 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 11월 배포 모의고사로 분석실을 먼저 엽니다. 배포 코드를 등록하면 12월 31일까지 이용할 수 있어요."></div>
+    <label class="consent"><input type="checkbox" name="is_free" value="1"> 무료 배포 교재 (학생 화면에 '무료 배포' 표시)</label>
+    <button class="btn primary mt" type="submit">만들기</button>
+  </form>
+</div>
+{% endblock %}

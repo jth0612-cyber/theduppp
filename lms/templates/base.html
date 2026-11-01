@@ -25,6 +25,7 @@
         <a href="{{ url_for('teacher.classes') }}" class="{{ 'active' if ep.startswith('teacher.class') or ep.startswith('teacher.exam') }}">반·시험</a>
         <a href="{{ url_for('teacher.students') }}" class="{{ 'active' if ep.startswith('teacher.student') }}">학생 검색</a>
         <a href="{{ url_for('teacher.questions') }}" class="{{ 'active' if ep.startswith('teacher.question') }}">질문답변</a>
+        <a href="{{ url_for('books.teacher_books') }}" class="{{ 'active' if ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock') }}">교재·분석실</a>
         <a href="{{ url_for('teacher.news') }}" class="{{ 'active' if ep.startswith('teacher.news') }}">교육 뉴스</a>
         <a href="{{ url_for('teacher.signups') }}" class="{{ 'active' if ep == 'teacher.signups' }}">가입 승인{% if pending_signups %} <span class="count">{{ pending_signups }}</span>{% endif %}</a>
         <a href="{{ url_for('teacher.staff') }}" class="{{ 'active' if ep.startswith('teacher.staff') }}">조교 계정</a>
@@ -38,6 +39,8 @@
         <a href="{{ url_for('student.videos') }}" class="{{ 'active' if ep == 'student.videos' }}">강의 영상</a>
         <a href="{{ url_for('student.scores') }}" class="{{ 'active' if ep == 'student.scores' }}">내 성적</a>
         <a href="{{ url_for('student.questions') }}" class="{{ 'active' if ep.startswith('student.question') }}">질답 게시판</a>
+        <a href="{{ url_for('books.analysis_home') }}" class="{{ 'active' if ep == 'books.analysis_home' }}">분석실</a>
+        <a href="{{ url_for('books.my_books') }}" class="{{ 'active' if ep in ('books.my_books', 'books.register_book') }}">내 교재</a>
         <a href="{{ url_for('games.hub') }}" class="{{ 'active' if ep.startswith('games.') }}">미니게임</a>
         <a href="{{ url_for('student.points') }}" class="{{ 'active' if ep == 'student.points' }}">포인트</a>
       {% endif %}
@@ -45,7 +48,7 @@
     <div class="side-foot">
       <img class="affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">
       <div class="userbox">
-        <a href="{{ url_for('auth.change_password') }}" title="비밀번호 변경">{{ g.user.nickname or g.user.display_name or g.user.username }}{% if g.user.role == 'assistant' %} (조교){% endif %}</a>
+        <a href="{{ url_for('auth.change_password') }}" title="내 계정">{{ g.user.nickname or g.user.display_name or g.user.username }}{% if g.user.role == 'assistant' %} (조교){% endif %}</a>
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn small">로그아웃</button>

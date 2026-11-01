@@ -69,7 +69,7 @@ def login():
             flash(error, "error")
             return render_template("login.html", username=username)
         login_user(user)
-        g.user = user
+        g.user = query("SELECT * FROM users WHERE id = ?", (user["id"],), one=True)
         audit("login", f"user:{username}")
         if user["must_change_pw"]:
             return redirect(url_for("auth.change_password"))
@@ -77,6 +77,8 @@ def login():
         if nxt and not nxt.startswith(_NEXT_PREFIX[user["role"]]):
             nxt = None
         return redirect(nxt or _home_for(user))
+    if session.pop("kicked", None):
+        flash("다른 기기에서 같은 계정으로 로그인해서 이 기기의 로그인이 끝났어요. 학생 계정은 한 기기에서만 쓸 수 있어요.", "error")
     return render_template("login.html")
 
 

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ mock.book_title }} {{ mock.round_no }}회 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('books.teacher_book', bid=mock.book_id) }}">← {{ mock.book_title }}</a></p>
+<div class="page-head">
+  <div><h1>{{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
+    <p class="muted small">{{ mock.n_items }}문항 · {{ fmt(mock.full_score) }}점 · 채점 {{ stats.n }}명 · {{ stats.computed_at }} 기준 (5분마다 갱신)</p></div>
+</div>
+<p class="small muted">정답: <span class="answer-key">{% for k in key %}{{ k }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</span></p>
+{% include "_analysis_stats.html" %}
+{% endblock %}

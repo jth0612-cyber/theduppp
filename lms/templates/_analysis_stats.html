@@ -1,0 +1,86 @@
+{# 회차 통계: 예상 등급컷, 점수 분포, 문항별 오답률, 선지별 선택 비율. 차트는 SVG 속성만 써서 CSP(style-src 'self')를 지킨다. #}
+<div class="an-row">
+  <section class="card an-cuts" aria-labelledby="h-cuts">
+    <div class="card-head"><h2 id="h-cuts">예상 등급컷</h2><span class="meta">제출 전에도 볼 수 있어요</span></div>
+    {% if stats.cuts %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th><th class="num">백분위</th><th class="num">추정 범위</th></tr></thead>
+      <tbody>
+      {% for r in stats.cuts %}
+        <tr class="{{ 'mine' if my_grade == r.grade }}">
+          <td>{{ r.grade }}</td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
+          <td class="num">{{ r.pct }}</td><td class="num muted">{% if r.lo == r.hi %}{{ fmt(r.lo) }}{% else %}{{ fmt(r.lo) }}–{{ fmt(r.hi) }}{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    <p class="small muted mt">함께 입력한 {{ stats.n }}명의 점수로 계산한 추정치예요. 수능 9등급 누적 비율(4·11·23·40·60·77·89·96%) 기준, 표준점수는 평균 50·표준편차 10으로 환산했어요.</p>
+    {% else %}
+    <p class="muted">함께 입력한 학생이 {{ min_for_cuts }}명 이상이 되면 등급컷이 나와요. (지금 {{ stats.n }}명)</p>
+    {% endif %}
+  </section>
+
+  <section class="card an-dist" aria-labelledby="h-dist">
+    <div class="card-head"><h2 id="h-dist">점수 분포</h2><span class="meta">{{ stats.n }}명</span></div>
+    {% if stats.dist %}
+    {% set maxp = (stats.dist|map(attribute='pct')|max) or 1 %}
+    <svg class="chart-svg" viewBox="0 0 600 240" role="img" aria-label="점수 구간별 학생 비율">
+      <line class="base" x1="0" x2="600" y1="200" y2="200"></line>
+      {% for d in stats.dist %}
+        {% set h = (d.pct / maxp * 160)|round(1) %}
+        {% set x = loop.index0 * 60 + 8 %}
+        <rect class="bar{{ ' bar-me' if my_score is not none and d.label == my_bucket }}" x="{{ x }}" y="{{ 200 - h }}" width="44" height="{{ h }}"><title>{{ d.label }}점: {{ d.pct }}% ({{ d.count }}명)</title></rect>
+        <text class="val" x="{{ x + 22 }}" y="{{ 194 - h }}" text-anchor="middle">{{ d.pct }}%</text>
+        <text class="tick" x="{{ x + 22 }}" y="222" text-anchor="middle">{{ d.label }}</text>
+      {% endfor %}
+    </svg>
+    {% else %}
+    <p class="muted">아직 채점된 학생이 없어요.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card" id="items" aria-labelledby="h-items">
+  <div class="card-head"><h2 id="h-items">문항별 오답률</h2><span class="meta">막대를 누르면 선지별 선택 비율을 볼 수 있어요 · 답안 입력 {{ stats.n_answers }}명 기준</span></div>
+  {% if stats['items'] %}
+  {% set n = stats['items']|length %}
+  {% set slot = 600 / n %}
+  {% set maxw = (stats['items']|map(attribute='wrong_pct')|max) or 1 %}
+  <svg class="chart-svg items" viewBox="0 0 600 250" role="img" aria-label="문항별 오답률(%)">
+    <line class="base" x1="0" x2="600" y1="210" y2="210"></line>
+    {% for it in stats['items'] %}
+      {% set h = (it.wrong_pct / maxw * 170)|round(1) %}
+      {% set x = (loop.index0 * slot + slot * 0.1)|round(1) %}
+      {% set w = (slot * 0.8)|round(1) %}
+      <a href="{{ request.path }}?{% if mock_param %}mock={{ mock_param }}&amp;{% endif %}q={{ it.no }}#items" aria-label="{{ it.no }}번 오답률 {{ it.wrong_pct }}%">
+        <rect class="bar{{ ' bar-top' if it.top }}{{ ' bar-sel' if selected and selected.no == it.no }}" x="{{ x }}" y="{{ 210 - h }}" width="{{ w }}" height="{{ [h, 1]|max }}"></rect>
+        <rect class="hit" x="{{ (loop.index0 * slot)|round(1) }}" y="0" width="{{ slot|round(1) }}" height="240"></rect>
+      </a>
+      <text class="val" x="{{ x + w / 2 }}" y="{{ 204 - h }}" text-anchor="middle">{{ it.wrong_pct }}</text>
+      <text class="tick{{ ' wrong' if it.no in my_wrong }}" x="{{ x + w / 2 }}" y="232" text-anchor="middle">{{ it.no }}</text>
+    {% endfor %}
+  </svg>
+  <ul class="legend">
+    <li><i class="lg-top"></i>오답률 상위 3문항</li>
+    <li><i class="lg-sel"></i>선택한 문항</li>
+    {% if my_wrong %}<li><b class="wrong">굵은 번호</b> 내가 틀린 문항</li>{% endif %}
+  </ul>
+
+  {% if selected %}
+  <div class="choices">
+    <h3>{{ selected.no }}번 · 선지별 선택 비율 <span class="muted small">오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}</span></h3>
+    <svg class="chart-svg choice" viewBox="0 0 600 {{ 5 * 34 }}" role="img" aria-label="{{ selected.no }}번 선지별 선택 비율">
+      {% for p in selected.choices %}
+        {% set y = loop.index0 * 34 %}
+        <text class="cno" x="0" y="{{ y + 20 }}">{{ '①②③④⑤'[loop.index0] }}</text>
+        <rect class="track" x="40" y="{{ y + 8 }}" width="500" height="16" rx="3"></rect>
+        <rect class="fill{{ ' fill-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 8 }}" width="{{ (p * 5)|round(1) }}" height="16" rx="3"></rect>
+        <text class="pct" x="600" y="{{ y + 21 }}" text-anchor="end">{{ p }}%</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="muted">답안을 모두 입력한 학생이 생기면 문항별 오답률이 나와요.</p>
+  {% endif %}
+</section>

@@ -215,7 +215,72 @@ CREATE TABLE IF NOT EXISTS audit_log (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+-- ---------- 교재 분석실 ----------
+-- 교재 (이용 기간이 끝나면 분석실을 볼 수 없다)
+CREATE TABLE IF NOT EXISTS books (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL,
+    subject     TEXT NOT NULL DEFAULT '',
+    expires_on  TEXT NOT NULL,
+    is_free     INTEGER NOT NULL DEFAULT 0,
+    notice      TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 교재 인증 코드. max_uses 가 NULL 이면 여러 명이 쓰는 배포 코드
+CREATE TABLE IF NOT EXISTS book_codes (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    code        TEXT NOT NULL UNIQUE,
+    max_uses    INTEGER,
+    uses        INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_book_codes_book ON book_codes(book_id);
+
+CREATE TABLE IF NOT EXISTS user_books (
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id       INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    code_id       INTEGER REFERENCES book_codes(id) ON DELETE SET NULL,
+    registered_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (user_id, book_id)
+);
+
+-- 교재의 회차(모의고사). answer_key / points 는 JSON 배열, 서버에만 둔다
+CREATE TABLE IF NOT EXISTS mocks (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    round_no    INTEGER NOT NULL,
+    title       TEXT NOT NULL DEFAULT '',
+    n_items     INTEGER NOT NULL,
+    full_score  REAL NOT NULL,
+    answer_key  TEXT NOT NULL,
+    points      TEXT NOT NULL,
+    open        INTEGER NOT NULL DEFAULT 1,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (book_id, round_no)
+);
+
+-- 가채점 제출. mode: answers(답안 입력) / score(점수만 입력). 답안이 다 차야 score 가 생긴다
+CREATE TABLE IF NOT EXISTS mock_entries (
+    id          INTEGER PRIMARY KEY,
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mode        TEXT NOT NULL CHECK (mode IN ('answers', 'score')),
+    answers     TEXT NOT NULL DEFAULT '',
+    score       REAL,
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (mock_id, user_id)
+);
+
+-- 공지 좋아요 (한 사람 한 번)
+CREATE TABLE IF NOT EXISTS notice_likes (
+    notice_id   INTEGER NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (notice_id, user_id)
+);
 """
+
 
 
 def get_db():
@@ -248,6 +313,13 @@ def init_db(path):
     _add_column(conn, "notices", "textbook", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "classes", "join_code", "TEXT")
     _add_column(conn, "classes", "join_open", "INTEGER NOT NULL DEFAULT 1")
+    # Google 계정 연결, 한 기기 로그인(학생), 공지 고정·조회수
+    _add_column(conn, "users", "google_sub", "TEXT")
+    _add_column(conn, "users", "google_email", "TEXT")
+    _add_column(conn, "users", "session_version", "INTEGER NOT NULL DEFAULT 0")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub)")
+    _add_column(conn, "notices", "pinned", "INTEGER NOT NULL DEFAULT 0")
+    _add_column(conn, "notices", "views", "INTEGER NOT NULL DEFAULT 0")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code)")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():

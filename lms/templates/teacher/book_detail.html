@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·분석실</a></p>
+<div class="page-head">
+  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 무료 배포{% endif %}</p></div>
+</div>
+
+<div class="grid grid-2">
+  <section class="card" aria-labelledby="h-mocks">
+    <h2 id="h-mocks">회차</h2>
+    {% if mocks %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>회차</th><th class="num">문항·만점</th><th class="num">채점</th><th></th></tr></thead>
+      <tbody>
+      {% for m in mocks %}
+        <tr class="{{ 'inactive' if not m.open }}">
+          <td><a href="{{ url_for('books.teacher_mock', mid=m.id) }}"><b>{{ m.round_no }}회</b>{% if m.title %} {{ m.title }}{% endif %}</a>{% if not m.open %} <span class="badge gray">닫힘</span>{% endif %}</td>
+          <td class="num">{{ m.n_items }}문항 · {{ fmt(m.full_score) }}점</td>
+          <td class="num">{{ m.n }}명</td>
+          <td class="num">
+            <form method="post" action="{{ url_for('books.toggle_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small">{{ '닫기' if m.open else '열기' }}</button></form>
+            <form method="post" action="{{ url_for('books.delete_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="{{ m.round_no }}회와 학생들의 가채점 기록을 모두 지울까요?">삭제</button></form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<p class="muted">아직 회차가 없습니다.</p>{% endif %}
+  </section>
+
+  <section class="card" aria-labelledby="h-codes">
+    <h2 id="h-codes">인증 코드</h2>
+    <p class="small">교재마다 한 번만 쓰는 개별 코드: <b>{{ single.total or 0 }}개</b> 발급, <b>{{ single.used or 0 }}개</b> 사용됨</p>
+    <form method="post" action="{{ url_for('books.make_codes', bid=book.id) }}" class="row">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="single">
+      <div class="field"><label for="count">개별 코드 개수</label><input type="number" id="count" name="count" min="1" max="2000" value="50"></div>
+      <div class="field shrink"><button class="btn" type="submit">만들고 CSV 받기</button></div>
+    </form>
+    <p class="small muted">CSV로 받은 코드를 교재 앞부속에 인쇄하세요. 다시 받을 수 없으니 잘 보관하세요.</p>
+    <h3 class="mt">배포 코드 (여러 명이 같이 쓰는 코드)</h3>
+    {% for c in shared %}
+      <div class="row code-row"><span class="join-code">{{ fmt_code(c.code) }}</span><span class="small muted">{{ c.uses }}명 사용</span>
+        <form method="post" action="{{ url_for('books.delete_code', cid=c.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="이 배포 코드를 지울까요? 이미 등록한 학생은 계속 쓸 수 있어요.">삭제</button></form></div>
+    {% else %}<p class="small muted">없음</p>{% endfor %}
+    <form method="post" action="{{ url_for('books.make_codes', bid=book.id) }}" class="mt">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="shared">
+      <button class="btn" type="submit">배포 코드 만들기</button>
+    </form>
+  </section>
+</div>
+
+<section class="card" id="add-mock" aria-labelledby="h-add">
+  <h2 id="h-add">회차 추가</h2>
+  <form method="post" action="{{ url_for('books.add_mock', bid=book.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div class="field shrink"><label for="round_no">회차</label><input type="number" id="round_no" name="round_no" min="1" value="{{ next_round }}" required></div>
+      <div class="field"><label for="mtitle">부제 (선택)</label><input type="text" id="mtitle" name="title" maxlength="60" placeholder="예: 파이널 1회"></div>
+      <div class="field shrink"><label for="n_items">문항 수</label><input type="number" id="n_items" name="n_items" min="1" max="60" value="20" required></div>
+      <div class="field shrink"><label for="full_score">만점</label><input type="number" id="full_score" name="full_score" min="1" max="200" step="0.5" value="50" required></div>
+    </div>
+    <div class="field"><label for="answer_key">정답 (1~5, 문항 순서대로)</label>
+      <input type="text" id="answer_key" name="answer_key" class="answer-input" inputmode="numeric" required autocomplete="off" placeholder="예: 14352 53411 24315 52143" aria-describedby="key-help">
+      <p class="small muted" id="key-help">정답은 서버에만 저장되고 학생 화면에는 나가지 않아요.</p></div>
+    <div class="field"><label for="points">배점 (선택)</label>
+      <input type="text" id="points" name="points" autocomplete="off" placeholder="비우면 만점을 문항 수로 똑같이 나눔. 예: 2,2,3,2,3,…" aria-describedby="pt-help">
+      <p class="small muted" id="pt-help">쉼표로 문항 수만큼 입력하고, 합이 만점과 같아야 합니다.</p></div>
+    <button class="btn primary" type="submit">회차 추가</button>
+  </form>
+</section>
+
+<details class="card">
+  <summary>교재 정보 수정 · 삭제</summary>
+  <form method="post" action="{{ url_for('books.edit_book', bid=book.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div class="field wide"><label for="etitle">교재 이름</label><input type="text" id="etitle" name="title" maxlength="100" value="{{ book.title }}"></div>
+      <div class="field"><label for="esubject">과목·표지 글자</label><input type="text" id="esubject" name="subject" maxlength="40" value="{{ book.subject }}"></div>
+      <div class="field"><label for="eexp">이용 기간 (마지막 날)</label><input type="date" id="eexp" name="expires_on" value="{{ book.expires_on }}"></div>
+    </div>
+    <div class="field"><label for="enotice">분석실 안내 문구</label><input type="text" id="enotice" name="notice" maxlength="300" value="{{ book.notice }}"></div>
+    <label class="consent"><input type="checkbox" name="is_free" value="1" {{ 'checked' if book.is_free }}> 무료 배포 교재</label>
+    <button class="btn mt" type="submit">저장</button>
+  </form>
+  <form method="post" action="{{ url_for('books.delete_book', bid=book.id) }}" class="mt">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label for="confirm_title">삭제하려면 교재 이름을 그대로 입력하세요</label><input type="text" id="confirm_title" name="confirm_title" autocomplete="off"></div>
+    <button class="btn danger" type="submit">교재 삭제 (회차·코드·가채점 기록 모두)</button>
+  </form>
+</details>
+{% endblock %}

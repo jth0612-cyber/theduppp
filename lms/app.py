@@ -71,6 +71,11 @@ def create_app(test_config=None):
     app.register_blueprint(teacher_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(games_bp)
+    from google_auth import bp as google_bp, google_enabled
+    from views.books import bp as books_bp
+    app.register_blueprint(google_bp)
+    app.register_blueprint(books_bp)
+    app.jinja_env.globals["google_enabled"] = google_enabled
 
     from content import file_kind, host_of, youtube_id
     app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id)
