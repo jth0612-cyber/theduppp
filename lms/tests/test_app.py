@@ -297,13 +297,10 @@ class FeatureTest(AppTest):
         self.assertNotIn("지난영상", page)
         self.assertIn("i.ytimg.com/vi/abcdefghijk", page)
 
-    def test_news_requires_https(self):
+    def test_news_removed(self):
         _, s1, _ = self._students()
-        self.c.post("/t/news", data={"title": "나쁜링크", "url": "javascript:alert(1)"})
-        self.c.post("/t/news", data={"title": "입시 기사", "url": "https://news.example.com/a", "source": "교육신문"})
-        home = s1.get("/s/").data.decode()
-        self.assertIn("입시 기사", home)
-        self.assertNotIn("나쁜링크", home)
+        self.assertEqual(self.c.get("/t/news").status_code, 404)
+        self.assertNotIn("교육 뉴스", s1.get("/s/").data.decode())
 
     def test_visit_recorded_once_per_day_and_no_points(self):
         _, s1, _ = self._students()
@@ -418,7 +415,7 @@ class FeatureTest(AppTest):
         self.assertIn("김조교", student_view)
         # 그 밖의 강사 화면은 모두 차단
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
-                    "/t/audit", "/t/staff", "/t/news"]:
+                    "/t/audit", "/t/staff", "/t/timetable"]:
             self.assertEqual(ta.get(url).status_code, 403, url)
         self.assertEqual(ta.post(f"/t/classes/{cid}/accounts").status_code, 403)
         self.assertEqual(ta.post("/t/staff", data={"display_name": "x", "username": "ta_x"}).status_code, 403)

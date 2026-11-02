@@ -40,7 +40,7 @@
       <h3>{{ c.label }}</h3>
       <div class="tt-list">
     {% for s in c.slots %}
-      <div class="tt-slot">
+      <div class="tt-slot tone-{{ s.tone }}">
         <span class="tt-time">{{ s.starts }}–{{ s.ends }}</span>
         <b>{{ s.title }}</b>
         {% if s.room %}<span class="tt-room">{{ s.room }}</span>{% endif %}

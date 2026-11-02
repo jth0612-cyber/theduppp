@@ -1,4 +1,4 @@
-"""공부 도구: 공부 결 진단, 오답 노트, 개념 카드, 시간표·D-day, 과제 제출함, 성적 리포트.
+"""공부 도구: 오답 노트, 개념 카드, 시간표·D-day, 과제 제출함, 성적 리포트.
 학생 화면(/s/...)과 선생님 화면(/t/...)을 함께 둔다. 학생은 본인 기록과 본인 반 자료만 본다."""
 import json
 from datetime import date, datetime
@@ -6,7 +6,6 @@ from datetime import date, datetime
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
 import analysis
-import study_guide
 from db import execute, get_setting, query, set_setting
 from security import (IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required,
                       teacher_required)
@@ -16,6 +15,7 @@ bp = Blueprint("study", __name__)
 WRONG_REASONS = ["개념 부족", "자료 해석", "조건 놓침", "계산 실수", "시간 부족", "찍음"]
 TASK_EXTS = IMAGE_EXTS | {"pdf"}
 WEEKDAYS = "월화수목금토일"
+UNITS = ["과학의 기초", "물질과 규칙성", "시스템과 상호작용", "변화와 다양성", "환경과 에너지", "과학과 미래사회"]
 
 
 def _me():
@@ -43,42 +43,24 @@ def dday_info():
     return {"day": d.isoformat(), "left": left, "label": get_setting("exam_label", "수능")}
 
 
+TONE_ORDER = [2, 0, 1, 5, 4, 6, 3, 7]   # 하늘, 벚꽃, 말차, 귤, 등꽃, 청록, 유자, 벽돌
+
+
 def class_slots(class_id):
-    return query("SELECT * FROM timetable WHERE class_id = ? ORDER BY weekday, starts, id", (class_id,))
+    """반 시간표. 수업 이름마다 다른 색을 순서대로 붙인다(같은 이름은 같은 색, 8개까지 겹치지 않음)."""
+    rows = query("SELECT * FROM timetable WHERE class_id = ? ORDER BY weekday, starts, id", (class_id,))
+    tones = {}
+    for r in rows:
+        key = r["title"].replace(" ", "")
+        if key not in tones:
+            tones[key] = TONE_ORDER[len(tones) % len(TONE_ORDER)]
+    return [dict(r, tone=tones[r["title"].replace(" ", "")]) for r in rows]
 
 
 def today_classes(class_id):
     """오늘 요일의 수업 (지금 이후 수업이 먼저 오도록 시작 시간 순)."""
     wd = date.today().weekday()
     return [s for s in class_slots(class_id) if s["weekday"] == wd]
-
-
-# =====================================================================
-# 1. 공부 결 진단
-# =====================================================================
-
-@bp.route("/s/guide", methods=["GET", "POST"])
-@student_required
-def guide():
-    row = query("SELECT * FROM study_types WHERE user_id = ?", (g.user["id"],), one=True)
-    if request.method == "POST":
-        code, picks = study_guide.score(request.form)
-        if code is None:
-            flash("모든 문항에 답해 주세요.", "error")
-            return render_template("study/guide_quiz.html", questions=study_guide.QUESTIONS,
-                                   picks=_partial(request.form)), 400
-        execute("""INSERT INTO study_types (user_id, code, answers) VALUES (?, ?, ?)
-                   ON CONFLICT(user_id) DO UPDATE SET code = excluded.code, answers = excluded.answers,
-                   updated_at = datetime('now', 'localtime')""", (g.user["id"], code, picks))
-        return redirect(url_for("study.guide"))
-    if row is None or request.args.get("retake"):
-        picks = row["answers"] if row else ""
-        return render_template("study/guide_quiz.html", questions=study_guide.QUESTIONS, picks=picks)
-    return render_template("study/guide.html", t=study_guide.describe(row["code"]), row=row)
-
-
-def _partial(form):
-    return "".join(form.get(f"q{i}", "-") for i in range(len(study_guide.QUESTIONS)))
 
 
 # =====================================================================
@@ -221,7 +203,7 @@ def t_cards():
     decks = query("""SELECT d.*, c.name AS class_name, (SELECT COUNT(*) FROM cards WHERE deck_id = d.id) AS n
                      FROM decks d LEFT JOIN classes c ON c.id = d.class_id ORDER BY d.unit, d.title""")
     return render_template("study/t_cards.html", decks=decks, classes=_classes(),
-                           units=[u[0] for u in study_guide.UNITS])
+                           units=UNITS)
 
 
 def parse_cards(raw):
@@ -496,7 +478,7 @@ def build_report(student_id):
                       FROM scores sc JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = ?
                       ORDER BY e.exam_date, e.id""", (student_id,))
     chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["exam_date"]} for r in scores])
-    mocks, reasons, focus, stype, tasks = [], [], None, None, None
+    mocks, reasons, focus, tasks = [], [], None, None
     if user:
         uid = user["id"]
         for e in query("""SELECT e.*, m.round_no, m.full_score, m.answer_key, m.points, m.id AS mid, b.title AS book_title
@@ -510,14 +492,12 @@ def build_report(student_id):
                            GROUP BY reason ORDER BY n DESC""", (uid,))
         focus = query("""SELECT COALESCE(SUM(minutes), 0) AS m, COUNT(*) AS n FROM focus_logs
                          WHERE user_id = ? AND ended_at >= date('now', 'localtime', '-27 days')""", (uid,), one=True)
-        row = query("SELECT code FROM study_types WHERE user_id = ?", (uid,), one=True)
-        stype = study_guide.describe(row["code"]) if row else None
     t = query("""SELECT COUNT(*) AS n, (SELECT COUNT(*) FROM submissions x JOIN assignments a2 ON a2.id = x.assignment_id
                                        WHERE x.student_id = ? AND a2.class_id = ?) AS sub
                  FROM assignments WHERE class_id = ?""", (student_id, s["class_id"], s["class_id"]), one=True)
     tasks = {"n": t["n"], "sub": t["sub"]}
     return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
-            "stype": stype, "tasks": tasks, "today": date.today().isoformat()}
+            "tasks": tasks, "today": date.today().isoformat()}
 
 
 @bp.route("/t/students/<int:sid>/report")

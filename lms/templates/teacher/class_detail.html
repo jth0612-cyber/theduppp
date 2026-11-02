@@ -204,7 +204,7 @@
 <div class="card">
   <h2>강의 영상 등록</h2>
   <div class="guide small">
-    영상 파일은 이 앱에 올리지 않고 <b>링크로 등록</b>합니다. 유튜브에 <b>'일부 공개'</b>로 올린 뒤 주소를 붙여 넣으세요.
+    영상 파일은 이 앱에 올리지 않고 <b>링크로 등록</b>합니다. 유튜브는 <b>'일부 공개'</b>로 올린 뒤, 구글 드라이브는 <b>공유 → 링크 복사</b>로 주소를 붙여 넣으세요. 학생이 누르면 그 사이트가 새 창으로 열립니다.
     만료일이 지나면 학생 화면에서 자동으로 숨겨집니다. 일부 공개 링크는 주소를 아는 사람은 볼 수 있으니, 외부 유출이 걱정되는 영상은 구글 드라이브 공유를 학원 계정으로 제한해 주세요.
   </div>
   <form method="post" action="{{ url_for('teacher.video_create', cid=cls.id) }}">
@@ -214,7 +214,7 @@
       <div class="field shrink"><label>길이</label><input type="text" name="duration" maxlength="10" placeholder="71:11"></div>
     </div>
     <div class="row">
-      <div class="field wide"><label>링크 (유튜브·비메오·구글 드라이브)</label><input type="text" name="url" maxlength="500" required placeholder="https://youtu.be/..."></div>
+      <div class="field wide"><label>링크 (유튜브·구글 드라이브)</label><input type="text" name="url" maxlength="500" required placeholder="https://youtu.be/... 또는 https://drive.google.com/file/d/..."></div>
       <div class="field"><label>만료일 (선택)</label><input type="date" name="expires_on"></div>
     </div>
     <button class="btn primary">등록</button>
@@ -226,7 +226,7 @@
     <tr><th>영상</th><th>길이</th><th>등록</th><th>만료</th><th></th></tr>
     {% for v in videos %}
     <tr class="{{ 'inactive' if v.expires_on and v.expires_on < today }}">
-      <td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ v.title }}</a><br><span class="small muted">{{ v.url|host_of }}</span></td>
+      <td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ v.title }}</a><br><span class="small muted">{{ v.url|video_source }}</span></td>
       <td class="small">{{ v.duration or '-' }}</td>
       <td class="small muted">{{ v.created_at[:10] }}</td>
       <td class="small">{% if v.expires_on %}{{ v.expires_on }}{% if v.expires_on < today %} <span class="badge gray">만료</span>{% endif %}{% else %}-{% endif %}</td>

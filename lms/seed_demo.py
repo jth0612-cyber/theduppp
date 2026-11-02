@@ -62,9 +62,6 @@ def main():
                           VALUES (?, '정오', '개념서 1권', '42p 3번 보기 정오', '③ 보기의 \"공유 결합\"을 \"이온 결합\"으로 고칩니다.')""", (cid,))
             db.execute("""INSERT INTO videos (class_id, title, url, duration, expires_on)
                           VALUES (?, '원소의 생성 (3주차)', 'https://drive.google.com/file/d/demo/view', '71:11', '2026-12-31')""", (cid,))
-        db.execute("""INSERT INTO news (title, url, source, summary) VALUES
-                      ('2028 교과전형 과목 이수 조건 정리', 'https://news.example.com/2028', '교육신문',
-                       '의약학 계열 지원 시 과학 과목 이수 조건을 미리 확인하세요.')""")
         db.execute("""INSERT INTO users (role, username, nickname, password_hash, student_id)
                       VALUES ('student', 'D1001', ?, ?, 1)""",
                    (generate_nickname(nickname_taken), hash_password(student_pw)))

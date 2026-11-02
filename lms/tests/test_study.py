@@ -1,4 +1,4 @@
-"""공부 도구 점검: 공부 결 진단, 오답 노트, 개념 카드, 시간표, 과제, 리포트, FAQ, 설치·알림.
+"""공부 도구 점검: 오답 노트, 개념 카드, 시간표, 과제, 리포트, FAQ, 설치·알림.
 python -m unittest discover tests"""
 import io
 import json
@@ -10,7 +10,6 @@ from datetime import date, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import study_guide  # noqa: E402
 from app import create_app  # noqa: E402
 from db import execute, query  # noqa: E402
 from security import hash_password  # noqa: E402
@@ -21,19 +20,7 @@ PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 64
 KEY25 = "1435253411243155214331524"
 
 
-class GuideMathTest(unittest.TestCase):
-    def test_score_and_describe(self):
-        form = {f"q{i}": "a" for i in range(12)}
-        code, picks = study_guide.score(form)
-        self.assertEqual(code, "SVRI")
-        self.assertEqual(picks, "a" * 12)
-        form = {f"q{i}": "b" for i in range(12)}
-        self.assertEqual(study_guide.score(form)[0], "PWFT")
-        self.assertEqual(study_guide.score({"q0": "a"}), (None, None))     # 빠진 문항
-        d = study_guide.describe("PVRT")
-        self.assertEqual(d["name"], "실험실형")
-        self.assertEqual(len(d["units"]), len(study_guide.UNITS))
-
+class CardsMathTest(unittest.TestCase):
     def test_parse_cards(self):
         cards, bad = parse_cards("이온 결합 | 양이온과 음이온\n\n잘못된 줄\n공유 결합|전자쌍 공유\n | 앞면 없음")
         self.assertEqual(cards, [("이온 결합", "양이온과 음이온"), ("공유 결합", "전자쌍 공유")])
@@ -83,16 +70,10 @@ class StudyTest(unittest.TestCase):
             return query(sql, args, one)
 
     # 1
-    def test_guide_flow(self):
+    def test_guide_removed(self):
         s = self.student(0)
-        self.assertIn("공부 결 진단", s.get("/s/guide").data.decode())
-        self.assertEqual(s.post("/s/guide", data={"q0": "a"}).status_code, 400)
-        form = {f"q{i}": ("a" if i < 6 else "b") for i in range(12)}
-        s.post("/s/guide", data=form)
-        page = s.get("/s/guide").data.decode()
-        self.assertIn("설계도형", page)
-        self.assertIn("단원별 공부법", page)
-        self.assertEqual(self.q("SELECT code FROM study_types", one=True)["code"], "SVFT")
+        self.assertEqual(s.get("/s/guide").status_code, 404)
+        self.assertNotIn("내 공부법", s.get("/s/").data.decode())
 
     # 2
     def test_wrong_notes(self):
@@ -153,6 +134,7 @@ class StudyTest(unittest.TestCase):
         self.assertIn("D-10", page)
         self.assertIn("302호", page)
         self.assertIn("13:00–15:50", page)
+        self.assertIn("tt-slot tone-", page)                                 # 수업마다 색
         home = s.get("/s/").data.decode()
         self.assertIn("D-10", home)
         self.assertIn("오늘 13:00 통합과학 정규", home)

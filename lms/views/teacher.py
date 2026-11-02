@@ -761,37 +761,6 @@ def video_delete(vid):
     return redirect(url_for("teacher.class_detail", cid=v["class_id"], tab="videos"))
 
 
-# ---------- 교육 뉴스 ----------
-
-@bp.route("/news", methods=["GET", "POST"])
-@teacher_required
-def news():
-    if request.method == "POST":
-        try:
-            title = _text("title", 150)
-            url = validate_https_url(request.form.get("url"))
-            source = _text("source", 40, required=False)
-            summary = _text("summary", 300, required=False)
-        except ValueError as e:
-            flash(str(e), "error")
-        else:
-            nid = execute("INSERT INTO news (title, url, source, summary) VALUES (?, ?, ?, ?)",
-                          (title, url, source, summary))
-            audit("news_create", f"news:{nid}")
-            flash("뉴스를 올렸습니다. 학생 홈에 표시됩니다.", "ok")
-        return redirect(url_for("teacher.news"))
-    rows = query("SELECT * FROM news ORDER BY created_at DESC LIMIT 100")
-    return render_template("teacher/news.html", news=rows)
-
-
-@bp.route("/news/<int:nid>/delete", methods=["POST"])
-@teacher_required
-def news_delete(nid):
-    execute("DELETE FROM news WHERE id = ?", (nid,))
-    audit("news_delete", f"news:{nid}")
-    return redirect(url_for("teacher.news"))
-
-
 # ---------- 조교 계정 ----------
 
 _USERNAME = re.compile(r"^[A-Za-z0-9_.-]{3,30}$")

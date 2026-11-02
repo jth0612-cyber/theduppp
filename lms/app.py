@@ -89,8 +89,8 @@ def create_app(test_config=None):
         return {"kakao": url if url.startswith("https://") else "", "note": os.environ.get("CONTACT_NOTE", "").strip()}
     app.jinja_env.globals["site_contact"] = site_contact
 
-    from content import file_kind, host_of, youtube_id
-    app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id)
+    from content import file_kind, host_of, video_source, youtube_id
+    app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id, video_source=video_source)
 
     @app.after_request
     def security_headers(resp):

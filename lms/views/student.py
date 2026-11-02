@@ -43,7 +43,6 @@ def home():
     materials = query("""SELECT m.*, f.original_name, f.size FROM materials m JOIN files f ON f.id = m.file_id
                          WHERE m.class_id = ? ORDER BY m.created_at DESC LIMIT 5""", (me["class_id"],))
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 5", (me["id"],))
-    news = query("SELECT * FROM news ORDER BY created_at DESC LIMIT 4")
     from views.study import dday_info, today_classes, wrong_list
     open_wrong = sum(len(gr["rows"]) for gr in wrong_list(g.user["id"], only_open=True))
     focus_today = query("""SELECT COALESCE(SUM(minutes), 0) AS m FROM focus_logs
@@ -54,7 +53,7 @@ def home():
                          WHERE a.class_id = ? AND s.id IS NULL ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
                       (me["id"], me["class_id"]))
     return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
-                           news=news, streak=streak_info(g.user["id"]),
+                           streak=streak_info(g.user["id"]),
                            dday=dday_info(), classes_today=today_classes(me["class_id"]), open_wrong=open_wrong,
                            tasks_due=tasks_due, focus_today=focus_today)
 

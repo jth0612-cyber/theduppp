@@ -70,16 +70,6 @@
       {% else %}<li class="empty">아직 질문하지 않았습니다.</li>{% endfor %}
     </ul>
   </section>
-  {% if news %}
-  <section class="panel" aria-labelledby="h-news">
-    <div class="sec-head"><h2 id="h-news">교육 뉴스</h2></div>
-    <ul class="mini-list">
-      {% for n in news %}
-        <li><a href="{{ n.url }}" target="_blank" rel="noopener noreferrer" title="{{ n.summary }}">{{ n.title }}</a><span class="m">{{ n.source or (n.url|host_of) }}</span></li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
 </div>
 
 <section class="panel" aria-labelledby="h-play">

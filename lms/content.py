@@ -41,6 +41,16 @@ def youtube_id(url):
     return vid if vid and _YT_ID.match(vid) else None
 
 
+def video_source(url):
+    """목록에 보일 영상 출처 이름."""
+    host = (urlparse(url).hostname or "").lower()
+    if host == "drive.google.com":
+        return "구글 드라이브"
+    if "vimeo" in host:
+        return "비메오"
+    return "유튜브"
+
+
 def host_of(url):
     return (urlparse(url).hostname or "").removeprefix("www.")
 

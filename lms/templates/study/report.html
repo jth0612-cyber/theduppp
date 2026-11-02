@@ -49,7 +49,6 @@
     <section class="rs-sec">
       <h2>학습 습관</h2>
       <dl class="report-lines">
-        <div><dt>공부 결</dt><dd>{% if r.stype %}{{ r.stype.name }} ({{ r.stype.code }}){% else %}진단 전{% endif %}</dd></div>
         <div><dt>같이 공부 4주</dt><dd>{% if r.focus and r.focus.n %}{{ r.focus.m // 60 }}시간 {{ r.focus.m % 60 }}분 · {{ r.focus.n }}번{% else %}기록 없음{% endif %}</dd></div>
         <div><dt>과제</dt><dd>{{ r.tasks.sub }}/{{ r.tasks.n }} 제출</dd></div>
       </dl>

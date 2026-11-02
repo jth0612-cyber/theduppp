@@ -2,17 +2,17 @@
 {% block title %}강의 영상 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>강의 영상</h1><p class="muted small">영상은 새 창에서 열립니다. 만료일이 지난 영상은 목록에서 사라져요.</p></div>
+  <div><h1>강의 영상</h1><p class="muted small">누르면 유튜브나 구글 드라이브가 새 창으로 열려요. 만료일이 지난 영상은 목록에서 사라져요.</p></div>
 </div>
 <div class="card">
   {% for v in videos %}
   {% set yt = v.url|youtube_id %}
   <a class="video-row" href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
     {% if yt %}<img class="thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">
-    {% else %}<span class="thumb thumb-empty">▶</span>{% endif %}
+    {% else %}<span class="thumb thumb-empty thumb-{{ 'drive' if (v.url|video_source) == '구글 드라이브' else 'other' }}">▶</span>{% endif %}
     <span class="file-main">
       <b>{{ v.title }}</b>
-      <span class="small muted">{% if v.duration %}<span class="badge gray">{{ v.duration }}</span> {% endif %}{{ v.created_at[:10] }}</span>
+      <span class="small muted"><span class="src-chip src-{{ 'drive' if (v.url|video_source) == '구글 드라이브' else 'yt' }}">{{ v.url|video_source }}</span>{% if v.duration %} <span class="badge gray">{{ v.duration }}</span>{% endif %} {{ v.created_at[:10] }}</span>
     </span>
     {% if v.expires_on %}<span class="small muted num">{{ v.expires_on[2:] }} 만료</span>{% endif %}
   </a>

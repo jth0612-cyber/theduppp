@@ -265,14 +265,6 @@ CREATE TABLE IF NOT EXISTS mock_entries (
 );
 
 -- ---------- 공부 도구 ----------
--- 공부 결 진단 결과 (code 예: SVRT)
-CREATE TABLE IF NOT EXISTS study_types (
-    user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    code        TEXT NOT NULL,
-    answers     TEXT NOT NULL,
-    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-);
-
 -- 오답 노트: 모의고사에서 틀린 문항의 복습 상태와 틀린 이유
 CREATE TABLE IF NOT EXISTS wrong_notes (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
