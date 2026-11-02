@@ -7,7 +7,6 @@
     <h1>{{ me.name }}님, 오늘도 한 걸음.</h1>
   </div>
   <div class="home-actions">
-    <a class="btn" href="{{ url_for('student.points') }}">{{ points }}P</a>
     <a class="btn primary" href="{{ url_for('student.questions', ask=1) }}#ask">질문하기</a>
   </div>
 </header>
@@ -19,10 +18,10 @@
     <b>{% if dday %}{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}{% else %}–{% endif %}</b>
     <span class="gl-s">{% if events %}다음 일정 {{ events[0].day[5:] }} {{ events[0].title }}{% else %}잡힌 일정 없음{% endif %}</span>
   </a>
-  <a class="gl" href="{{ url_for('study.planner') }}">
-    <span class="gl-k">오늘 할 일</span>
-    <b>{{ plan_today|selectattr('done')|list|length }}<small>/{{ plan_today|length }}</small></b>
-    <span class="gl-s">{% if plan_today %}{{ (plan_today|rejectattr('done')|first or plan_today[0]).text }}{% else %}플래너에 오늘 할 일을 적어 보세요{% endif %}</span>
+  <a class="gl" href="{{ url_for('rooms.rooms') }}">
+    <span class="gl-k">오늘 집중</span>
+    <b>{{ focus_today }}<small>분</small></b>
+    <span class="gl-s">{% if focus_today %}같이 공부에서 쌓은 시간{% else %}산사나 찻집에서 타이머를 돌려 보세요{% endif %}</span>
   </a>
   <a class="gl" href="{{ url_for('study.tasks') }}">
     <span class="gl-k">안 낸 과제</span>
@@ -38,7 +37,7 @@
 
 <section class="today-bar" aria-label="이번 주 접속">
   <p><b>{% if streak.total > 1 %}누적 {{ streak.total }}일째{% else %}오늘부터 시작{% endif %}</b><br>
-    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 접속 포인트 10P를 받아요.{% endif %}</span></p>
+    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 이번 주 칸이 채워져요.{% endif %}</span></p>
   <div class="week">
     {% for d in streak.week %}
       <span class="day {{ 'done' if d.done }} {{ 'today' if d.today }}" title="{{ d.label }}">{{ d.label }}</span>

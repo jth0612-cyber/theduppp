@@ -160,15 +160,6 @@ CREATE TABLE IF NOT EXISTS visits (
     PRIMARY KEY (user_id, day)
 );
 
-CREATE TABLE IF NOT EXISTS points (
-    id          INTEGER PRIMARY KEY,
-    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    amount      INTEGER NOT NULL,
-    reason      TEXT NOT NULL,
-    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_points_user ON points(user_id);
-
 -- 미니게임 한 판. 정답(answer)은 서버에만 두고 채점도 서버에서 한다
 CREATE TABLE IF NOT EXISTS game_rounds (
     id          INTEGER PRIMARY KEY,
@@ -316,18 +307,6 @@ CREATE TABLE IF NOT EXISTS card_marks (
     updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     PRIMARY KEY (user_id, card_id)
 );
-
--- 주간 플래너 (day: 0=월 … 6=일)
-CREATE TABLE IF NOT EXISTS plan_items (
-    id          INTEGER PRIMARY KEY,
-    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    week_start  TEXT NOT NULL,
-    day         INTEGER NOT NULL CHECK (day BETWEEN 0 AND 6),
-    text        TEXT NOT NULL,
-    done        INTEGER NOT NULL DEFAULT 0,
-    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_plan_user_week ON plan_items(user_id, week_start);
 
 -- 일정(반별, class_id 가 NULL 이면 전체)과 주간 시간표, 사이트 설정(수능일 등)
 CREATE TABLE IF NOT EXISTS events (

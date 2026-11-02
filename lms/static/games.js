@@ -30,10 +30,6 @@
       .forEach(function (n) { n.classList.toggle("hidden", n.getAttribute("data-role") !== role); });
   }
 
-  function pointsText(p) {
-    return p > 0 ? "+" + p + "P 받았어요!" : "오늘 게임 포인트를 모두 받았거나, 이번엔 포인트가 없어요.";
-  }
-
   // ---------- 염기 짝 맞추기 ----------
   var dna = document.getElementById("dna-game");
   if (dna) {
@@ -67,7 +63,7 @@
           renderStrands();
           q("result-title").textContent = res.timeout ? "시간 초과!" :
             (res.correct === res.total ? "완벽해요! 🎉" : res.correct + " / " + res.total + " 맞았어요");
-          q("result-detail").textContent = "걸린 시간 " + res.elapsed + "초 · " + pointsText(res.points) +
+          q("result-detail").textContent = "걸린 시간 " + res.elapsed + "초" +
             (res.correct < res.total ? " (정답: 3'-" + res.answer + "-5')" : "");
           q("result").classList.remove("hidden");
         })
@@ -139,7 +135,7 @@
       post(mc.dataset.start.replace(/\/start$/, "/" + game.id + "/submit"), { answers: game.answers })
         .then(function (res) {
           m("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점! 🎉" : " 맞았어요");
-          m("result-detail").textContent = pointsText(res.points);
+          m("result-detail").textContent = res.score === res.total ? "모두 맞혔어요." : "아래 해설로 틀린 문제를 다시 확인해 보세요.";
           var review = m("review");
           review.textContent = "";
           res.results.forEach(function (r, i) {

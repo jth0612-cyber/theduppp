@@ -230,7 +230,7 @@ class AppTest(unittest.TestCase):
 
 
 class FeatureTest(AppTest):
-    """질답 개선, 공지 말머리, 강의 영상, 뉴스, 포인트, 미니게임."""
+    """질답 개선, 공지 말머리, 강의 영상, 뉴스, 접속 기록, 미니게임."""
 
     def _students(self):
         cid = self.setup_class_with_students()
@@ -305,20 +305,19 @@ class FeatureTest(AppTest):
         self.assertIn("입시 기사", home)
         self.assertNotIn("나쁜링크", home)
 
-    def test_visit_points_once_per_day_and_teacher_grant(self):
+    def test_visit_recorded_once_per_day_and_no_points(self):
         _, s1, _ = self._students()
         for _ in range(3):
             s1.get("/s/")
         with self.app.app_context():
             uid = query("SELECT id FROM users WHERE username='A001'", one=True)["id"]
-            self.assertEqual(query("SELECT COUNT(*) n FROM points WHERE user_id=?", (uid,), one=True)["n"], 1)
+            self.assertEqual(query("SELECT COUNT(*) n FROM visits WHERE user_id=?", (uid,), one=True)["n"], 1)
             sid = query("SELECT id FROM students WHERE student_no='A001'", one=True)["id"]
-        self.assertIn("누적 접속", self.c.get(f"/t/students/{sid}").data.decode())
-        self.c.post(f"/t/students/{sid}/points", data={"amount": "50", "reason": "성적 향상"})
-        self.c.post(f"/t/students/{sid}/points", data={"amount": "99999", "reason": "과다"})
-        self.assertIn("60P", s1.get("/s/points").data.decode())
-        # 학생은 포인트 지급 불가
-        self.assertEqual(s1.post(f"/t/students/{sid}/points", data={"amount": "100", "reason": "x"}).status_code, 403)
+        page = self.c.get(f"/t/students/{sid}").data.decode()
+        self.assertIn("누적 접속", page)
+        self.assertNotIn("포인트", page)
+        self.assertEqual(s1.get("/s/points").status_code, 404)              # 포인트 기능 없음
+        self.assertEqual(self.c.post(f"/t/students/{sid}/points", data={"amount": "5"}).status_code, 404)
 
     def test_dna_game_scored_on_server(self):
         _, s1, s2 = self._students()
@@ -331,7 +330,7 @@ class FeatureTest(AppTest):
         self.assertEqual(s2.post(f"/s/games/dna/{rid}/submit", json={"answer": answer}).status_code, 404)
         res = s1.post(f"/s/games/dna/{rid}/submit", json={"answer": answer}).get_json()
         self.assertEqual(res["correct"], 12)
-        self.assertGreater(res["points"], 0)
+        self.assertNotIn("points", res)
         # 같은 판은 한 번만 제출
         self.assertEqual(s1.post(f"/s/games/dna/{rid}/submit", json={"answer": answer}).status_code, 409)
 
@@ -348,12 +347,11 @@ class FeatureTest(AppTest):
         res = s1.post(f"/s/games/chargaff/{start['round_id']}/submit", json={"answers": [0, 0, 0, 0, 0]}).get_json()
         self.assertEqual(res["total"], 5)
 
-    def test_quiz_scored_and_daily_cap(self):
+    def test_quiz_scored_on_server(self):
         import json as _json
         _, s1, _ = self._students()
         self.assertEqual(s1.post("/s/games/quiz/start", json={"topic": "없는단원"}).status_code, 400)
-        total = 0
-        for _ in range(12):
+        for _ in range(3):
             start = s1.post("/s/games/quiz/start", json={"topic": "life"}).get_json()
             self.assertNotIn("answer_index", str(start))
             with self.app.app_context():
@@ -362,8 +360,6 @@ class FeatureTest(AppTest):
             res = s1.post(f"/s/games/quiz/{start['round_id']}/submit",
                           json={"answers": [a["answer_index"] for a in ans]}).get_json()
             self.assertEqual(res["score"], res["total"])
-            total += res["points"]
-        self.assertEqual(total, 50)  # 하루 게임 포인트 상한
 
     def test_behind_synology_https_proxy(self):
         """시놀로지 리버스 프록시(HTTPS) 뒤에서 CSRF·보안 쿠키·실제 IP 기록이 동작하는지."""

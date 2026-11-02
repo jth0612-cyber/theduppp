@@ -1,4 +1,4 @@
-"""학생 화면: 홈, 공지, 자료, 강의 영상, 내 성적, 질답 게시판, 포인트.
+"""학생 화면: 홈, 공지, 자료, 강의 영상, 내 성적, 질답 게시판.
 성적·자료·공지·영상은 본인/본인 반으로 제한한다. 질답 게시판은 학습질문만 전체 공개(작성자는 닉네임)하고,
 행정문의는 본인과 선생님만 본다."""
 import os
@@ -8,7 +8,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect, render_tem
 
 from content import MAX_FOLLOWUPS, NOTICE_TAGS, QUESTION_TYPES
 from db import execute, query
-from engagement import balance, record_visit, streak_info
+from engagement import record_visit, streak_info
 from security import IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required
 
 bp = Blueprint("student", __name__, url_prefix="/s")
@@ -46,18 +46,17 @@ def home():
     news = query("SELECT * FROM news ORDER BY created_at DESC LIMIT 4")
     from views.study import dday_info, upcoming_events, wrong_list
     open_wrong = sum(len(gr["rows"]) for gr in wrong_list(g.user["id"], only_open=True))
-    from datetime import date, timedelta
-    today = date.today()
-    plan_today = query("SELECT * FROM plan_items WHERE user_id = ? AND week_start = ? AND day = ? ORDER BY id",
-                       (g.user["id"], (today - timedelta(days=today.weekday())).isoformat(), today.weekday()))
+    focus_today = query("""SELECT COALESCE(SUM(minutes), 0) AS m FROM focus_logs
+                           WHERE user_id = ? AND date(ended_at) = date('now', 'localtime')""",
+                        (g.user["id"],), one=True)["m"]
     tasks_due = query("""SELECT a.id, a.title, a.due_on FROM assignments a
                          LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
                          WHERE a.class_id = ? AND s.id IS NULL ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
                       (me["id"], me["class_id"]))
     return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
-                           news=news, streak=streak_info(g.user["id"]), points=balance(g.user["id"]),
+                           news=news, streak=streak_info(g.user["id"]),
                            dday=dday_info(), events=upcoming_events(me["class_id"]), open_wrong=open_wrong,
-                           plan_today=plan_today, tasks_due=tasks_due)
+                           tasks_due=tasks_due, focus_today=focus_today)
 
 
 @bp.route("/notices")
@@ -139,15 +138,6 @@ def scores():
                     FROM scores sc JOIN exams e ON e.id = sc.exam_id
                     WHERE sc.student_id = ? ORDER BY e.exam_date DESC, e.id DESC""", (me["id"],))
     return render_template("student/scores.html", me=me, scores=rows)
-
-
-@bp.route("/points")
-@student_required
-def points():
-    me = _me()
-    history = query("SELECT * FROM points WHERE user_id = ? ORDER BY id DESC LIMIT 100", (g.user["id"],))
-    return render_template("student/points.html", me=me, points=balance(g.user["id"]), history=history,
-                           streak=streak_info(g.user["id"]))
 
 
 # ---------- 질답 게시판 ----------

@@ -1,4 +1,4 @@
-"""공부 도구 점검: 공부 결 진단, 오답 노트, 개념 카드, 플래너, 일정, 과제, 리포트, FAQ, 설치·알림.
+"""공부 도구 점검: 공부 결 진단, 오답 노트, 개념 카드, 일정, 과제, 리포트, FAQ, 설치·알림.
 python -m unittest discover tests"""
 import io
 import json
@@ -138,19 +138,6 @@ class StudyTest(unittest.TestCase):
         self.assertEqual(other.get(f"/s/cards/{did}").status_code, 404)
         self.assertEqual(other.post(f"/s/cards/mark/{cards[0]['id']}", data={"status": "known"}).status_code, 404)
 
-    # 4
-    def test_planner(self):
-        s = self.student(0)
-        monday = (date.today() - timedelta(days=date.today().weekday())).isoformat()
-        s.post("/s/planner/add", data={"week": monday, "day": "2", "text": "기출 20문항"})
-        p = self.q("SELECT * FROM plan_items", one=True)
-        self.assertEqual((p["week_start"], p["day"]), (monday, 2))
-        r = s.post(f"/s/planner/{p['id']}/toggle", headers={"X-Requested-With": "fetch"})
-        self.assertEqual(r.get_json()["done"], True)
-        self.assertEqual(self.student(1).post(f"/s/planner/{p['id']}/toggle").status_code, 404)
-        page = self.t.get(f"/t/planner?class_id={self.cid}").data.decode()
-        self.assertIn("100%", page)
-
     # 5
     def test_calendar_and_dday(self):
         self.t.post("/t/calendar", data={"action": "dday", "exam_day": (date.today() + timedelta(days=10)).isoformat(),
@@ -165,7 +152,10 @@ class StudyTest(unittest.TestCase):
         self.assertIn("D-10", page)
         self.assertIn("주간테스트", page)
         self.assertIn("13:00", page)
-        self.assertIn("D-10", s.get("/s/").data.decode())
+        home = s.get("/s/").data.decode()
+        self.assertIn("D-10", home)
+        self.assertNotIn("플래너", home)
+        self.assertEqual(s.get("/s/planner").status_code, 404)
         self.assertNotIn("주간테스트", self.student(2).get("/s/calendar").data.decode())  # 다른 반 일정
 
     # 7

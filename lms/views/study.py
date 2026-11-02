@@ -1,4 +1,4 @@
-"""공부 도구: 공부 결 진단, 오답 노트, 개념 카드, 주간 플래너, 일정·D-day, 과제 제출함, 성적 리포트.
+"""공부 도구: 공부 결 진단, 오답 노트, 개념 카드, 일정·D-day, 과제 제출함, 성적 리포트.
 학생 화면(/s/...)과 선생님 화면(/t/...)을 함께 둔다. 학생은 본인 기록과 본인 반 자료만 본다."""
 import calendar
 import json
@@ -34,9 +34,6 @@ def _parse_day(raw, default=None):
     except ValueError:
         return default
 
-
-def _monday(d):
-    return d - timedelta(days=d.weekday())
 
 
 def dday_info():
@@ -288,101 +285,6 @@ def _classes():
 
 
 # =====================================================================
-# 4. 주간 플래너
-# =====================================================================
-
-def _week_param():
-    d = _parse_day(request.args.get("week"), date.today())
-    return _monday(d)
-
-
-@bp.route("/s/planner")
-@student_required
-def planner():
-    week = _week_param()
-    rows = query("SELECT * FROM plan_items WHERE user_id = ? AND week_start = ? ORDER BY day, id",
-                 (g.user["id"], week.isoformat()))
-    days = [{"i": i, "label": WEEKDAYS[i], "date": week + timedelta(days=i),
-             "items": [r for r in rows if r["day"] == i]} for i in range(7)]
-    total, done = len(rows), sum(r["done"] for r in rows)
-    return render_template("study/planner.html", days=days, week=week, today=date.today(),
-                           prev=week - timedelta(days=7), next=week + timedelta(days=7),
-                           total=total, done=done)
-
-
-@bp.route("/s/planner/add", methods=["POST"])
-@student_required
-def planner_add():
-    week = _monday(_parse_day(request.form.get("week"), date.today()))
-    text = request.form.get("text", "").strip()[:120]
-    try:
-        day = int(request.form.get("day", ""))
-    except ValueError:
-        day = -1
-    if not text or not 0 <= day <= 6:
-        flash("할 일과 요일을 확인하세요.", "error")
-    elif query("SELECT COUNT(*) AS n FROM plan_items WHERE user_id = ? AND week_start = ?",
-               (g.user["id"], week.isoformat()), one=True)["n"] >= 70:
-        flash("한 주에 70개까지 적을 수 있어요.", "error")
-    else:
-        execute("INSERT INTO plan_items (user_id, week_start, day, text) VALUES (?, ?, ?, ?)",
-                (g.user["id"], week.isoformat(), day, text))
-    return redirect(url_for("study.planner", week=week.isoformat()) + f"#d{day}")
-
-
-def _own_plan(pid):
-    p = query("SELECT * FROM plan_items WHERE id = ? AND user_id = ?", (pid, g.user["id"]), one=True)
-    if p is None:
-        abort(404)
-    return p
-
-
-@bp.route("/s/planner/<int:pid>/toggle", methods=["POST"])
-@student_required
-def planner_toggle(pid):
-    p = _own_plan(pid)
-    execute("UPDATE plan_items SET done = ? WHERE id = ?", (0 if p["done"] else 1, pid))
-    if request.headers.get("X-Requested-With") == "fetch":
-        return jsonify(ok=True, done=not p["done"])
-    return redirect(url_for("study.planner", week=p["week_start"]) + f"#d{p['day']}")
-
-
-@bp.route("/s/planner/<int:pid>/delete", methods=["POST"])
-@student_required
-def planner_delete(pid):
-    p = _own_plan(pid)
-    execute("DELETE FROM plan_items WHERE id = ?", (pid,))
-    return redirect(url_for("study.planner", week=p["week_start"]) + f"#d{p['day']}")
-
-
-def plan_rate(user_id, weeks=4):
-    since = (_monday(date.today()) - timedelta(days=7 * (weeks - 1))).isoformat()
-    r = query("""SELECT COUNT(*) AS total, COALESCE(SUM(done), 0) AS done FROM plan_items
-                 WHERE user_id = ? AND week_start >= ?""", (user_id, since), one=True)
-    return {"total": r["total"], "done": r["done"], "pct": round(100 * r["done"] / r["total"]) if r["total"] else None}
-
-
-@bp.route("/t/planner")
-@teacher_required
-def t_planner():
-    classes = _classes()
-    cid = request.args.get("class_id", type=int) or (classes[0]["id"] if classes else None)
-    week = _week_param()
-    rows = []
-    if cid:
-        rows = query("""SELECT s.id AS sid, s.name, s.student_no, u.id AS uid,
-                               (SELECT COUNT(*) FROM plan_items p WHERE p.user_id = u.id AND p.week_start = ?) AS total,
-                               (SELECT COALESCE(SUM(done), 0) FROM plan_items p WHERE p.user_id = u.id AND p.week_start = ?) AS done
-                        FROM students s LEFT JOIN users u ON u.student_id = s.id
-                        WHERE s.class_id = ? AND s.active = 1 ORDER BY s.name""",
-                     (week.isoformat(), week.isoformat(), cid))
-    planned = [r for r in rows if r["total"]]
-    avg = round(sum(100 * r["done"] / r["total"] for r in planned) / len(planned)) if planned else None
-    return render_template("study/t_planner.html", classes=classes, cid=cid, week=week, rows=rows, avg=avg,
-                           prev=week - timedelta(days=7), next=week + timedelta(days=7))
-
-
-# =====================================================================
 # 5. 일정 달력 · 시간표 · D-day
 # =====================================================================
 
@@ -628,7 +530,7 @@ def build_report(student_id):
                       FROM scores sc JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = ?
                       ORDER BY e.exam_date, e.id""", (student_id,))
     chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["exam_date"]} for r in scores])
-    mocks, reasons, plan, stype, tasks = [], [], None, None, None
+    mocks, reasons, focus, stype, tasks = [], [], None, None, None
     if user:
         uid = user["id"]
         for e in query("""SELECT e.*, m.round_no, m.full_score, m.answer_key, m.points, m.id AS mid, b.title AS book_title
@@ -640,14 +542,15 @@ def build_report(student_id):
                           "grade": analysis.grade_for(e["score"], st["cuts"]), "n": st["n"], "wrong": wrong})
         reasons = query("""SELECT reason, COUNT(*) AS n FROM wrong_notes WHERE user_id = ? AND reason != ''
                            GROUP BY reason ORDER BY n DESC""", (uid,))
-        plan = plan_rate(uid)
+        focus = query("""SELECT COALESCE(SUM(minutes), 0) AS m, COUNT(*) AS n FROM focus_logs
+                         WHERE user_id = ? AND ended_at >= date('now', 'localtime', '-27 days')""", (uid,), one=True)
         row = query("SELECT code FROM study_types WHERE user_id = ?", (uid,), one=True)
         stype = study_guide.describe(row["code"]) if row else None
     t = query("""SELECT COUNT(*) AS n, (SELECT COUNT(*) FROM submissions x JOIN assignments a2 ON a2.id = x.assignment_id
                                        WHERE x.student_id = ? AND a2.class_id = ?) AS sub
                  FROM assignments WHERE class_id = ?""", (student_id, s["class_id"], s["class_id"]), one=True)
     tasks = {"n": t["n"], "sub": t["sub"]}
-    return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "plan": plan,
+    return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
             "stype": stype, "tasks": tasks, "today": date.today().isoformat()}
 
 

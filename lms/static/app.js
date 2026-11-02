@@ -46,20 +46,6 @@ function postForm(form) {
     headers: { "X-Requested-With": "fetch" } }).then(function (r) { if (!r.ok) throw r; return r.json(); });
 }
 
-// ---------- 플래너: 체크를 새로고침 없이 ----------
-document.addEventListener("submit", function (e) {
-  var form = e.target;
-  if (form.matches("[data-toggle]")) {
-    e.preventDefault();
-    var li = form.closest("li");
-    var btn = form.querySelector("button");
-    postForm(form).then(function (d) {
-      li.classList.toggle("is-done", d.done);
-      btn.setAttribute("aria-pressed", d.done ? "true" : "false");
-    }).catch(function () { form.submit(); });
-  }
-});
-
 // ---------- 오답 노트: 이유·복습 체크는 바로 저장 ----------
 document.addEventListener("change", function (e) {
   var form = e.target.closest("form[data-autosave]");

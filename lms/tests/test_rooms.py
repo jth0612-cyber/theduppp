@@ -27,15 +27,16 @@ class RoomsTest(unittest.TestCase):
         self.assertEqual(me["status"], "focus")
         # 방금 시작했는데 25분을 주장해도 인정하지 않는다
         r = a.post("/s/rooms/sanji/done", data={"minutes": "25"}).get_json()
-        self.assertEqual((r["minutes"], r["points"]), (0, 0))
+        self.assertEqual(r["minutes"], 0)
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM focus_logs", one=True)["n"], 0)
-        # 서버 기준 30분 전에 시작했다면 계획한 25분까지 인정 + 5P
+        # 서버 기준 30분 전에 시작했다면 계획한 25분까지 인정
         a.post("/s/rooms/sanji/beat", data={"action": "start", "plan": "25"})
         with self.app.app_context():
             execute("UPDATE room_presence SET focus_since = datetime('now', 'localtime', '-30 minutes')")
         r = a.post("/s/rooms/sanji/done", data={"minutes": "90"}).get_json()
-        self.assertEqual((r["minutes"], r["points"], r["today"]), (25, 5, 25))
-        self.assertIn("집중: 산사 25분", self.q("SELECT reason FROM points ORDER BY id DESC LIMIT 1", one=True)["reason"])
+        self.assertEqual((r["minutes"], r["today"]), (25, 25))
+        self.assertNotIn("points", r)
+        self.assertIn("<b>25<small>분", a.get("/s/").data.decode())   # 홈 오늘 집중
         # 떠나면 목록에서 빠진다
         a.post("/s/rooms/sanji/beat", data={"action": "leave"})
         self.assertNotIn("닉0 (나)", b.get("/s/rooms/sanji").data.decode())

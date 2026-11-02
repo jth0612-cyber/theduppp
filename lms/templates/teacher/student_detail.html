@@ -51,13 +51,7 @@
     {% else %}<p class="small muted">퇴원 학생은 계정이 없습니다.</p>{% endif %}
     {% if engagement %}
     <h3 class="mt">학습 활동</h3>
-    <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b> · 연속 {{ engagement.streak.streak }}일 · 포인트 <b>{{ engagement.points }}P</b></p>
-    <form method="post" action="{{ url_for('teacher.student_points', sid=s.id) }}" class="row">
-      {{ csrf() }}
-      <div class="field shrink"><input type="number" name="amount" min="-1000" max="1000" required placeholder="+50" class="score"></div>
-      <div class="field"><input type="text" name="reason" maxlength="60" required placeholder="사유 (예: 모의고사 성적 향상)"></div>
-      <div class="field shrink"><button class="btn small">포인트 지급</button></div>
-    </form>
+    <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b> · 연속 {{ engagement.streak.streak }}일</p>
     {% endif %}
   </div>
 </div>

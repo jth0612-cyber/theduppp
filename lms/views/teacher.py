@@ -10,7 +10,7 @@ from flask import (Blueprint, Response, abort, flash, g, redirect, render_templa
 
 from content import NOTICE_TAGS, QUESTION_TYPES, VIDEO_HOSTS, validate_https_url
 from db import execute, get_db, join_code_taken, new_join_code, nickname_taken, query
-from engagement import award, balance, streak_info
+from engagement import streak_info
 from nickname import generate_nickname
 from views.student import question_thread
 from security import (audit, decrypt, delete_file, encrypt, generate_temp_password,
@@ -336,33 +336,11 @@ def student_detail(sid):
     all_classes = query("SELECT id, name FROM classes WHERE archived = 0 ORDER BY name")
     engagement = None
     if account:
-        engagement = {"streak": streak_info(account["id"]), "points": balance(account["id"])}
+        engagement = {"streak": streak_info(account["id"])}
     return render_template("teacher/student_detail.html", s=s, phone=decrypt(s["phone_enc"]),
                            memo=decrypt(s["memo_enc"]), scores=scores, chart=chart, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
                            note_categories=NOTE_CATEGORIES, engagement=engagement)
-
-
-@bp.route("/students/<int:sid>/points", methods=["POST"])
-@teacher_required
-def student_points(sid):
-    _get_student(sid)
-    account = query("SELECT id FROM users WHERE student_id = ?", (sid,), one=True)
-    try:
-        amount = int(request.form.get("amount", ""))
-        reason = _text("reason", 60)
-        if not -1000 <= amount <= 1000 or amount == 0:
-            raise ValueError("포인트는 -1000 ~ 1000 사이로 입력하세요.")
-    except ValueError as e:
-        flash(str(e) if "포인트" in str(e) or "입력" in str(e) else "포인트를 숫자로 입력하세요.", "error")
-        return redirect(url_for("teacher.student_detail", sid=sid))
-    if account is None:
-        flash("계정이 있는 학생에게만 포인트를 줄 수 있습니다.", "error")
-    else:
-        award(account["id"], amount, f"선생님: {reason}")
-        audit("points_grant", f"student:{sid} amount:{amount}")
-        flash(f"{amount:+d}P 를 지급했습니다.", "ok")
-    return redirect(url_for("teacher.student_detail", sid=sid))
 
 
 @bp.route("/students/<int:sid>/edit", methods=["POST"])

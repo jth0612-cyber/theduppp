@@ -6,7 +6,6 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
 from db import execute, get_db, query
-from engagement import award
 from security import audit, student_required, teacher_required
 
 bp = Blueprint("rooms", __name__)
@@ -20,8 +19,6 @@ PLACES = {
 }
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
 PLAN_CHOICES = (25, 50, 90)
-POINTS_PER_25 = 5
-FOCUS_POINTS_DAILY_CAP = 40
 NOTE_MAX = 60
 
 
@@ -129,20 +126,14 @@ def done(place):
     uid = g.user["id"]
     me = query("SELECT * FROM room_presence WHERE user_id = ? AND place = ?", (uid, place), one=True)
     if me is None or me["status"] != "focus":
-        return jsonify(ok=False, minutes=0, points=0, today=_my_today(uid))
+        return jsonify(ok=False, minutes=0, today=_my_today(uid))
     asked = request.form.get("minutes", type=int) or 0
     minutes = max(0, min(asked, _elapsed_min(me["focus_since"]), me["plan_min"]))
     execute("UPDATE room_presence SET status = 'rest', focus_since = NULL, last_seen = datetime('now', 'localtime') "
             "WHERE user_id = ?", (uid,))
-    points = 0
     if minutes >= 5:
         execute("INSERT INTO focus_logs (user_id, place, minutes) VALUES (?, ?, ?)", (uid, place, minutes))
-        earned = query("""SELECT COALESCE(SUM(amount), 0) AS n FROM points WHERE user_id = ? AND reason LIKE '집중:%'
-                          AND date(created_at) = date('now', 'localtime')""", (uid,), one=True)["n"]
-        points = max(0, min((minutes // 25) * POINTS_PER_25, FOCUS_POINTS_DAILY_CAP - earned))
-        if points:
-            award(uid, points, f"집중: {PLACES[place][0]} {minutes}분")
-    return jsonify(ok=True, minutes=minutes, points=points, today=_my_today(uid))
+    return jsonify(ok=True, minutes=minutes, today=_my_today(uid))
 
 
 @bp.route("/s/rooms/<place>/note", methods=["POST"])
