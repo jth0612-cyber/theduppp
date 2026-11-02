@@ -45,10 +45,11 @@ class RoomsTest(unittest.TestCase):
     def test_3d_positions(self):
         a, b = self.student(0), self.student(1)
         page = a.get("/s/rooms/sanji").data.decode()
-        self.assertIn("sanji3d.js", page)                                # 산사는 3D
+        self.assertIn("world3d.js", page)                                # 산사는 3D
         self.assertIn("data-enter-btn", page)
-        self.assertNotIn("sanji3d.js", a.get("/s/rooms/sanji?flat=1").data.decode())   # 그림 버전도 남김
-        self.assertNotIn("sanji3d.js", a.get("/s/rooms/eki").data.decode())
+        self.assertNotIn("world3d.js", a.get("/s/rooms/sanji?flat=1").data.decode())   # 그림 버전도 남김
+        for p in ("sento", "eki", "kissa"):                              # 나머지 세 곳도 3D
+            self.assertIn("world3d.js", a.get(f"/s/rooms/{p}").data.decode())
         a.post("/s/rooms/sanji/beat", data={"x": "3.5", "z": "-7", "ry": "3.14", "pose": "sit", "seat": "8",
                                             "color": "#5fa3c9"})
         b.get("/s/rooms/sanji")

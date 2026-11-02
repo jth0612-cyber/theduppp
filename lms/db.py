@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     UNIQUE (assignment_id, student_id)
 );
 
--- 함께 공부하는 장소(산사·목욕탕·역·찻집): 지금 있는 사람, 집중 기록, 남기고 간 글
+-- 함께 공부하는 장소(산사·노천탕·역·찻집): 지금 있는 사람, 집중 기록, 남기고 간 글
 CREATE TABLE IF NOT EXISTS room_presence (
     user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     place       TEXT NOT NULL,

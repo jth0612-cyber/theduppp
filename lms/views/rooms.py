@@ -1,4 +1,4 @@
-"""함께 공부하는 장소: 일본 소도시의 네 곳(산사, 온천 마을 목욕탕, 바닷가 작은 역, 비 오는 골목 찻집)에
+"""함께 공부하는 장소: 일본 소도시의 네 곳(산사, 눈 내리는 노천탕, 바닷가 작은 역, 비 오는 골목 찻집)에
 학생들이 모여 각자 집중 타이머를 돌린다. 실시간 연결 없이 25초마다 '여기 있어요' 신호를 보내 서로를 본다.
 집중 시간은 서버가 잰 시간(focus_since)을 넘겨 인정하지 않는다."""
 from datetime import date, datetime, timedelta
@@ -13,15 +13,16 @@ bp = Blueprint("rooms", __name__)
 # key: (이름, 지역 느낌 한 줄, 남기는 글 이름, 남기는 글 안내, 소리)
 PLACES = {
     "sanji": ("산사", "이끼 낀 돌계단 위, 바람과 먼 종소리", "에마", "소원판에 오늘의 다짐을 걸어 두세요", "wind"),
-    "sento": ("목욕탕", "온천 마을 골목 끝, 굴뚝에서 김이 오르는 곳", "탈의실 칠판", "다 씻고 나가며 한 줄 남기기", "water"),
-    "eki": ("바닷가 역", "하루 몇 번 기차가 서는 작은 무인역", "역 노트", "기다리는 동안 노트에 한 줄", "waves"),
-    "kissa": ("골목 찻집", "비 오는 밤, 창가 자리가 비어 있는 찻집", "냅킨 메모", "냅킨에 적어 두고 가기", "rain"),
+    "sento": ("노천탕", "눈 내리는 산골 마을, 김이 오르는 바위 온천", "휴게소 칠판", "몸 녹이고 나가며 한 줄 남기기", "water"),
+    "eki": ("바닷가 역", "노란 난간 너머 바다가 보이는 작은 무인역", "역 노트", "기차를 기다리며 노트에 한 줄", "waves"),
+    "kissa": ("골목 찻집", "비 오는 성 아래 골목, 물길 옆 나무 찻집", "냅킨 메모", "냅킨에 적어 두고 가기", "rain"),
 }
+ENTER_TEXT = {"sanji": "산사에 들어가기", "sento": "온천에 들어가기", "eki": "역으로 올라가기", "kissa": "찻집 문 열기"}
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
 PLAN_CHOICES = (25, 50, 90)
 NOTE_MAX = 60
 # 3D 장소 (나머지는 그림 버전)
-PLACES_3D = {"sanji"}
+PLACES_3D = set(PLACES)
 POSES = {"stand", "walk", "sit", "gassho", "bow", "breathe"}
 AVATAR_COLORS = ["#e8805c", "#e6a23c", "#7cb87a", "#5fa3c9", "#9b86d1", "#d97aa0", "#8c7a6b", "#4f9e94"]
 
@@ -111,7 +112,8 @@ def room(place):
                            my_color=my_color or AVATAR_COLORS[g.user["id"] % len(AVATAR_COLORS)],
                            elapsed=_elapsed_min(me["focus_since"]) if me["status"] == "focus" else 0,
                            members=[_member_json(m, g.user["id"]) for m in _members(place)],
-                           notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, note_max=NOTE_MAX)
+                           notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, note_max=NOTE_MAX,
+                           enter_text=ENTER_TEXT.get(place, "들어가기"))
 
 
 @bp.route("/s/rooms/<place>/beat", methods=["POST"])

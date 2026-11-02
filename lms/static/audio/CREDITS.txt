@@ -2,3 +2,5 @@
 - wind, birds, crickets, chimes, bowl, steps: Moodist (github.com/remvze/moodist) 프로젝트에 실린 음원을 잘라 반복용으로 다듬음.
   해당 프로젝트 안내에 따르면 음원은 Pixabay Content License 또는 CC0 이며, 둘 다 출처 표기 없이 수정·사용할 수 있음.
 - moktak: 이 사이트에서 직접 합성.
+- 노천탕(water, spout, drips, bamboo, splash), 바닷가 역(waves, wind, gulls, train), 골목 찻집(rain, rain2, cafe, clock, kettle, page)도
+  같은 Moodist 프로젝트의 Pixabay·CC0 음원을 잘라 다듬음.

@@ -5,12 +5,12 @@
 {% block content %}
 <div class="w3" id="w3" data-room="{{ key }}"
      data-beat="{{ url_for('rooms.beat', place=key) }}" data-done="{{ url_for('rooms.done', place=key) }}"
-     data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/' ~ key ~ '/') }}"
+     data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/') }}"
      data-three="{{ url_for('static', filename='vendor/three.module.min.js') }}"
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}"
      data-color="{{ my_color }}" data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
-    <canvas class="w3-canvas" data-canvas aria-label="산사 마당과 법당. 바닥을 누르면 걸어가고, 방석을 누르면 앉아요." role="img"></canvas>
+    <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
 
     <div class="w3-top">
@@ -31,7 +31,7 @@
         {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
       </div>
       <nav class="w3-actions" data-actions aria-label="동작"></nav>
-      <p class="w3-hint" data-hint>바닥을 누르면 걸어가요 · 드래그로 둘러보기 · 방석을 누르면 앉아요</p>
+      <p class="w3-hint" data-hint>바닥을 누르면 걸어가요 · 끌어서 둘러보기</p>
     </div>
 
     <div class="w3-enter" data-enter>
@@ -39,7 +39,7 @@
         <p class="kicker">Study together</p>
         <h1>{{ info[0] }}</h1>
         <p>{{ info[1] }}</p>
-        <button type="button" class="btn primary big" data-enter-btn>산사에 들어가기</button>
+        <button type="button" class="btn primary big" data-enter-btn>{{ enter_text }}</button>
         <p class="fine">소리가 함께 나와요. 휴대폰 옆 볼륨 버튼으로 크기를 조절하세요.</p>
       </div>
     </div>
@@ -68,7 +68,7 @@
         <input type="text" name="body" maxlength="{{ note_max }}" required placeholder="예: 오늘은 2단원 기출 끝까지" aria-label="{{ info[2] }}에 남길 한 줄">
         <button class="btn" type="submit">걸기</button>
       </form>
-      {% if not notes %}<p class="muted small">아직 아무도 걸지 않았어요. 첫 에마를 걸어 보세요.</p>{% endif %}
+      {% if not notes %}<p class="muted small">아직 아무도 걸지 않았어요. 첫 글을 남겨 보세요.</p>{% endif %}
       <ul class="note-wall wall-{{ key }}">
         {% for n in notes %}
         <li><p>{{ n.body }}</p><span>{{ n.nickname or '익명' }} · {{ n.created_at[5:10] }}</span>
@@ -78,5 +78,5 @@
     </section>
   </div>
 </div>
-<script type="module" src="{{ url_for('static', filename='sanji3d.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='world3d.js') }}"></script>
 {% endblock %}
