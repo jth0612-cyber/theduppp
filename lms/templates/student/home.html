@@ -12,15 +12,6 @@
   </div>
 </header>
 
-<section class="today-bar" aria-label="이번 주 접속">
-  <p><b>{% if streak.total > 1 %}누적 {{ streak.total }}일째{% else %}오늘부터 시작{% endif %}</b><br>
-    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 접속 포인트 10P를 받아요.{% endif %}</span></p>
-  <div class="week">
-    {% for d in streak.week %}
-      <span class="day {{ 'done' if d.done }} {{ 'today' if d.today }}" title="{{ d.label }}">{{ d.label }}</span>
-    {% endfor %}
-  </div>
-</section>
 
 <section class="glance" aria-label="오늘 한눈에">
   <a class="gl" href="{{ url_for('study.s_calendar') }}">
@@ -43,6 +34,16 @@
     <b>{{ open_wrong }}</b>
     <span class="gl-s">{% if open_wrong %}다시 풀어서 맞히면 지워져요{% else %}남은 오답 없음{% endif %}</span>
   </a>
+</section>
+
+<section class="today-bar" aria-label="이번 주 접속">
+  <p><b>{% if streak.total > 1 %}누적 {{ streak.total }}일째{% else %}오늘부터 시작{% endif %}</b><br>
+    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 접속 포인트 10P를 받아요.{% endif %}</span></p>
+  <div class="week">
+    {% for d in streak.week %}
+      <span class="day {{ 'done' if d.done }} {{ 'today' if d.today }}" title="{{ d.label }}">{{ d.label }}</span>
+    {% endfor %}
+  </div>
 </section>
 
 <div class="home-cols">

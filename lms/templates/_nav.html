@@ -1,0 +1,97 @@
+{# 메뉴 정의: 컴퓨터 왼쪽 메뉴, 휴대폰 아래 탭, 휴대폰 전체 메뉴가 모두 이 목록을 쓴다. #}
+{% set ICONS = {
+  'home': '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  'notice': '<path d="M3 10v4a1 1 0 0 0 1 1h2l6 4V5L6 9H4a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
+  'calendar': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  'task': '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="m9 13 2 2 4-4"/>',
+  'folder': '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  'video': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>',
+  'chat': '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  'plan': '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12 3 3 5-6"/>',
+  'compass': '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  'cards': '<rect x="7" y="3" width="13" height="16" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h9"/>',
+  'wrong': '<path d="M6 3h12v18H6z"/><path d="m9.5 9.5 5 5M14.5 9.5l-5 5"/>',
+  'chart': '<path d="M4 20V11M10 20V5M16 20v-7M2 20h20"/>',
+  'book': '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/>',
+  'score': '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  'report': '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  'game': '<rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M5.5 12.5h3M15.5 12h.01M18 14h.01"/>',
+  'point': '<circle cx="12" cy="12" r="9"/><path d="M10 16V8h2.5a2 2 0 0 1 0 4H10"/>',
+  'grid': '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  'dash': '<rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="3" width="8" height="6" rx="1.5"/><rect x="3" y="15" width="8" height="6" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/>',
+  'users': '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6 6 0 0 1 3.5 6"/>',
+  'search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  'news': '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>',
+  'signup': '<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/>',
+  'shield': '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
+  'list': '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  'close': '<path d="M6 6l12 12M18 6 6 18"/>',
+} %}
+
+{% macro icon(name) %}<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{{ ICONS[name]|safe }}</svg>{% endmacro %}
+
+{% macro nav_groups(ep) %}
+{%- set u = g.user -%}
+{%- if u.role == 'teacher' -%}
+{%- set groups = [
+  (None, [
+    ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
+    ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
+    ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
+    ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0)]),
+  ('수업 운영', [
+    ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task'), 0),
+    ('study.t_calendar', '일정·시간표', 'calendar', ep == 'study.t_calendar', 0),
+    ('study.t_cards', '개념 카드', 'cards', ep in ('study.t_cards', 'study.t_deck'), 0),
+    ('study.t_planner', '플래너 현황', 'plan', ep == 'study.t_planner', 0),
+    ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
+    ('teacher.news', '교육 뉴스', 'news', ep.startswith('teacher.news'), 0)]),
+  ('계정', [
+    ('teacher.signups', '가입 승인', 'signup', ep == 'teacher.signups', pending_signups or 0),
+    ('teacher.staff', '조교 계정', 'shield', ep.startswith('teacher.staff'), 0),
+    ('teacher.audit_log', '접근 기록', 'list', ep == 'teacher.audit_log', 0)])] -%}
+{%- elif u.role == 'assistant' -%}
+{%- set groups = [(None, [('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0)])] -%}
+{%- else -%}
+{%- set groups = [
+  (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
+  ('수업', [
+    ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
+    ('study.s_calendar', '일정', 'calendar', ep == 'study.s_calendar', 0),
+    ('study.tasks', '과제', 'task', ep == 'study.tasks', 0),
+    ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),
+    ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0),
+    ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
+  ('공부', [
+    ('study.planner', '플래너', 'plan', ep == 'study.planner', 0),
+    ('study.guide', '내 공부법', 'compass', ep == 'study.guide', 0),
+    ('study.cards', '개념 카드', 'cards', ep in ('study.cards', 'study.deck'), 0),
+    ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
+    ('books.analysis_home', '모의고사 분석', 'chart', ep == 'books.analysis_home', 0),
+    ('books.my_books', '내 서가', 'book', ep in ('books.my_books', 'books.register_book'), 0)]),
+  ('기록', [
+    ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
+    ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0),
+    ('games.hub', '미니게임', 'game', ep.startswith('games.'), 0),
+    ('student.points', '포인트', 'point', ep == 'student.points', 0)])] -%}
+{%- endif -%}
+{{ caller(groups) }}
+{% endmacro %}
+
+{# 휴대폰 아래 탭: 자주 쓰는 4개 + 전체 #}
+{% macro tab_items(ep) %}
+{%- if g.user.role == 'teacher' -%}
+{%- set items = [('teacher.dashboard', '홈', 'dash', ep == 'teacher.dashboard'),
+                 ('teacher.questions', '질문', 'chat', ep.startswith('teacher.question')),
+                 ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task')),
+                 ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'))] -%}
+{%- elif g.user.role == 'assistant' -%}
+{%- set items = [('teacher.questions', '질문', 'chat', ep.startswith('teacher.question'))] -%}
+{%- else -%}
+{%- set items = [('student.home', '홈', 'home', ep == 'student.home'),
+                 ('study.s_calendar', '일정', 'calendar', ep == 'study.s_calendar'),
+                 ('study.planner', '플래너', 'plan', ep == 'study.planner'),
+                 ('student.questions', '질답', 'chat', ep.startswith('student.question'))] -%}
+{%- endif -%}
+{{ caller(items) }}
+{% endmacro %}

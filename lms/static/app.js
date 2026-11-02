@@ -123,11 +123,11 @@ document.addEventListener("click", function (e) {
   themeLabel();
 });
 function themeLabel() {
-  var b = document.querySelector("[data-theme-toggle]");
-  if (!b) return;
   var cur = "auto";
   try { cur = localStorage.getItem("theme") || "auto"; } catch (_) {}
-  b.textContent = { auto: "화면: 자동", light: "화면: 밝게", dark: "화면: 어둡게" }[cur];
+  document.querySelectorAll("[data-theme-toggle]").forEach(function (b) {
+    b.textContent = { auto: "화면: 자동", light: "화면: 밝게", dark: "화면: 어둡게" }[cur];
+  });
 }
 document.addEventListener("DOMContentLoaded", themeLabel);
 
@@ -146,16 +146,17 @@ function pushSupported() {
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }
 function pushLabel() {
-  var b = document.querySelector("[data-push]");
-  if (!b) return;
+  var all = document.querySelectorAll("[data-push]");
+  if (!all.length) return;
   if (!pushSupported()) {
-    b.textContent = "알림: 홈 화면에 설치 후 사용";
-    b.disabled = true;
+    all.forEach(function (b) { b.textContent = "알림: 홈 화면에 설치 후 사용"; b.disabled = true; });
     return;
   }
   navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
-    b.textContent = sub ? "알림: 켜짐" : (Notification.permission === "denied" ? "알림: 차단됨" : "알림 켜기");
-    b.setAttribute("aria-pressed", sub ? "true" : "false");
+    all.forEach(function (b) {
+      b.textContent = sub ? "알림: 켜짐" : (Notification.permission === "denied" ? "알림: 차단됨" : "알림 켜기");
+      b.setAttribute("aria-pressed", sub ? "true" : "false");
+    });
   });
 }
 document.addEventListener("DOMContentLoaded", pushLabel);
@@ -181,4 +182,23 @@ document.addEventListener("click", function (e) {
       });
     });
   }).catch(function () {}).then(pushLabel);
+});
+
+// ---------- 휴대폰 전체 메뉴 ----------
+function setMenu(open) {
+  var m = document.getElementById("m-menu");
+  var btn = document.querySelector("[data-menu-open]");
+  if (!m) return;
+  m.hidden = !open;
+  document.body.classList.toggle("menu-open", open);
+  if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) { var c = m.querySelector("[data-menu-close]"); if (c) c.focus(); }
+  else if (btn) btn.focus();
+}
+document.addEventListener("click", function (e) {
+  if (e.target.closest("[data-menu-open]")) setMenu(true);
+  else if (e.target.closest("[data-menu-close]")) setMenu(false);
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && document.body.classList.contains("menu-open")) setMenu(false);
 });
