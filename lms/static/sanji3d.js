@@ -305,38 +305,50 @@ function route(fx, fz, tx, tz, toHall) {
 }
 
 // ---------------------------------------------------------------- 캐릭터
-const ROBE = 0xefe7d8;
 function nameSprite(text, me) {
   const t = textTexture(text, { w: 384, h: 96, font: "600 40px 'Noto Sans KR', sans-serif", fg: me ? "#fff" : "#2a2622", bg: me ? "rgba(30,28,24,0.82)" : "rgba(255,252,246,0.86)", radius: 48 });
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
   s.scale.set(1.5, 0.375, 1); s.position.y = 1.72; s.renderOrder = 10; return s;
 }
+// 동자 수험생: 큰 얼굴, 털모자(방울), 목도리, 책가방. 모자·목도리·장갑이 학생이 고른 색
+const SKIN = 0xf6d3b8, INK = 0x2a2420;
+const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: c, ...o });
+const sharedM = { robe: toon(0xeee4d2), skin: toon(SKIN), pom: toon(0xfff7ec), bag: toon(0x8a6a4f), bagTop: toon(0x6d523c), shoe: toon(0x5a4a3e),
+  eye: new THREE.MeshBasicMaterial({ color: INK }), shine: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+  blush: new THREE.MeshBasicMaterial({ color: 0xf3a08e, transparent: true, opacity: 0.65 }) };
+function part(g, m, x, y, z, parent) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); parent.add(o); return o; }
 class Avatar {
   constructor({ color, nick, me = false }) {
-    this.me = me; this.g = new THREE.Group(); this.upper = new THREE.Group(); this.upper.position.y = 0.32; this.g.add(this.upper);
-    this.robeMat = new THREE.MeshLambertMaterial({ color: ROBE, flatShading: true });
-    this.colorMat = new THREE.MeshLambertMaterial({ color, flatShading: true });
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.46, 0.78, 10), this.robeMat); body.position.y = 0.22; this.upper.add(body);
-    const sash = new THREE.Mesh(new THREE.CylinderGeometry(0.335, 0.37, 0.12, 10), this.colorMat); sash.position.y = 0.28; this.upper.add(sash);
-    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.05, 6, 12), this.colorMat); collar.rotation.x = Math.PI / 2; collar.position.y = 0.6; this.upper.add(collar);
-    this.head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 12), new THREE.MeshLambertMaterial({ color: 0xf2c9a8 })); this.head.position.y = 0.98; this.upper.add(this.head);
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.42), this.colorMat); cap.position.y = 1.0; this.upper.add(cap);
-    const eyeM = new THREE.MeshBasicMaterial({ color: 0x2a2420 });
-    for (const x of [-0.12, 0.12]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), eyeM); e.position.set(x, 0.96, 0.35); this.upper.add(e); }
-    const cheekM = new THREE.MeshBasicMaterial({ color: 0xf0a08a, transparent: true, opacity: 0.6 });
-    for (const x of [-0.21, 0.21]) { const c = new THREE.Mesh(new THREE.CircleGeometry(0.055, 10), cheekM); c.position.set(x, 0.88, 0.335); c.lookAt(x * 3, 0.88, 2); this.upper.add(c); }
-    const handM = new THREE.MeshLambertMaterial({ color: 0xf2c9a8 });
-    this.hands = [-1, 1].map((s) => { const h = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), handM); h.userData.side = s; this.upper.add(h); return h; });
-    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false }));
+    this.me = me; this.g = new THREE.Group(); this.upper = new THREE.Group(); this.g.add(this.upper);
+    this.colorMat = toon(color); this.rimMat = toon(new THREE.Color(color).offsetHSL(0, 0, 0.18));
+    const U = this.upper;
+    part(new THREE.CylinderGeometry(0.3, 0.44, 0.62, 20), sharedM.robe, 0, 0.42, 0, U);
+    const scarf = part(new THREE.TorusGeometry(0.24, 0.085, 10, 20), this.colorMat, 0, 0.74, 0, U); scarf.rotation.x = Math.PI / 2;
+    const tail = part(new THREE.BoxGeometry(0.12, 0.28, 0.06), this.colorMat, 0.14, 0.58, 0.27, U); tail.rotation.z = 0.15;
+    this.head = part(new THREE.SphereGeometry(0.48, 28, 20), sharedM.skin, 0, 1.16, 0, U);
+    const hat = part(new THREE.SphereGeometry(0.5, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), this.colorMat, 0, 1.22, 0, U); hat.scale.y = 0.95;
+    const rim = part(new THREE.TorusGeometry(0.47, 0.07, 10, 28), this.rimMat, 0, 1.24, 0, U); rim.rotation.x = Math.PI / 2;
+    this.pom = part(new THREE.SphereGeometry(0.12, 14, 10), sharedM.pom, 0, 1.74, 0, U);
+    for (const sd of [-1, 1]) {
+      const e = part(new THREE.SphereGeometry(0.058, 12, 8), sharedM.eye, sd * 0.15, 1.08, 0.45, U); e.scale.set(1, 1.25, 0.6);
+      part(new THREE.SphereGeometry(0.016, 6, 4), sharedM.shine, sd * 0.15 + 0.015, 1.105, 0.48, U);
+      const bl = part(new THREE.CircleGeometry(0.06, 14), sharedM.blush, sd * 0.25, 1.0, 0.44, U); bl.lookAt(sd * 1, 1.0, 3);
+    }
+    const mouth = part(new THREE.TorusGeometry(0.035, 0.011, 6, 12, Math.PI), sharedM.eye, 0, 1.01, 0.46, U); mouth.rotation.z = Math.PI;
+    part(new THREE.BoxGeometry(0.42, 0.42, 0.18), sharedM.bag, 0, 0.5, -0.38, U);
+    part(new THREE.BoxGeometry(0.44, 0.12, 0.2), sharedM.bagTop, 0, 0.66, -0.38, U);
+    this.hands = [-1, 1].map((sd) => { const h = part(new THREE.SphereGeometry(0.1, 12, 8), this.colorMat, sd * 0.42, 0.42, 0.06, U); h.userData.side = sd; return h; });
+    this.feet = [-1, 1].map((sd) => { const f = part(new THREE.SphereGeometry(0.11, 12, 8), sharedM.shoe, sd * 0.15, 0.06, 0.08, this.g); f.scale.set(1, 0.6, 1.4); f.userData.side = sd; return f; });
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; this.g.add(shadow);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.0, depthWrite: false, side: THREE.DoubleSide }));
     this.ring.rotation.x = -Math.PI / 2; this.ring.position.y = 0.04; this.g.add(this.ring);
-    this.tag = nameSprite(nick, me); this.g.add(this.tag);
+    this.tag = nameSprite(nick, me); this.tag.position.y = 2.15; this.g.add(this.tag);
     this.pos = new THREE.Vector3(); this.path = []; this.yaw = 0; this.pose = "stand"; this.t = Math.random() * 10;
     this.focus = false; this.seat = null; this.bowT = 0; this.speed = me ? 3.6 : 3.8;
     scene.add(this.g);
   }
-  setColor(c) { this.colorMat.color.set(c); this.ring.material.color.set(c); }
+  setColor(c) { this.colorMat.color.set(c); this.rimMat.color.set(new THREE.Color(c).offsetHSL(0, 0, 0.18)); this.ring.material.color.set(c); }
   place(x, z, yaw) { this.pos.set(x, heightAt(x, z), z); if (yaw !== undefined) this.yaw = yaw; this.path = []; }
   walkTo(points) { this.path = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); if (this.pose !== "walk") this.pose = "walk"; }
   get moving() { return this.path.length > 0; }
@@ -358,19 +370,27 @@ class Avatar {
     // 몸짓
     const walk = this.pose === "walk";
     const bob = walk && !reduceMotion ? Math.abs(Math.sin(this.t * 11)) * 0.07 : 0;
-    this.upper.position.y = (sitting ? 0.06 : 0.18) + bob;
+    this.upper.position.y = (sitting ? -0.06 : 0) + bob;
     this.upper.rotation.z = walk && !reduceMotion ? Math.sin(this.t * 11) * 0.05 : 0;
     const breathe = (this.pose === "breathe" || this.focus) && !reduceMotion ? 1 + Math.sin(this.t * (Math.PI * 2 / 6)) * 0.025 : 1;
     this.upper.scale.set(breathe, sitting ? 0.92 : 1, breathe);
     // 절: 잠깐 앞으로 숙였다 돌아옴
     if (this.bowT > 0) { this.bowT -= dt; const k = Math.sin(Math.min(1, (1.6 - this.bowT) / 1.6) * Math.PI); this.upper.rotation.x = k * 0.75; if (this.bowT <= 0) { this.upper.rotation.x = 0; if (this.pose === "bow") this.pose = this.seat !== null ? "sit" : "stand"; } }
     const gassho = this.pose === "gassho" || this.pose === "bow";
+    const ph = this.t * 11;
     this.hands.forEach((h) => {
       const s = h.userData.side;
-      if (gassho) h.position.set(s * 0.06, 0.58, 0.38);
-      else if (sitting) h.position.set(s * 0.22, 0.12, 0.34);
-      else h.position.set(s * 0.44, 0.2 + (walk ? Math.sin(this.t * 11 + (s > 0 ? Math.PI : 0)) * 0.06 : 0), walk ? Math.sin(this.t * 11 + (s > 0 ? 0 : Math.PI)) * 0.12 : 0.02);
+      if (gassho) h.position.set(s * 0.05, 0.66, 0.4);
+      else if (sitting) h.position.set(s * 0.18, 0.36, 0.32);
+      else h.position.set(s * 0.42, 0.42 + (walk ? Math.sin(ph + (s > 0 ? Math.PI : 0)) * 0.04 : 0), walk ? Math.sin(ph + (s > 0 ? 0 : Math.PI)) * 0.14 : 0.06);
     });
+    this.feet.forEach((f) => {
+      const s = f.userData.side;
+      if (sitting) { f.position.set(s * 0.22, 0.02, 0.3); f.rotation.y = -s * 1.1; }
+      else { const sw = walk && !reduceMotion ? Math.sin(ph + (s > 0 ? Math.PI : 0)) : 0;
+        f.position.set(s * 0.15, 0.06 + Math.max(0, sw) * 0.07, 0.08 + sw * 0.12); f.rotation.y = 0; }
+    });
+    if (!reduceMotion) this.pom.position.x = Math.sin(this.t * (walk ? 11 : 1.5)) * (walk ? 0.03 : 0.01);
     if (this.me) this.tag.visible = this.seat === null;
     const ringTarget = this.focus ? 0.55 + Math.sin(this.t * 2) * 0.15 : 0;
     this.ring.material.opacity += (ringTarget - this.ring.material.opacity) * Math.min(1, dt * 3);
