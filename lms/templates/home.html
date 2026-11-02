@@ -1,20 +1,92 @@
 {% extends "base.html" %}
 {% block title %}정태혁 통합과학 lab{% endblock %}
-{% block main_class %}home-wrap{% endblock %}
+{% block body_class %}pub{% endblock %}
+{% block main_class %}pub-wrap{% endblock %}
+{% block auth_brand %}{% endblock %}
 {% block content %}
-<header class="masthead">
-  <p class="mast-kicker">시대인재N 재수종합 · 통합과학</p>
-  <h1>정태혁 통합과학 lab</h1>
-  <p class="ed-lede">수업 자료와 공지, 질문, 모의고사 분석을 한곳에 모았습니다. 재원생 계정으로 들어와 주세요.</p>
-  <p class="mast-actions"><a class="btn primary" href="{{ url_for('auth.login') }}">로그인</a> <a class="text-link" href="{{ url_for('auth.signup') }}">반 코드로 가입 신청</a></p>
+<header class="pub-bar">
+  <a class="pub-brand" href="{{ url_for('auth.index') }}" aria-label="정태혁 통합과학 lab 홈">
+    {% include "_logo.html" %}
+    <span>정태혁 통합과학 lab</span>
+  </a>
+  <nav class="pub-nav" aria-label="바로가기">
+    <a href="#books">교재</a>
+    <a href="#guide">안내</a>
+    <a class="pub-login" href="{{ url_for('auth.login') }}">로그인</a>
+  </nav>
 </header>
-<ol class="index-list" aria-label="둘러보기">
-  <li><a href="{{ url_for('student.notices') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">1</span><span class="el-sym">No</span></span>
-    <span class="idx-body"><b>공지</b><span>수업 일정, 정오표, 자료 안내</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
-  <li><a href="{{ url_for('student.questions') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">2</span><span class="el-sym">Qa</span></span>
-    <span class="idx-body"><b>질문 게시판</b><span>재원생끼리 닉네임으로 묻고, 선생님이 답합니다</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
-  <li><a href="{{ url_for('books.analysis_home') }}"><span class="el idx-el" aria-hidden="true"><span class="el-top">3</span><span class="el-sym">Mo</span></span>
-    <span class="idx-body"><b>모의고사 분석</b><span>교재 코드로 열리는 가채점과 반 통계</span></span><span class="idx-go" aria-hidden="true">→</span></a></li>
-</ol>
-<p class="fine">세 곳 모두 로그인한 재원생에게만 열립니다.</p>
+
+<section class="pub-hero" aria-labelledby="hero-title">
+  <figure class="hero-photo">
+    <img src="{{ url_for('static', filename='img/books/framing-stand.webp') }}"
+         srcset="{{ url_for('static', filename='img/books/framing-stand-700.webp') }} 700w, {{ url_for('static', filename='img/books/framing-stand.webp') }} 1400w"
+         sizes="(max-width: 860px) 100vw, 58vw" width="1400" height="1250"
+         alt="검은 표지의 FRAMING 기출문제집이 서 있고, 옆에 같은 책 두 권이 책등을 보이며 기대어 있다">
+  </figure>
+  <div class="hero-copy">
+    <p class="kicker">2028 수능 대비 · 통합과학</p>
+    <h1 id="hero-title">틀을 잡고,<br>줄을 세운다.</h1>
+    <p class="hero-lede">기출로 생각의 틀을 잡고, 개념을 한 줄로 세웁니다. 수업 공지와 질문, 교재 모의고사의 가채점 분석을 이곳에서 이어 갑니다.</p>
+    <p class="hero-actions">
+      <a class="btn primary" href="{{ url_for('auth.login') }}">재원생 로그인</a>
+      <a class="text-link" href="{{ url_for('auth.signup') }}">반 코드로 가입 신청</a>
+    </p>
+  </div>
+</section>
+
+<section class="pub-sec" id="books" aria-labelledby="books-title">
+  <div class="pub-sec-head">
+    <p class="kicker">Books</p>
+    <h2 id="books-title">교재</h2>
+  </div>
+  <ul class="book-list">
+    <li class="book-item">
+      <figure class="book-photo">
+        <img src="{{ url_for('static', filename='img/books/framing-stack-700.webp') }}"
+             srcset="{{ url_for('static', filename='img/books/framing-stack-700.webp') }} 700w, {{ url_for('static', filename='img/books/framing-stack.webp') }} 1400w"
+             sizes="(max-width: 860px) 100vw, 45vw" width="1400" height="1250" loading="lazy"
+             alt="FRAMING 검은 표지와 흰 표지 두 권이 바닥에 비스듬히 겹쳐 놓여 있다">
+      </figure>
+      <div class="book-meta">
+        <p class="book-name">FRAMING</p>
+        <p class="book-sub">기출문제집 · 통합과학 I</p>
+      </div>
+    </li>
+    <li class="book-item">
+      <figure class="book-photo">
+        <img src="{{ url_for('static', filename='img/books/lineup-stack-700.webp') }}"
+             srcset="{{ url_for('static', filename='img/books/lineup-stack-700.webp') }} 700w, {{ url_for('static', filename='img/books/lineup-stack.webp') }} 1400w"
+             sizes="(max-width: 860px) 100vw, 45vw" width="1400" height="1250" loading="lazy"
+             alt="LINE_UP 통합과학 I과 II 두 권이 바닥에 비스듬히 겹쳐 놓여 있다">
+      </figure>
+      <div class="book-meta">
+        <p class="book-name">LINE_UP</p>
+        <p class="book-sub">통합과학 I · II</p>
+      </div>
+    </li>
+  </ul>
+  <p class="book-note">교재 앞쪽의 코드를 등록하면 회차별 가채점, 등급 기준, 문항별 정답률이 열립니다. <a class="text-link" href="{{ url_for('books.register_book') }}">코드 등록하기</a></p>
+</section>
+
+<section class="pub-sec" id="guide" aria-labelledby="guide-title">
+  <div class="pub-sec-head">
+    <p class="kicker">Guide</p>
+    <h2 id="guide-title">안내</h2>
+  </div>
+  <ul class="guide-list">
+    <li><a href="{{ url_for('student.notices') }}">
+      <span class="g-no">01</span>
+      <span class="g-body"><b>공지</b><span>수업 일정, 정오표, 자료 안내</span></span>
+      <span class="g-go" aria-hidden="true">→</span></a></li>
+    <li><a href="{{ url_for('student.questions') }}">
+      <span class="g-no">02</span>
+      <span class="g-body"><b>질문 게시판</b><span>닉네임으로 묻고, 선생님이 답합니다</span></span>
+      <span class="g-go" aria-hidden="true">→</span></a></li>
+    <li><a href="{{ url_for('books.analysis_home') }}">
+      <span class="g-no">03</span>
+      <span class="g-body"><b>모의고사 분석</b><span>가채점과 반 전체 통계</span></span>
+      <span class="g-go" aria-hidden="true">→</span></a></li>
+  </ul>
+  <p class="fine">세 곳 모두 로그인한 재원생에게만 열립니다.</p>
+</section>
 {% endblock %}

@@ -8,7 +8,7 @@
       <tbody>
       {% for r in stats.cuts %}
         <tr class="{{ 'mine' if my_grade == r.grade }}">
-          <td><span class="chip-el">{{ r.grade }}</span></td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
+          <td class="grade-cell">{{ r.grade }}등급</td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
           <td class="num">{{ r.pct }}</td><td class="num muted">{% if r.lo == r.hi %}±0{% else %}{{ fmt(r.lo) }}~{{ fmt(r.hi) }}{% endif %}</td>
         </tr>
       {% endfor %}

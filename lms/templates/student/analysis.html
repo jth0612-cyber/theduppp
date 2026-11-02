@@ -80,10 +80,9 @@
         <span class="k">원점수</span>
         <b>{% if my_score is not none %}{{ fmt(my_score) }}{% else %}—{% endif %}</b><span class="of">/ {{ fmt(mock.full_score) }}</span>
       </div>
-      <div class="el grade-el" aria-label="{{ '예상 ' ~ my_grade ~ '등급' if my_grade else '예상 등급 없음' }}">
-        <span class="el-top">예상</span>
-        <span class="el-sym">{{ my_grade or '–' }}</span>
-        <span class="el-name">등급</span>
+      <div class="report-grade" aria-label="{{ '예상 ' ~ my_grade ~ '등급' if my_grade else '예상 등급 없음' }}">
+        <span class="k">예상 등급</span>
+        <b>{{ my_grade or '–' }}</b>
       </div>
     </div>
     <dl class="report-lines">
