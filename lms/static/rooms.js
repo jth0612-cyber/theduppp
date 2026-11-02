@@ -146,7 +146,21 @@ function initRoom(room) {
     }
     var btn = room.querySelector("[data-sound-toggle]");
     function label() { if (btn) { btn.textContent = on ? "소리 끄기" : "소리 켜기"; btn.setAttribute("aria-pressed", on ? "true" : "false"); } }
+    // 아이폰 무음 스위치: 브라우저가 만든 소리는 '알림음'으로 취급돼 꺼진다.
+    // '미디어 재생'으로 취급받도록 (1) iOS 17+ 오디오 세션을 playback 으로, (2) 무음 파일을 함께 반복 재생.
+    var keepAlive = null;
+    function mediaMode(onOff) {
+      try { if (navigator.audioSession) navigator.audioSession.type = onOff ? "playback" : "auto"; } catch (_) {}
+      if (onOff) {
+        if (!keepAlive) {
+          keepAlive = new Audio("/static/silence.wav");
+          keepAlive.loop = true; keepAlive.setAttribute("playsinline", ""); keepAlive.preload = "auto";
+        }
+        var p = keepAlive.play(); if (p && p.catch) p.catch(function () {});
+      } else if (keepAlive) { keepAlive.pause(); }
+    }
     function start() {
+      mediaMode(true);
       try {
         if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
         if (ctx.state === "suspended") ctx.resume();
@@ -158,6 +172,7 @@ function initRoom(room) {
       on = false; timers.forEach(clearTimeout); timers = [];
       if (master) { master.disconnect(); master = null; }
       if (ctx) { ctx.close(); ctx = null; }
+      mediaMode(false);
       label();
     }
     if (btn) btn.addEventListener("click", function () { on ? stop() : start(); });
