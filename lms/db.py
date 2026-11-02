@@ -374,6 +374,32 @@ CREATE TABLE IF NOT EXISTS submissions (
     UNIQUE (assignment_id, student_id)
 );
 
+-- 함께 공부하는 장소(산사·목욕탕·역·찻집): 지금 있는 사람, 집중 기록, 남기고 간 글
+CREATE TABLE IF NOT EXISTS room_presence (
+    user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    place       TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'rest' CHECK (status IN ('focus', 'rest')),
+    focus_since TEXT,
+    plan_min    INTEGER NOT NULL DEFAULT 25,
+    last_seen   TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS focus_logs (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    place       TEXT NOT NULL,
+    minutes     INTEGER NOT NULL,
+    ended_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_focus_user ON focus_logs(user_id, ended_at);
+CREATE TABLE IF NOT EXISTS room_notes (
+    id          INTEGER PRIMARY KEY,
+    place       TEXT NOT NULL,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_room_notes_place ON room_notes(place, created_at);
+
 -- 웹 푸시 구독 (브라우저마다 하나)
 CREATE TABLE IF NOT EXISTS push_subs (
     id          INTEGER PRIMARY KEY,

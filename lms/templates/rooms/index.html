@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "rooms/_scenes.html" import scene %}
+{% block title %}같이 공부 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<header class="ed-head ed-head-split">
+  <div>
+    <p class="kicker">Study together</p>
+    <h1>어디서 공부할까요?</h1>
+    <p class="ed-lede">일본 소도시의 조용한 네 곳. 들어가면 같은 자리의 친구들이 보이고, 각자 타이머를 돌리며 함께 집중합니다.</p>
+  </div>
+  <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
+</header>
+<ul class="place-list">
+  {% for key, p in places.items() %}
+  {% set c = counts.get(key) %}
+  <li>
+    <a href="{{ url_for('rooms.room', place=key) }}" class="place pl-{{ key }}">
+      {{ scene(key) }}
+      <span class="place-body">
+        <b>{{ p[0] }}</b>
+        <span class="place-line">{{ p[1] }}</span>
+        <span class="place-now">{% if c and c.n %}<i class="dot-live" aria-hidden="true"></i>{{ c.n }}명 있음 · {{ c.focus or 0 }}명 집중 중{% else %}지금은 조용해요{% endif %}</span>
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

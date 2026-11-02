@@ -1,0 +1,88 @@
+{# 장소 그림: 직접 그린 단순한 겹 그림(SVG). 움직임은 CSS 클래스로만(CSP: 인라인 스타일 금지). #}
+{% macro scene(key, cls='', align='xMidYMid') %}
+<svg class="scene {{ cls }}" viewBox="0 0 400 240" preserveAspectRatio="{{ align }} slice" role="img" aria-label="{{ {'sanji': '해 질 녘 산사의 돌계단과 석등', 'sento': '온천 마을 목욕탕 입구와 김이 오르는 굴뚝', 'eki': '노을 지는 바닷가의 작은 역', 'kissa': '비 오는 밤 골목의 불 켜진 찻집'}[key] }}">
+{% if key == 'sanji' %}
+  <defs>
+    <linearGradient id="sj-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4256"/><stop offset=".55" stop-color="#8a7a86"/><stop offset="1" stop-color="#d9b89a"/></linearGradient>
+    <radialGradient id="sj-glow"><stop offset="0" stop-color="#ffd58a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd58a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#sj-sky)"/>
+  <circle cx="300" cy="62" r="13" fill="#f3e3c4" opacity=".85"/>
+  <path d="M0 132 60 96 110 118 170 80 230 112 290 86 350 108 400 92V240H0z" fill="#59626a" opacity=".55"/>
+  <path d="M0 150 50 128 120 146 180 118 250 142 320 124 400 140V240H0z" fill="#3f4a45"/>
+  <g fill="#26302b">
+    <path d="M22 168 34 120 46 168z"/><path d="M40 172 54 110 68 172z"/><path d="M350 170 364 116 378 170z"/><path d="M372 172 384 128 396 172z"/>
+  </g>
+  <g fill="#2a2522">
+    <path d="M232 128c22-10 70-10 92 0l-8 6h-76z"/><rect x="246" y="134" width="64" height="26"/>
+    <path d="M238 124c16-12 64-12 80 0" fill="none" stroke="#2a2522" stroke-width="4"/>
+  </g>
+  <rect x="270" y="142" width="16" height="18" fill="#e8b46a" opacity=".85" class="sc-flicker"/>
+  <path d="M150 240 186 160h28l36 80z" fill="#6f6a62"/>
+  <g stroke="#57534c" stroke-width="2"><path d="M180 174h40M176 186h48M171 199h58M165 213h70M158 228h84"/></g>
+  <path d="M150 240 186 160" stroke="#4d5a4a" stroke-width="5" opacity=".6"/>
+  <g fill="#4c4740">
+    <rect x="118" y="196" width="18" height="30"/><path d="M110 196h34l-6-8h-22z"/><rect x="263" y="196" width="18" height="30"/><path d="M255 196h34l-6-8h-22z"/>
+  </g>
+  <circle cx="127" cy="205" r="22" fill="url(#sj-glow)" class="sc-flicker"/><circle cx="272" cy="205" r="22" fill="url(#sj-glow)" class="sc-flicker sc-delay"/>
+  <rect x="122" y="200" width="10" height="8" fill="#ffd58a"/><rect x="267" y="200" width="10" height="8" fill="#ffd58a"/>
+  <g fill="#fff3b8" class="sc-fireflies"><circle cx="90" cy="180" r="1.6"/><circle cx="310" cy="176" r="1.4"/><circle cx="210" cy="150" r="1.2"/><circle cx="60" cy="200" r="1.3"/></g>
+{% elif key == 'sento' %}
+  <defs>
+    <linearGradient id="st-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f3b52"/><stop offset="1" stop-color="#c79a7a"/></linearGradient>
+    <radialGradient id="st-door"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".8"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#st-sky)"/>
+  <rect x="300" y="20" width="18" height="120" fill="#4a3e3a"/><rect x="298" y="20" width="22" height="6" fill="#3a302d"/>
+  <g fill="#f4ede6" class="sc-steam"><circle cx="309" cy="12" r="10" opacity=".5"/><circle cx="322" cy="0" r="13" opacity=".35"/><circle cx="300" cy="-10" r="9" opacity=".25"/></g>
+  <path d="M40 104 200 70 360 104z" fill="#3c4148"/><path d="M40 104h320v8H40z" fill="#2e3237"/>
+  <rect x="60" y="112" width="280" height="128" fill="#8a6a50"/>
+  <g stroke="#6f5440" stroke-width="2">{% for x in range(70, 340, 14) %}<path d="M{{ x }} 112v128"/>{% endfor %}</g>
+  <rect x="150" y="140" width="100" height="100" fill="#3a2c24"/>
+  <circle cx="200" cy="200" r="60" fill="url(#st-door)"/>
+  <rect x="160" y="150" width="80" height="90" fill="#ffd9a0" opacity=".55"/>
+  <g fill="#2d3e66"><rect x="150" y="136" width="32" height="48"/><rect x="184" y="136" width="32" height="48"/><rect x="218" y="136" width="32" height="48"/></g>
+  <text x="200" y="168" text-anchor="middle" font-size="26" fill="#f4ede6" font-family="serif">ゆ</text>
+  <rect x="84" y="150" width="44" height="34" fill="#f5d39a" opacity=".7"/><rect x="272" y="150" width="44" height="34" fill="#f5d39a" opacity=".7"/>
+  <path d="M84 167h44M106 150v34M272 167h44M294 150v34" stroke="#8a6a50" stroke-width="2"/>
+  <ellipse cx="100" cy="232" rx="16" ry="6" fill="#3b4a3a"/><path d="M92 230c-6-20 2-30 8-34 6 4 14 14 8 34z" fill="#4f6a4b"/>
+{% elif key == 'eki' %}
+  <defs>
+    <linearGradient id="ek-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d6b8f"/><stop offset=".6" stop-color="#e3a184"/><stop offset="1" stop-color="#f2cf9b"/></linearGradient>
+    <linearGradient id="ek-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d79a86"/><stop offset="1" stop-color="#5d6f8a"/></linearGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#ek-sky)"/>
+  <circle cx="250" cy="132" r="26" fill="#fbe2b0"/>
+  <rect y="132" width="400" height="60" fill="url(#ek-sea)"/>
+  <g stroke="#fbe2b0" stroke-width="2" stroke-linecap="round" class="sc-shimmer"><path d="M224 142h52M232 150h36M220 158h60M238 166h26"/></g>
+  <path d="M0 130 40 122 70 132z" fill="#6a6e7c" opacity=".7"/>
+  <rect y="184" width="400" height="56" fill="#5b5a5f"/>
+  <rect y="184" width="400" height="6" fill="#d7c9b4"/>
+  <g stroke="#3d3c40" stroke-width="3"><path d="M0 214h400M0 228h400"/></g>
+  <g stroke="#7a6a5a" stroke-width="4">{% for x in range(8, 400, 24) %}<path d="M{{ x }} 208v26"/>{% endfor %}</g>
+  <g fill="#3d3a38"><rect x="56" y="120" width="5" height="64"/><rect x="128" y="120" width="5" height="64"/><path d="M46 116h96l-8-10H54z"/></g>
+  <rect x="70" y="160" width="50" height="6" fill="#7b5c44"/><rect x="74" y="166" width="4" height="12" fill="#5a4332"/><rect x="112" y="166" width="4" height="12" fill="#5a4332"/>
+  <rect x="300" y="132" width="40" height="18" fill="#f6efe2"/><rect x="318" y="150" width="4" height="34" fill="#3d3a38"/>
+  <path d="M306 141h28" stroke="#3d4e7a" stroke-width="3"/>
+  <circle cx="160" cy="70" r="1.6" fill="#fff" opacity=".7"/><path d="M180 60q5-4 10 0q5-4 10 0" stroke="#3f3f4a" stroke-width="1.5" fill="none"/>
+{% else %}
+  <defs>
+    <linearGradient id="ks-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2333"/><stop offset="1" stop-color="#36405a"/></linearGradient>
+    <radialGradient id="ks-lamp"><stop offset="0" stop-color="#ffd38a" stop-opacity=".7"/><stop offset="1" stop-color="#ffd38a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#ks-sky)"/>
+  <path d="M0 40h70v170H0zM330 30h70v180h-70z" fill="#161b26"/>
+  <rect x="90" y="70" width="220" height="140" fill="#2a2523"/>
+  <path d="M80 70h240l-14-16H94z" fill="#1f1a19"/>
+  <rect x="110" y="96" width="120" height="76" fill="#f2c27a" class="sc-flicker"/>
+  <path d="M110 134h120M170 96v76" stroke="#2a2523" stroke-width="4"/>
+  <g fill="#7a4b32"><path d="M140 160h20l-3 10h-14z"/><rect x="186" y="150" width="6" height="20"/><circle cx="189" cy="146" r="7"/></g>
+  <rect x="246" y="110" width="44" height="100" fill="#3b2f2a"/><circle cx="282" cy="160" r="2" fill="#d9b27a"/>
+  <rect x="248" y="58" width="40" height="22" fill="#d9c9a8"/><path d="M256 69h24" stroke="#5b3b2a" stroke-width="3"/>
+  <circle cx="352" cy="94" r="44" fill="url(#ks-lamp)"/><rect x="350" y="94" width="4" height="116" fill="#11151e"/><rect x="344" y="86" width="16" height="10" fill="#ffd38a"/>
+  <rect y="210" width="400" height="30" fill="#232a38"/>
+  <rect x="110" y="214" width="120" height="14" fill="#f2c27a" opacity=".25"/>
+  <g stroke="#a9b8d6" stroke-width="1.2" opacity=".55" class="sc-rain">{% for i in range(0, 34) %}{% set x = (i * 37) % 420 - 10 %}{% set y = (i * 53) % 220 %}<path d="M{{ x }} {{ y }}l-4 14"/>{% endfor %}</g>
+{% endif %}
+</svg>
+{% endmacro %}

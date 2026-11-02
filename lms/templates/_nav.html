@@ -26,6 +26,7 @@
   'shield': '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
   'list': '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
   'close': '<path d="M6 6l12 12M18 6 6 18"/>',
+  'torii': '<path d="M3 5c4 1 14 1 18 0M5 9h14M7 6v15M17 6v15"/>',
 } %}
 
 {% macro icon(name) %}<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{{ ICONS[name]|safe }}</svg>{% endmacro %}
@@ -44,6 +45,7 @@
     ('study.t_calendar', '일정·시간표', 'calendar', ep == 'study.t_calendar', 0),
     ('study.t_cards', '개념 카드', 'cards', ep in ('study.t_cards', 'study.t_deck'), 0),
     ('study.t_planner', '플래너 현황', 'plan', ep == 'study.t_planner', 0),
+    ('rooms.t_rooms', '같이 공부 현황', 'torii', ep == 'rooms.t_rooms', 0),
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
     ('teacher.news', '교육 뉴스', 'news', ep.startswith('teacher.news'), 0)]),
   ('계정', [
@@ -63,6 +65,7 @@
     ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0),
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
   ('공부', [
+    ('rooms.rooms', '같이 공부', 'torii', ep.startswith('rooms.'), 0),
     ('study.planner', '플래너', 'plan', ep == 'study.planner', 0),
     ('study.guide', '내 공부법', 'compass', ep == 'study.guide', 0),
     ('study.cards', '개념 카드', 'cards', ep in ('study.cards', 'study.deck'), 0),
@@ -89,7 +92,7 @@
 {%- set items = [('teacher.questions', '질문', 'chat', ep.startswith('teacher.question'))] -%}
 {%- else -%}
 {%- set items = [('student.home', '홈', 'home', ep == 'student.home'),
-                 ('study.s_calendar', '일정', 'calendar', ep == 'study.s_calendar'),
+                 ('rooms.rooms', '같이 공부', 'torii', ep.startswith('rooms.')),
                  ('study.planner', '플래너', 'plan', ep == 'study.planner'),
                  ('student.questions', '질답', 'chat', ep.startswith('student.question'))] -%}
 {%- endif -%}

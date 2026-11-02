@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "rooms/_scenes.html" import scene %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ info[0] }} · 같이 공부{% endblock %}
+{% block body_class %}in-room room-{{ key }}{% endblock %}
+{% block content %}
+<div class="room" data-room="{{ key }}" data-sound="{{ info[4] }}"
+     data-beat="{{ url_for('rooms.beat', place=key) }}" data-done="{{ url_for('rooms.done', place=key) }}"
+     data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}">
+  <div class="room-stage">
+    {{ scene(key, 'stage-scene', 'xMidYMax') }}
+    <div class="stage-top">
+      <a class="stage-back" href="{{ url_for('rooms.rooms') }}" data-leave>← 장소 고르기</a>
+      <button type="button" class="stage-sound" data-sound-toggle aria-pressed="false">소리 켜기</button>
+    </div>
+    <div class="stage-timer">
+      <p class="st-place">{{ info[0] }}</p>
+      <p class="st-time" data-clock aria-live="off">{{ '%02d:00'|format(me.plan_min) }}</p>
+      <p class="st-state" data-state>{{ '집중 중' if me.status == 'focus' else '준비' }}</p>
+    </div>
+  </div>
+
+  <section class="room-controls" aria-label="집중 타이머">
+    <div class="plan-pick" role="radiogroup" aria-label="집중 시간">
+      {% for m in plans %}<label class="chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
+    </div>
+    <div class="room-buttons">
+      <button type="button" class="btn primary big" data-start>집중 시작</button>
+      <button type="button" class="btn big" data-stop hidden>여기까지 하기</button>
+    </div>
+    <p class="fine" data-msg>오늘 {{ today }}분 집중했어요. 25분마다 5P (하루 40P까지).</p>
+  </section>
+
+  <div class="room-cols">
+    <section class="panel" aria-labelledby="h-here">
+      <div class="sec-head"><h2 id="h-here">지금 여기</h2><span data-count>{{ members|length }}명</span></div>
+      <ul class="here-list" data-members>
+        {% for m in members %}
+        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{{ m.nick }}{% if m.me %} (나){% endif %}</b>
+          <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %} · 오늘 {{ m.today }}분</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section class="panel" id="notes" aria-labelledby="h-notes">
+      <div class="sec-head"><h2 id="h-notes">{{ info[2] }}</h2><span>{{ info[3] }}</span></div>
+      <form method="post" action="{{ url_for('rooms.note', place=key) }}" class="note-form">
+        {{ csrf() }}
+        <input type="text" name="body" maxlength="{{ note_max }}" required placeholder="예: 오늘은 2단원 기출 끝까지" aria-label="{{ info[2] }}에 남길 한 줄">
+        <button class="btn" type="submit">남기기</button>
+      </form>
+      {% if not notes %}<p class="muted small">아직 아무도 남기지 않았어요. 첫 줄을 남겨 보세요.</p>{% endif %}
+      <ul class="note-wall wall-{{ key }}">
+        {% for n in notes %}
+        <li><p>{{ n.body }}</p><span>{{ n.nickname or '익명' }} · {{ n.created_at[5:10] }}</span>
+          {% if n.mine %}<form method="post" action="{{ url_for('rooms.note_delete', nid=n.id) }}">{{ csrf() }}<button class="x" aria-label="내 글 지우기">×</button></form>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='rooms.js') }}" defer></script>
+{% endblock %}
