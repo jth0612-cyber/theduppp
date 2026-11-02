@@ -1,8 +1,7 @@
-"""공부 도구: 공부 결 진단, 오답 노트, 개념 카드, 일정·D-day, 과제 제출함, 성적 리포트.
+"""공부 도구: 공부 결 진단, 오답 노트, 개념 카드, 시간표·D-day, 과제 제출함, 성적 리포트.
 학생 화면(/s/...)과 선생님 화면(/t/...)을 함께 둔다. 학생은 본인 기록과 본인 반 자료만 본다."""
-import calendar
 import json
-from datetime import date, timedelta
+from datetime import date, datetime
 
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
@@ -15,7 +14,6 @@ from security import (IMAGE_EXTS, audit, delete_file, login_required, save_uploa
 bp = Blueprint("study", __name__)
 
 WRONG_REASONS = ["개념 부족", "자료 해석", "조건 놓침", "계산 실수", "시간 부족", "찍음"]
-EVENT_KINDS = ["일정", "시험", "수업", "휴강", "마감"]
 TASK_EXTS = IMAGE_EXTS | {"pdf"}
 WEEKDAYS = "월화수목금토일"
 
@@ -45,9 +43,14 @@ def dday_info():
     return {"day": d.isoformat(), "left": left, "label": get_setting("exam_label", "수능")}
 
 
-def upcoming_events(class_id, limit=3):
-    return query("""SELECT * FROM events WHERE (class_id IS NULL OR class_id = ?) AND day >= date('now', 'localtime')
-                    ORDER BY day, id LIMIT ?""", (class_id, limit))
+def class_slots(class_id):
+    return query("SELECT * FROM timetable WHERE class_id = ? ORDER BY weekday, starts, id", (class_id,))
+
+
+def today_classes(class_id):
+    """오늘 요일의 수업 (지금 이후 수업이 먼저 오도록 시작 시간 순)."""
+    wd = date.today().weekday()
+    return [s for s in class_slots(class_id) if s["weekday"] == wd]
 
 
 # =====================================================================
@@ -285,56 +288,42 @@ def _classes():
 
 
 # =====================================================================
-# 5. 일정 달력 · 시간표 · D-day
+# 5. 시간표 · D-day
 # =====================================================================
 
-def _month_param():
-    raw = request.args.get("month", "")
-    try:
-        y, m = (int(x) for x in raw.split("-"))
-        return date(y, m, 1)
-    except ValueError:
-        t = date.today()
-        return date(t.year, t.month, 1)
+def _week_columns(slots):
+    today = date.today().weekday()
+    cols = [{"i": i, "label": WEEKDAYS[i], "today": i == today, "slots": [s for s in slots if s["weekday"] == i]}
+            for i in range(7)]
+    # 주말에 수업이 없으면 월~금만 보여 준다
+    if not any(c["slots"] for c in cols[5:]):
+        cols = cols[:5]
+    return cols
 
 
-def _month_grid(first, events):
-    cal = calendar.Calendar(firstweekday=0)
-    by_day = {}
-    for e in events:
-        by_day.setdefault(e["day"], []).append(e)
-    weeks = []
-    for wk in cal.monthdatescalendar(first.year, first.month):
-        weeks.append([{"date": d, "in": d.month == first.month, "events": by_day.get(d.isoformat(), [])} for d in wk])
-    return weeks
+def _valid_time(t):
+    return len(t) == 5 and t[2] == ":" and t[:2].isdigit() and t[3:].isdigit() and int(t[:2]) < 24 and int(t[3:]) < 60
 
 
-def _shift_month(first, n):
-    m = first.month - 1 + n
-    return date(first.year + m // 12, m % 12 + 1, 1)
-
-
-@bp.route("/s/calendar")
+@bp.route("/s/timetable")
 @student_required
-def s_calendar():
+def timetable():
     me = _me()
-    first = _month_param()
-    last = _shift_month(first, 1) - timedelta(days=1)
-    events = query("""SELECT * FROM events WHERE (class_id IS NULL OR class_id = ?) AND day BETWEEN ? AND ?
-                      ORDER BY day, id""", (me["class_id"], first.isoformat(), last.isoformat()))
-    tasks = query("""SELECT id, title, due_on FROM assignments WHERE class_id = ? AND due_on BETWEEN ? AND ?""",
-                  (me["class_id"], first.isoformat(), last.isoformat()))
-    merged = [dict(e) for e in events] + [{"day": t["due_on"], "title": f"과제 마감: {t['title']}", "kind": "마감"}
-                                          for t in tasks]
-    timetable = query("SELECT * FROM timetable WHERE class_id = ? ORDER BY weekday, starts", (me["class_id"],))
-    return render_template("study/calendar.html", weeks=_month_grid(first, merged), first=first, today=date.today(),
-                           prev=_shift_month(first, -1), next=_shift_month(first, 1), dday=dday_info(),
-                           timetable=timetable, weekdays=WEEKDAYS, upcoming=upcoming_events(me["class_id"], 5))
+    slots = class_slots(me["class_id"])
+    now = date.today()
+    hm = datetime.now().strftime("%H:%M")
+    today = [s for s in slots if s["weekday"] == now.weekday()]
+    current = next((s for s in today if s["starts"] <= hm < s["ends"]), None)
+    upnext = next((s for s in today if s["starts"] > hm), None)
+    return render_template("study/timetable.html", cols=_week_columns(slots), dday=dday_info(), me=me,
+                           current=current, upnext=upnext, has_slots=bool(slots))
 
 
-@bp.route("/t/calendar", methods=["GET", "POST"])
+@bp.route("/t/timetable", methods=["GET", "POST"])
 @teacher_required
-def t_calendar():
+def t_timetable():
+    classes = _classes()
+    cid = request.values.get("class_id", type=int) or (classes[0]["id"] if classes else None)
     if request.method == "POST":
         action = request.form.get("action")
         if action == "dday":
@@ -346,55 +335,32 @@ def t_calendar():
                 set_setting("exam_day", d.isoformat())
                 set_setting("exam_label", label)
                 flash(f"{label} 날짜를 {d.isoformat()}로 정했습니다.", "ok")
-        elif action == "event":
-            d = _parse_day(request.form.get("day"))
-            title = request.form.get("title", "").strip()[:80]
-            kind = request.form.get("kind") if request.form.get("kind") in EVENT_KINDS else "일정"
-            cid = request.form.get("class_id") or None
-            if d is None or not title:
-                flash("날짜와 내용을 입력하세요.", "error")
-            else:
-                execute("INSERT INTO events (class_id, day, title, kind) VALUES (?, ?, ?, ?)",
-                        (int(cid) if cid else None, d.isoformat(), title, kind))
-                flash("일정을 추가했습니다.", "ok")
-                from views.pwa import notify_class
-                notify_class(int(cid) if cid else None, f"새 일정 · {d.month}/{d.day}", title, url_for("study.s_calendar"))
         elif action == "slot":
-            try:
-                cid = int(request.form.get("class_id", ""))
-                wd = int(request.form.get("weekday", ""))
-                starts, ends = request.form.get("starts", ""), request.form.get("ends", "")
-                title = request.form.get("title", "").strip()[:40]
-                if not (0 <= wd <= 6 and len(starts) == 5 and len(ends) == 5 and title and starts < ends):
-                    raise ValueError
-            except ValueError:
-                flash("반, 요일, 시작·끝 시간, 수업 이름을 확인하세요.", "error")
+            days = [int(x) for x in request.form.getlist("weekday") if x.isdigit() and 0 <= int(x) <= 6]
+            starts, ends = request.form.get("starts", ""), request.form.get("ends", "")
+            title = request.form.get("title", "").strip()[:40]
+            room = request.form.get("room", "").strip()[:30]
+            if not cid or not days or not title or not (_valid_time(starts) and _valid_time(ends)) or starts >= ends:
+                flash("반, 요일(하나 이상), 시작·끝 시간, 수업 이름을 확인하세요.", "error")
             else:
-                execute("INSERT INTO timetable (class_id, weekday, starts, ends, title) VALUES (?, ?, ?, ?, ?)",
-                        (cid, wd, starts, ends, title))
-                flash("시간표에 추가했습니다.", "ok")
-        return redirect(url_for("study.t_calendar"))
-    events = query("""SELECT e.*, c.name AS class_name FROM events e LEFT JOIN classes c ON c.id = e.class_id
-                      WHERE e.day >= date('now', 'localtime', '-30 days') ORDER BY e.day, e.id""")
-    slots = query("""SELECT t.*, c.name AS class_name FROM timetable t JOIN classes c ON c.id = t.class_id
-                     ORDER BY c.name, t.weekday, t.starts""")
-    return render_template("study/t_calendar.html", events=events, slots=slots, classes=_classes(),
-                           kinds=EVENT_KINDS, weekdays=WEEKDAYS, dday=dday_info(),
-                           exam_label=get_setting("exam_label", "수능"))
+                for wd in days:
+                    execute("INSERT INTO timetable (class_id, weekday, starts, ends, title, room) VALUES (?, ?, ?, ?, ?, ?)",
+                            (cid, wd, starts, ends, title, room))
+                flash(f"{', '.join(WEEKDAYS[d] for d in days)}요일에 '{title}'을 넣었습니다.", "ok")
+        return redirect(url_for("study.t_timetable", class_id=cid))
+    slots = class_slots(cid) if cid else []
+    return render_template("study/t_timetable.html", classes=classes, cid=cid, cols=_week_columns(slots),
+                           slots=slots, weekdays=WEEKDAYS, dday=dday_info(), exam_label=get_setting("exam_label", "수능"))
 
 
-@bp.route("/t/calendar/event/<int:eid>/delete", methods=["POST"])
-@teacher_required
-def t_event_delete(eid):
-    execute("DELETE FROM events WHERE id = ?", (eid,))
-    return redirect(url_for("study.t_calendar"))
-
-
-@bp.route("/t/calendar/slot/<int:tid>/delete", methods=["POST"])
+@bp.route("/t/timetable/slot/<int:tid>/delete", methods=["POST"])
 @teacher_required
 def t_slot_delete(tid):
+    row = query("SELECT class_id FROM timetable WHERE id = ?", (tid,), one=True)
+    if row is None:
+        abort(404)
     execute("DELETE FROM timetable WHERE id = ?", (tid,))
-    return redirect(url_for("study.t_calendar"))
+    return redirect(url_for("study.t_timetable", class_id=row["class_id"]))
 
 
 # =====================================================================

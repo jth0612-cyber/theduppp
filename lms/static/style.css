@@ -632,19 +632,6 @@ body.pub, body.no-shell { background: #f4efe7; }
 .dday { margin: 0; display: grid; justify-items: end; }
 .dday span { font-size: 12px; color: var(--muted); }
 .dday b { font-family: var(--font-display); font-weight: 600; font-size: 34px; line-height: 1; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
-.month { border-top: 1px solid var(--ink); }
-.m-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.m-head span { padding: 8px 6px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--rule); }
-.m-cell { min-height: 92px; padding: 6px; border-bottom: 1px solid var(--rule); border-left: 1px solid var(--rule); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.m-cell:first-child { border-left: 0; }
-.m-cell.out { background: var(--raised); color: var(--faint); }
-.m-day { font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.m-cell.today .m-day { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--sheet); }
-.m-ev { font-size: 11.5px; line-height: 1.35; padding: 1px 5px; border-radius: 3px; background: var(--accent-soft); color: var(--accent-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.m-ev.k-시험 { background: var(--warn-soft); color: var(--warn); }
-.m-ev.k-휴강 { background: var(--raised); color: var(--muted); }
-.m-ev.k-마감 { background: var(--danger-soft); color: var(--danger); }
-.tt-day { width: 22px; flex: none; }
 
 /* 과제 */
 .task { border-top: 1px solid var(--rule); padding: 18px 0; }
@@ -685,8 +672,6 @@ table.compact th, table.compact td { padding: 7px 8px; font-size: 13.5px; }
   .axis-strip li { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); }
   .week-grid { grid-template-columns: minmax(0, 1fr); }
   .x { opacity: 1; }
-  .m-cell { min-height: 58px; padding: 3px; }
-  .m-ev { font-size: 10px; padding: 0 3px; }
   .glance { gap: 8px; }
   .gl { padding: 12px; }
   .gl b { font-size: 24px; }
@@ -883,4 +868,30 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
   .room-stage { margin: -20px -16px 16px; border-radius: 0; }
   .room-buttons .btn.big { min-width: 0; width: 100%; }
   .room-buttons { width: 100%; }
+}
+
+/* ================= 시간표 ================= */
+.tt-week { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.tt-day { min-width: 0; border-top: 2px solid var(--edge); padding-top: 10px; display: grid; gap: 8px; align-content: start; }
+.tt-list { display: grid; gap: 8px; min-width: 0; }
+.tt-day.is-today { border-top-color: var(--ink); }
+.tt-day h2, .tt-day h3 { margin: 0 0 2px; font-size: 15px; font-weight: 600; display: flex; gap: 6px; align-items: baseline; }
+.tt-day h2 small { font-size: 11px; font-weight: 600; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 1px 7px; }
+.tt-slot { position: relative; display: grid; gap: 2px; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--edge); border-radius: 6px; }
+.tt-day.is-today .tt-slot { border-color: color-mix(in srgb, var(--ink) 35%, var(--edge)); }
+.tt-slot.is-now { background: var(--accent-soft); border-color: var(--accent); }
+.tt-slot.is-now::before { content: "지금"; position: absolute; top: 8px; right: 10px; font-size: 11px; font-weight: 700; color: var(--accent-ink); }
+.tt-time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tt-slot b { font-weight: 600; font-size: 14.5px; }
+.tt-room { font-size: 12px; color: var(--muted); }
+.tt-slot form { position: absolute; top: 4px; right: 4px; margin: 0; }
+.tt-slot .x { opacity: .7; }
+.tt-empty { margin: 0; font-size: 13px; color: var(--faint); padding: 6px 2px; }
+.day-pick { border: 0; padding: 0; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+.day-pick legend { padding: 0; margin-bottom: 8px; color: var(--muted); width: 100%; }
+.day-pick .chip span { padding: 7px 14px; font-size: 14px; }
+@media (max-width: 640px) {
+  .tt-week { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .tt-day { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; align-items: start; }
+  .tt-day h2, .tt-day h3 { flex-direction: column; gap: 4px; padding-top: 10px; }
 }

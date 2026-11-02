@@ -1,4 +1,4 @@
-"""공부 도구 점검: 공부 결 진단, 오답 노트, 개념 카드, 일정, 과제, 리포트, FAQ, 설치·알림.
+"""공부 도구 점검: 공부 결 진단, 오답 노트, 개념 카드, 시간표, 과제, 리포트, FAQ, 설치·알림.
 python -m unittest discover tests"""
 import io
 import json
@@ -139,24 +139,29 @@ class StudyTest(unittest.TestCase):
         self.assertEqual(other.post(f"/s/cards/mark/{cards[0]['id']}", data={"status": "known"}).status_code, 404)
 
     # 5
-    def test_calendar_and_dday(self):
-        self.t.post("/t/calendar", data={"action": "dday", "exam_day": (date.today() + timedelta(days=10)).isoformat(),
-                                         "exam_label": "수능"})
-        day = (date.today() + timedelta(days=2)).isoformat()
-        self.t.post("/t/calendar", data={"action": "event", "day": day, "title": "주간테스트", "kind": "시험",
-                                         "class_id": str(self.cid)})
-        self.t.post("/t/calendar", data={"action": "slot", "class_id": str(self.cid), "weekday": "0",
-                                         "starts": "13:00", "ends": "15:50", "title": "정규"})
+    def test_timetable_and_dday(self):
+        self.t.post("/t/timetable", data={"action": "dday", "exam_day": (date.today() + timedelta(days=10)).isoformat(),
+                                          "exam_label": "수능"})
+        wd = date.today().weekday()
+        self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": [str(wd), str((wd + 2) % 7)],
+                                          "starts": "13:00", "ends": "15:50", "title": "통합과학 정규", "room": "302호"})
+        self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": "1",
+                                          "starts": "15:00", "ends": "14:00", "title": "거꾸로"})    # 끝이 시작보다 빠름
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM timetable", one=True)["n"], 2)
         s = self.student(0)
-        page = s.get("/s/calendar").data.decode()
+        page = s.get("/s/timetable").data.decode()
         self.assertIn("D-10", page)
-        self.assertIn("주간테스트", page)
-        self.assertIn("13:00", page)
+        self.assertIn("302호", page)
+        self.assertIn("13:00–15:50", page)
         home = s.get("/s/").data.decode()
         self.assertIn("D-10", home)
-        self.assertNotIn("플래너", home)
+        self.assertIn("오늘 13:00 통합과학 정규", home)
+        self.assertEqual(s.get("/s/calendar").status_code, 404)              # 일정 기능 없음
         self.assertEqual(s.get("/s/planner").status_code, 404)
-        self.assertNotIn("주간테스트", self.student(2).get("/s/calendar").data.decode())  # 다른 반 일정
+        self.assertNotIn("통합과학 정규", self.student(2).get("/s/timetable").data.decode())  # 다른 반
+        tid = self.q("SELECT id FROM timetable LIMIT 1", one=True)["id"]
+        self.t.post(f"/t/timetable/slot/{tid}/delete")
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM timetable", one=True)["n"], 1)
 
     # 7
     def test_tasks(self):

@@ -308,23 +308,15 @@ CREATE TABLE IF NOT EXISTS card_marks (
     PRIMARY KEY (user_id, card_id)
 );
 
--- 일정(반별, class_id 가 NULL 이면 전체)과 주간 시간표, 사이트 설정(수능일 등)
-CREATE TABLE IF NOT EXISTS events (
-    id          INTEGER PRIMARY KEY,
-    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,
-    day         TEXT NOT NULL,
-    title       TEXT NOT NULL,
-    kind        TEXT NOT NULL DEFAULT '일정',
-    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_events_day ON events(day);
+-- 반별 주간 시간표, 사이트 설정(수능일 등)
 CREATE TABLE IF NOT EXISTS timetable (
     id          INTEGER PRIMARY KEY,
     class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
     weekday     INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
     starts      TEXT NOT NULL,
     ends        TEXT NOT NULL,
-    title       TEXT NOT NULL
+    title       TEXT NOT NULL,
+    room        TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS settings (
     key         TEXT PRIMARY KEY,
@@ -439,6 +431,7 @@ def init_db(path):
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code)")
     # 자주 묻는 질문(FAQ)으로 고정
     _add_column(conn, "questions", "faq", "INTEGER NOT NULL DEFAULT 0")
+    _add_column(conn, "timetable", "room", "TEXT NOT NULL DEFAULT ''")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():
         conn.execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(code_taken), cid))
