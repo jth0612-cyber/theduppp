@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ d.title }} · 개념 카드{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('study.cards') }}">← 개념 카드</a></p>
+<header class="ed-head ed-head-split">
+  <div><p class="kicker">{{ d.unit or '통합과학' }}</p><h1>{{ d.title }}</h1></div>
+  <nav class="seg" aria-label="카드 고르기">
+    <a href="{{ url_for('study.deck', did=d.id) }}" class="{{ 'is-on' if mode == 'all' }}">전체</a>
+    <a href="{{ url_for('study.deck', did=d.id, mode='new') }}" class="{{ 'is-on' if mode == 'new' }}">처음 보는</a>
+    <a href="{{ url_for('study.deck', did=d.id, mode='unsure') }}" class="{{ 'is-on' if mode == 'unsure' }}">헷갈린</a>
+  </nav>
+</header>
+{% if cards %}
+<div class="flash-deck" data-deck>
+  <p class="fd-count small muted" aria-live="polite"><span data-pos>1</span> / {{ cards|length }}</p>
+  {% for c in cards %}
+  <article class="fcard{{ ' is-current' if loop.first }}" data-card="{{ c.id }}" {{ 'hidden' if not loop.first }}>
+    <button type="button" class="fc-face" data-flip aria-label="카드 뒤집기">
+      <span class="fc-front">{{ c.front }}</span>
+      <span class="fc-back" hidden>{{ c.back }}</span>
+      <span class="fc-hint small muted">눌러서 뒤집기</span>
+    </button>
+    <div class="fc-actions">
+      {% for st, label in [('unsure', '헷갈려요'), ('known', '알아요')] %}
+      <form method="post" action="{{ url_for('study.card_mark', cid=c.id) }}" data-mark>
+        {{ csrf() }}<input type="hidden" name="status" value="{{ st }}">
+        <button class="btn {{ 'primary' if st == 'known' }}{{ ' is-on' if c.status == st }}" type="submit">{{ label }}</button>
+      </form>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+  <p class="fd-done" hidden data-done>한 바퀴 끝! <a href="{{ url_for('study.deck', did=d.id, mode='unsure') }}">헷갈린 카드만 다시 보기</a></p>
+</div>
+{% else %}
+<div class="quiet-box"><p>{% if mode == 'unsure' %}헷갈린 카드가 없어요.{% elif mode == 'new' %}처음 보는 카드가 없어요.{% else %}카드가 아직 없어요.{% endif %}</p></div>
+{% endif %}
+{% endblock %}

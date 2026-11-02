@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}과제 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>과제</h1><p class="muted small">과제를 내면 알림을 켠 학생에게 알림이 갑니다. 학생은 사진이나 PDF로 제출합니다.</p></div></div>
+<div class="card">
+  {% if rows %}<div class="table-wrap"><table>
+    <thead><tr><th>과제</th><th>반</th><th>마감</th><th class="num">제출</th><th class="num">확인</th></tr></thead>
+    <tbody>{% for a in rows %}<tr><td><a href="{{ url_for('study.t_task', aid=a.id) }}"><b>{{ a.title }}</b></a></td><td>{{ a.class_name }}</td><td>{{ a.due_on or '–' }}</td>
+      <td class="num">{{ a.sub }}/{{ a.n }}</td><td class="num">{{ a.chk }}</td></tr>{% endfor %}</tbody>
+  </table></div>{% else %}<p class="muted">아직 낸 과제가 없습니다.</p>{% endif %}
+</div>
+<div class="card">
+  <h2>새 과제</h2>
+  <form method="post">
+    {{ csrf() }}
+    <div class="row">
+      <div class="field"><label for="class_id">반</label><select id="class_id" name="class_id" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <div class="field wide"><label for="title">과제 이름</label><input type="text" id="title" name="title" maxlength="100" required placeholder="예: FRAMING 2단원 기출 1~20번 풀이"></div>
+      <div class="field shrink"><label for="due_on">마감</label><input type="date" id="due_on" name="due_on"></div>
+    </div>
+    <div class="field"><label for="body">설명 (선택)</label><textarea id="body" name="body" maxlength="2000"></textarea></div>
+    <button class="btn primary">과제 내기</button>
+  </form>
+</div>
+{% endblock %}

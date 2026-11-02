@@ -9,9 +9,14 @@
     <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
       <span class="muted">{% if g.user.role == 'teacher' %}<a href="{{ url_for('teacher.student_detail', sid=q.sid) }}">{{ q.name }}</a>{% else %}{{ q.name }}{% endif %} (게시판 닉네임: {{ q.nickname or '없음' }}) · {{ q.class_name }} · {{ q.created_at[:16] }}</span></p>
   </div>
+  <div class="row">
+  {% if q.qtype == '학습질문' %}
+  <form method="post" action="{{ url_for('study.t_faq', qid=q.id) }}">{{ csrf() }}<button class="btn small{{ ' is-on' if q.faq }}">{{ '자주 묻는 질문에서 빼기' if q.faq else '자주 묻는 질문으로 고정' }}</button></form>
+  {% endif %}
   {% if q.status == 'answered' %}
   <form method="post" action="{{ url_for('teacher.question_reopen', qid=q.id) }}">{{ csrf() }}<button class="btn small">답변 대기로 되돌리기</button></form>
   {% endif %}
+  </div>
 </div>
 <p class="small muted">{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개됩니다.{% else %}행정문의는 이 학생과 선생님·조교만 볼 수 있습니다.{% endif %}</p>
 <div class="card">

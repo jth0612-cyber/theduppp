@@ -9,6 +9,7 @@
       {% if not s.active %}<span class="badge gray">퇴원</span>{% endif %}</h1>
     {% if s.target %}<p class="muted small">목표: {{ s.target }}</p>{% endif %}
   </div>
+  <a class="btn" href="{{ url_for('study.t_report', sid=s.id) }}">성적 리포트 (인쇄·PDF)</a>
 </div>
 
 <div class="grid grid-2">

@@ -8,6 +8,14 @@
   <title>{% block title %}정태혁 통합과학 lab{% endblock %}</title>
   <link rel="preload" href="{{ url_for('static', filename='fonts/NotoSansKR-var.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}" type="image/png">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <meta name="theme-color" content="#f4efe7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="통합과학 lab">
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body class="{% block body_class %}{% endblock %} {{ 'has-shell' if g.user and not g.user.must_change_pw else 'no-shell' }}">
@@ -23,10 +31,16 @@
       {% if g.user.role == 'teacher' %}
         <a href="{{ url_for('teacher.dashboard') }}" class="{{ 'active' if ep == 'teacher.dashboard' }}">대시보드</a>
         <a href="{{ url_for('teacher.classes') }}" class="{{ 'active' if ep.startswith('teacher.class') or ep.startswith('teacher.exam') }}">반·시험</a>
-        <a href="{{ url_for('teacher.students') }}" class="{{ 'active' if ep.startswith('teacher.student') }}">학생 검색</a>
+        <a href="{{ url_for('teacher.students') }}" class="{{ 'active' if ep.startswith('teacher.student') or ep == 'study.t_report' }}">학생 검색</a>
         <a href="{{ url_for('teacher.questions') }}" class="{{ 'active' if ep.startswith('teacher.question') }}">질문답변</a>
+        <p class="nav-group">수업 운영</p>
+        <a href="{{ url_for('study.t_tasks') }}" class="{{ 'active' if ep in ('study.t_tasks', 'study.t_task') }}">과제</a>
+        <a href="{{ url_for('study.t_calendar') }}" class="{{ 'active' if ep == 'study.t_calendar' }}">일정·시간표</a>
+        <a href="{{ url_for('study.t_cards') }}" class="{{ 'active' if ep in ('study.t_cards', 'study.t_deck') }}">개념 카드</a>
+        <a href="{{ url_for('study.t_planner') }}" class="{{ 'active' if ep == 'study.t_planner' }}">플래너 현황</a>
         <a href="{{ url_for('books.teacher_books') }}" class="{{ 'active' if ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock') }}">교재·모의고사</a>
         <a href="{{ url_for('teacher.news') }}" class="{{ 'active' if ep.startswith('teacher.news') }}">교육 뉴스</a>
+        <p class="nav-group">계정</p>
         <a href="{{ url_for('teacher.signups') }}" class="{{ 'active' if ep == 'teacher.signups' }}">가입 승인{% if pending_signups %} <span class="count">{{ pending_signups }}</span>{% endif %}</a>
         <a href="{{ url_for('teacher.staff') }}" class="{{ 'active' if ep.startswith('teacher.staff') }}">조교 계정</a>
         <a href="{{ url_for('teacher.audit_log') }}" class="{{ 'active' if ep == 'teacher.audit_log' }}">접근 기록</a>
@@ -34,18 +48,32 @@
         <a href="{{ url_for('teacher.questions') }}" class="{{ 'active' if ep.startswith('teacher.question') }}">질문답변</a>
       {% else %}
         <a href="{{ url_for('student.home') }}" class="{{ 'active' if ep == 'student.home' }}">홈</a>
-        <a href="{{ url_for('student.notices') }}" class="{{ 'active' if ep == 'student.notices' }}">공지</a>
+        <p class="nav-group">수업</p>
+        <a href="{{ url_for('student.notices') }}" class="{{ 'active' if ep in ('student.notices', 'student.notice_detail') }}">공지</a>
+        <a href="{{ url_for('study.s_calendar') }}" class="{{ 'active' if ep == 'study.s_calendar' }}">일정</a>
+        <a href="{{ url_for('study.tasks') }}" class="{{ 'active' if ep == 'study.tasks' }}">과제</a>
         <a href="{{ url_for('student.materials') }}" class="{{ 'active' if ep == 'student.materials' }}">자료실</a>
         <a href="{{ url_for('student.videos') }}" class="{{ 'active' if ep == 'student.videos' }}">강의 영상</a>
-        <a href="{{ url_for('student.scores') }}" class="{{ 'active' if ep == 'student.scores' }}">내 성적</a>
         <a href="{{ url_for('student.questions') }}" class="{{ 'active' if ep.startswith('student.question') }}">질답 게시판</a>
+        <p class="nav-group">공부</p>
+        <a href="{{ url_for('study.planner') }}" class="{{ 'active' if ep == 'study.planner' }}">플래너</a>
+        <a href="{{ url_for('study.guide') }}" class="{{ 'active' if ep == 'study.guide' }}">내 공부법</a>
+        <a href="{{ url_for('study.cards') }}" class="{{ 'active' if ep in ('study.cards', 'study.deck') }}">개념 카드</a>
+        <a href="{{ url_for('study.wrong_notes') }}" class="{{ 'active' if ep == 'study.wrong_notes' }}">오답 노트</a>
         <a href="{{ url_for('books.analysis_home') }}" class="{{ 'active' if ep == 'books.analysis_home' }}">모의고사 분석</a>
         <a href="{{ url_for('books.my_books') }}" class="{{ 'active' if ep in ('books.my_books', 'books.register_book') }}">내 서가</a>
+        <p class="nav-group">기록</p>
+        <a href="{{ url_for('student.scores') }}" class="{{ 'active' if ep == 'student.scores' }}">내 성적</a>
+        <a href="{{ url_for('study.s_report') }}" class="{{ 'active' if ep == 'study.s_report' }}">내 리포트</a>
         <a href="{{ url_for('games.hub') }}" class="{{ 'active' if ep.startswith('games.') }}">미니게임</a>
         <a href="{{ url_for('student.points') }}" class="{{ 'active' if ep == 'student.points' }}">포인트</a>
       {% endif %}
     </nav>
     <div class="side-foot">
+      <div class="prefs">
+        <button type="button" class="pref" data-push aria-pressed="false">알림 켜기</button>
+        <button type="button" class="pref" data-theme-toggle>화면: 자동</button>
+      </div>
       <img class="affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">
       <div class="userbox">
         <a href="{{ url_for('auth.change_password') }}" title="내 계정">{{ g.user.nickname or g.user.display_name or g.user.username }}{% if g.user.role == 'assistant' %} (조교){% endif %}</a>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ r.s.name }} 성적 리포트 · 정태혁 통합과학 lab{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block content %}
+<div class="row no-print mb">
+  {% if teacher %}<a class="small" href="{{ url_for('teacher.student_detail', sid=r.s.id) }}">← {{ r.s.name }}</a>{% endif %}
+  <button class="btn primary" type="button" data-print>인쇄 · PDF 저장</button>
+</div>
+<article class="report-sheet">
+  <header class="rs-head">
+    <div>
+      <p class="kicker">정태혁 통합과학 lab · 학습 리포트</p>
+      <h1>{{ r.s.name }} <small>{{ r.s.class_name }} · {{ r.s.student_no }}</small></h1>
+    </div>
+    <p class="small muted">{{ r.today }} 기준</p>
+  </header>
+
+  <section class="rs-sec">
+    <h2>시험 성적 흐름</h2>
+    {% if r.chart %}
+    {% set chart = r.chart %}
+    <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="득점률 추이">
+      {% for pct in [0, 50, 100] %}{% set y = chart.pad + (chart.h - 2 * chart.pad) * (1 - pct / 100) %}
+        <line class="grid-line" x1="{{ chart.pad }}" x2="{{ chart.w - chart.pad }}" y1="{{ y }}" y2="{{ y }}"></line><text x="2" y="{{ y + 4 }}">{{ pct }}</text>{% endfor %}
+      <polyline class="line" points="{{ chart.polyline }}"></polyline>
+      {% for c in chart.coords %}<circle class="dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"></circle>{% endfor %}
+    </svg>
+    <table class="ledger compact"><thead><tr><th>시험</th><th>날짜</th><th class="num">점수</th><th class="num">득점률</th><th class="num">반 평균</th></tr></thead>
+      <tbody>{% for x in r.scores %}<tr><td>{{ x.name }}</td><td>{{ x.exam_date }}</td><td class="num">{{ fmt(x.score) }} / {{ fmt(x.max_score) }}</td><td class="num">{{ x.pct }}%</td><td class="num">{{ x.avg_pct }}%</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">기록된 시험 성적이 없습니다.</p>{% endif %}
+  </section>
+
+  <section class="rs-sec">
+    <h2>교재 모의고사</h2>
+    {% if r.mocks %}
+    <table class="ledger compact"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
+      <tbody>{% for m in r.mocks %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">채점한 모의고사가 없습니다.</p>{% endif %}
+  </section>
+
+  <div class="rs-cols">
+    <section class="rs-sec">
+      <h2>틀린 이유</h2>
+      {% if r.reasons %}{% set total = r.reasons|sum(attribute='n') %}
+      <ul class="rs-bars">{% for x in r.reasons %}{% set p = (100 * x.n / total)|round|int %}
+        <li><span>{{ x.reason }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}"></span></span><b>{{ x.n }}</b></li>{% endfor %}</ul>
+      {% else %}<p class="muted small">오답 노트에 이유를 고른 문항이 없습니다.</p>{% endif %}
+    </section>
+    <section class="rs-sec">
+      <h2>학습 습관</h2>
+      <dl class="report-lines">
+        <div><dt>공부 결</dt><dd>{% if r.stype %}{{ r.stype.name }} ({{ r.stype.code }}){% else %}진단 전{% endif %}</dd></div>
+        <div><dt>플래너 4주</dt><dd>{% if r.plan and r.plan.total %}{{ r.plan.done }}/{{ r.plan.total }} 완료 · {{ r.plan.pct }}%{% else %}계획 없음{% endif %}</dd></div>
+        <div><dt>과제</dt><dd>{{ r.tasks.sub }}/{{ r.tasks.n }} 제출</dd></div>
+      </dl>
+    </section>
+  </div>
+</article>
+{% endblock %}

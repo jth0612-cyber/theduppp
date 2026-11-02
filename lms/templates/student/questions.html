@@ -38,6 +38,15 @@
   </form>
 </details>
 
+{% if faqs %}
+<section class="panel faq" aria-labelledby="h-faq">
+  <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2><span>선생님이 골라 둔 질문</span></div>
+  <ul class="mini-list">
+    {% for f in faqs %}<li><a href="{{ url_for('student.question_detail', qid=f.id) }}">{{ f.title }}</a></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <nav class="tabs">
   <a href="{{ url_for('student.questions') }}" class="{{ 'active' if view == 'all' and not qtype }}">전체</a>
   {% for t in qtypes %}

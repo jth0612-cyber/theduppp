@@ -659,6 +659,8 @@ def question_detail(qid):
             execute("UPDATE questions SET status = 'answered' WHERE id = ?", (qid,))
             audit("question_answer", f"question:{qid}")
             flash("답변을 등록했습니다.", "ok")
+            from views.pwa import notify_student
+            notify_student(q["sid"], "질문에 답변이 달렸어요", q["title"], url_for("student.question_detail", qid=qid))
             nxt = query("SELECT id FROM questions WHERE status = 'open' ORDER BY created_at LIMIT 1", one=True)
             if request.form.get("go_next") == "1" and nxt:
                 return redirect(url_for("teacher.question_detail", qid=nxt["id"]))
@@ -693,6 +695,8 @@ def notice_create(cid):
                       (cid, tag, textbook, title, body, 1 if request.form.get("pinned") else 0))
         audit("notice_create", f"notice:{nid}")
         flash("공지를 등록했습니다.", "ok")
+        from views.pwa import notify_class
+        notify_class(cid, f"새 {tag}", title, url_for("student.notice_detail", nid=nid))
     return redirect(url_for("teacher.class_detail", cid=cid, tab="notices"))
 
 

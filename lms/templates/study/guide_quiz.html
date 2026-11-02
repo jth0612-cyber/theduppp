@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}공부 결 진단 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<header class="ed-head">
+  <p class="kicker">Study type</p>
+  <h1>공부 결 진단</h1>
+  <p class="ed-lede">12문항, 2분이면 끝나요. 맞고 틀린 답은 없습니다. 지금 실제로 하는 쪽을 고르세요.</p>
+</header>
+<form method="post" class="quiz">
+  {{ csrf() }}
+  <ol class="quiz-list">
+  {% for axis, q, a, b in questions %}
+    {% set i = loop.index0 %}
+    <li>
+      <fieldset>
+        <legend><span class="q-no">{{ '%02d'|format(loop.index) }}</span> {{ q }}</legend>
+        <div class="choice-pair">
+          <label class="choice"><input type="radio" name="q{{ i }}" value="a" required {{ 'checked' if picks[i:i+1] == 'a' }}><span>{{ a }}</span></label>
+          <label class="choice"><input type="radio" name="q{{ i }}" value="b" {{ 'checked' if picks[i:i+1] == 'b' }}><span>{{ b }}</span></label>
+        </div>
+      </fieldset>
+    </li>
+  {% endfor %}
+  </ol>
+  <button class="btn primary" type="submit">결과 보기</button>
+</form>
+{% endblock %}

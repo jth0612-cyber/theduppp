@@ -22,6 +22,29 @@
   </div>
 </section>
 
+<section class="glance" aria-label="오늘 한눈에">
+  <a class="gl" href="{{ url_for('study.s_calendar') }}">
+    <span class="gl-k">{{ dday.label if dday else 'D-day' }}</span>
+    <b>{% if dday %}{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}{% else %}–{% endif %}</b>
+    <span class="gl-s">{% if events %}다음 일정 {{ events[0].day[5:] }} {{ events[0].title }}{% else %}잡힌 일정 없음{% endif %}</span>
+  </a>
+  <a class="gl" href="{{ url_for('study.planner') }}">
+    <span class="gl-k">오늘 할 일</span>
+    <b>{{ plan_today|selectattr('done')|list|length }}<small>/{{ plan_today|length }}</small></b>
+    <span class="gl-s">{% if plan_today %}{{ (plan_today|rejectattr('done')|first or plan_today[0]).text }}{% else %}플래너에 오늘 할 일을 적어 보세요{% endif %}</span>
+  </a>
+  <a class="gl" href="{{ url_for('study.tasks') }}">
+    <span class="gl-k">안 낸 과제</span>
+    <b>{{ tasks_due|length }}</b>
+    <span class="gl-s">{% if tasks_due %}{{ tasks_due[0].title }}{% if tasks_due[0].due_on %} · {{ tasks_due[0].due_on[5:] }} 마감{% endif %}{% else %}밀린 과제 없음{% endif %}</span>
+  </a>
+  <a class="gl" href="{{ url_for('study.wrong_notes', view='open') }}">
+    <span class="gl-k">복습할 오답</span>
+    <b>{{ open_wrong }}</b>
+    <span class="gl-s">{% if open_wrong %}다시 풀어서 맞히면 지워져요{% else %}남은 오답 없음{% endif %}</span>
+  </a>
+</section>
+
 <div class="home-cols">
   <section class="panel" aria-labelledby="h-notice">
     <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체 보기 →</a></div>

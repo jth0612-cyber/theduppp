@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, kind_badge %}
+{% block title %}{{ a.title }} · 과제{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('study.t_tasks') }}">← 과제</a></p>
+<div class="page-head"><div><h1>{{ a.title }}</h1><p class="muted small">{{ a.class_name }} · 마감 {{ a.due_on or '없음' }}</p></div>
+  <form method="post" action="{{ url_for('study.t_task_delete', aid=a.id) }}">{{ csrf() }}<button class="btn small danger" data-confirm="과제와 학생 제출물을 모두 지울까요?">과제 삭제</button></form></div>
+{% if a.body %}<div class="card pre">{{ a.body }}</div>{% endif %}
+<div class="card"><div class="table-wrap"><table>
+  <thead><tr><th>학생</th><th>제출</th><th>확인</th></tr></thead>
+  <tbody>{% for r in rows %}
+  <tr id="s{{ r.id }}" class="{{ 'inactive' if not r.id }}">
+    <td><b>{{ r.name }}</b> <span class="muted small">{{ r.student_no }}</span></td>
+    <td>{% if r.id %}<span class="small muted">{{ r.submitted_at[:16] }}</span>
+        {% if r.file_id %}<br>{{ kind_badge(r.original_name) }} <a href="{{ url_for('student.file', fid=r.file_id, inline=1 if r.mime.startswith('image/') else None) }}" target="_blank" rel="noopener">{{ r.original_name }}</a>{% endif %}
+        {% if r.note %}<br><span class="small">{{ r.note }}</span>{% endif %}
+      {% else %}<span class="muted small">제출 전</span>{% endif %}</td>
+    <td>{% if r.id %}
+      <form method="post" action="{{ url_for('study.t_check', sid=r.id) }}" class="row check-form">{{ csrf() }}
+        <input type="text" name="comment" maxlength="500" value="{{ r.comment }}" placeholder="코멘트 (선택)" aria-label="{{ r.name }} 코멘트">
+        <button class="btn small{{ ' is-on' if r.status == 'checked' }}" name="status" value="checked">확인</button>
+        <button class="btn small{{ ' is-on' if r.status == 'redo' }}" name="status" value="redo">다시 제출</button>
+      </form>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

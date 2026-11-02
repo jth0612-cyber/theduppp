@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ d.title }} · 개념 카드{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('study.t_cards') }}">← 개념 카드</a></p>
+<div class="page-head"><div><h1>{{ d.title }}</h1><p class="muted small">{{ d.unit or '단원 없음' }} · 카드 {{ cards|length }}장</p></div>
+  <form method="post" action="{{ url_for('study.t_deck_delete', did=d.id) }}">{{ csrf() }}<button class="btn small danger" data-confirm="이 묶음과 카드, 학생들의 표시 기록을 모두 지울까요?">묶음 삭제</button></form></div>
+<div class="card">
+  <h2>카드 추가</h2>
+  <form method="post">
+    {{ csrf() }}
+    <div class="field"><label for="cards">한 줄에 한 장 · 앞면 | 뒷면</label>
+      <textarea id="cards" name="cards" rows="8" placeholder="이온 결합 | 금속 양이온과 비금속 음이온이 전기적 인력으로 결합&#10;공유 결합 | 비금속 원자끼리 전자쌍을 공유하여 결합"></textarea></div>
+    <button class="btn primary" type="submit">추가</button>
+  </form>
+</div>
+<div class="card">
+  {% if cards %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>앞면</th><th>뒷면</th><th class="num">헷갈려요</th><th></th></tr></thead>
+    <tbody>{% for c in cards %}<tr><td>{{ c.front }}</td><td class="small">{{ c.back }}</td><td class="num">{{ c.unsure }}명</td>
+      <td class="num"><form method="post" action="{{ url_for('study.t_card_delete', cid=c.id) }}" class="inline-form">{{ csrf() }}<button class="btn small">삭제</button></form></td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">카드가 없습니다.</p>{% endif %}
+</div>
+{% endblock %}

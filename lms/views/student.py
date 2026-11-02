@@ -44,8 +44,20 @@ def home():
                          WHERE m.class_id = ? ORDER BY m.created_at DESC LIMIT 5""", (me["class_id"],))
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 5", (me["id"],))
     news = query("SELECT * FROM news ORDER BY created_at DESC LIMIT 4")
+    from views.study import dday_info, upcoming_events, wrong_list
+    open_wrong = sum(len(gr["rows"]) for gr in wrong_list(g.user["id"], only_open=True))
+    from datetime import date, timedelta
+    today = date.today()
+    plan_today = query("SELECT * FROM plan_items WHERE user_id = ? AND week_start = ? AND day = ? ORDER BY id",
+                       (g.user["id"], (today - timedelta(days=today.weekday())).isoformat(), today.weekday()))
+    tasks_due = query("""SELECT a.id, a.title, a.due_on FROM assignments a
+                         LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
+                         WHERE a.class_id = ? AND s.id IS NULL ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
+                      (me["id"], me["class_id"]))
     return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
-                           news=news, streak=streak_info(g.user["id"]), points=balance(g.user["id"]))
+                           news=news, streak=streak_info(g.user["id"]), points=balance(g.user["id"]),
+                           dday=dday_info(), events=upcoming_events(me["class_id"]), open_wrong=open_wrong,
+                           plan_today=plan_today, tasks_due=tasks_due)
 
 
 @bp.route("/notices")
@@ -208,7 +220,9 @@ def questions():
     rows = query(f"""{_PUBLIC_QUESTION_SELECT} WHERE {where_sql}
                      ORDER BY q.created_at DESC LIMIT ? OFFSET ?""",
                  [me["id"]] + args + [QUESTIONS_PER_PAGE, (page - 1) * QUESTIONS_PER_PAGE])
-    return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page,
+    faqs = query("""SELECT id, title FROM questions WHERE faq = 1 AND qtype = '학습질문'
+                    ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
+    return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs,
                            qtype=qtype, qtypes=QUESTION_TYPES,
                            pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total)
 
@@ -301,8 +315,10 @@ def _can_access_file(file_id):
                     SELECT 1 FROM questions WHERE image_id = ? AND (qtype = '학습질문' OR student_id = ?)
                     UNION
                     SELECT 1 FROM followups f JOIN questions q ON q.id = f.question_id
-                    WHERE f.image_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)""",
-                 (file_id, sid, file_id, sid, file_id, sid), one=True) is not None
+                    WHERE f.image_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)
+                    UNION
+                    SELECT 1 FROM submissions WHERE file_id = ? AND student_id = ?""",
+                 (file_id, sid, file_id, sid, file_id, sid, file_id, sid), one=True) is not None
 
 
 @bp.route("/file/<int:fid>", endpoint="file")

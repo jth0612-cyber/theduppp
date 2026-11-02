@@ -273,6 +273,117 @@ CREATE TABLE IF NOT EXISTS mock_entries (
     UNIQUE (mock_id, user_id)
 );
 
+-- ---------- 공부 도구 ----------
+-- 공부 결 진단 결과 (code 예: SVRT)
+CREATE TABLE IF NOT EXISTS study_types (
+    user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    code        TEXT NOT NULL,
+    answers     TEXT NOT NULL,
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 오답 노트: 모의고사에서 틀린 문항의 복습 상태와 틀린 이유
+CREATE TABLE IF NOT EXISTS wrong_notes (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    item_no     INTEGER NOT NULL,
+    reason      TEXT NOT NULL DEFAULT '',
+    memo        TEXT NOT NULL DEFAULT '',
+    reviewed_at TEXT,
+    PRIMARY KEY (user_id, mock_id, item_no)
+);
+
+-- 개념 카드 묶음과 카드, 학생별 표시(known/unsure)
+CREATE TABLE IF NOT EXISTS decks (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL,
+    unit        TEXT NOT NULL DEFAULT '',
+    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS cards (
+    id          INTEGER PRIMARY KEY,
+    deck_id     INTEGER NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+    front       TEXT NOT NULL,
+    back        TEXT NOT NULL,
+    pos         INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_cards_deck ON cards(deck_id);
+CREATE TABLE IF NOT EXISTS card_marks (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    card_id     INTEGER NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    status      TEXT NOT NULL CHECK (status IN ('known', 'unsure')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (user_id, card_id)
+);
+
+-- 주간 플래너 (day: 0=월 … 6=일)
+CREATE TABLE IF NOT EXISTS plan_items (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    week_start  TEXT NOT NULL,
+    day         INTEGER NOT NULL CHECK (day BETWEEN 0 AND 6),
+    text        TEXT NOT NULL,
+    done        INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_plan_user_week ON plan_items(user_id, week_start);
+
+-- 일정(반별, class_id 가 NULL 이면 전체)과 주간 시간표, 사이트 설정(수능일 등)
+CREATE TABLE IF NOT EXISTS events (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    kind        TEXT NOT NULL DEFAULT '일정',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_events_day ON events(day);
+CREATE TABLE IF NOT EXISTS timetable (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    weekday     INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+    starts      TEXT NOT NULL,
+    ends        TEXT NOT NULL,
+    title       TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS settings (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL
+);
+
+-- 과제와 제출
+CREATE TABLE IF NOT EXISTS assignments (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL DEFAULT '',
+    due_on      TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS submissions (
+    id            INTEGER PRIMARY KEY,
+    assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    student_id    INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    file_id       INTEGER REFERENCES files(id) ON DELETE SET NULL,
+    note          TEXT NOT NULL DEFAULT '',
+    status        TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'checked', 'redo')),
+    comment       TEXT NOT NULL DEFAULT '',
+    submitted_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    checked_at    TEXT,
+    UNIQUE (assignment_id, student_id)
+);
+
+-- 웹 푸시 구독 (브라우저마다 하나)
+CREATE TABLE IF NOT EXISTS push_subs (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint    TEXT NOT NULL UNIQUE,
+    p256dh      TEXT NOT NULL,
+    auth        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
 -- 공지 좋아요 (한 사람 한 번)
 CREATE TABLE IF NOT EXISTS notice_likes (
     notice_id   INTEGER NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
@@ -321,6 +432,8 @@ def init_db(path):
     _add_column(conn, "notices", "pinned", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "notices", "views", "INTEGER NOT NULL DEFAULT 0")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code)")
+    # 자주 묻는 질문(FAQ)으로 고정
+    _add_column(conn, "questions", "faq", "INTEGER NOT NULL DEFAULT 0")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():
         conn.execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(code_taken), cid))
@@ -403,3 +516,13 @@ def execute(sql, args=()):
     cur = db.execute(sql, args)
     db.commit()
     return cur.lastrowid
+
+
+def get_setting(key, default=""):
+    row = query("SELECT value FROM settings WHERE key = ?", (key,), one=True)
+    return row["value"] if row else default
+
+
+def set_setting(key, value):
+    execute("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value))
