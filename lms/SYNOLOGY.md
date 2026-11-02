@@ -120,9 +120,13 @@ python create_teacher.py
 | 컨테이너가 바로 꺼짐 | Container Manager → 컨테이너 → 로그에서 오류 확인. `Permission denied: '/app/instance/.env'` 이면 2장의 instance 폴더 권한 설정 |
 | 시간이 9시간 다르게 찍힘 | docker-compose.yml의 `TZ: Asia/Seoul` 확인 |
 
-## 9. Google 로그인 켜기 (선택)
+## 9. Google 로그인 켜기 (켜면 학생 가입에 Google 필수)
 
-학생이 '내 계정'에서 Google 계정을 연결해 두면 다음부터 Google로 로그인할 수 있습니다. 새 가입은 여전히 반 코드 + 승인으로만 받습니다.
+이 설정을 켜면 **학생 가입은 반드시 Google 계정 확인부터** 합니다. Google에서는 이메일 주소만 받고 전화번호는 받지 않습니다. 선생님이 승인하면 학생은 Google로 바로 로그인할 수 있고, 수험번호 + 비밀번호 로그인도 예비로 남습니다. 예전에 가입한 학생은 '내 계정'에서 Google 계정을 연결할 수 있습니다.
+
+비용: Google 로그인(OAuth)은 무료입니다. 사용자 수·로그인 횟수 요금이 없고 결제 수단 등록도 필요 없습니다. 이메일만 요청하는 기본 범위라 Google 앱 심사도 필요 없습니다.
+
+켜기 전까지는 예전처럼 반 코드 + 수험번호 + 비밀번호로 가입합니다.
 
 1. https://console.cloud.google.com 에 로그인 → 새 프로젝트 만들기 (무료)
 2. **API 및 서비스 → OAuth 동의 화면**: 외부(External), 앱 이름 `정태혁 통합과학 lab`, 지원 이메일 입력, 범위는 `openid`, `email` 만
@@ -135,10 +139,10 @@ python create_teacher.py
    GOOGLE_CLIENT_SECRET=복사한_보안_비밀번호
    ```
    이 값은 비밀번호와 같습니다. 다른 곳에 공유하지 마세요.
-5. Container Manager → 컨테이너 → student-lms → **다시 시작**. 로그인 화면에 "Google 계정으로 로그인" 버튼이 생깁니다.
+5. Container Manager → 컨테이너 → student-lms → **다시 시작**. 로그인 화면에 "Google 계정으로 로그인" 버튼이, 가입 화면에 "Google 계정으로 시작하기" 버튼이 생깁니다.
 6. OAuth 동의 화면이 '테스트' 상태면 등록한 테스트 사용자만 로그인됩니다. 학생 전체가 쓰려면 **앱 게시**를 누르세요.
 
-Google 로그인을 켜면 학생의 Google 이메일 주소가 저장됩니다. 개인정보 처리방침의 수집 항목에 "Google 계정 이메일(선택, 연결한 경우)"을 넣으세요.
+Google 로그인을 켜면 학생의 Google 이메일 주소가 저장됩니다. 가입 화면의 동의 문구에는 "Google 계정 이메일"이 자동으로 들어갑니다.
 
 ## 10. 문의 버튼·연락처 (선택)
 

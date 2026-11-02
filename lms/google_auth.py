@@ -1,7 +1,8 @@
 """Google 계정으로 로그인 (OpenID Connect, 승인 코드 + PKCE).
 
-이 앱은 반 학생 전용이라 Google 로 '새 가입'은 받지 않는다.
-이미 승인된 계정으로 로그인한 뒤 '내 계정'에서 Google 계정을 연결해 두면, 다음부터 Google 로 로그인할 수 있다.
+Google 이 켜져 있으면 학생 가입은 반드시 Google 계정 확인부터 한다(mode=signup).
+확인된 Google 계정(sub, 이메일)은 가입 신청에 붙고, 선생님이 승인하면 그 계정으로 바로 로그인할 수 있다.
+예전에 가입한 학생은 '내 계정'에서 Google 계정을 연결할 수 있다(mode=link).
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 이 instance/.env 에 있을 때만 켜진다."""
 import base64
 import hashlib
@@ -23,6 +24,17 @@ AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 _HOME = {"teacher": "teacher.dashboard", "assistant": "teacher.questions", "student": "student.home"}
+
+
+SIGNUP_TTL = 30 * 60   # Google 확인 후 가입서를 다 쓰기까지 30분
+
+
+def signup_identity():
+    """가입 중인 학생의 확인된 Google 계정. 없거나 오래됐으면 None."""
+    d = session.get("g_signup")
+    if not d or datetime.now().timestamp() - d.get("at", 0) > SIGNUP_TTL:
+        return None
+    return d
 
 
 def google_enabled():
@@ -58,7 +70,7 @@ def start():
     if not google_enabled():
         abort(404)
     mode = request.args.get("mode", "login")
-    if mode not in ("login", "link"):
+    if mode not in ("login", "link", "signup"):
         abort(400)
     if mode == "link" and g.user is None:
         return redirect(url_for("auth.login"))
@@ -84,7 +96,8 @@ def callback():
         return redirect(url_for("auth.login"))
     if request.args.get("error") or not request.args.get("code"):
         flash("Google 로그인을 취소했어요.", "error")
-        return redirect(url_for("auth.login") if saved["mode"] == "login" else url_for("auth.change_password"))
+        return redirect(url_for("auth.change_password") if saved["mode"] == "link" else
+                        url_for("auth.signup") if saved["mode"] == "signup" else url_for("auth.login"))
     try:
         ident = fetch_identity(request.args["code"], saved["verifier"], url_for("google.callback", _external=True))
     except (urllib.error.URLError, KeyError, ValueError, TimeoutError):
@@ -93,6 +106,16 @@ def callback():
     if not ident["email_verified"]:
         flash("이메일 인증이 끝난 Google 계정만 쓸 수 있어요.", "error")
         return redirect(url_for("auth.login"))
+
+    if saved["mode"] == "signup":
+        if query("SELECT 1 FROM users WHERE google_sub = ?", (ident["sub"],), one=True):
+            flash("이미 가입된 Google 계정이에요. 'Google 계정으로 로그인'을 눌러 주세요.", "error")
+            return redirect(url_for("auth.login"))
+        if query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (ident["sub"],), one=True):
+            flash("이 Google 계정으로 이미 가입 신청했어요. 선생님 승인을 기다려 주세요.", "error")
+            return redirect(url_for("auth.login"))
+        session["g_signup"] = {"sub": ident["sub"], "email": ident["email"], "at": datetime.now().timestamp()}
+        return redirect(url_for("auth.signup"))
 
     if saved["mode"] == "link":
         if g.user is None:
@@ -108,6 +131,9 @@ def callback():
         return redirect(url_for("auth.change_password"))
 
     user = query("SELECT * FROM users WHERE google_sub = ?", (ident["sub"],), one=True)
+    if user is None and query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (ident["sub"],), one=True):
+        flash("가입 승인 대기 중이에요. 선생님이 승인하면 이 Google 계정으로 로그인할 수 있어요.", "error")
+        return redirect(url_for("auth.login"))
     if user is None:
         flash("이 Google 계정과 연결된 계정이 없어요. 먼저 수험번호로 로그인한 뒤 '내 계정'에서 Google 계정을 연결하세요.",
               "error")

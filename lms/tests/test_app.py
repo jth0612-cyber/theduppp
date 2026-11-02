@@ -5,6 +5,7 @@ import re
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -574,6 +575,50 @@ class FeatureTest(AppTest):
             self.assertEqual(query("SELECT class_id FROM students WHERE id=?", (u["student_id"],), one=True)["class_id"], cid)
         self.login(anon, "S100", "Signup!2026")
         self.assertEqual(anon.get("/s/").status_code, 200)
+
+    def test_signup_requires_google_when_enabled(self):
+        cid = self.setup_class_with_students()
+        with self.app.app_context():
+            code = query("SELECT join_code FROM classes WHERE id=?", (cid,), one=True)["join_code"]
+        ident = {"sub": "g-777", "email": "jimin@example.com", "email_verified": True}
+        with mock.patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "sec"}), \
+                mock.patch("google_auth.fetch_identity", return_value=ident):
+            anon = self.app.test_client()
+            # Google 확인 전에는 가입서 대신 'Google 계정으로 시작하기'만 보이고, 바로 보내도 거부
+            page = anon.get("/signup").data.decode()
+            self.assertIn("Google 계정으로 시작하기", page)
+            self.assertNotIn('name="student_no"', page)
+            self._signup(anon, code)
+            with self.app.app_context():
+                self.assertEqual(query("SELECT COUNT(*) n FROM signup_requests", one=True)["n"], 0)
+            # Google 확인 → 이메일이 보이는 가입서 → 신청
+            r = anon.get("/auth/google/start?mode=signup")
+            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
+            self.assertTrue(anon.get(f"/auth/google/callback?state={state}&code=x").headers["Location"].endswith("/signup"))
+            self.assertIn("jimin@example.com", anon.get("/signup").data.decode())
+            self.assertIn("가입 신청 완료", self._signup(anon, code).data.decode())
+            # 승인 전 Google 로그인 → 대기 안내
+            r = anon.get("/auth/google/start?mode=login")
+            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
+            self.assertIn("승인 대기", anon.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True).data.decode())
+            # 같은 Google 계정으로 또 가입 시도 → 막힘
+            other = self.app.test_client()
+            r = other.get("/auth/google/start?mode=signup")
+            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
+            self.assertIn("이미 가입 신청", other.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True).data.decode())
+            # 선생님 화면에 이메일이 보이고, 승인하면 Google 로 바로 로그인
+            self.assertIn("jimin@example.com", self.c.get("/t/signups").data.decode())
+            with self.app.app_context():
+                rid = query("SELECT id FROM signup_requests", one=True)["id"]
+            self.c.post("/t/signups", data={"action": "approve", "ids": [str(rid)]})
+            with self.app.app_context():
+                u = query("SELECT * FROM users WHERE username='S100'", one=True)
+                self.assertEqual((u["google_sub"], u["google_email"]), ("g-777", "jimin@example.com"))
+            fresh = self.app.test_client()
+            r = fresh.get("/auth/google/start?mode=login")
+            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
+            r = fresh.get(f"/auth/google/callback?state={state}&code=x")
+            self.assertTrue(r.headers["Location"].endswith("/s/"))
 
     def test_signup_links_to_existing_roster_and_closed_class(self):
         cid = self.setup_class_with_students()  # 명단에 A001 김민수 (계정 없음)

@@ -20,13 +20,14 @@
   <form method="post">
     {{ csrf() }}
     <div class="table-wrap"><table>
-      <tr><th></th><th>신청 반</th><th>이름</th><th>수험번호</th><th>명단 확인</th><th>신청 시각</th></tr>
+      <tr><th></th><th>신청 반</th><th>이름</th><th>수험번호</th><th>Google 이메일</th><th>명단 확인</th><th>신청 시각</th></tr>
       {% for r in requests %}
       <tr>
         <td><input type="checkbox" name="ids" value="{{ r.id }}" aria-label="{{ r.name }} 선택"></td>
         <td>{{ r.class_name }}</td>
         <td>{{ r.name }}</td>
         <td>{{ r.student_no }}</td>
+        <td class="small">{{ r.google_email or '—' }}</td>
         <td class="small">
           {% if r.roster_name is none %}<span class="badge gray">명단에 없음 · 새로 등록</span>
           {% elif r.roster_name != r.name %}<span class="badge danger">명단 이름 다름: {{ r.roster_name }}</span>

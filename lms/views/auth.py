@@ -124,7 +124,14 @@ _STUDENT_NO = re.compile(r"^[A-Za-z0-9-]{3,30}$")
 def signup():
     if g.user is not None:
         return redirect(_home_for(g.user))
+    from google_auth import google_enabled, signup_identity
     form = {k: request.form.get(k, "").strip() for k in ("code", "name", "student_no")}
+    need_google = google_enabled()
+    gid = signup_identity() if need_google else None
+    if need_google and gid is None:          # Google 계정 확인이 먼저
+        if request.method == "POST":
+            flash("먼저 Google 계정으로 본인 확인을 해 주세요.", "error")
+        return render_template("signup.html", form=form, step="google")
     if request.method == "POST":
         if _ip_limited(request.remote_addr or "", "signup"):
             flash("가입 시도가 너무 많습니다. 1시간 뒤에 다시 시도하세요.", "error")
@@ -150,13 +157,19 @@ def signup():
             error = "이미 가입된 수험번호예요. 로그인하거나 선생님께 비밀번호 초기화를 요청하세요."
         elif query("SELECT 1 FROM signup_requests WHERE student_no = ?", (form["student_no"],), one=True):
             error = "이미 가입 신청한 수험번호예요. 선생님 승인을 기다려 주세요."
+        elif gid and (query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True)
+                      or query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (gid["sub"],), one=True)):
+            error = "이 Google 계정은 이미 가입했거나 신청 중이에요."
         if error:
             flash(error, "error")
-            return render_template("signup.html", form=form)
-        rid = execute("""INSERT INTO signup_requests (class_id, name, student_no, password_hash, consent_at, ip)
-                         VALUES (?, ?, ?, ?, ?, ?)""",
+            return render_template("signup.html", form=form, gid=gid)
+        rid = execute("""INSERT INTO signup_requests (class_id, name, student_no, password_hash, consent_at, ip,
+                                                      google_sub, google_email)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                       (cls["id"], form["name"], form["student_no"], hash_password(password),
-                       datetime.now().isoformat(timespec="seconds"), request.remote_addr or ""))
+                       datetime.now().isoformat(timespec="seconds"), request.remote_addr or "",
+                       gid["sub"] if gid else None, gid["email"] if gid else None))
+        session.pop("g_signup", None)
         audit("signup_request", f"request:{rid} class:{cls['id']}", username=form["student_no"])
-        return render_template("signup_done.html", class_name=cls["name"])
-    return render_template("signup.html", form=form)
+        return render_template("signup_done.html", class_name=cls["name"], google=bool(gid))
+    return render_template("signup.html", form=form, gid=gid)

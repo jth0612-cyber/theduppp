@@ -19,7 +19,7 @@
   </form>
   {% if google_enabled() %}
   <a class="btn google-btn" href="{{ url_for('google.start', mode='login') }}">Google 계정으로 로그인</a>
-  <p class="small muted">Google 로그인은 '내 계정'에서 Google 계정을 연결한 뒤에 쓸 수 있어요.</p>
+  <p class="small muted">Google로 가입했거나 '내 계정'에서 연결해 둔 학생은 Google로 바로 로그인할 수 있어요.</p>
   {% endif %}
   <p class="small mt">처음이에요? <a href="{{ url_for('auth.signup') }}">학생 회원가입</a> (반 가입 코드 필요)</p>
 </div>

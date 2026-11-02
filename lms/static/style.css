@@ -271,6 +271,11 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .text-link { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--control); }
 .btn.is-on { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
 .google-btn { width: 100%; min-height: 44px; margin-top: 12px; }
+.signup-steps { list-style: none; display: flex; gap: 6px; padding: 0; margin: 14px 0; }
+.signup-steps li { flex: 1; padding: 8px 6px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--muted); text-align: center; line-height: 1.35; }
+.signup-steps li b { display: block; font-family: var(--font-display); font-size: 15px; }
+.signup-steps li.is-on { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.google-ok { padding: 10px 12px; border-radius: var(--radius); background: var(--ok-soft); color: var(--ink); margin: 10px 0 4px; overflow-wrap: anywhere; }
 .account-google { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--rule); display: grid; gap: 10px; justify-items: start; }
 
 /* ---------- 모의고사 분석: 회차 선택 ---------- */

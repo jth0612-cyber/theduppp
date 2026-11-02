@@ -415,6 +415,8 @@ def init_db(path):
     _add_column(conn, "classes", "join_open", "INTEGER NOT NULL DEFAULT 1")
     # Google 계정 연결, 한 기기 로그인(학생), 공지 고정·조회수
     _add_column(conn, "users", "google_sub", "TEXT")
+    _add_column(conn, "signup_requests", "google_sub", "TEXT")
+    _add_column(conn, "signup_requests", "google_email", "TEXT")
     _add_column(conn, "users", "google_email", "TEXT")
     _add_column(conn, "users", "session_version", "INTEGER NOT NULL DEFAULT 0")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub)")

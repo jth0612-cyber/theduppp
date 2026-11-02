@@ -851,6 +851,8 @@ def _approve(req):
     """가입 신청 1건 승인. 성공하면 None, 실패하면 사유 문자열."""
     if query("SELECT 1 FROM users WHERE username = ?", (req["student_no"],), one=True):
         return f"{req['name']}({req['student_no']}): 이미 같은 아이디의 계정이 있습니다."
+    if req["google_sub"] and query("SELECT 1 FROM users WHERE google_sub = ?", (req["google_sub"],), one=True):
+        return f"{req['name']}({req['student_no']}): 이 Google 계정은 이미 다른 계정에 연결되어 있습니다."
     student = query("SELECT * FROM students WHERE student_no = ?", (req["student_no"],), one=True)
     if student is None:
         sid = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, ?, ?)",
@@ -859,9 +861,10 @@ def _approve(req):
         return f"{req['name']}({req['student_no']}): 퇴원 처리된 학생입니다. 학생 정보에서 재원으로 바꾼 뒤 승인하세요."
     else:
         sid = student["id"]  # 선생님이 미리 등록해 둔 명단과 연결 (반·이름은 명단 기준)
-    execute("""INSERT INTO users (role, username, nickname, password_hash, student_id)
-               VALUES ('student', ?, ?, ?, ?)""",
-            (req["student_no"], generate_nickname(nickname_taken), req["password_hash"], sid))
+    execute("""INSERT INTO users (role, username, nickname, password_hash, student_id, google_sub, google_email)
+               VALUES ('student', ?, ?, ?, ?, ?, ?)""",
+            (req["student_no"], generate_nickname(nickname_taken), req["password_hash"], sid,
+             req["google_sub"], req["google_email"]))
     execute("DELETE FROM signup_requests WHERE id = ?", (req["id"],))
     audit("signup_approve", f"student:{sid} consent:{req['consent_at']}")
     return None
