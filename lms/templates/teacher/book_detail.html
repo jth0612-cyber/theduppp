@@ -57,15 +57,25 @@
     <div class="row">
       <div class="field shrink"><label for="round_no">회차</label><input type="number" id="round_no" name="round_no" min="1" value="{{ next_round }}" required></div>
       <div class="field"><label for="mtitle">부제 (선택)</label><input type="text" id="mtitle" name="title" maxlength="60" placeholder="예: 파이널 1회"></div>
-      <div class="field shrink"><label for="n_items">문항 수</label><input type="number" id="n_items" name="n_items" min="1" max="60" value="20" required></div>
+      <div class="field shrink"><label for="n_items">문항 수</label><input type="number" id="n_items" name="n_items" min="1" max="60" value="25" required></div>
       <div class="field shrink"><label for="full_score">만점</label><input type="number" id="full_score" name="full_score" min="1" max="200" step="0.5" value="50" required></div>
     </div>
     <div class="field"><label for="answer_key">정답 (1~5, 문항 순서대로)</label>
-      <input type="text" id="answer_key" name="answer_key" class="answer-input" inputmode="numeric" required autocomplete="off" placeholder="예: 14352 53411 24315 52143" aria-describedby="key-help">
+      <input type="text" id="answer_key" name="answer_key" class="answer-input" inputmode="numeric" required autocomplete="off" placeholder="예: 14352 53411 24315 52143 31524" aria-describedby="key-help">
       <p class="small muted" id="key-help">정답은 서버에만 저장되고 학생 화면에는 나가지 않아요.</p></div>
-    <div class="field"><label for="points">배점 (선택)</label>
-      <input type="text" id="points" name="points" autocomplete="off" placeholder="비우면 만점을 문항 수로 똑같이 나눔. 예: 2,2,3,2,3,…" aria-describedby="pt-help">
-      <p class="small muted" id="pt-help">쉼표로 문항 수만큼 입력하고, 합이 만점과 같아야 합니다.</p></div>
+    <fieldset class="points-box" aria-describedby="pt-help">
+      <legend>배점 <span class="muted small">적지 않은 문항은 2점</span></legend>
+      <div class="row">
+        <div class="field"><label for="high_items">2.5점 문항 번호</label><input type="text" id="high_items" name="high_items" autocomplete="off" inputmode="numeric" placeholder="예: 8, 12, 17, 20, 25"></div>
+        <div class="field"><label for="low_items">1.5점 문항 번호</label><input type="text" id="low_items" name="low_items" autocomplete="off" inputmode="numeric" placeholder="예: 1, 2, 3, 5, 9"></div>
+      </div>
+      <p class="small muted" id="pt-help">25문항 50점이면 2.5점 문항과 1.5점 문항의 개수가 같아야 합계가 맞아요. 쉼표나 띄어쓰기로 구분하고, 3-5처럼 범위로 적어도 됩니다.</p>
+      <details class="mt">
+        <summary class="small">배점을 문항마다 직접 적기</summary>
+        <div class="field"><label for="points">배점 (쉼표로 문항 수만큼)</label>
+          <input type="text" id="points" name="points" autocomplete="off" placeholder="예: 1.5,2,2,2.5,… (이 칸을 채우면 위의 번호 칸은 무시)"></div>
+      </details>
+    </fieldset>
     <button class="btn primary" type="submit">회차 추가</button>
   </form>
 </section>

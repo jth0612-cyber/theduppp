@@ -39,7 +39,7 @@
       <div class="omr-cols">
         {% for i in range(1, mock.n_items + 1) %}
         <fieldset class="omr-row{{ ' is-wrong' if i in my_wrong }}">
-          <legend><span class="sr">{{ i }}번</span><span aria-hidden="true">{{ '%02d'|format(i) }}</span></legend>
+          <legend><span class="sr">{{ i }}번 {{ fmt(points[i - 1]) }}점</span><span aria-hidden="true">{{ '%02d'|format(i) }}{% if points[i - 1] != 2 %}<small class="pt pt-{{ 'hi' if points[i - 1] > 2 else 'lo' }}">{{ fmt(points[i - 1]) }}</small>{% endif %}</span></legend>
           {% for c in range(1, 6) %}
             <label class="bubble"><input type="radio" name="a{{ i }}" value="{{ c }}" {{ 'checked' if marks[i - 1] == c|string }}><span>{{ c }}</span><span class="sr">번 선택</span></label>
           {% endfor %}
@@ -87,7 +87,8 @@
     </div>
     <dl class="report-lines">
       <div><dt>채점 상태</dt><dd>{% if my_score is not none %}{% if my_wrong %}{{ my_wrong|length }}문항 오답{% elif entry and entry.mode == 'score' %}점수만 기록{% else %}모두 정답{% endif %}{% elif entry %}{{ filled }}문항 표시, 채점 전{% else %}아직 답안 없음{% endif %}</dd></div>
-      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{{ my_wrong|sort|join(' · ') }}</dd></div>{% endif %}
+      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>
+      <div><dt>놓친 점수</dt><dd>{{ fmt(lost) }}점</dd></div>{% endif %}
       <div><dt>등급 산출</dt><dd>{% if my_score is none %}모든 문항을 채점하면 표시{% elif not stats.cuts %}참여 {{ min_for_cuts }}명부터 표시{% else %}반 응시자 기준 추정{% endif %}</dd></div>
       <div><dt>함께 응시</dt><dd>{{ stats.n }}명</dd></div>
     </dl>

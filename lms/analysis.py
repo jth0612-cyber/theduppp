@@ -10,6 +10,10 @@ GRADE_CUM = [4, 11, 23, 40, 60, 77, 89, 96]
 MIN_FOR_CUTS = 10          # 이 인원보다 적으면 등급컷을 보여주지 않는다
 RANGE_PCT = 2              # 추정 범위: 누적 비율 ±2%p 에 해당하는 점수
 CHOICES = 5
+# 통합과학(2028 수능~): 25문항 50점, 배점 1.5·2·2.5점 혼합
+DEFAULT_ITEMS = 25
+DEFAULT_FULL = 50
+BASE_POINT, HIGH_POINT, LOW_POINT = 2, 2.5, 1.5
 
 # 헷갈리는 글자(0/O, 1/I/L)를 뺀 대문자·숫자. 12자리면 약 7.9×10^17 가지
 _ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -64,6 +68,47 @@ def parse_points(raw, n_items, full_score):
     if abs(sum(pts) - full_score) > 1e-9:
         raise ValueError(f"배점의 합({_fmt(sum(pts))})이 만점({_fmt(full_score)})과 같아야 합니다.")
     return [int(p) if p == int(p) else p for p in pts]
+
+
+def parse_item_numbers(raw, n_items):
+    """'3, 7 12-14' 같은 문항 번호 목록. 범위(12-14)도 받는다."""
+    out = set()
+    for part in (raw or "").replace(",", " ").replace("·", " ").split():
+        try:
+            if "-" in part or "~" in part:
+                a, b = part.replace("~", "-").split("-", 1)
+                rng = range(int(a), int(b) + 1)
+            else:
+                rng = [int(part)]
+        except ValueError:
+            raise ValueError(f"문항 번호 '{part}'를 읽지 못했습니다. 숫자와 쉼표로 적어 주세요.") from None
+        for n in rng:
+            if not 1 <= n <= n_items:
+                raise ValueError(f"{n}번은 없는 문항입니다. (1~{n_items}번)")
+            out.add(n)
+    return out
+
+
+def points_from_levels(high_raw, low_raw, n_items, full_score):
+    """2.5점·1.5점 문항 번호만 받고 나머지는 2점으로 채운다. 합이 만점과 같아야 한다."""
+    high = parse_item_numbers(high_raw, n_items)
+    low = parse_item_numbers(low_raw, n_items)
+    both = high & low
+    if both:
+        raise ValueError(f"{', '.join(map(str, sorted(both)))}번이 2.5점과 1.5점에 모두 들어 있습니다.")
+    pts = [HIGH_POINT if i in high else LOW_POINT if i in low else BASE_POINT for i in range(1, n_items + 1)]
+    total = sum(pts)
+    if abs(total - full_score) > 1e-9:
+        raise ValueError(f"배점의 합이 {_fmt(total)}점입니다. 만점 {_fmt(full_score)}점이 되도록 "
+                         f"2.5점과 1.5점 문항 수를 맞춰 주세요. (지금 2.5점 {len(high)}개, 1.5점 {len(low)}개)")
+    return pts
+
+
+def score_step(points):
+    """점수가 움직이는 가장 작은 단위: 모두 정수면 1, 0.5점 배점이 있으면 0.5."""
+    if all(float(p) == int(p) for p in points):
+        return 1
+    return 0.5 if all(float(p) * 2 == int(float(p) * 2) for p in points) else 0.1
 
 
 def parse_answers(raw, n_items):
@@ -150,30 +195,30 @@ def grade_for(score, cuts):
     return 9
 
 
-def distribution(scores, full_score, buckets=10):
-    """점수 구간별 비율(%). 마지막 구간은 만점을 포함한다."""
+def _band(i, width, full_score, buckets, step):
+    lo = round(i * width / step) * step
+    hi = full_score if i == buckets - 1 else round(((i + 1) * width - step) / step) * step
+    return f"{_fmt(lo)}–{_fmt(hi)}"
+
+
+def distribution(scores, full_score, buckets=10, step=1):
+    """점수 구간별 비율(%). 마지막 구간은 만점을 포함한다. step: 점수 단위(0.5점 배점이면 0.5)."""
     width = full_score / buckets
     counts = [0] * buckets
     for sc in scores:
         idx = min(buckets - 1, int(sc // width)) if width else 0
         counts[idx] += 1
     n = len(scores) or 1
-    out = []
-    for i, c in enumerate(counts):
-        lo = round(i * width)
-        hi = round(full_score) if i == buckets - 1 else round((i + 1) * width) - 1
-        out.append({"label": f"{lo}–{hi}", "pct": round(100 * c / n), "count": c})
-    return out
+    return [{"label": _band(i, width, full_score, buckets, step), "pct": round(100 * c / n), "count": c}
+            for i, c in enumerate(counts)]
 
 
-def bucket_label(score, full_score, buckets=10):
+def bucket_label(score, full_score, buckets=10, step=1):
     if score is None:
         return None
     width = full_score / buckets
     i = min(buckets - 1, int(score // width)) if width else 0
-    lo = round(i * width)
-    hi = round(full_score) if i == buckets - 1 else round((i + 1) * width) - 1
-    return f"{lo}–{hi}"
+    return _band(i, width, full_score, buckets, step)
 
 
 def item_stats(answer_rows, key):
@@ -194,7 +239,7 @@ def item_stats(answer_rows, key):
     return items
 
 
-def compute(entries, key, full_score):
+def compute(entries, key, full_score, step=1):
     """entries: [{'answers': str, 'score': float|None}] (같은 회차의 모든 제출)."""
     complete = [e for e in entries if e["score"] is not None]
     scores = [float(e["score"]) for e in complete]
@@ -203,7 +248,7 @@ def compute(entries, key, full_score):
         "n": len(scores),
         "n_answers": len(answer_rows),
         "cuts": grade_cuts(scores),
-        "dist": distribution(scores, full_score) if scores else [],
+        "dist": distribution(scores, full_score, step=step) if scores else [],
         "items": item_stats(answer_rows, key) if answer_rows else [],
         "computed_at": time.strftime("%H:%M"),
     }

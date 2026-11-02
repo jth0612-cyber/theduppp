@@ -34,6 +34,29 @@ class AnalysisMathTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             analysis.parse_points(",".join(["2"] * 20), 20, 50)
 
+    def test_points_from_levels_25_items(self):
+        pts = analysis.points_from_levels("8, 12 17 20,25", "1-3, 5 9", 25, 50)
+        self.assertEqual(len(pts), 25)
+        self.assertEqual(sum(pts), 50)
+        self.assertEqual((pts[7], pts[0], pts[3]), (2.5, 1.5, 2))
+        with self.assertRaises(ValueError):                             # 개수가 안 맞으면 합이 50이 아님
+            analysis.points_from_levels("8, 12", "1", 25, 50)
+        with self.assertRaises(ValueError):                             # 같은 문항이 두 칸에
+            analysis.points_from_levels("3", "3", 25, 50)
+        with self.assertRaises(ValueError):                             # 없는 문항
+            analysis.points_from_levels("26", "1", 25, 50)
+
+    def test_half_point_bands(self):
+        self.assertEqual(analysis.score_step([2, 2.5, 1.5]), 0.5)
+        self.assertEqual(analysis.score_step([2, 3]), 1)
+        dist = analysis.distribution([4.5, 5, 49.5, 50], 50, step=0.5)
+        self.assertEqual(dist[0]["label"], "0–4.5")
+        self.assertEqual(dist[1]["label"], "5–9.5")
+        self.assertEqual(dist[-1]["label"], "45–50")
+        self.assertEqual((dist[0]["count"], dist[1]["count"], dist[-1]["count"]), (1, 1, 2))
+        self.assertEqual(analysis.bucket_label(47.5, 50, step=0.5), "45–50")
+        self.assertEqual(analysis.distribution([0], 50)[0]["label"], "0–4")      # 정수 배점은 그대로
+
     def test_grade_cuts_and_percentile(self):
         scores = list(range(1, 101))                                    # 1~100점 100명
         cuts = analysis.grade_cuts(scores)
@@ -100,6 +123,31 @@ class BooksTest(unittest.TestCase):
         with self.app.app_context():
             mid = query("SELECT id FROM mocks WHERE book_id = ?", (bid,), one=True)["id"]
         return bid, mid
+
+    def test_25_items_with_mixed_points(self):
+        r = self.t.post("/t/books", data={"title": "통합과학 실전", "subject": "통합과학", "expires_on": "2099-12-31"})
+        bid = int(r.headers["Location"].rsplit("/", 1)[-1])
+        key = "1435253411243155214331524"
+        r = self.t.post(f"/t/books/{bid}/mocks", data={"round_no": "1", "n_items": "25", "full_score": "50",
+                                                       "answer_key": key, "high_items": "21-25", "low_items": "1-5"})
+        self.assertEqual(r.status_code, 302)
+        with self.app.app_context():
+            m = query("SELECT * FROM mocks WHERE book_id = ?", (bid,), one=True)
+        self.assertEqual(sum(json.loads(m["points"])), 50)
+        self.t.post(f"/t/books/{bid}/codes", data={"kind": "shared"})
+        with self.app.app_context():
+            code = query("SELECT code FROM book_codes WHERE book_id = ?", (bid,), one=True)["code"]
+        s = self.student(0)
+        s.post("/s/books/register", data={"code": code})
+        # 1번(1.5점)과 25번(2.5점)을 틀리면 46점
+        ans = ("2" if key[0] != "2" else "3") + key[1:24] + ("2" if key[24] != "2" else "3")
+        s.post(f"/s/analysis/{m['id']}/submit", data={"mode": "answers", "quick": ans})
+        with self.app.app_context():
+            self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (m["id"],), one=True)["score"], 46)
+        page = s.get(f"/s/analysis?mock={m['id']}").data.decode()
+        self.assertIn("놓친 점수", page)
+        self.assertIn("4점", page)
+        self.assertIn("45–50", page)
 
     def shared_code(self, bid):
         self.t.post(f"/t/books/{bid}/codes", data={"kind": "shared"})

@@ -37,10 +37,11 @@ def _mock_or_404(mid):
 
 def _stats(mock):
     key, full = json.loads(mock["answer_key"]), mock["full_score"]
+    step = analysis.score_step(json.loads(mock["points"]))
 
     def load():
         rows = query("SELECT answers, score FROM mock_entries WHERE mock_id = ?", (mock["id"],))
-        return analysis.compute([dict(r) for r in rows], key, full)
+        return analysis.compute([dict(r) for r in rows], key, full, step)
     return analysis.cached(mock["id"], _ttl(), load)
 
 
@@ -131,6 +132,7 @@ def analysis_home():
         abort(404)
     mock = _mock_or_404(mid)
     key = json.loads(mock["answer_key"])
+    points = json.loads(mock["points"])
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
     stats = _stats(mock)
     my_score = entry["score"] if entry else None
@@ -142,7 +144,9 @@ def analysis_home():
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats,
                            my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mode=mode, mock_param=mid,
-                           my_bucket=analysis.bucket_label(my_score, mock["full_score"]), marks=marks,
+                           my_bucket=analysis.bucket_label(my_score, mock["full_score"],
+                                                           step=analysis.score_step(points)), marks=marks,
+                           points=points, lost=sum(points[n - 1] for n in my_wrong),
                            filled=analysis.filled_count(marks),
                            min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt)
 
@@ -312,12 +316,18 @@ def add_mock(bid):
     _book_or_404(bid)
     try:
         round_no = int(request.form.get("round_no", ""))
-        n_items = int(request.form.get("n_items", "20"))
-        full = float(request.form.get("full_score", "50"))
+        n_items = int(request.form.get("n_items", analysis.DEFAULT_ITEMS))
+        full = float(request.form.get("full_score", analysis.DEFAULT_FULL))
         if not (1 <= n_items <= 60 and 0 < full <= 200 and round_no >= 1):
             raise ValueError("문항 수(1~60), 만점(0~200), 회차(1 이상)를 확인하세요.")
         key = analysis.parse_key(request.form.get("answer_key"), n_items)
-        points = analysis.parse_points(request.form.get("points"), n_items, full)
+        if request.form.get("points", "").strip():
+            points = analysis.parse_points(request.form.get("points"), n_items, full)
+        elif request.form.get("high_items", "").strip() or request.form.get("low_items", "").strip():
+            points = analysis.points_from_levels(request.form.get("high_items"), request.form.get("low_items"),
+                                                 n_items, full)
+        else:
+            points = analysis.parse_points("", n_items, full)
     except ValueError as e:
         flash(str(e) if str(e) and not str(e).startswith("invalid literal") else "숫자를 확인하세요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid) + "#add-mock")

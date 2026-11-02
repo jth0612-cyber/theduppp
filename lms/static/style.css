@@ -280,6 +280,10 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .omr-row { display: grid; grid-template-columns: 34px repeat(5, 1fr); align-items: center; border: 0; border-bottom: 1px solid var(--rule); margin: 0; padding: 5px 0; min-width: 0; }
 .omr-row legend { float: left; padding: 0; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); width: 34px; }
 .omr-row.is-wrong legend { color: var(--danger); font-weight: 700; }
+.omr-row legend .pt { display: block; font-size: 10px; line-height: 1.1; letter-spacing: 0; }
+.omr-row legend .pt-hi { color: var(--accent-ink); font-weight: 600; }
+.omr-row legend .pt-lo { color: var(--faint); }
+.report-lines .nums small { font-size: 11px; color: var(--muted); margin-left: 1px; }
 .bubble { position: relative; display: grid; place-items: center; margin: 0; cursor: pointer; }
 .bubble input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .bubble span:first-of-type { width: 26px; height: 32px; border-radius: 13px / 16px; border: 1px solid var(--control); display: grid; place-items: center; font-size: 12px; color: var(--muted); transition: background-color 120ms ease, color 120ms ease; }
@@ -492,3 +496,7 @@ body.pub, body.no-shell { background: #f4efe7; }
 @media (max-width: 760px) {
   .home-cols, .play-list { grid-template-columns: minmax(0, 1fr); }
 }
+
+.points-box { border: 1px solid var(--edge); border-radius: 4px; padding: 14px 16px 6px; margin: 0 0 16px; }
+.points-box legend { padding: 0 6px; font-size: 13px; font-weight: 600; }
+.points-box .field { margin-bottom: 8px; }
