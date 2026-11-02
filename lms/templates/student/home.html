@@ -1,67 +1,70 @@
 {% extends "base.html" %}
 {% from "_macros.html" import status_badge, filesize, tag_badge, kind_badge %}
 {% block content %}
-<div class="page-head">
-  <div><h1>{{ me.name }}님</h1><p class="small">게시판 닉네임 <b>{{ g.user.nickname }}</b> · {{ me.class_name }}</p></div>
-  <div class="row">
+<header class="ed-head home-head">
+  <div>
+    <p class="kicker">{{ me.class_name }} · 닉네임 {{ g.user.nickname }}</p>
+    <h1>{{ me.name }}님, 오늘도 한 걸음.</h1>
+  </div>
+  <div class="home-actions">
     <a class="btn" href="{{ url_for('student.points') }}">{{ points }}P</a>
     <a class="btn primary" href="{{ url_for('student.questions', ask=1) }}#ask">질문하기</a>
   </div>
-</div>
+</header>
 
-<div class="card streak">
-  <div>
-    <h2>{% if streak.total > 1 %}벌써 누적 {{ streak.total }}일!{% else %}오늘부터 시작!{% endif %}</h2>
-    <p class="muted small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요. 어제보다 한 걸음.{% else %}매일 들어오면 접속 포인트 10P를 받아요.{% endif %}</p>
-  </div>
+<section class="today-bar" aria-label="이번 주 접속">
+  <p><b>{% if streak.total > 1 %}누적 {{ streak.total }}일째{% else %}오늘부터 시작{% endif %}</b><br>
+    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 접속 포인트 10P를 받아요.{% endif %}</span></p>
   <div class="week">
     {% for d in streak.week %}
       <span class="day {{ 'done' if d.done }} {{ 'today' if d.today }}" title="{{ d.label }}">{{ d.label }}</span>
     {% endfor %}
   </div>
+</section>
+
+<div class="home-cols">
+  <section class="panel" aria-labelledby="h-notice">
+    <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체 보기 →</a></div>
+    <ul class="mini-list">
+      {% for n in notices %}
+        <li>{{ tag_badge(n.tag) }}<a href="{{ url_for('student.notice_detail', nid=n.id) }}">{{ n.title }}</a><time>{{ n.created_at[5:10] }}</time></li>
+      {% else %}<li class="empty">새 공지가 없습니다.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="panel" aria-labelledby="h-mat">
+    <div class="sec-head"><h2 id="h-mat">자료실</h2><a href="{{ url_for('student.materials') }}">전체 보기 →</a></div>
+    <ul class="mini-list">
+      {% for m in materials %}
+        <li>{{ kind_badge(m.original_name) }}<a href="{{ url_for('student.file', fid=m.file_id) }}">{{ m.title }}</a><span class="m">{{ filesize(m.size) }}</span></li>
+      {% else %}<li class="empty">올라온 자료가 없습니다.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="panel" aria-labelledby="h-q">
+    <div class="sec-head"><h2 id="h-q">내 질문</h2><a href="{{ url_for('student.questions', view='mine') }}">전체 보기 →</a></div>
+    <ul class="mini-list">
+      {% for q in questions %}
+        <li><a href="{{ url_for('student.question_detail', qid=q.id) }}">{{ q.title }}</a>{{ status_badge(q.status) }}</li>
+      {% else %}<li class="empty">아직 질문하지 않았습니다.</li>{% endfor %}
+    </ul>
+  </section>
+  {% if news %}
+  <section class="panel" aria-labelledby="h-news">
+    <div class="sec-head"><h2 id="h-news">교육 뉴스</h2></div>
+    <ul class="mini-list">
+      {% for n in news %}
+        <li><a href="{{ n.url }}" target="_blank" rel="noopener noreferrer" title="{{ n.summary }}">{{ n.title }}</a><span class="m">{{ n.source or (n.url|host_of) }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 </div>
 
-<div class="card">
-  <h2>미니게임 <a class="small" href="{{ url_for('games.hub') }}">전체</a></h2>
-  <div class="row">
-    <a class="btn" href="{{ url_for('games.dna') }}">🧬 염기 짝 맞추기</a>
-    <a class="btn" href="{{ url_for('games.chargaff') }}">⚖️ 샤가프 법칙</a>
-    <a class="btn" href="{{ url_for('games.quiz') }}">✨ 통합과학 퀴즈</a>
-  </div>
-</div>
-
-<div class="grid grid-2">
-  <div class="card">
-    <h2>공지 <a class="small" href="{{ url_for('student.notices') }}">전체</a></h2>
-    {% for n in notices %}
-      <p>{{ tag_badge(n.tag) }} <b>{{ n.title }}</b> <span class="small muted">{{ n.created_at[5:10] }}</span></p>
-    {% else %}<p class="muted">공지가 없습니다.</p>{% endfor %}
-  </div>
-  <div class="card">
-    <h2>자료실 <a class="small" href="{{ url_for('student.materials') }}">전체</a></h2>
-    {% for m in materials %}
-      <p>{{ kind_badge(m.original_name) }} <a href="{{ url_for('student.file', fid=m.file_id) }}">{{ m.title }}</a> <span class="small muted">{{ filesize(m.size) }}</span></p>
-    {% else %}<p class="muted">자료가 없습니다.</p>{% endfor %}
-  </div>
-</div>
-
-{% if news %}
-<h2 class="mt">교육 뉴스</h2>
-<div class="grid grid-2 news">
-  {% for n in news %}
-  <a class="card news-card" href="{{ n.url }}" target="_blank" rel="noopener noreferrer">
-    <span class="small muted">{{ n.source or (n.url|host_of) }} · {{ n.created_at[5:10] }}</span>
-    <b>{{ n.title }}</b>
-    {% if n.summary %}<span class="small">{{ n.summary }}</span>{% endif %}
-  </a>
-  {% endfor %}
-</div>
-{% endif %}
-
-<div class="card">
-  <h2>내 질문 <a class="small" href="{{ url_for('student.questions', view='mine') }}">전체</a></h2>
-  {% for q in questions %}
-    <p><a href="{{ url_for('student.question_detail', qid=q.id) }}">{{ q.title }}</a> {{ status_badge(q.status) }}</p>
-  {% else %}<p class="muted">아직 질문하지 않았습니다.</p>{% endfor %}
-</div>
+<section class="panel" aria-labelledby="h-play">
+  <div class="sec-head"><h2 id="h-play">쉬어 가기</h2><a href="{{ url_for('games.hub') }}">미니게임 전체 →</a></div>
+  <ul class="play-list">
+    <li><a href="{{ url_for('games.dna') }}"><b>염기 짝 맞추기</b><span>A·T, G·C 짝을 시간 안에</span></a></li>
+    <li><a href="{{ url_for('games.chargaff') }}"><b>샤가프 법칙</b><span>염기 비율 계산 연습</span></a></li>
+    <li><a href="{{ url_for('games.quiz') }}"><b>통합과학 퀴즈</b><span>개념 객관식 한 세트</span></a></li>
+  </ul>
+</section>
 {% endblock %}
