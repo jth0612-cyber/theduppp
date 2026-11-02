@@ -42,6 +42,24 @@ class RoomsTest(unittest.TestCase):
         self.assertNotIn("닉0 (나)", b.get("/s/rooms/sanji").data.decode())
         self.assertIn("학생0", self.t.get("/t/rooms").data.decode())
 
+    def test_3d_positions(self):
+        a, b = self.student(0), self.student(1)
+        page = a.get("/s/rooms/sanji").data.decode()
+        self.assertIn("sanji3d.js", page)                                # 산사는 3D
+        self.assertIn("data-enter-btn", page)
+        self.assertNotIn("sanji3d.js", a.get("/s/rooms/sanji?flat=1").data.decode())   # 그림 버전도 남김
+        self.assertNotIn("sanji3d.js", a.get("/s/rooms/eki").data.decode())
+        a.post("/s/rooms/sanji/beat", data={"x": "3.5", "z": "-7", "ry": "3.14", "pose": "sit", "seat": "8",
+                                            "color": "#5fa3c9"})
+        b.get("/s/rooms/sanji")
+        r = b.post("/s/rooms/sanji/beat", data={"x": "999", "z": "nan", "pose": "fly", "color": "red"}).get_json()
+        friend = [m for m in r["members"] if not m["me"]][0]
+        self.assertEqual((friend["x"], friend["z"], friend["pose"], friend["seat"], friend["color"]),
+                         (3.5, -7.0, "sit", 8, "#5fa3c9"))
+        mine = [m for m in r["members"] if m["me"]][0]
+        self.assertEqual((mine["x"], mine["pose"]), (0, "stand"))        # 이상한 값은 무시
+        self.assertTrue(mine["color"].startswith("#"))
+
     def test_notes(self):
         a = self.student(0)
         a.post("/s/rooms/eki/note", data={"body": "  기차 오기 전에   2단원 끝  "})

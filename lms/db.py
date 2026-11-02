@@ -424,6 +424,13 @@ def init_db(path):
     # 자주 묻는 질문(FAQ)으로 고정
     _add_column(conn, "questions", "faq", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "timetable", "room", "TEXT NOT NULL DEFAULT ''")
+    # 3D 같이 공부: 위치·자세·캐릭터 색
+    _add_column(conn, "room_presence", "px", "REAL NOT NULL DEFAULT 0")
+    _add_column(conn, "room_presence", "pz", "REAL NOT NULL DEFAULT 0")
+    _add_column(conn, "room_presence", "ry", "REAL NOT NULL DEFAULT 0")
+    _add_column(conn, "room_presence", "pose", "TEXT NOT NULL DEFAULT 'stand'")
+    _add_column(conn, "room_presence", "seat", "INTEGER")
+    _add_column(conn, "users", "avatar_color", "TEXT")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():
         conn.execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(code_taken), cid))

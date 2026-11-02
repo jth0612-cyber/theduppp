@@ -909,3 +909,69 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
   .tt-day { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; align-items: start; }
   .tt-day h2, .tt-day h3 { flex-direction: column; gap: 4px; padding-top: 10px; }
 }
+
+/* ================= 같이 공부 · 3D 산사 ================= */
+.in-room3d .container { padding: 0 0 48px; }
+.w3-stage { position: relative; height: min(80vh, 780px); min-height: 460px; overflow: hidden; border-radius: 15px 15px 0 0; background: #1b1d22; touch-action: none; user-select: none; -webkit-user-select: none; }
+.w3-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.w3-canvas:active { cursor: grabbing; }
+.w3-below { padding: 26px 32px 0; }
+.w3-vignette { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.4s ease;
+  background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(12, 10, 8, .55) 100%); }
+.w3-stage.is-focus .w3-vignette { opacity: 1; }
+.w3-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; pointer-events: none; }
+.w3-top > * { pointer-events: auto; }
+.w3-pill { font: inherit; font-size: 13px; color: #1d1b18; background: rgba(255, 252, 246, .72); border: 1px solid rgba(255, 255, 255, .6);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; }
+.w3-pill:hover { text-decoration: none; background: rgba(255, 252, 246, .9); }
+.w3-pill[aria-pressed="true"] { background: #1d1b18; color: #fff; border-color: #1d1b18; }
+.w3-place { margin: 0; display: grid; justify-items: center; color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, .45); line-height: 1.25; }
+.w3-place b { font-family: var(--font-display); font-weight: 600; font-size: 17px; letter-spacing: .08em; }
+.w3-place span { font-size: 12px; opacity: .9; }
+.w3-whisper { position: absolute; left: 50%; top: 74px; transform: translate(-50%, 6px); margin: 0; max-width: min(92%, 560px); text-align: center;
+  font-family: var(--font-display); font-size: clamp(15px, 2.2vw, 19px); color: #fff; text-shadow: 0 1px 10px rgba(0, 0, 0, .55);
+  opacity: 0; transition: opacity .9s ease, transform .9s ease; pointer-events: none; }
+.w3-whisper.is-on { opacity: 1; transform: translate(-50%, 0); }
+.w3-timer { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); text-align: center; color: #fff; pointer-events: none; text-shadow: 0 2px 18px rgba(0, 0, 0, .5); }
+.w3-timer p { margin: 0; }
+.w3-timer-time { font-family: var(--font-display); font-weight: 600; font-size: clamp(56px, 11vw, 96px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.w3-timer-state { font-size: 13px; letter-spacing: .2em; opacity: .9; margin-top: 6px !important; }
+.w3-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: grid; justify-items: center; gap: 10px; padding: 0 12px 14px; pointer-events: none; }
+.w3-bottom > * { pointer-events: auto; }
+.w3-plans { display: flex; gap: 6px; }
+.w3-chip { position: relative; margin: 0; }
+.w3-chip input { position: absolute; opacity: 0; }
+.w3-chip span { display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 13px; cursor: pointer; color: #1d1b18;
+  background: rgba(255, 252, 246, .72); border: 1px solid rgba(255, 255, 255, .6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.w3-chip input:checked + span { background: #1d1b18; color: #fff; border-color: #1d1b18; }
+.w3-chip input:focus-visible + span { outline: 2px solid #fff; outline-offset: 2px; }
+.w3-actions { display: flex; gap: 2px; padding: 6px; border-radius: 20px; background: rgba(28, 26, 22, .5); border: 1px solid rgba(255, 255, 255, .18);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.w3-act { display: grid; justify-items: center; gap: 3px; min-width: 62px; padding: 8px 10px 6px; border: 0; border-radius: 14px; background: none; color: #fff; font: inherit; font-size: 12px; cursor: pointer; transition: background-color .15s ease, transform .1s ease; }
+.w3-act svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.w3-act:hover { background: rgba(255, 255, 255, .12); }
+.w3-act:active { transform: scale(.95); }
+.w3-act.is-primary { background: rgba(255, 252, 246, .92); color: #1d1b18; }
+.w3-act:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.w3-hint { margin: 0; font-size: 12px; color: rgba(255, 255, 255, .88); text-shadow: 0 1px 6px rgba(0, 0, 0, .55); text-align: center; pointer-events: none !important; }
+.w3-enter { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(18, 16, 14, .35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.w3-enter[hidden] { display: none; }
+.w3-enter-card { max-width: 360px; text-align: center; display: grid; gap: 8px; justify-items: center; padding: 28px 26px 22px; border-radius: 18px; background: var(--sheet); color: var(--ink); }
+.w3-enter-card h1 { margin: 0; font-size: 30px; }
+.w3-enter-card p { margin: 0; color: var(--muted); }
+.w3-enter-card .btn.big { min-height: 50px; padding: 0 30px; border-radius: 999px; margin-top: 10px; font-size: 16px; }
+.w3-fallback { position: absolute; inset: auto 16px 16px; color: #fff; }
+.w3-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.w3-colors p { margin: 0 6px 0 0; }
+.w3-swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sheet); box-shadow: 0 0 0 1px var(--edge); cursor: pointer; padding: 0; }
+.w3-swatch.is-on { box-shadow: 0 0 0 2px var(--ink); }
+.sw-0 { background: #e8805c; } .sw-1 { background: #e6a23c; } .sw-2 { background: #7cb87a; } .sw-3 { background: #5fa3c9; }
+.sw-4 { background: #9b86d1; } .sw-5 { background: #d97aa0; } .sw-6 { background: #8c7a6b; } .sw-7 { background: #4f9e94; }
+@media (max-width: 900px) {
+  .in-room3d .container { padding: 0 0 calc(80px + env(safe-area-inset-bottom)); }
+  .w3-stage { height: calc(100dvh - 50px - 70px - env(safe-area-inset-bottom)); min-height: 420px; border-radius: 0; }
+  .w3-below { padding: 20px 16px 0; }
+  .w3-act { min-width: 54px; padding: 8px 6px 6px; font-size: 11px; }
+  .w3-whisper { top: 66px; }
+}
+@media (prefers-reduced-motion: reduce) { .w3-whisper, .w3-vignette { transition: none; } }

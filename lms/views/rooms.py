@@ -20,6 +20,10 @@ PLACES = {
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
 PLAN_CHOICES = (25, 50, 90)
 NOTE_MAX = 60
+# 3D 장소 (나머지는 그림 버전)
+PLACES_3D = {"sanji"}
+POSES = {"stand", "walk", "sit", "gassho", "bow", "breathe"}
+AVATAR_COLORS = ["#e8805c", "#e6a23c", "#7cb87a", "#5fa3c9", "#9b86d1", "#d97aa0", "#8c7a6b", "#4f9e94"]
 
 
 def _place_or_404(place):
@@ -29,7 +33,8 @@ def _place_or_404(place):
 
 
 def _members(place):
-    return query(f"""SELECT u.id, u.nickname, p.status, p.focus_since, p.plan_min,
+    return query(f"""SELECT u.id, u.nickname, u.avatar_color, p.status, p.focus_since, p.plan_min,
+                            p.px, p.pz, p.ry, p.pose, p.seat,
                             (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f
                              WHERE f.user_id = u.id AND date(f.ended_at) = date('now', 'localtime')) AS today
                      FROM room_presence p JOIN users u ON u.id = p.user_id
@@ -55,9 +60,22 @@ def _elapsed_min(since):
 
 
 def _member_json(m, me):
-    return {"nick": m["nickname"] or "익명", "me": m["id"] == me, "status": m["status"],
+    return {"id": m["id"], "nick": m["nickname"] or "익명", "me": m["id"] == me, "status": m["status"],
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
-            "plan": m["plan_min"], "today": m["today"]}
+            "plan": m["plan_min"], "today": m["today"],
+            "x": round(m["px"], 2), "z": round(m["pz"], 2), "ry": round(m["ry"], 2), "pose": m["pose"],
+            "seat": m["seat"], "color": m["avatar_color"] or AVATAR_COLORS[m["id"] % len(AVATAR_COLORS)]}
+
+
+def _pos_args():
+    """브라우저가 보낸 위치·자세. 이상한 값은 버린다."""
+    def num(name, lo, hi):
+        v = request.form.get(name, type=float)
+        return None if v is None or v != v else max(lo, min(hi, v))
+    pose = request.form.get("pose")
+    seat = request.form.get("seat", type=int)
+    return num("x", -40, 40), num("z", -40, 40), num("ry", -7, 7), pose if pose in POSES else None, \
+        seat if seat is not None and 0 <= seat < 200 else None
 
 
 # ---------- 학생 ----------
@@ -87,7 +105,10 @@ def room(place):
     notes = query("""SELECT n.id, n.body, n.created_at, u.nickname, n.user_id = ? AS mine FROM room_notes n
                      JOIN users u ON u.id = n.user_id WHERE n.place = ? ORDER BY n.created_at DESC LIMIT 40""",
                   (g.user["id"], place))
-    return render_template("rooms/room.html", key=place, info=info, places=PLACES, me=me,
+    tpl = "rooms/room3d.html" if place in PLACES_3D and request.args.get("flat") != "1" else "rooms/room.html"
+    my_color = query("SELECT avatar_color FROM users WHERE id = ?", (g.user["id"],), one=True)["avatar_color"]
+    return render_template(tpl, key=place, info=info, places=PLACES, me=me, colors=AVATAR_COLORS,
+                           my_color=my_color or AVATAR_COLORS[g.user["id"] % len(AVATAR_COLORS)],
                            elapsed=_elapsed_min(me["focus_since"]) if me["status"] == "focus" else 0,
                            members=[_member_json(m, g.user["id"]) for m in _members(place)],
                            notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, note_max=NOTE_MAX)
@@ -114,6 +135,13 @@ def beat(place):
         db.execute("""INSERT INTO room_presence (user_id, place) VALUES (?, ?)
                       ON CONFLICT(user_id) DO UPDATE SET place = excluded.place,
                       last_seen = datetime('now', 'localtime')""", (uid, place))
+    x, z, ry, pose, seat = _pos_args()
+    if x is not None and z is not None and action != "leave":
+        db.execute("UPDATE room_presence SET px = ?, pz = ?, ry = COALESCE(?, ry), pose = COALESCE(?, pose), seat = ? "
+                   "WHERE user_id = ?", (x, z, ry, pose, seat, uid))
+    color = request.form.get("color")
+    if color in AVATAR_COLORS:
+        db.execute("UPDATE users SET avatar_color = ? WHERE id = ?", (color, uid))
     db.commit()
     return jsonify(members=[_member_json(m, uid) for m in _members(place)], today=_my_today(uid))
 

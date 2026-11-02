@@ -1,0 +1,4 @@
+같이 공부 배경 소리 출처
+- wind, birds, crickets, chimes, bowl, steps: Moodist (github.com/remvze/moodist) 프로젝트에 실린 음원을 잘라 반복용으로 다듬음.
+  해당 프로젝트 안내에 따르면 음원은 Pixabay Content License 또는 CC0 이며, 둘 다 출처 표기 없이 수정·사용할 수 있음.
+- moktak: 이 사이트에서 직접 합성.
