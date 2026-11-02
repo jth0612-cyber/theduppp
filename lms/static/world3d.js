@@ -159,6 +159,7 @@ const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: c, ...o });
 const sharedM = { robe: toon(0xeee4d2), skin: toon(SKIN), pom: toon(0xfff7ec), bag: toon(0x8a6a4f), bagTop: toon(0x6d523c), shoe: toon(0x5a4a3e),
   eye: new THREE.MeshBasicMaterial({ color: INK }), shine: new THREE.MeshBasicMaterial({ color: 0xffffff }),
   blush: new THREE.MeshBasicMaterial({ color: 0xf3a08e, transparent: true, opacity: 0.65 }) };
+const crownM = new THREE.MeshToonMaterial({ color: 0xf0c040 });
 function part(g, m, x, y, z, parent) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); parent.add(o); return o; }
 class Avatar {
   constructor({ color, nick, me = false }) {
@@ -241,6 +242,17 @@ class Avatar {
     this.ring.material.opacity += (ringTarget - this.ring.material.opacity) * Math.min(1, dt * 3);
   }
   bow() { this.pose = "bow"; this.bowT = 1.6; }
+  // 이번 주 이 장소의 터줏대감(1위)은 머리 위에 작은 금관
+  setKing(v) {
+    if (!!v === !!this.crown) return;
+    if (v) {
+      const c = new THREE.Group();
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.09, 16, 1, true), crownM); c.add(band);
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; const t = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.13, 6), crownM); t.position.set(Math.cos(a) * 0.15, 0.1, Math.sin(a) * 0.15); c.add(t); }
+      const gem = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshBasicMaterial({ color: 0xd8405a })); gem.position.set(0, 0.01, 0.17); c.add(gem);
+      c.position.y = 1.93; this.upper.add(c); this.crown = c; this.tag.position.y = 2.35;
+    } else { this.upper.remove(this.crown); this.crown = null; this.tag.position.y = 2.15; }
+  }
   dispose() { scene.remove(this.g); }
 }
 
@@ -523,13 +535,13 @@ function onBeat(d) {
   if (!d || !d.members) return;
   const seen = new Set();
   d.members.forEach((m) => {
-    if (m.me) return; seen.add(m.id);
+    if (m.me) { me.setKing(m.king); return; } seen.add(m.id);
     let o = others.get(m.id);
     if (!o) {
       o = new Avatar({ color: m.color, nick: m.nick }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
       if (entered) whisper(`${m.nick}님이 들어왔어요.`, 2600);
     }
-    o.setColor(m.color);
+    o.setColor(m.color); o.setKing(m.king);
     o.focus = m.status === "focus";
     o.seat = m.seat === null || m.seat === undefined ? null : m.seat;
     if (o.seat !== null && SEATS[o.seat]) {
@@ -557,6 +569,8 @@ function drawList(ms) {
     li.className = (m.status === "focus" ? "is-focus" : "") + (m.me ? " is-me" : "");
     const seat = document.createElement("i"); seat.className = "seat"; seat.setAttribute("aria-hidden", "true");
     const b = document.createElement("b"); b.textContent = m.nick + (m.me ? " (나)" : "");
+    if (m.king) { const k = document.createElement("small"); k.className = "here-tag is-king"; k.textContent = "터줏대감"; b.append(" ", k); }
+    else if (m.follow) { const k = document.createElement("small"); k.className = "here-tag"; k.textContent = "팔로잉"; b.append(" ", k); }
     const s = document.createElement("span");
     s.textContent = (m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중") + ` · 오늘 ${m.today}분`;
     li.append(seat, b, s); listEl.appendChild(li);
@@ -713,5 +727,5 @@ function frame() {
   if (slowT > 3) { const fps = frames / slowT; if (fps < 28 && pixelRatio > 1) { pixelRatio = Math.max(1, pixelRatio - 0.5); renderer.setPixelRatio(pixelRatio); resize(); } frames = 0; slowT = 0; }
 }
 render();
-document.fonts && document.fonts.ready.then(() => { me.g.remove(me.tag); me.tag = nameSprite(meName.trim() || "나", true); me.g.add(me.tag); });
+document.fonts && document.fonts.ready.then(() => { me.g.remove(me.tag); me.tag = nameSprite(meName.trim() || "나", true); me.tag.position.y = me.crown ? 2.35 : 2.15; me.g.add(me.tag); });
 requestAnimationFrame(frame);

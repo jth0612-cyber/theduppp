@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
+{% from "rooms/_social.html" import rank_row %}
 {% block title %}{{ info[0] }} · 같이 공부{% endblock %}
 {% block body_class %}in-room3d{% endblock %}
 {% block content %}
@@ -51,13 +52,19 @@
       <div class="sec-head"><h2 id="h-here">지금 여기</h2><span data-count>{{ members|length }}명</span></div>
       <ul class="here-list" data-members>
         {% for m in members %}
-        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{{ m.nick }}{% if m.me %} (나){% endif %}</b>
+        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% elif m.follow %} <small class="here-tag">팔로잉</small>{% endif %}</b>
           <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %} · 오늘 {{ m.today }}분</span></li>
         {% endfor %}
       </ul>
       <div class="w3-colors" role="radiogroup" aria-label="내 캐릭터 색">
         <p class="small muted">내 캐릭터 색</p>
         {% for c in colors %}<button type="button" class="w3-swatch sw-{{ loop.index0 }}{{ ' is-on' if c == my_color }}" data-color-pick="{{ c }}" aria-label="색 {{ loop.index }}" aria-pressed="{{ 'true' if c == my_color else 'false' }}"></button>{% endfor %}
+      </div>
+      <div class="w3-rank">
+        <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
+        {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id, follows, url_for('rooms.room', place=key)) }}{% endfor %}</ol>
+        {% else %}<p class="muted small">이번 주에는 아직 기록이 없어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
+        <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위 · {{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
       </div>
       <p class="fine" data-msg>오늘 {{ today }}분 집중했어요. 5분 이상 집중하면 기록에 남아요.</p>
     </section>

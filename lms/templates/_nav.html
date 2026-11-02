@@ -61,7 +61,8 @@
     ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0),
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
   ('공부', [
-    ('rooms.rooms', '같이 공부', 'torii', ep.startswith('rooms.'), 0),
+    ('rooms.rooms', '같이 공부', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
+    ('rooms.friends', '친구', 'users', ep == 'rooms.friends', 0),
     ('study.cards', '개념 카드', 'cards', ep in ('study.cards', 'study.deck'), 0),
     ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
     ('books.analysis_home', '모의고사 분석', 'chart', ep == 'books.analysis_home', 0),

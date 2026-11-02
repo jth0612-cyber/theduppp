@@ -74,6 +74,68 @@ class RoomsTest(unittest.TestCase):
         self.t.post(f"/t/rooms/notes/{n['id']}/delete")
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_notes", one=True)["n"], 4)
 
+    def _log(self, i, place, minutes, ago_days=0):
+        uid = self.q("SELECT id FROM users WHERE username = ?", (f"S{i:03d}",), one=True)["id"]
+        with self.app.app_context():
+            execute("INSERT INTO focus_logs (user_id, place, minutes, ended_at) VALUES (?, ?, ?, datetime('now', 'localtime', ?))",
+                    (uid, place, minutes, f"-{ago_days} days"))
+        return uid
+
+    def test_rank_per_place_and_king_crown(self):
+        u0 = self._log(0, "sanji", 120)
+        u1 = self._log(1, "sanji", 60)
+        self._log(1, "eki", 300)
+        a, b = self.student(0), self.student(1)
+        page = b.get("/s/rooms/rank?place=sanji").data.decode()
+        board = page[page.index('class="rank-list"'):]
+        self.assertLess(board.index("닉0"), board.index("닉1"))           # 산사는 닉0 이 1위
+        self.assertIn("2시간", page)
+        self.assertIn("2<small>위</small>", page)                       # 닉1 의 내 순위
+        eki = b.get("/s/rooms/rank?place=eki").data.decode()
+        eki = eki[eki.index('class="rank-list"'):]
+        self.assertIn("닉1", eki); self.assertNotIn("닉0", eki)          # 장소마다 따로
+        self.assertIn("터줏대감 <b>닉0</b>", a.get("/s/rooms").data.decode())
+        # 3D 화면: 1위에게 king 표시
+        a.get("/s/rooms/sanji")
+        r = b.post("/s/rooms/sanji/beat", data={}).get_json()
+        kings = {m["id"]: m["king"] for m in r["members"]}
+        self.assertTrue(kings[u0]); self.assertFalse(kings[u1])
+        # 기간: 지난달 기록은 '이번 주'에 안 들어감
+        self._log(2, "kissa", 500, ago_days=40)
+        self.assertIn("아직 아무도", a.get("/s/rooms/rank?place=kissa&period=week").data.decode())
+        self.assertIn("닉2", a.get("/s/rooms/rank?place=kissa&period=all").data.decode())
+        self.assertEqual(a.get("/s/rooms/rank?place=nowhere").status_code, 404)
+
+    def test_follow_and_friends(self):
+        a, b = self.student(0), self.student(1)
+        u1 = self.q("SELECT id FROM users WHERE username='S001'", one=True)["id"]
+        u0 = self.q("SELECT id FROM users WHERE username='S000'", one=True)["id"]
+        self.assertIn("닉1", a.get("/s/friends?q=닉1").data.decode())     # 닉네임으로 찾기
+        a.post(f"/s/follow/{u1}")
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM follows", one=True)["n"], 1)
+        fr = a.get("/s/friends").data.decode()
+        self.assertIn("팔로잉", fr); self.assertIn("닉1", fr)
+        self.assertIn("닉0", b.get("/s/friends").data.decode())          # b 의 팔로워에 닉0
+        self.assertEqual(a.post(f"/s/follow/{u0}").status_code, 404)    # 나 자신은 안 됨
+        teacher = self.q("SELECT id FROM users WHERE role='teacher'", one=True)["id"]
+        self.assertEqual(a.post(f"/s/follow/{teacher}").status_code, 404)  # 선생님 계정은 안 됨
+        # 팔로잉끼리 순위
+        self._log(1, "sento", 30)
+        self._log(2, "sento", 90)
+        mine = a.get("/s/rooms/rank?place=sento&scope=follow").data.decode()
+        mine = mine[mine.index('class="rank-list"'):]
+        self.assertIn("닉1", mine); self.assertNotIn("닉2", mine)
+        self.assertIn("닉2", a.get("/s/rooms/rank?place=sento").data.decode())
+        # 같이 공부 목록에 팔로잉 표시
+        b.get("/s/rooms/sento")
+        r = a.post("/s/rooms/sento/beat", data={}).get_json()
+        self.assertTrue([m for m in r["members"] if m["id"] == u1][0]["follow"])
+        # 다시 누르면 언팔로우, next 는 /s/ 안쪽만
+        r = a.post(f"/s/follow/{u1}", data={"next": "https://evil.example/"})
+        self.assertTrue(r.headers["Location"].endswith("/s/friends"))
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM follows", one=True)["n"], 0)
+        self.assertEqual(a.get("/s/friends?q=50%25_").status_code, 200)   # 특수문자 검색도 오류 없음
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,10 @@
     <h1>어디서 공부할까요?</h1>
     <p class="ed-lede">일본 소도시의 조용한 네 곳. 들어가면 같은 자리의 친구들이 보이고, 각자 타이머를 돌리며 함께 집중합니다.</p>
   </div>
+  <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
+  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a> · <a href="{{ url_for('rooms.friends') }}">친구</a></p>
+  </div>
 </header>
 <ul class="place-list">
   {% for key, p in places.items() %}
@@ -19,6 +22,8 @@
       <span class="place-body">
         <b>{{ p[0] }}</b>
         <span class="place-line">{{ p[1] }}</span>
+        {% set k = kings[key] %}
+        <span class="place-king">{% if k %}<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>이번 주 터줏대감 <b>{{ k.nickname }}</b> · {{ k.m|hm }}{% else %}이번 주 터줏대감 자리가 비어 있어요{% endif %}</span>
         <span class="place-now">{% if c and c.n %}<i class="dot-live" aria-hidden="true"></i>{{ c.n }}명 있음 · {{ c.focus or 0 }}명 집중 중{% else %}지금은 조용해요{% endif %}</span>
       </span>
     </a>

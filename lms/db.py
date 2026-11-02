@@ -354,6 +354,16 @@ CREATE TABLE IF NOT EXISTS focus_logs (
     ended_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_focus_user ON focus_logs(user_id, ended_at);
+-- 학생끼리 팔로우 (닉네임으로만 보인다)
+CREATE TABLE IF NOT EXISTS follows (
+    follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (follower_id, followee_id),
+    CHECK (follower_id != followee_id)
+);
+CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id);
+CREATE INDEX IF NOT EXISTS idx_focus_place ON focus_logs(place, ended_at);
 CREATE TABLE IF NOT EXISTS room_notes (
     id          INTEGER PRIMARY KEY,
     place       TEXT NOT NULL,

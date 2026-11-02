@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "rooms/_social.html" import rank_row %}
+{% block title %}터줏대감 순위 · 같이 공부{% endblock %}
+{% block content %}
+{% set here = request.full_path.rstrip('?') %}
+<header class="ed-head ed-head-split">
+  <div>
+    <p class="kicker">Regulars</p>
+    <h1>{{ places[place][0] }}의 터줏대감</h1>
+    <p class="ed-lede">이 장소에서 집중한 시간이 많은 순서예요. 5분 이상 집중한 기록만 세요.</p>
+  </div>
+  <dl class="my-mins"><div><dt>내 순위 · {{ periods[period] }}</dt><dd>{% if my_rank.rank %}{{ my_rank.rank }}<small>위</small>{% else %}–{% endif %}</dd></div>
+    <div><dt>내 시간</dt><dd class="dd-text">{{ my_rank.m|hm }}</dd></div></dl>
+</header>
+<nav class="seg seg-wide" aria-label="장소">
+  {% for key, p in places.items() %}<a href="{{ url_for('rooms.rank', place=key, period=period, scope=scope) }}" class="{{ 'is-on' if key == place }}">{{ p[0] }}</a>{% endfor %}
+</nav>
+<div class="rank-filters">
+  <nav class="seg" aria-label="기간">{% for k, v in periods.items() %}<a href="{{ url_for('rooms.rank', place=place, period=k, scope=scope) }}" class="{{ 'is-on' if k == period }}">{{ v }}</a>{% endfor %}</nav>
+  <nav class="seg" aria-label="범위"><a href="{{ url_for('rooms.rank', place=place, period=period, scope='all') }}" class="{{ 'is-on' if scope == 'all' }}">모두</a><a href="{{ url_for('rooms.rank', place=place, period=period, scope='follow') }}" class="{{ 'is-on' if scope == 'follow' }}">팔로잉끼리</a></nav>
+</div>
+<section class="panel">
+  {% if rows %}
+  <ol class="rank-list">{% for r in rows %}{{ rank_row(r, me, follows, here) }}{% endfor %}</ol>
+  {% elif scope == 'follow' %}<p class="muted">아직 팔로잉한 친구의 기록이 없어요. <a href="{{ url_for('rooms.friends') }}">친구 찾기</a></p>
+  {% else %}<p class="muted">{{ periods[period] }}에는 아직 아무도 기록하지 않았어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
+</section>
+<p class="small mt"><a href="{{ url_for('rooms.room', place=place) }}">{{ places[place][0] }}에 들어가기 →</a> · <a href="{{ url_for('rooms.friends') }}">친구</a></p>
+{% endblock %}

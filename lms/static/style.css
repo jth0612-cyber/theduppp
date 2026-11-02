@@ -980,3 +980,44 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
   .w3-whisper { top: 66px; }
 }
 @media (prefers-reduced-motion: reduce) { .w3-whisper, .w3-vignette { transition: none; } }
+
+/* ---------- 같이 공부 · 터줏대감 순위와 친구 ---------- */
+.rooms-side { display: grid; gap: 8px; justify-items: end; }
+.rooms-links a { color: var(--accent-ink); font-weight: 600; }
+.place-king { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--muted); }
+.place .place-king b, .place-king b { color: var(--ink); font-family: var(--font-ui); font-size: 12.5px; font-weight: 600; letter-spacing: 0; }
+.crown { width: 16px; height: 16px; flex: none; fill: #e2ae25; stroke: #a87a10; stroke-width: 1.2; stroke-linejoin: round; }
+.seg-wide { margin: 4px 0 10px; }
+.rank-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.rank-list { list-style: none; margin: 0; padding: 0; }
+.rank-row { display: grid; grid-template-columns: 28px 12px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.rank-row:last-child { border-bottom: 0; }
+.rank-no { font-family: var(--font-display); font-weight: 600; font-size: 17px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-row.is-king .rank-no .crown { width: 22px; height: 22px; }
+.rank-row.is-king .rank-nick { font-weight: 700; }
+.rank-row.is-me { background: var(--accent-soft); border-radius: 10px; padding-left: 6px; padding-right: 6px; border-bottom-color: transparent; }
+.rank-nick { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rank-nick small { font-weight: 400; color: var(--muted); }
+.rank-m { font-variant-numeric: tabular-nums; font-size: 13.5px; color: var(--accent-ink); white-space: nowrap; }
+.rank-dot { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.rank-row form { justify-self: end; }
+.rank-row.is-me .rank-m { grid-column: 4 / 6; justify-self: end; }
+.rank-compact .rank-row { padding: 7px 0; grid-template-columns: 24px 10px minmax(0, 1fr) auto auto; }
+.rank-compact .rank-no { font-size: 15px; }
+.rank-compact .rank-dot { width: 10px; height: 10px; }
+.w3-rank { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.w3-rank .sec-head { margin-bottom: 4px; }
+.follow-btn { min-width: 64px; }
+.follow-btn.is-on { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
+.friend-search { display: flex; gap: 8px; margin: 4px 0 16px; max-width: 520px; }
+.friend-search input { flex: 1; min-width: 0; }
+.friend-list { list-style: none; margin: 0; padding: 0; }
+.friend-row { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.friend-row:last-child { border-bottom: 0; }
+.friend-body { display: grid; min-width: 0; }
+.friend-body .small { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 720px) {
+  .rooms-side { justify-items: start; }
+}
+.here-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); vertical-align: 1px; }
+.here-tag.is-king { background: #f8ecc4; color: #7a5a08; }
