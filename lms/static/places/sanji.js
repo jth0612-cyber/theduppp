@@ -33,13 +33,13 @@ export default {
 
     // ---------------------------------------------------------------- 도리이 (주홍 기둥, 검은 가사기)
     {
-      const ver = 0xd2452c, blk = 0x1f1c1c;
-      for (const x of [-2.7, 2.7]) { cyl(0.3, 0.34, 5.2, 12, ver, x, 2.6, 20.5); cyl(0.42, 0.42, 0.35, 12, blk, x, 0.17, 20.5); }
-      box(7.0, 0.32, 0.36, ver, 0, 4.2, 20.5);                                    // 누키
-      box(0.42, 0.7, 0.3, ver, 0, 4.7, 20.5);                                     // 가쿠즈카
-      box(8.6, 0.42, 0.62, ver, 0, 5.05, 20.5);                                   // 시마키
-      const k2 = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.32, 0.72), mat(blk)); k2.position.set(0, 5.42, 20.5); scene.add(k2);
-      for (const sd of [-1, 1]) { const tip = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.72), mat(blk)); tip.position.set(sd * 5.05, 5.55, 20.5); tip.rotation.z = sd * 0.22; scene.add(tip); }
+      const TZ = 24.5, ver = 0xd2452c, blk = 0x1f1c1c;
+      for (const x of [-2.7, 2.7]) { cyl(0.3, 0.34, 5.2, 12, ver, x, 2.6, TZ); cyl(0.42, 0.42, 0.35, 12, blk, x, 0.17, TZ); }
+      box(7.0, 0.32, 0.36, ver, 0, 4.2, TZ);                                    // 누키
+      box(0.42, 0.7, 0.3, ver, 0, 4.7, TZ);                                     // 가쿠즈카
+      box(8.6, 0.42, 0.62, ver, 0, 5.05, TZ);                                   // 시마키
+      const k2 = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.32, 0.72), mat(blk)); k2.position.set(0, 5.42, TZ); scene.add(k2);
+      for (const sd of [-1, 1]) { const tip = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.72), mat(blk)); tip.position.set(sd * 5.05, 5.55, TZ); tip.rotation.z = sd * 0.22; scene.add(tip); }
     }
 
     // ---------------------------------------------------------------- 법당
