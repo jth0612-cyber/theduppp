@@ -12,7 +12,7 @@ from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, 
 
 import analysis
 from db import execute, query
-from security import audit, student_required, teacher_required
+from security import audit, staff_required, student_required, teacher_only, teacher_required
 
 bp = Blueprint("books", __name__)
 
@@ -199,8 +199,10 @@ def clear_entry(mid):
 # ---------- 강사 ----------
 
 @bp.route("/t/books", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def teacher_books():
+    if request.method == "POST":
+        teacher_only()  # 조교는 보기만
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         expires_on = request.form.get("expires_on", "").strip()
@@ -230,7 +232,7 @@ def _book_or_404(bid):
 
 
 @bp.route("/t/books/<int:bid>")
-@teacher_required
+@staff_required
 def teacher_book(bid):
     book = _book_or_404(bid)
     mocks = query("""SELECT m.*, (SELECT COUNT(*) FROM mock_entries e WHERE e.mock_id = m.id AND e.score IS NOT NULL)
@@ -378,7 +380,7 @@ def delete_book(bid):
 
 
 @bp.route("/t/mocks/<int:mid>")
-@teacher_required
+@staff_required
 def teacher_mock(mid):
     mock = _mock_or_404(mid)
     stats = _stats(mock)

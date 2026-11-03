@@ -294,9 +294,7 @@ def _can_access_file(file_id):
     if g.user["role"] == "teacher":
         return True
     if g.user["role"] == "assistant":
-        # 조교는 질문·추가 질문에 첨부된 사진만
-        return query("""SELECT 1 FROM questions WHERE image_id = ?
-                        UNION SELECT 1 FROM followups WHERE image_id = ?""", (file_id, file_id), one=True) is not None
+        return True   # 조교도 반 자료·과제 제출물·질문 사진을 볼 수 있다
     sid = g.user["student_id"]
     return query("""SELECT 1 FROM materials m JOIN students s ON s.class_id = m.class_id
                     WHERE m.file_id = ? AND s.id = ? AND s.active = 1

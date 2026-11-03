@@ -152,6 +152,12 @@ staff_required = login_required(("teacher", "assistant"))  # 질문답변처럼 
 student_required = login_required("student")
 
 
+def teacher_only():
+    """조교도 볼 수 있는 화면에서, 바꾸는 일(POST)은 선생님만."""
+    if g.user is None or g.user["role"] != "teacher":
+        abort(403)
+
+
 # ---------- 필드 암호화 ----------
 
 def _fernet():

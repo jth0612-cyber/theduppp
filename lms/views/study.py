@@ -8,7 +8,7 @@ from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template
 import analysis
 from db import execute, get_setting, query, set_setting
 from security import (IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required,
-                      teacher_required)
+                      staff_required, teacher_only, teacher_required)
 
 bp = Blueprint("study", __name__)
 
@@ -188,7 +188,7 @@ def card_mark(cid):
 
 
 @bp.route("/t/cards", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def t_cards():
     if request.method == "POST":
         title = request.form.get("title", "").strip()[:80]
@@ -224,7 +224,7 @@ def parse_cards(raw):
 
 
 @bp.route("/t/cards/<int:did>", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def t_deck(did):
     d = query("SELECT * FROM decks WHERE id = ?", (did,), one=True)
     if d is None:
@@ -302,8 +302,10 @@ def timetable():
 
 
 @bp.route("/t/timetable", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def t_timetable():
+    if request.method == "POST":
+        teacher_only()  # 조교는 보기만
     classes = _classes()
     cid = request.values.get("class_id", type=int) or (classes[0]["id"] if classes else None)
     if request.method == "POST":
@@ -397,7 +399,7 @@ def task_submit(aid):
 
 
 @bp.route("/t/tasks", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def t_tasks():
     classes = _classes()
     if request.method == "POST":
@@ -423,7 +425,7 @@ def t_tasks():
 
 
 @bp.route("/t/tasks/<int:aid>")
-@teacher_required
+@staff_required
 def t_task(aid):
     a = query("SELECT a.*, c.name AS class_name FROM assignments a JOIN classes c ON c.id = a.class_id WHERE a.id = ?",
               (aid,), one=True)
@@ -438,7 +440,7 @@ def t_task(aid):
 
 
 @bp.route("/t/submissions/<int:sid>", methods=["POST"])
-@teacher_required
+@staff_required
 def t_check(sid):
     s = query("SELECT * FROM submissions WHERE id = ?", (sid,), one=True)
     if s is None:
@@ -501,7 +503,7 @@ def build_report(student_id):
 
 
 @bp.route("/t/students/<int:sid>/report")
-@teacher_required
+@staff_required
 def t_report(sid):
     audit("report_view", f"student:{sid}")
     return render_template("study/report.html", r=build_report(sid), fmt=analysis._fmt, teacher=True)

@@ -395,7 +395,7 @@ class FeatureTest(AppTest):
         ta.post("/password", data={"current": temp, "new": "Assist!2026", "confirm": "Assist!2026"})
         return ta
 
-    def test_assistant_can_only_answer_questions(self):
+    def test_assistant_sees_more_but_cannot_manage(self):
         cid, s1, _ = self._students()
         ta = self._make_assistant()
         qid = self.ask(s1, "42p 3번")
@@ -407,19 +407,28 @@ class FeatureTest(AppTest):
         self.assertEqual(ta.get("/t/questions").status_code, 200)
         self.assertEqual(ta.get(f"/t/questions/{admin_q}").status_code, 200)
         self.assertEqual(ta.get(f"/s/file/{fid}").status_code, 200)
-        page = ta.get(f"/t/questions/{qid}").data.decode()
-        self.assertNotIn(f"/t/students/{sid}", page)  # 학생 상세로 가는 링크 없음
         ta.post(f"/t/questions/{qid}", data={"body": "조교가 설명할게요"})
         # 학생에게는 '조교 답변 (김조교)' 로 보임
         student_view = s1.get(f"/s/questions/{qid}").data.decode()
         self.assertIn("조교 답변", student_view)
         self.assertIn("김조교", student_view)
-        # 그 밖의 강사 화면은 모두 차단
+        # 조교도 볼 수 있는 화면 (보기 위주로 열어 둠)
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
-                    "/t/audit", "/t/staff", "/t/timetable"]:
+                    "/t/timetable", "/t/tasks", "/t/cards", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
+            self.assertEqual(ta.get(url).status_code, 200, url)
+        # 계정·기록·삭제 같은 관리 일은 선생님만
+        for url in ["/t/audit", "/t/staff", "/t/signups"]:
             self.assertEqual(ta.get(url).status_code, 403, url)
-        self.assertEqual(ta.post(f"/t/classes/{cid}/accounts").status_code, 403)
-        self.assertEqual(ta.post("/t/staff", data={"display_name": "x", "username": "ta_x"}).status_code, 403)
+        r = ta.post(f"/t/classes/{cid}/accounts", headers={"Referer": f"http://localhost/t/classes/{cid}"})
+        self.assertEqual(r.status_code, 302)                                  # 오류 화면 대신 안내하고 돌려보냄
+        self.assertIn("선생님만", ta.get(f"/t/classes/{cid}").data.decode())
+        ta.post("/t/staff", data={"display_name": "x", "username": "ta_x"})
+        ta.post(f"/t/students/{sid}/delete")
+        ta.post("/t/classes", data={"name": "몰래 만든 반"})
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE username='ta_x'", one=True)["n"], 0)
+            self.assertIsNotNone(query("SELECT id FROM students WHERE id=?", (sid,), one=True))
+            self.assertIsNone(query("SELECT id FROM classes WHERE name='몰래 만든 반'", one=True))
         # 학생 화면도 못 씀
         self.assertEqual(ta.get("/s/").status_code, 403)
 

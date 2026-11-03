@@ -14,7 +14,7 @@ from engagement import streak_info
 from nickname import generate_nickname
 from views.student import question_thread
 from security import (audit, decrypt, delete_file, encrypt, generate_temp_password,
-                      hash_password, save_upload, staff_required, teacher_required)
+                      hash_password, save_upload, staff_required, teacher_only, teacher_required)
 
 bp = Blueprint("teacher", __name__, url_prefix="/t")
 
@@ -94,7 +94,7 @@ def _score_chart(points):
 # ---------- 대시보드 ----------
 
 @bp.route("/")
-@teacher_required
+@staff_required
 def dashboard():
     stats = query("""SELECT
         (SELECT COUNT(*) FROM classes WHERE archived = 0) AS classes,
@@ -121,8 +121,10 @@ def dashboard():
 # ---------- 반 ----------
 
 @bp.route("/classes", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def classes():
+    if request.method == "POST":
+        teacher_only()  # 조교는 보기만
     if request.method == "POST":
         try:
             name = _text("name", 60)
@@ -143,7 +145,7 @@ def classes():
 
 
 @bp.route("/classes/<int:cid>")
-@teacher_required
+@staff_required
 def class_detail(cid):
     cls = _get_class(cid)
     tab = request.args.get("tab", "students")
@@ -298,7 +300,7 @@ def student_import(cid):
 
 
 @bp.route("/students")
-@teacher_required
+@staff_required
 def students():
     q = request.args.get("q", "").strip()
     page = _page()
@@ -316,7 +318,7 @@ def students():
 
 
 @bp.route("/students/<int:sid>")
-@teacher_required
+@staff_required
 def student_detail(sid):
     s = _get_student(sid)
     audit("student_view", f"student:{sid}")
@@ -523,7 +525,7 @@ def _get_exam(eid):
 
 
 @bp.route("/exams/<int:eid>", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def exam_detail(eid):
     exam = _get_exam(eid)
     students = query("""SELECT s.id, s.name, s.student_no, sc.score FROM students s
@@ -569,7 +571,7 @@ def exam_detail(eid):
 
 
 @bp.route("/exams/<int:eid>/export")
-@teacher_required
+@staff_required
 def exam_export(eid):
     exam = _get_exam(eid)
     rows = query("""SELECT s.name, s.student_no, sc.score FROM students s
@@ -656,7 +658,7 @@ def question_reopen(qid):
 # ---------- 공지 / 자료 ----------
 
 @bp.route("/classes/<int:cid>/notices", methods=["POST"])
-@teacher_required
+@staff_required
 def notice_create(cid):
     _get_class(cid)
     try:
@@ -679,7 +681,7 @@ def notice_create(cid):
 
 
 @bp.route("/notices/<int:nid>/pin", methods=["POST"])
-@teacher_required
+@staff_required
 def notice_pin(nid):
     n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
     if n is None:
@@ -700,7 +702,7 @@ def notice_delete(nid):
 
 
 @bp.route("/classes/<int:cid>/materials", methods=["POST"])
-@teacher_required
+@staff_required
 def material_create(cid):
     _get_class(cid)
     try:
@@ -730,7 +732,7 @@ def material_delete(mid):
 # ---------- 강의 영상 (외부 링크 + 만료일) ----------
 
 @bp.route("/classes/<int:cid>/videos", methods=["POST"])
-@teacher_required
+@staff_required
 def video_create(cid):
     _get_class(cid)
     try:

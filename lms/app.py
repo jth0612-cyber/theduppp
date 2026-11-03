@@ -120,6 +120,12 @@ def create_app(test_config=None):
 
     @app.errorhandler(403)
     def forbidden(_e):
+        from flask import flash, g, redirect, request
+        # 조교가 선생님 전용 버튼(삭제·계정 등)을 누른 경우: 오류 화면 대신 원래 화면으로 돌려보낸다
+        if request.method == "POST" and getattr(g, "user", None) is not None and g.user["role"] == "assistant":
+            flash("이 작업은 선생님만 할 수 있어요.", "error")
+            ref = request.referrer or ""
+            return redirect(ref if ref.startswith(request.host_url) else "/t/questions")
         return render_template("error.html", code=403, message="접근 권한이 없습니다."), 403
 
     @app.errorhandler(404)

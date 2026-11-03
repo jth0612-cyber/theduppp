@@ -37,7 +37,7 @@ def _safe_next(target):
 
 _HOME = {"teacher": "teacher.dashboard", "assistant": "teacher.questions", "student": "student.home"}
 # 로그인 후 next 로 돌아갈 수 있는 경로 (역할 밖의 화면으로 보내 403 이 나지 않게)
-_NEXT_PREFIX = {"teacher": "/t/", "assistant": "/t/questions", "student": "/s/"}
+_NEXT_PREFIX = {"teacher": "/t/", "assistant": "/t/", "student": "/s/"}
 
 
 def _home_for(user):
