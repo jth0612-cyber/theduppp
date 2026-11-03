@@ -159,7 +159,7 @@
 <div class="card">
   <div class="page-head">
     <div><h3>{% if n.pinned %}<span class="badge">고정</span> {% endif %}{{ tag_badge(n.tag) }} {{ n.title }}</h3>
-      <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · 조회 {{ n.views }} · 좋아요 {{ n.likes }}</span></div>
+      <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · <b>{{ n.readers }}/{{ n.members }}명 읽음</b> · 좋아요 {{ n.likes }}{% if n.renotified_at %} · 안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at[5:16] }}){% endif %}</span></div>
     <div class="row">
       <form method="post" action="{{ url_for('teacher.notice_pin', nid=n.id) }}">{{ csrf() }}<button class="btn small">{{ '고정 해제' if n.pinned else '맨 위 고정' }}</button></form>
       <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제할까요?">

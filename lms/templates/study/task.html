@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ a.title }} · 과제{% endblock %}
+{% block content %}
+<header class="ed-head">
+  <p class="kicker">{% if target %}<a href="{{ url_for('study.t_task', aid=a.id) }}">← 과제 현황</a> · {{ target.name }}{% else %}<a href="{{ url_for('study.tasks') }}">← 과제 목록</a>{% endif %}</p>
+  <h1>{{ a.title }}</h1>
+  {% if a.body and not an %}<p class="ed-lede pre">{{ a.body }}</p>{% endif %}
+</header>
+{% if not an %}
+<form method="post" class="tk-omr" data-confirm="답을 내면 바로 채점하고 해설이 열려요. 한 번만 낼 수 있어요. 낼까요?">
+  {{ csrf() }}
+  <p class="small muted">{{ a.key|length }}문항 · 모르는 문제는 비워 둬도 돼요.</p>
+  <ol class="omr">
+    {% for k in a.key %}{% set q = loop.index %}
+    <li><span class="omr-no">{{ q }}</span>
+      {% if choice[loop.index0] %}
+      <span class="omr-choices" role="radiogroup" aria-label="{{ q }}번">{% for c in range(1, 6) %}<label><input type="radio" name="q{{ q }}" value="{{ c }}"><span>{{ c }}</span></label>{% endfor %}</span>
+      {% else %}<input type="text" name="q{{ q }}" maxlength="20" class="omr-text" placeholder="답 입력" aria-label="{{ q }}번 답">{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  <button class="btn primary big" type="submit">채점하고 분석 보기</button>
+</form>
+{% else %}
+<section class="tk-result">
+  <div class="tk-score-big"><b>{{ an.correct }}</b><span>/ {{ an.total }}</span><em>{{ an.pct }}점</em></div>
+  <div class="tk-findings">
+    <h2>{% if target %}{{ target.name }} 학생의 문제점{% else %}나의 문제점{% endif %}</h2>
+    <ul>{% for kind, text in an.findings %}<li class="fd-{{ kind }}">{{ text }}</li>{% endfor %}</ul>
+  </div>
+</section>
+<section class="panel">
+  <div class="sec-head"><h2>단원별</h2></div>
+  <ul class="tk-units">{% for u, c, t, p in an.units %}
+    <li><span>{{ u }}</span><span class="tk-bar"><i class="w-{{ (p // 10) * 10 }}"></i></span><b>{{ c }}/{{ t }}</b></li>{% endfor %}</ul>
+</section>
+<section class="panel">
+  <div class="sec-head"><h2>틀린 문제와 해설</h2>{% if a.solution_file_id %}<a class="small" href="{{ url_for('student.file', fid=a.solution_file_id, inline=1) }}" target="_blank" rel="noopener">해설 PDF 열기</a>{% endif %}</div>
+  {% set ns = namespace(any=false) %}
+  <ul class="tk-wrong">
+  {% for k in a.key %}{% set i = loop.index0 %}{% if not an.ok[i] %}{% set ns.any = true %}{% set s = a.sol.get(loop.index) %}
+    <li>
+      <p><b>{{ loop.index }}번</b> · 내 답 <span class="tk-mine">{{ an.answers[i] or '비움' }}</span> · 정답 <span class="tk-key">{{ k }}</span>
+        {% if an.rates[i] is not none %}<span class="small muted"> · 다른 친구 정답률 {{ (an.rates[i] * 100)|round|int }}%</span>{% endif %}
+        {% if a.unit_list[i] %}<span class="small muted"> · {{ a.unit_list[i] }}</span>{% endif %}</p>
+      {% if s %}<p class="tk-sol">{{ s.text }}</p>{% if a.solution_file_id %}<a class="small" href="{{ url_for('student.file', fid=a.solution_file_id, inline=1) }}#page={{ s.page }}" target="_blank" rel="noopener">PDF {{ s.page }}쪽에서 보기</a>{% endif %}{% endif %}
+    </li>
+  {% endif %}{% endfor %}
+  </ul>
+  {% if not ns.any %}<p class="muted">틀린 문제가 없어요. 👏</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

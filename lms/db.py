@@ -376,6 +376,24 @@ CREATE TABLE IF NOT EXISTS room_chat (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_room_chat_place ON room_chat(place, id);
+-- 과제 답 입력(파일 제출 대신): 학생이 고른 답을 서버가 채점
+CREATE TABLE IF NOT EXISTS task_answers (
+    id            INTEGER PRIMARY KEY,
+    assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    student_id    INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    answers       TEXT NOT NULL,
+    correct       INTEGER NOT NULL,
+    total         INTEGER NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (assignment_id, student_id)
+);
+-- 공지를 실제로 연 학생 (같은 학생은 한 번만)
+CREATE TABLE IF NOT EXISTS notice_reads (
+    notice_id   INTEGER NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    read_at     TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (notice_id, user_id)
+);
 -- 학생끼리 팔로우 (닉네임으로만 보인다)
 CREATE TABLE IF NOT EXISTS follows (
     follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -448,6 +466,14 @@ def init_db(path):
     # Google 계정 연결, 한 기기 로그인(학생), 공지 고정·조회수
     _add_column(conn, "users", "google_sub", "TEXT")
     _add_column(conn, "signup_requests", "google_sub", "TEXT")
+    # 과제: 정답(JSON 목록)·단원(JSON 목록)·정답·해설 PDF·문항별 해설(JSON)
+    _add_column(conn, "assignments", "answer_key", "TEXT NOT NULL DEFAULT '[]'")
+    _add_column(conn, "assignments", "units", "TEXT NOT NULL DEFAULT '[]'")
+    _add_column(conn, "assignments", "solution_file_id", "INTEGER")
+    _add_column(conn, "assignments", "solutions", "TEXT NOT NULL DEFAULT '{}'")
+    if _add_column(conn, "notices", "renotified_at", "TEXT"):
+        # 기능이 생기기 전 공지는 읽음 기록이 없으니 다시 알리지 않는다
+        conn.execute("UPDATE notices SET renotified_at = created_at")
     _add_column(conn, "signup_requests", "google_email", "TEXT")
     _add_column(conn, "users", "google_email", "TEXT")
     _add_column(conn, "users", "session_version", "INTEGER NOT NULL DEFAULT 0")
@@ -510,9 +536,12 @@ def _release_file_owner(conn):
 
 
 def _add_column(conn, table, column, ddl):
+    """없을 때만 칸을 더한다. 새로 더했으면 True."""
     cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
     if column not in cols:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+        return True
+    return False
 
 
 # 헷갈리는 글자(0/O, 1/I/L)를 뺀 대문자·숫자 8자리 → 약 1조 가지

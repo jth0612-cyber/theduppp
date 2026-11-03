@@ -1,11 +1,14 @@
 """공부 도구: 오답 노트, 개념 카드, 시간표·D-day, 과제 제출함, 성적 리포트.
 학생 화면(/s/...)과 선생님 화면(/t/...)을 함께 둔다. 학생은 본인 기록과 본인 반 자료만 본다."""
 import json
+import os
+import re
 from datetime import date, datetime
 
-from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, g, jsonify, redirect, render_template, request, url_for
 
 import analysis
+import taskkit
 from db import execute, get_setting, query, set_setting
 from security import (IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required,
                       staff_required, teacher_only, teacher_required)
@@ -348,54 +351,95 @@ def t_slot_delete(tid):
 
 
 # =====================================================================
-# 7. 과제 제출함
+# 7. 과제: 정답·해설 PDF 를 올리면, 학생이 답을 입력하는 순간 채점하고 문제점을 분석
 # =====================================================================
+
+def _task_or_404(aid, class_id=None):
+    a = query("SELECT * FROM assignments WHERE id = ?" + (" AND class_id = ?" if class_id else ""),
+              (aid, class_id) if class_id else (aid,), one=True)
+    if a is None:
+        abort(404)
+    a = dict(a)
+    a["key"] = json.loads(a.get("answer_key") or "[]")
+    a["unit_list"] = json.loads(a.get("units") or "[]")
+    a["sol"] = {int(k): v for k, v in json.loads(a.get("solutions") or "{}").items()}
+    return a
+
+
+def _task_analysis(a, student_id):
+    mine = query("SELECT * FROM task_answers WHERE assignment_id = ? AND student_id = ?", (a["id"], student_id), one=True)
+    if mine is None:
+        return None, None
+    answers = json.loads(mine["answers"])
+    others = [json.loads(r["answers"]) for r in query("SELECT answers FROM task_answers WHERE assignment_id = ? AND student_id != ?",
+                                                     (a["id"], student_id))]
+    return mine, dict(taskkit.analyze(a["key"], a["unit_list"], answers, others), answers=answers)
+
 
 @bp.route("/s/tasks")
 @student_required
 def tasks():
     me = _me()
-    rows = query("""SELECT a.*, s.status, s.comment, s.submitted_at, s.file_id, s.note, f.original_name
-                    FROM assignments a
-                    LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
-                    LEFT JOIN files f ON f.id = s.file_id
-                    WHERE a.class_id = ? ORDER BY COALESCE(a.due_on, '9999') , a.id DESC""",
+    rows = query("""SELECT a.id, a.title, a.body, a.due_on, a.answer_key, t.correct, t.total, t.created_at AS done_at
+                    FROM assignments a LEFT JOIN task_answers t ON t.assignment_id = a.id AND t.student_id = ?
+                    WHERE a.class_id = ? ORDER BY t.id IS NOT NULL, COALESCE(a.due_on, '9999'), a.id DESC""",
                  (me["id"], me["class_id"]))
+    rows = [dict(r, n=len(json.loads(r["answer_key"] or "[]"))) for r in rows]
     return render_template("study/tasks.html", rows=rows, today=date.today().isoformat())
 
 
-@bp.route("/s/tasks/<int:aid>", methods=["POST"])
+@bp.route("/s/tasks/<int:aid>", methods=["GET", "POST"])
 @student_required
-def task_submit(aid):
+def task(aid):
     me = _me()
-    a = query("SELECT * FROM assignments WHERE id = ? AND class_id = ?", (aid, me["class_id"]), one=True)
-    if a is None:
-        abort(404)
-    old = query("SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?", (aid, me["id"]), one=True)
-    if old and old["status"] == "checked":
-        flash("이미 확인이 끝난 과제예요.", "error")
-        return redirect(url_for("study.tasks") + f"#a{aid}")
-    note = request.form.get("note", "").strip()[:500]
-    f = request.files.get("file")
-    file_id = old["file_id"] if old else None
-    if f and f.filename:
-        try:
-            new_id = save_upload(f, TASK_EXTS)
-        except ValueError as e:
-            flash(str(e), "error")
-            return redirect(url_for("study.tasks") + f"#a{aid}")
-        if file_id:
-            delete_file(file_id)
-        file_id = new_id
-    if not file_id and not note:
-        flash("사진이나 PDF를 올리거나 메모를 적어 주세요.", "error")
-        return redirect(url_for("study.tasks") + f"#a{aid}")
-    execute("""INSERT INTO submissions (assignment_id, student_id, file_id, note, status) VALUES (?, ?, ?, ?, 'submitted')
-               ON CONFLICT(assignment_id, student_id) DO UPDATE SET file_id = excluded.file_id, note = excluded.note,
-               status = 'submitted', submitted_at = datetime('now', 'localtime')""", (aid, me["id"], file_id, note))
-    audit("task_submit", f"assignment:{aid}")
-    flash("제출했어요.", "ok")
-    return redirect(url_for("study.tasks") + f"#a{aid}")
+    a = _task_or_404(aid, me["class_id"])
+    if not a["key"]:
+        flash("선생님이 아직 정답을 올리지 않은 과제예요.", "error")
+        return redirect(url_for("study.tasks"))
+    done = query("SELECT 1 FROM task_answers WHERE assignment_id = ? AND student_id = ?", (aid, me["id"]), one=True)
+    if request.method == "POST" and not done:
+        answers = [(request.form.get(f"q{i + 1}") or "").strip()[:20] for i in range(len(a["key"]))]
+        if not any(answers):
+            flash("답을 하나 이상 입력하세요.", "error")
+            return redirect(url_for("study.task", aid=aid))
+        correct = sum(taskkit.grade(a["key"], answers))
+        execute("INSERT INTO task_answers (assignment_id, student_id, answers, correct, total) VALUES (?, ?, ?, ?, ?)",
+                (aid, me["id"], json.dumps(answers, ensure_ascii=False), correct, len(a["key"])))
+        audit("task_answered", f"assignment:{aid}")
+        return redirect(url_for("study.task", aid=aid))
+    mine, an = _task_analysis(a, me["id"])
+    return render_template("study/task.html", a=a, mine=mine, an=an, choice=[taskkit.is_choice(k) for k in a["key"]])
+
+
+def _save_solution_pdf(a_id, f):
+    """정답·해설 PDF 저장 → 정답표·문항별 해설·단원 짐작. (찾은 정답 수, 찾은 해설 수)"""
+    fid = save_upload(f, {"pdf"})
+    row = query("SELECT stored_name FROM files WHERE id = ?", (fid,), one=True)
+    pages = taskkit.pdf_pages(os.path.join(current_app.config["UPLOAD_DIR"], row["stored_name"]))
+    old = query("SELECT * FROM assignments WHERE id = ?", (a_id,), one=True)
+    key = json.loads(old["answer_key"] or "[]") or taskkit.guess_key(pages)
+    sol = taskkit.split_solutions(pages, len(key) or 40)
+    units = json.loads(old["units"] or "[]")
+    if len(units) < len(key):
+        units = units + [taskkit.guess_unit(sol.get(i + 1, {}).get("text", "")) for i in range(len(units), len(key))]
+    if old["solution_file_id"]:
+        delete_file(old["solution_file_id"])
+    execute("UPDATE assignments SET solution_file_id = ?, answer_key = ?, units = ?, solutions = ? WHERE id = ?",
+            (fid, json.dumps(key), json.dumps(units, ensure_ascii=False), json.dumps(sol, ensure_ascii=False), a_id))
+    return len(key), len(sol)
+
+
+def _parse_key(raw):
+    """'3 1 5 2 4' / '31524' / '③①⑤' / 단답 '12, 0.5' 같은 입력을 정답 목록으로."""
+    raw = (raw or "").strip()
+    if not raw:
+        return []
+    for c, d in taskkit.CIRCLED.items():
+        raw = raw.replace(c, " " + d + " ")
+    parts = [p for p in re.split(r"[\s,/]+", raw) if p]
+    if len(parts) == 1 and parts[0].isdigit() and len(parts[0]) > 2 and set(parts[0]) <= set("12345"):
+        parts = list(parts[0])
+    return parts[:80]
 
 
 @bp.route("/t/tasks", methods=["GET", "POST"])
@@ -408,58 +452,107 @@ def t_tasks():
         due = _parse_day(request.form.get("due_on"))
         if not title or not cid:
             flash("반과 과제 이름을 입력하세요.", "error")
-        else:
-            aid = execute("INSERT INTO assignments (class_id, title, body, due_on) VALUES (?, ?, ?, ?)",
-                          (cid, title, request.form.get("body", "").strip()[:2000], due.isoformat() if due else None))
-            audit("task_created", f"assignment:{aid}")
-            flash("과제를 냈습니다.", "ok")
+            return redirect(url_for("study.t_tasks"))
+        key = _parse_key(request.form.get("answer_key"))
+        aid = execute("INSERT INTO assignments (class_id, title, body, due_on, answer_key) VALUES (?, ?, ?, ?, ?)",
+                      (cid, title, request.form.get("body", "").strip()[:2000], due.isoformat() if due else None, json.dumps(key)))
+        f = request.files.get("pdf")
+        if f and f.filename:
+            try:
+                nk, ns = _save_solution_pdf(aid, f)
+                flash(f"정답·해설 PDF 에서 정답 {nk}개, 문항별 해설 {ns}개를 찾았어요. 아래에서 확인하고 고쳐 주세요.", "ok")
+            except ValueError as e:
+                flash(str(e), "error")
+        audit("task_created", f"assignment:{aid}")
+        a = _task_or_404(aid)
+        if a["key"]:
             from views.pwa import notify_class
-            notify_class(cid, "새 과제", title, url_for("study.tasks"))
-        return redirect(url_for("study.t_tasks"))
+            notify_class(cid, "새 과제", title, url_for("study.task", aid=aid))
+        return redirect(url_for("study.t_task", aid=aid))
     rows = query("""SELECT a.*, c.name AS class_name,
                            (SELECT COUNT(*) FROM students s WHERE s.class_id = a.class_id AND s.active = 1) AS n,
-                           (SELECT COUNT(*) FROM submissions WHERE assignment_id = a.id) AS sub,
-                           (SELECT COUNT(*) FROM submissions WHERE assignment_id = a.id AND status = 'checked') AS chk
+                           (SELECT COUNT(*) FROM task_answers WHERE assignment_id = a.id) AS sub,
+                           (SELECT ROUND(AVG(correct * 100.0 / total)) FROM task_answers WHERE assignment_id = a.id) AS avg
                     FROM assignments a JOIN classes c ON c.id = a.class_id ORDER BY a.id DESC""")
+    rows = [dict(r, items=len(json.loads(r["answer_key"] or "[]"))) for r in rows]
     return render_template("study/t_tasks.html", rows=rows, classes=classes)
 
 
-@bp.route("/t/tasks/<int:aid>")
+@bp.route("/t/tasks/<int:aid>", methods=["GET", "POST"])
 @staff_required
 def t_task(aid):
-    a = query("SELECT a.*, c.name AS class_name FROM assignments a JOIN classes c ON c.id = a.class_id WHERE a.id = ?",
-              (aid,), one=True)
-    if a is None:
-        abort(404)
-    rows = query("""SELECT st.id AS sid, st.name, st.student_no, s.id, s.status, s.note, s.comment, s.submitted_at,
-                           s.file_id, f.original_name, f.mime
-                    FROM students st LEFT JOIN submissions s ON s.student_id = st.id AND s.assignment_id = ?
-                    LEFT JOIN files f ON f.id = s.file_id
-                    WHERE st.class_id = ? AND st.active = 1 ORDER BY s.id IS NULL, st.name""", (aid, a["class_id"]))
-    return render_template("study/t_task.html", a=a, rows=rows)
+    a = _task_or_404(aid)
+    if request.method == "POST":
+        f = request.files.get("pdf")
+        if f and f.filename:
+            try:
+                nk, ns = _save_solution_pdf(aid, f)
+                flash(f"PDF 를 새로 읽었어요. 정답 {nk}개, 해설 {ns}개.", "ok")
+            except ValueError as e:
+                flash(str(e), "error")
+            return redirect(url_for("study.t_task", aid=aid))
+        if query("SELECT 1 FROM task_answers WHERE assignment_id = ?", (aid,), one=True) and request.form.get("confirm") != "1":
+            flash("이미 답을 낸 학생이 있어요. 정답을 바꾸면 그 학생들도 다시 채점돼요. 한 번 더 저장을 누르세요.", "error")
+            return redirect(url_for("study.t_task", aid=aid, confirm=1))
+        n = request.form.get("n", type=int) or 0
+        n = max(0, min(80, n))
+        key = [(request.form.get(f"k{i + 1}") or "").strip()[:20] for i in range(n)]
+        while key and not key[-1]:
+            key.pop()
+        units = [(request.form.get(f"u{i + 1}") or "") if (request.form.get(f"u{i + 1}") or "") in taskkit.UNITS else ""
+                 for i in range(len(key))]
+        execute("UPDATE assignments SET answer_key = ?, units = ? WHERE id = ?",
+                (json.dumps(key), json.dumps(units, ensure_ascii=False), aid))
+        for r in query("SELECT id, answers FROM task_answers WHERE assignment_id = ?", (aid,)):   # 다시 채점
+            ans = json.loads(r["answers"]); ans = (ans + [""] * len(key))[:len(key)]
+            execute("UPDATE task_answers SET correct = ?, total = ? WHERE id = ?", (sum(taskkit.grade(key, ans)), len(key), r["id"]))
+        flash("정답과 단원을 저장했어요.", "ok")
+        return redirect(url_for("study.t_task", aid=aid))
+    a = _task_or_404(aid)
+    a["class_name"] = query("SELECT name FROM classes WHERE id = ?", (a["class_id"],), one=True)["name"]
+    rows = query("""SELECT st.id AS sid, st.name, st.student_no, t.correct, t.total, t.answers, t.created_at
+                    FROM students st LEFT JOIN task_answers t ON t.student_id = st.id AND t.assignment_id = ?
+                    WHERE st.class_id = ? AND st.active = 1 ORDER BY t.id IS NULL, t.correct DESC, st.name""", (aid, a["class_id"]))
+    all_ans = [json.loads(r["answers"]) for r in rows if r["answers"]]
+    items = []
+    for i, k in enumerate(a["key"]):
+        picks = [taskkit.norm_answer(x[i]) for x in all_ans if i < len(x) and x[i]]
+        right = sum(1 for p in picks if p == taskkit.norm_answer(k))
+        dist = {c: picks.count(c) for c in "12345"} if taskkit.is_choice(k) else {}
+        items.append({"no": i + 1, "key": k, "unit": a["unit_list"][i] if i < len(a["unit_list"]) else "",
+                      "rate": round(right * 100 / len(picks)) if picks else None, "dist": dist, "n": len(picks),
+                      "sol": a["sol"].get(i + 1)})
+    units = {}
+    for it in items:
+        if it["rate"] is not None:
+            u = units.setdefault(it["unit"] or "단원 미정", []); u.append(it["rate"])
+    unit_rates = sorted(((u, round(sum(v) / len(v))) for u, v in units.items()), key=lambda x: x[1])
+    return render_template("study/t_task.html", a=a, rows=rows, items=items, unit_rates=unit_rates, units=taskkit.UNITS,
+                           n_slots=max(len(a["key"]), 25), confirm=request.args.get("confirm") == "1")
 
 
-@bp.route("/t/submissions/<int:sid>", methods=["POST"])
+@bp.route("/t/tasks/<int:aid>/students/<int:sid>")
 @staff_required
-def t_check(sid):
-    s = query("SELECT * FROM submissions WHERE id = ?", (sid,), one=True)
-    if s is None:
+def t_task_student(aid, sid):
+    a = _task_or_404(aid)
+    st = query("SELECT * FROM students WHERE id = ?", (sid,), one=True)
+    mine, an = _task_analysis(a, sid)
+    if st is None or mine is None:
         abort(404)
-    status = request.form.get("status") if request.form.get("status") in ("checked", "redo") else "checked"
-    execute("UPDATE submissions SET status = ?, comment = ?, checked_at = datetime('now', 'localtime') WHERE id = ?",
-            (status, request.form.get("comment", "").strip()[:500], sid))
-    flash("확인 결과를 남겼습니다.", "ok")
-    return redirect(url_for("study.t_task", aid=s["assignment_id"]) + f"#s{sid}")
+    return render_template("study/task.html", a=a, mine=mine, an=an, choice=[taskkit.is_choice(k) for k in a["key"]], target=st)
 
 
 @bp.route("/t/tasks/<int:aid>/delete", methods=["POST"])
 @teacher_required
 def t_task_delete(aid):
+    a = query("SELECT solution_file_id FROM assignments WHERE id = ?", (aid,), one=True)
+    if a and a["solution_file_id"]:
+        delete_file(a["solution_file_id"])
     for r in query("SELECT file_id FROM submissions WHERE assignment_id = ? AND file_id IS NOT NULL", (aid,)):
         delete_file(r["file_id"])
     execute("DELETE FROM assignments WHERE id = ?", (aid,))
     audit("task_deleted", f"assignment:{aid}")
-    flash("과제와 제출물을 지웠습니다.", "ok")
+    flash("과제와 학생 답을 지웠습니다.", "ok")
     return redirect(url_for("study.t_tasks"))
 
 
@@ -494,10 +587,12 @@ def build_report(student_id):
                            GROUP BY reason ORDER BY n DESC""", (uid,))
         focus = query("""SELECT COALESCE(SUM(minutes), 0) AS m, COUNT(*) AS n FROM focus_logs
                          WHERE user_id = ? AND ended_at >= date('now', 'localtime', '-27 days')""", (uid,), one=True)
-    t = query("""SELECT COUNT(*) AS n, (SELECT COUNT(*) FROM submissions x JOIN assignments a2 ON a2.id = x.assignment_id
-                                       WHERE x.student_id = ? AND a2.class_id = ?) AS sub
-                 FROM assignments WHERE class_id = ?""", (student_id, s["class_id"], s["class_id"]), one=True)
-    tasks = {"n": t["n"], "sub": t["sub"]}
+    t = query("""SELECT COUNT(*) AS n, (SELECT COUNT(*) FROM task_answers x JOIN assignments a2 ON a2.id = x.assignment_id
+                                       WHERE x.student_id = ? AND a2.class_id = ?) AS sub,
+                        (SELECT ROUND(AVG(x.correct * 100.0 / x.total)) FROM task_answers x JOIN assignments a2 ON a2.id = x.assignment_id
+                                       WHERE x.student_id = ? AND a2.class_id = ?) AS avg
+                 FROM assignments WHERE class_id = ?""", (student_id, s["class_id"], student_id, s["class_id"], s["class_id"]), one=True)
+    tasks = {"n": t["n"], "sub": t["sub"], "avg": t["avg"]}
     return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
             "tasks": tasks, "today": date.today().isoformat()}
 

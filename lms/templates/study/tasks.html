@@ -1,32 +1,23 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf, kind_badge %}
 {% block title %}과제 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head">
   <p class="kicker">Assignments</p>
   <h1>과제</h1>
-  <p class="ed-lede">풀이를 사진(PNG·JPG)이나 PDF로 올리세요. 선생님이 확인하면 표시와 코멘트가 남습니다.</p>
+  <p class="ed-lede">문제를 풀고 내 답만 입력하면, 바로 채점하고 어디가 약한지 알려줘요. 해설은 답을 낸 뒤에 열려요.</p>
 </header>
+<ul class="tk-list">
 {% for a in rows %}
-<section class="task{{ ' is-late' if a.due_on and a.due_on < today and not a.status }}" id="a{{ a.id }}">
-  <div class="task-head">
-    <h2>{{ a.title }}</h2>
-    <span class="task-state st-{{ a.status or 'none' }}">{% if a.status == 'checked' %}확인 완료{% elif a.status == 'redo' %}다시 제출{% elif a.status == 'submitted' %}제출함{% else %}제출 전{% endif %}</span>
-  </div>
-  <p class="muted small">{% if a.due_on %}마감 {{ a.due_on }}{% if a.due_on < today %} · 지남{% endif %}{% else %}마감 없음{% endif %}{% if a.submitted_at %} · {{ a.submitted_at[:16] }} 제출{% endif %}</p>
-  {% if a.body %}<div class="pre task-body">{{ a.body }}</div>{% endif %}
-  {% if a.comment %}<p class="answer"><b>선생님</b> {{ a.comment }}</p>{% endif %}
-  {% if a.file_id %}<p class="small">{{ kind_badge(a.original_name) }} <a href="{{ url_for('student.file', fid=a.file_id) }}">{{ a.original_name }}</a></p>{% endif %}
-  {% if a.status != 'checked' %}
-  <form method="post" action="{{ url_for('study.task_submit', aid=a.id) }}" enctype="multipart/form-data" class="row task-form">
-    {{ csrf() }}
-    <div class="field"><label for="f{{ a.id }}">{{ '다시 올리기' if a.file_id else '파일' }} (PNG·JPG·PDF)</label><input type="file" id="f{{ a.id }}" name="file" accept=".png,.jpg,.jpeg,.pdf"></div>
-    <div class="field wide"><label for="n{{ a.id }}">메모 (선택)</label><input type="text" id="n{{ a.id }}" name="note" maxlength="500" value="{{ a.note or '' }}"></div>
-    <div class="field shrink"><button class="btn primary" type="submit">{{ '다시 제출' if a.status else '제출' }}</button></div>
-  </form>
-  {% endif %}
-</section>
+  <li>
+    <a class="tk-row{{ ' is-done' if a.correct is not none }}{{ ' is-late' if a.due_on and a.due_on < today and a.correct is none }}" href="{{ url_for('study.task', aid=a.id) }}">
+      <span class="tk-main"><b>{{ a.title }}</b>
+        <span class="small muted">{{ a.n }}문항{% if a.due_on %} · 마감 {{ a.due_on[5:].replace('-', '/') }}{% if a.due_on < today and a.correct is none %} · 지남{% endif %}{% endif %}</span></span>
+      {% if a.correct is not none %}<span class="tk-score"><b>{{ a.correct }}</b>/{{ a.total }}</span>
+      {% elif a.n %}<span class="tk-go">답 입력</span>{% else %}<span class="small muted">준비 중</span>{% endif %}
+    </a>
+  </li>
 {% else %}
-<div class="quiet-box"><p>아직 나온 과제가 없어요.</p></div>
+  <li class="quiet-box"><p>아직 나온 과제가 없어요.</p></li>
 {% endfor %}
+</ul>
 {% endblock %}

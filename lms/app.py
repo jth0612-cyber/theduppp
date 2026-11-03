@@ -136,6 +136,9 @@ def create_app(test_config=None):
     def too_large(_e):
         return render_template("error.html", code=413, message="파일이 너무 큽니다. (최대 20MB)"), 413
 
+    if not app.config.get("TESTING"):
+        from views import notices_job
+        notices_job.start(app)
     return app
 
 

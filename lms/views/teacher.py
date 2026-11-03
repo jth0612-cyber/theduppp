@@ -176,7 +176,11 @@ def class_detail(cid):
                                 ORDER BY e.exam_date DESC, e.id DESC""", (cid,))
         ctx["today"] = date.today().isoformat()
     elif tab == "notices":
-        ctx["notices"] = query("""SELECT n.*, (SELECT COUNT(*) FROM notice_likes l WHERE l.notice_id = n.id) AS likes
+        ctx["notices"] = query("""SELECT n.*, (SELECT COUNT(*) FROM notice_likes l WHERE l.notice_id = n.id) AS likes,
+                                  (SELECT COUNT(*) FROM notice_reads r JOIN users u ON u.id = r.user_id
+                                   JOIN students s ON s.id = u.student_id WHERE r.notice_id = n.id AND s.class_id = n.class_id) AS readers,
+                                  (SELECT COUNT(*) FROM students s JOIN users u ON u.student_id = s.id
+                                   WHERE s.class_id = n.class_id AND s.active = 1) AS members
                                   FROM notices n WHERE n.class_id = ? ORDER BY n.pinned DESC, n.created_at DESC""",
                                (cid,))
         ctx["tags"] = NOTICE_TAGS

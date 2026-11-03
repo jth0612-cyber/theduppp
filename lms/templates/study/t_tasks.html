@@ -2,25 +2,27 @@
 {% from "_macros.html" import csrf %}
 {% block title %}과제 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>과제</h1><p class="muted small">과제를 내면 알림을 켠 학생에게 알림이 갑니다. 학생은 사진이나 PDF로 제출합니다.</p></div></div>
-<div class="card">
-  {% if rows %}<div class="table-wrap"><table>
-    <thead><tr><th>과제</th><th>반</th><th>마감</th><th class="num">제출</th><th class="num">확인</th></tr></thead>
-    <tbody>{% for a in rows %}<tr><td><a href="{{ url_for('study.t_task', aid=a.id) }}"><b>{{ a.title }}</b></a></td><td>{{ a.class_name }}</td><td>{{ a.due_on or '–' }}</td>
-      <td class="num">{{ a.sub }}/{{ a.n }}</td><td class="num">{{ a.chk }}</td></tr>{% endfor %}</tbody>
-  </table></div>{% else %}<p class="muted">아직 낸 과제가 없습니다.</p>{% endif %}
-</div>
+<div class="page-head"><div><h1>과제</h1>
+  <p class="muted small">정답·해설 PDF 를 올리면 정답표와 문항별 해설을 자동으로 읽어요. 학생은 답만 입력하고, 바로 채점·분석을 받아요.</p></div></div>
 <div class="card">
   <h2>새 과제</h2>
-  <form method="post">
+  <form method="post" enctype="multipart/form-data" class="grid-form">
     {{ csrf() }}
-    <div class="row">
-      <div class="field"><label for="class_id">반</label><select id="class_id" name="class_id" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
-      <div class="field wide"><label for="title">과제 이름</label><input type="text" id="title" name="title" maxlength="100" required placeholder="예: FRAMING 2단원 기출 1~20번 풀이"></div>
-      <div class="field shrink"><label for="due_on">마감</label><input type="date" id="due_on" name="due_on"></div>
-    </div>
-    <div class="field"><label for="body">설명 (선택)</label><textarea id="body" name="body" maxlength="2000"></textarea></div>
-    <button class="btn primary">과제 내기</button>
+    <div class="field"><label for="class_id">반</label><select id="class_id" name="class_id" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="title">과제 이름</label><input id="title" name="title" maxlength="100" required placeholder="예: 2단원 기출 1회"></div>
+    <div class="field"><label for="due_on">마감 (선택)</label><input id="due_on" name="due_on" type="date"></div>
+    <div class="field wide"><label for="pdf">정답·해설 PDF</label><input id="pdf" name="pdf" type="file" accept=".pdf">
+      <span class="fine">정답표(1 ③ 2 ⑤ …)와 번호별 해설을 자동으로 찾아요. 못 찾으면 아래에 정답을 직접 적거나, 만든 뒤 고칠 수 있어요.</span></div>
+    <div class="field wide"><label for="answer_key">정답 직접 입력 (선택)</label><input id="answer_key" name="answer_key" placeholder="예: 3 1 5 2 4 … 또는 31524…  (단답은 띄어서: 12 0.5 3)"></div>
+    <div class="field wide"><label for="body">안내 (선택)</label><textarea id="body" name="body" rows="2" maxlength="2000"></textarea></div>
+    <div class="field"><button class="btn primary" type="submit">과제 내기</button></div>
   </form>
+</div>
+<div class="card">
+  {% if rows %}<div class="table-wrap"><table>
+    <thead><tr><th>과제</th><th>반</th><th class="num">문항</th><th class="num">답 낸 학생</th><th class="num">평균</th><th>마감</th></tr></thead><tbody>
+    {% for r in rows %}<tr><td><a href="{{ url_for('study.t_task', aid=r.id) }}">{{ r.title }}</a>{% if not r.items %} <span class="badge danger">정답 없음</span>{% endif %}</td>
+      <td>{{ r.class_name }}</td><td class="num">{{ r.items }}</td><td class="num">{{ r.sub }}/{{ r.n }}</td><td class="num">{{ (r.avg|int ~ '%') if r.avg is not none else '–' }}</td><td class="small muted">{{ r.due_on or '' }}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted">아직 낸 과제가 없어요.</p>{% endif %}
 </div>
 {% endblock %}

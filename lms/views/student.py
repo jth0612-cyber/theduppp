@@ -49,8 +49,8 @@ def home():
                            WHERE user_id = ? AND date(ended_at) = date('now', 'localtime')""",
                         (g.user["id"],), one=True)["m"]
     tasks_due = query("""SELECT a.id, a.title, a.due_on FROM assignments a
-                         LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
-                         WHERE a.class_id = ? AND s.id IS NULL ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
+                         LEFT JOIN task_answers s ON s.assignment_id = a.id AND s.student_id = ?
+                         WHERE a.class_id = ? AND s.id IS NULL AND a.answer_key != '[]' ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
                       (me["id"], me["class_id"]))
     return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
                            streak=streak_info(g.user["id"]),
@@ -88,6 +88,7 @@ def notice_detail(nid):
     n = query("SELECT * FROM notices WHERE id = ? AND class_id = ?", (nid, me["class_id"]), one=True)
     if n is None:
         abort(404)
+    execute("INSERT OR IGNORE INTO notice_reads (notice_id, user_id) VALUES (?, ?)", (nid, g.user["id"]))
     seen = session.get("seen_notices", [])
     if nid not in seen:  # 같은 로그인에서는 한 번만 조회수에 센다
         execute("UPDATE notices SET views = views + 1 WHERE id = ?", (nid,))
@@ -95,7 +96,8 @@ def notice_detail(nid):
         n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
     likes = query("SELECT COUNT(*) AS c FROM notice_likes WHERE notice_id = ?", (nid,), one=True)["c"]
     liked = query("SELECT 1 FROM notice_likes WHERE notice_id = ? AND user_id = ?", (nid, g.user["id"]), one=True)
-    return render_template("student/notice_detail.html", n=n, likes=likes, liked=bool(liked))
+    readers = query("SELECT COUNT(*) AS c FROM notice_reads WHERE notice_id = ?", (nid,), one=True)["c"]
+    return render_template("student/notice_detail.html", n=n, likes=likes, liked=bool(liked), readers=readers)
 
 
 @bp.route("/notices/<int:nid>/like", methods=["POST"])
@@ -304,7 +306,8 @@ def _can_access_file(file_id):
                     SELECT 1 FROM followups f JOIN questions q ON q.id = f.question_id
                     WHERE f.image_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)
                     UNION
-                    SELECT 1 FROM submissions WHERE file_id = ? AND student_id = ?""",
+                    SELECT 1 FROM assignments a JOIN task_answers t ON t.assignment_id = a.id
+                    WHERE a.solution_file_id = ? AND t.student_id = ?""",
                  (file_id, sid, file_id, sid, file_id, sid, file_id, sid), one=True) is not None
 
 
@@ -317,7 +320,7 @@ def download(fid):
     path = os.path.join(current_app.config["UPLOAD_DIR"], f["stored_name"])
     if not os.path.exists(path):
         abort(404)
-    inline = f["mime"].startswith("image/") and request.args.get("inline") == "1"
+    inline = (f["mime"].startswith("image/") or f["mime"] == "application/pdf") and request.args.get("inline") == "1"
     audit("file_download", f"file:{fid}")
     resp = send_file(path, mimetype=f["mime"], as_attachment=not inline,
                      download_name=f["original_name"], max_age=0)

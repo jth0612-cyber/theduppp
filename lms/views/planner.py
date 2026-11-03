@@ -47,7 +47,7 @@ def _auto(student, d):
     """그날 자동으로 보이는 것: 수업, 마감이 그날~이틀 뒤인 아직 안 낸 과제."""
     classes = [s for s in class_slots(student["class_id"]) if s["weekday"] == d.weekday()]
     tasks = query("""SELECT a.id, a.title, a.due_on FROM assignments a
-                     LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = ?
+                     LEFT JOIN task_answers s ON s.assignment_id = a.id AND s.student_id = ?
                      WHERE a.class_id = ? AND a.due_on BETWEEN ? AND ? AND s.id IS NULL
                      ORDER BY a.due_on""",
                   (student["id"], student["class_id"], d.isoformat(), (d + timedelta(days=2)).isoformat()))

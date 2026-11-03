@@ -283,6 +283,28 @@ class FeatureTest(AppTest):
         self.assertIn("개념서 1권", errata)
         self.assertNotIn("일반", errata)
 
+    def test_notice_reads_and_renotify(self):
+        cid, s1, s2 = self._students()
+        self.c.post(f"/t/classes/{cid}/notices", data={"title": "내일 휴강", "body": "자습 하세요"})
+        with self.app.app_context():
+            nid = query("SELECT id FROM notices", one=True)["id"]
+        s1.get(f"/s/notices/{nid}")
+        self.assertIn("1명 읽음", s1.get(f"/s/notices/{nid}").data.decode())   # 같은 학생은 한 번만
+        page = self.c.get(f"/t/classes/{cid}?tab=notices").data.decode()
+        self.assertRegex(page, r"<b>1/\d+명 읽음</b>")                       # 반 인원 중 읽은 수
+        from unittest import mock
+        from views import notices_job
+        with self.app.app_context():
+            # 아직 5시간이 안 됨 → 다시 알리지 않음
+            self.assertEqual(notices_job.renotify_due(), 0)
+            execute("UPDATE notices SET created_at = datetime('now', 'localtime', '-6 hours')")
+            with mock.patch("views.pwa.notify_users") as sent:
+                self.assertEqual(notices_job.renotify_due(), 1)
+                self.assertEqual(notices_job.renotify_due(), 0)               # 한 번만
+            sent.assert_called_once()
+            readers = {r["user_id"] for r in query("SELECT user_id FROM notice_reads")}
+            self.assertTrue(all(u not in readers for u in sent.call_args[0][0]))  # 읽은 학생은 빼고
+
     def test_video_links_validated_and_expire(self):
         cid, s1, _ = self._students()
         for url in ["javascript:alert(1)", "http://youtu.be/abcdefghijk", "https://evil.example.com/v"]:

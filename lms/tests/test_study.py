@@ -144,24 +144,46 @@ class StudyTest(unittest.TestCase):
         self.t.post(f"/t/timetable/slot/{tid}/delete")
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM timetable", one=True)["n"], 1)
 
-    # 7
+    # 7 과제: 정답·해설 PDF → 학생 답 입력 → 채점·분석
     def test_tasks(self):
-        self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "기출 풀이", "due_on": "2099-01-01"})
-        aid = self.q("SELECT id FROM assignments", one=True)["id"]
-        s = self.student(0)
-        self.assertIn("기출 풀이", s.get("/s/tasks").data.decode())
-        r = s.post(f"/s/tasks/{aid}", data={"note": "다 풀었어요", "file": (io.BytesIO(PNG), "a.png")},
-                   content_type="multipart/form-data")
-        self.assertEqual(r.status_code, 302)
-        sub = self.q("SELECT * FROM submissions", one=True)
-        self.assertEqual(s.get(f"/s/file/{sub['file_id']}").status_code, 200)            # 본인 제출물
-        self.assertEqual(self.student(1).get(f"/s/file/{sub['file_id']}").status_code, 404)  # 친구는 못 봄
-        self.assertEqual(self.student(2).post(f"/s/tasks/{aid}", data={"note": "x"}).status_code, 404)
-        self.assertIn("학생0", self.t.get(f"/t/tasks/{aid}").data.decode())
-        self.t.post(f"/t/submissions/{sub['id']}", data={"status": "checked", "comment": "좋아요"})
-        page = s.get("/s/tasks").data.decode()
-        self.assertIn("확인 완료", page)
-        self.assertIn("좋아요", page)
+        pdf = open(os.path.join(os.path.dirname(__file__), "fixtures", "solution_sample.pdf"), "rb").read()
+        r = self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "2단원 기출 1회", "due_on": "2099-01-01",
+                                          "pdf": (io.BytesIO(pdf), "해설.pdf")}, content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn("정답 5개", r.data.decode())                          # PDF 에서 정답표를 읽음
+        a = self.q("SELECT * FROM assignments", one=True)
+        self.assertEqual(json.loads(a["answer_key"]), ["3", "5", "1", "2", "4"])
+        self.assertEqual(json.loads(a["units"])[0], "물질과 규칙성")         # 해설 낱말로 단원 짐작
+        self.assertIn("4", json.loads(a["solutions"]))                     # 문항별 해설
+        aid, fid = a["id"], a["solution_file_id"]
+        s0, s1, s2 = self.student(0), self.student(1), self.student(2)
+        self.assertIn("2단원 기출 1회", s0.get("/s/tasks").data.decode())
+        self.assertEqual(s0.get(f"/s/file/{fid}").status_code, 404)        # 답을 내기 전에는 해설 못 봄
+        self.assertEqual(s2.get(f"/s/tasks/{aid}").status_code, 404)       # 다른 반
+        s1.post(f"/s/tasks/{aid}", data={"q1": "3", "q2": "5", "q3": "1", "q4": "2", "q5": "4"})
+        r = s0.post(f"/s/tasks/{aid}", data={"q1": "3", "q2": "1", "q3": "1", "q4": "2"}, follow_redirects=True)
+        page = r.data.decode()
+        self.assertIn("<b>3</b><span>/ 5</span>", page)
+        self.assertIn("5번을 비워 두었어요", page)
+        self.assertIn("다른 친구들 대부분이 맞힌 2번", page)                 # 실수 의심
+        self.assertIn("이온 결합 물질은", page)                              # 틀린 문제 해설
+        self.assertEqual(s0.get(f"/s/file/{fid}?inline=1").status_code, 200)  # 낸 뒤엔 해설 PDF 열림
+        # 한 번만 낼 수 있음
+        s0.post(f"/s/tasks/{aid}", data={"q2": "5"})
+        self.assertEqual(self.q("SELECT correct FROM task_answers WHERE student_id = (SELECT id FROM students WHERE student_no='S000')", one=True)["correct"], 3)
+        # 선생님: 현황·학생별 분석·정답 고치면 다시 채점
+        tp = self.t.get(f"/t/tasks/{aid}").data.decode()
+        self.assertIn("학생0", tp); self.assertIn("반 전체 단원별 정답률", tp)
+        sid0 = self.q("SELECT id FROM students WHERE student_no='S000'", one=True)["id"]
+        self.assertIn("학생0 학생의 문제점", self.t.get(f"/t/tasks/{aid}/students/{sid0}").data.decode())
+        form = {"n": "5", "confirm": "1", **{f"k{i + 1}": v for i, v in enumerate(["3", "1", "1", "2", "4"])}}
+        self.t.post(f"/t/tasks/{aid}", data=form)
+        self.assertEqual(self.q("SELECT correct FROM task_answers WHERE student_id = ?", (sid0,), one=True)["correct"], 4)
+        # 정답을 직접 적는 과제(단답 포함)
+        self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "단답 연습", "answer_key": "③ ① 12 0.5"})
+        b = self.q("SELECT * FROM assignments WHERE title = '단답 연습'", one=True)
+        self.assertEqual(json.loads(b["answer_key"]), ["3", "1", "12", "0.5"])
+        s0.post(f"/s/tasks/{b['id']}", data={"q1": "3", "q2": "2", "q3": " 12 ", "q4": "0.5"})
+        self.assertEqual(self.q("SELECT correct FROM task_answers WHERE assignment_id = ?", (b["id"],), one=True)["correct"], 3)
 
     # 6
     def test_report_access(self):
@@ -205,7 +227,7 @@ class StudyTest(unittest.TestCase):
         wd = date.today().weekday()
         self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": str(wd),
                                           "starts": "13:00", "ends": "15:50", "title": "통합과학 정규"})
-        self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "2단원 기출", "due_on": (date.today() + timedelta(days=1)).isoformat()})
+        self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "2단원 기출", "answer_key": "1 2 3", "due_on": (date.today() + timedelta(days=1)).isoformat()})
         s = self.student(0)
         today, tomorrow = date.today().isoformat(), (date.today() + timedelta(days=1)).isoformat()
         page = s.get("/s/planner").data.decode()

@@ -4,7 +4,7 @@
 <article class="narrow article">
   <p class="fine"><a href="{{ url_for('student.notices') }}">공지 목록</a> / {{ n.tag }}{% if n.textbook %} · {{ n.textbook }}{% endif %}</p>
   <h1>{{ n.title }}</h1>
-  <p class="fine">{{ n.created_at[:16]|replace('-', '.') }} · 읽음 {{ n.views }}</p>
+  <p class="fine">{{ n.created_at[:16]|replace('-', '.') }} · {{ readers }}명 읽음</p>
   <div class="pre article-body">{{ n.body }}</div>
   <form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
