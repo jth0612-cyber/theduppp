@@ -47,6 +47,7 @@ PLAN_CHOICES = (25, 50, 90)
 NOTE_MAX = 60
 # 3D 장소 (나머지는 그림 버전)
 PLACES_3D = set(PLACES)
+ACTS = {"splash", "coffee", "page", "suzu", "wish", "fortune", "temizu", "bow"}   # 친구 화면에도 보여 주는 동작
 POSES = {"stand", "walk", "sit", "gassho", "bow", "breathe"}
 AVATAR_COLORS = ["#e8805c", "#e6a23c", "#7cb87a", "#5fa3c9", "#9b86d1", "#d97aa0", "#8c7a6b", "#4f9e94"]
 
@@ -59,7 +60,7 @@ def _place_or_404(place):
 
 def _members(place):
     return query(f"""SELECT u.id, u.nickname, u.avatar_color, p.status, p.focus_since, p.plan_min,
-                            p.px, p.pz, p.ry, p.pose, p.seat,
+                            p.px, p.pz, p.ry, p.pose, p.seat, p.act, p.act_seq,
                             (SELECT idx FROM room_fortunes rf WHERE rf.user_id = u.id AND rf.day = date('now', 'localtime')) AS fortune,
                             (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f
                              WHERE f.user_id = u.id AND date(f.ended_at) = date('now', 'localtime')) AS today
@@ -79,6 +80,13 @@ def _my_today(user_id):
                     WHERE user_id = ? AND date(ended_at) = date('now', 'localtime')""", (user_id,), one=True)["m"]
 
 
+def _left_sec(since, plan_min):
+    """집중 남은 초 (친구 머리 위 타이머용)."""
+    if not since:
+        return None
+    return max(0, int(plan_min * 60 - (datetime.now() - datetime.fromisoformat(since)).total_seconds()))
+
+
 def _elapsed_min(since):
     if not since:
         return 0
@@ -87,9 +95,10 @@ def _elapsed_min(since):
 
 def _member_json(m, me, king=None, follows=()):
     return {"id": m["id"], "nick": m["nickname"] or "익명", "me": m["id"] == me, "status": m["status"],
-            "king": m["id"] == king, "follow": m["id"] in follows,
+            "king": m["id"] == king, "follow": m["id"] in follows, "act": m["act"], "act_seq": m["act_seq"],
             "charm": FORTUNES[m["fortune"]][4] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
+            "left": _left_sec(m["focus_since"], m["plan_min"]) if m["status"] == "focus" else None,
             "plan": m["plan_min"], "today": m["today"],
             "x": round(m["px"], 2), "z": round(m["pz"], 2), "ry": round(m["ry"], 2), "pose": m["pose"],
             "seat": m["seat"], "color": m["avatar_color"] or AVATAR_COLORS[m["id"] % len(AVATAR_COLORS)]}
@@ -300,6 +309,9 @@ def beat(place):
     if x is not None and z is not None and action != "leave":
         db.execute("UPDATE room_presence SET px = ?, pz = ?, ry = COALESCE(?, ry), pose = COALESCE(?, pose), seat = ? "
                    "WHERE user_id = ?", (x, z, ry, pose, seat, uid))
+    act = request.form.get("act", "")
+    if act in ACTS and action != "leave":
+        db.execute("UPDATE room_presence SET act = ?, act_seq = act_seq + 1 WHERE user_id = ?", (act, uid))
     color = request.form.get("color")
     if color in AVATAR_COLORS:
         db.execute("UPDATE users SET avatar_color = ? WHERE id = ?", (color, uid))

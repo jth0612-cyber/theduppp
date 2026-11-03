@@ -498,6 +498,9 @@ def init_db(path):
     _add_column(conn, "room_presence", "ry", "REAL NOT NULL DEFAULT 0")
     _add_column(conn, "room_presence", "pose", "TEXT NOT NULL DEFAULT 'stand'")
     _add_column(conn, "room_presence", "seat", "INTEGER")
+    # 친구들에게도 보이는 동작(물 튕기기·커피 마시기 등): 이름과 번호(누를 때마다 1씩 늘어남)
+    _add_column(conn, "room_presence", "act", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "room_presence", "act_seq", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "users", "avatar_color", "TEXT")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():

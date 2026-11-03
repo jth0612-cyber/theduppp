@@ -187,6 +187,18 @@ class RoomsTest(unittest.TestCase):
         a.post("/s/planner/add", data={"day": f1["day"], "body": "[오늘의 미션] " + f1["mission"], "subject": f1["subject"]})
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM planner_items", one=True)["n"], 1)
 
+    def test_shared_actions_reach_friends(self):
+        a, b = self.student(0), self.student(1)
+        a.get("/s/rooms/sento"); b.get("/s/rooms/sento")
+        u0 = self.q("SELECT id FROM users WHERE username='S000'", one=True)["id"]
+        seq0 = [m for m in b.post("/s/rooms/sento/beat", data={}).get_json()["members"] if m["id"] == u0][0]["act_seq"]
+        a.post("/s/rooms/sento/beat", data={"x": "0", "z": "0", "act": "splash"})
+        m = [m for m in b.post("/s/rooms/sento/beat", data={}).get_json()["members"] if m["id"] == u0][0]
+        self.assertEqual((m["act"], m["act_seq"]), ("splash", seq0 + 1))
+        a.post("/s/rooms/sento/beat", data={"act": "hack<script>"})          # 정해진 동작만
+        m = [m for m in b.post("/s/rooms/sento/beat", data={}).get_json()["members"] if m["id"] == u0][0]
+        self.assertEqual(m["act_seq"], seq0 + 1)
+
 
 if __name__ == "__main__":
     unittest.main()

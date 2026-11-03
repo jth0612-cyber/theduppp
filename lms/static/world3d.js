@@ -255,6 +255,18 @@ const trees = { broad: broadTree, pine: pineTree, cedar: cedarTree, bush, grass 
 const K = { THREE, scene, camera, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo, trees, reduceMotion, isTouch };
 const P = PLACE.build(K);
 flora.finish();
+// 카메라가 벽·기둥·천장 속으로 들어가지 않게, 장소의 큰 물체를 '가림막'으로 모아 둔다 (작은 소품·잎·투명한 것은 뺀다)
+const occluders = [];
+scene.traverse((o) => {
+  if (!o.isMesh || o.isInstancedMesh || o.userData.noOcclude) return;
+  const m = o.material; if (!m || m.transparent || m.side === THREE.BackSide) return;
+  if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+  const sc = Math.max(o.scale.x, o.scale.y, o.scale.z);
+  if (o.geometry.boundingSphere.radius * sc < 0.55) return;
+  occluders.push(o);
+});
+const occRay = new THREE.Raycaster();
+const shown = (o) => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
 const heightAt = P.heightAt;
 const SEATS = P.seats;
 const fliesArea = P.fliesArea || [-16, 16, -2, 20];
@@ -383,6 +395,7 @@ class Avatar {
       else if (sitting) h.position.set(s * 0.18, 0.36, 0.32);
       else h.position.set(s * 0.42, 0.42 + (walk ? Math.sin(ph + (s > 0 ? Math.PI : 0)) * 0.04 : 0), walk ? Math.sin(ph + (s > 0 ? 0 : Math.PI)) * 0.14 : 0.06);
     });
+    this.gestureMotion(dt);
     this.feet.forEach((f) => {
       const s = f.userData.side;
       if (sitting) { f.position.set(s * 0.22, 0.02, 0.3); f.rotation.y = -s * 1.1; }
@@ -391,6 +404,7 @@ class Avatar {
     });
     if (!reduceMotion) this.pom.position.x = Math.sin(this.t * (walk ? 11 : 1.5)) * (walk ? 0.03 : 0.01);
     if (this.me) this.tag.visible = this.seat === null;
+    if (this.timer && this.timer.visible) { this.timer.position.y = this.tag.position.y + 0.48; this.drawFocusTimer(); }
     const ringTarget = this.focus ? 0.55 + Math.sin(this.t * 2) * 0.15 : 0;
     this.ring.material.opacity += (ringTarget - this.ring.material.opacity) * Math.min(1, dt * 3);
   }
@@ -415,6 +429,39 @@ class Avatar {
     if (exhale) { this.oh.scale.setScalar(0.9 + Math.sin(this.breathT * 9) * 0.12); this.puffT -= dt; if (this.puffT <= 0) { spawnPuff(this); this.puffT = 0.55; } }
   }
   bow() { this.pose = "bow"; this.bowT = 1.6; }
+  // 짧은 몸짓: splash(두 손으로 물 쳐 올리기), sip(찻잔을 들어 후- 불고 한 모금, 내려놓기)
+  gesture(name, secs) { this.gName = name; this.gT = 0; this.gDur = secs; }
+  gestureMotion(dt) {
+    if (!this.gName) { if (this.cup) this.cup.visible = false; return; }
+    this.gT += dt; const k = Math.min(1, this.gT / this.gDur), ease = (x) => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, x))) / 2;
+    const [L, Rh] = this.hands;
+    if (this.gName === "splash") {
+      const w = Math.sin(k * Math.PI);                        // 앞으로 낮게 → 위로 쳐 올림
+      L.position.set(-0.16, 0.3 + w * 0.34, 0.36 + w * 0.12); Rh.position.set(0.16, 0.3 + w * 0.34, 0.36 + w * 0.12);
+      this.upper.rotation.x = 0.25 * Math.sin(k * Math.PI);
+    } else if (this.gName === "sip") {
+      if (!this.cup) {                                           // 손에 드는 나무 찻잔 + 김
+        const c = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.06, 0.12, 16), toon(0xc89a6a)); c.add(body);
+        const tea = new THREE.Mesh(new THREE.CircleGeometry(0.066, 16), toon(0x3a2418)); tea.rotation.x = -Math.PI / 2; tea.position.y = 0.055; c.add(tea);
+        const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.015, 18), toon(0xe9dcc6)); plate.position.y = -0.065; c.add(plate);
+        this.steam = [0, 1, 2].map((i) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, transparent: true, depthWrite: false, opacity: 0 })); sp.scale.setScalar(0.08); c.add(sp); return sp; });
+        this.upper.add(c); this.cup = c;
+      }
+      this.cup.visible = true;
+      // 0~0.25 찻잔을 들어 올림, 0.25~0.45 후- 불기, 0.45~0.75 한 모금(고개 뒤로), 0.75~1 내려놓기
+      const up = k < 0.25 ? ease(k / 0.25) : k < 0.75 ? 1 : 1 - ease((k - 0.75) / 0.25);
+      const drink = k > 0.45 && k < 0.75 ? Math.sin(((k - 0.45) / 0.3) * Math.PI) : 0;
+      Rh.position.set(0.08 + 0.1 * (1 - up), 0.4 + up * 0.52, 0.32 + up * 0.14);
+      L.position.set(-0.05 - 0.1 * (1 - up), 0.36 + up * 0.48, 0.34 + up * 0.12);
+      this.cup.position.set(0.02, Rh.position.y + 0.07, Rh.position.z + 0.02); this.cup.rotation.x = -drink * 0.7;
+      this.head.rotation.x = -drink * 0.18; this.upper.rotation.x = -drink * 0.06;
+      const blow = k > 0.25 && k < 0.45;
+      this.mouth.visible = !blow && !drink; this.oh.visible = blow;
+      this.steam.forEach((sp, i) => { const t = (this.gT * 0.8 + i / 3) % 1; sp.position.set(Math.sin(t * 6 + i) * 0.02, 0.1 + t * 0.25, (blow ? 0.05 + t * 0.2 : 0)); sp.material.opacity = (1 - t) * 0.55 * (1 - drink); sp.scale.setScalar(0.06 + t * 0.12); });
+    }
+    if (k >= 1) { this.gName = null; this.upper.rotation.x = 0; this.head.rotation.x = 0; this.mouth.visible = true; this.oh.visible = false; if (this.cup) this.cup.visible = false; }
+  }
   // 오늘의 운세를 뽑으면 하루 동안 가방에 작은 행운 부적이 달린다 (친구들에게도 보인다)
   setCharm(color) {
     if ((this.charmColor || null) === (color || null)) return;
@@ -428,6 +475,33 @@ class Avatar {
     c.position.set(0.23, 0.42, -0.48); this.upper.add(c); this.charm = c;
   }
   // 이번 주 이 장소의 터줏대감(1위)은 머리 위에 작은 금관
+  // 집중 중인 친구 머리 위: 남은 시간이 1초마다 줄어드는 작은 타이머 (둥근 진행 띠 + 분:초)
+  setFocusLeft(left, plan) {
+    if (left === null || left === undefined) { this.focusEnd = null; if (this.timer) this.timer.visible = false; return; }
+    const end = Date.now() + left * 1000;
+    if (!this.focusEnd || Math.abs(end - this.focusEnd) > 2500) this.focusEnd = end;   // 신호가 늦게 와도 덜컥거리지 않게
+    this.focusPlan = (plan || 25) * 60;
+    if (!this.timer) {
+      const c = document.createElement("canvas"); c.width = 256; c.height = 96;
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+      sp.scale.set(1.25, 0.47, 1); sp.renderOrder = 11; this.g.add(sp); this.timer = sp; this.timerCanvas = c; this.timerShown = "";
+    }
+    this.timer.visible = true;
+  }
+  drawFocusTimer() {
+    if (!this.timer || !this.focusEnd || !this.timer.visible) return;
+    const left = Math.max(0, Math.round((this.focusEnd - Date.now()) / 1000));
+    const txt = String(Math.floor(left / 60)).padStart(2, "0") + ":" + String(left % 60).padStart(2, "0");
+    if (txt === this.timerShown) return; this.timerShown = txt;
+    const c = this.timerCanvas, x = c.getContext("2d"); x.clearRect(0, 0, 256, 96);
+    x.fillStyle = "rgba(20,24,22,.78)"; x.beginPath(); x.moveTo(48, 8); x.arcTo(248, 8, 248, 88, 40); x.arcTo(248, 88, 8, 88, 40); x.arcTo(8, 88, 8, 8, 40); x.arcTo(8, 8, 248, 8, 40); x.fill();
+    const k = 1 - left / this.focusPlan;                                     // 진행 띠
+    x.lineWidth = 7; x.strokeStyle = "rgba(255,255,255,.18)"; x.beginPath(); x.arc(52, 48, 24, 0, Math.PI * 2); x.stroke();
+    x.strokeStyle = "#9fd6bf"; x.beginPath(); x.arc(52, 48, 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); x.stroke();
+    x.fillStyle = "#fff"; x.font = "700 46px 'Noto Sans KR', sans-serif"; x.textBaseline = "middle"; x.textAlign = "left"; x.fillText(txt, 92, 50);
+    this.timer.material.map.needsUpdate = true;
+  }
   setKing(v) {
     if (!!v === !!this.crown) return;
     if (v) {
@@ -458,16 +532,40 @@ let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 25, focusStart =
 const CAM = Object.assign({ free: isTouch ? 9.5 : 8.5, seated: isTouch ? 6.4 : 6.0, focus: isTouch ? 5.8 : 5.4, pitch: 0.42, seatPitch: 0.36, focusPitch: 0.3 }, P.cam || {});
 const cam = { yaw: P.spawn.camYaw || 0, pitch: CAM.pitch, dist: CAM.free, tYaw: P.spawn.camYaw || 0, tPitch: CAM.pitch, tDist: CAM.free };
 const camTarget = new THREE.Vector3();
+let camFree = CAM.free, camLift = 0;
+const camDir = new THREE.Vector3(), _tmpDir = new THREE.Vector3();
 function updateCamera(dt, snap) {
-  const k = snap ? 1 : Math.min(1, dt * 5);
-  cam.yaw += (cam.tYaw - cam.yaw) * k; cam.pitch += (cam.tPitch - cam.pitch) * k; cam.dist += (cam.tDist - cam.dist) * k;
+  // 부드럽게 따라가기: 손으로 돌릴 때는 빠르게, 저절로 돌아갈 때는 천천히 (지수 감쇠라 화면 빠르기와 상관없이 같은 느낌)
+  const ky = snap ? 1 : 1 - Math.exp(-dt * (drag && drag.moved ? 14 : 4.5));
+  const kd = snap ? 1 : 1 - Math.exp(-dt * 5);
+  cam.yaw += (cam.tYaw - cam.yaw) * ky; cam.pitch += (cam.tPitch - cam.pitch) * ky; cam.dist += (cam.tDist - cam.dist) * kd;
   const tgt = new THREE.Vector3(me.g.position.x, me.g.position.y + (state === "free" ? 1.3 : 1.15), me.g.position.z);
-  camTarget.lerp(tgt, snap ? 1 : Math.min(1, dt * 6));
-  const cx = camTarget.x + Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist;
-  const cz = camTarget.z + Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist;
-  const cy = camTarget.y + Math.sin(cam.pitch) * cam.dist;
-  camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.6), cz);
+  camTarget.lerp(tgt, snap ? 1 : 1 - Math.exp(-dt * 8));
+  // 카메라와 캐릭터 사이에 벽이 있으면: 조금 더 위에서 내려다보는 각도로 비켜 보고, 그래도 막히면 벽 앞까지만
+  const freeAt = (pitch, dir) => {
+    dir.set(Math.sin(cam.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(cam.yaw) * Math.cos(pitch));
+    occRay.set(camTarget, dir); occRay.far = cam.dist + 0.4;
+    const h = occRay.intersectObjects(occluders, false).find((x) => shown(x.object));
+    return h ? Math.max(0.9, h.distance - 0.35) : cam.dist;
+  };
+  let free = freeAt(cam.pitch, camDir), lift = 0;
+  if (free < cam.dist * 0.75) {
+    for (const extra of [0.3, 0.6, 0.85]) {
+      const p2 = Math.min(1.35, cam.pitch + extra), f2 = freeAt(p2, _tmpDir);
+      if (f2 > free + 0.6) { free = f2; lift = p2 - cam.pitch; if (f2 >= cam.dist * 0.75) break; }
+    }
+  }
+  camLift += (lift - camLift) * (1 - Math.exp(-dt * (lift > camLift ? 10 : 2.5)));
+  const pe = cam.pitch + camLift;
+  camDir.set(Math.sin(cam.yaw) * Math.cos(pe), Math.sin(pe), Math.cos(cam.yaw) * Math.cos(pe));
+  camFree = free < camFree || snap ? free : camFree + (free - camFree) * (1 - Math.exp(-dt * 2.5));
+  const d = Math.min(cam.dist, camFree);
+  const cx = camTarget.x + camDir.x * d, cz = camTarget.z + camDir.z * d, cy = camTarget.y + camDir.y * d;
+  camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.5), cz);
   camera.lookAt(camTarget);
+  // 카메라가 캐릭터에 너무 붙으면 내 캐릭터를 잠깐 숨긴다 (머리 속이 보이지 않게)
+  me.g.visible = !QS.has("shot") && d > 1.15;
+  if (me.tag) me.tag.material.opacity = Math.max(0, Math.min(1, (d - 2.2) / 1.2));   // 가까우면 내 이름표는 흐리게
   if (SHOT) { camera.position.set(...SHOT.p); camera.lookAt(...SHOT.t); if (camera.fov !== SHOT.fov) { camera.fov = SHOT.fov; camera.updateProjectionMatrix(); } }
 }
 function camBehind(dist, pitch) {
@@ -495,7 +593,7 @@ canvas.addEventListener("pointermove", (e) => {
   if (!drag) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6) drag.moved = true;
-  if (drag.moved) { cam.tYaw -= dx * 0.0065; cam.tPitch = Math.max(0.12, Math.min(1.25, cam.tPitch + dy * 0.0045)); }
+  if (drag.moved) { cam.tYaw -= dx * 0.0065; cam.tPitch = Math.max(0.06, Math.min(1.05, cam.tPitch + dy * 0.0045)); }
   drag.x = e.clientX; drag.y = e.clientY;
 });
 function endPointer(e) {
@@ -619,8 +717,18 @@ const E = {
     });
     el.appendChild(row); stage.appendChild(el); return el;
   },
-  pop(obj, secs) { pops.push({ obj, t: secs || 1, total: secs || 1 }); obj.visible = true; },
+  // 친구들에게도 보이는 동작: 내 화면에서 바로 하고, 다음 신호에 실어 보낸다
+  share(name) { pendingAct = name; sync(true); },
+  pop(obj, secs, av) {
+    if (av && av !== me) { const c = obj.clone(); c.userData = { ...obj.userData, tmp: true }; scene.add(c); obj = c; }   // 친구 몫은 복사본
+    pops.push({ obj, t: secs || 1, total: secs || 1, av: av || me }); obj.visible = true;
+  },
 };
+
+function playAct(name, av, mine) {
+  if (P.remote && P.remote[name]) return P.remote[name](E, av, mine);
+  if (name === "bow") av.bow();
+}
 
 // ---------------------------------------------------------------- 동작 메뉴
 const ICON = {
@@ -671,7 +779,7 @@ function act(id, obj) {
   if (id === "sit") { const s = nearestFreeSeat(); return s === null ? whisper(`빈 ${josa(P.seatNoun, "이", "가")} 없어요.`) : goSit(s); }
   if (id === "stand") return standUp();
   if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모으고, 오늘 공부할 것 하나를 떠올려요."); sync(true); return; }
-  if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); sync(true); return; }
+  if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); E.share("bow"); return; }
   if (id === "breathe") return breathe();
   if (id === "focus") return startFocus();
   if (id === "stop") return finishFocus(false);
@@ -730,6 +838,7 @@ setInterval(tickTimer, 500);
 
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
+if (QS.has("debug")) window.__w3 = { others, me: () => me };
 const listEl = root.querySelector("[data-members]");
 function post(url, data) {
   const fd = new FormData(); fd.append("csrf_token", csrf());
@@ -740,14 +849,17 @@ let lastSent = 0, dirty = true, beatBusy = false;
 function sync(now) { dirty = true; if (now) lastSent = 0; }
 function myPayload() {
   return { x: me.pos.x.toFixed(2), z: me.pos.z.toFixed(2), ry: me.yaw.toFixed(2), pose: me.pose === "walk" && !me.moving ? "stand" : me.pose,
-    seat: mySeat === null ? "" : mySeat, color: myColor };
+    seat: mySeat === null ? "" : mySeat, color: myColor, ...(pendingAct ? { act: pendingAct } : {}) };
 }
+let pendingAct = "";
+const seenAct = new Map();   // 친구 id → 마지막으로 본 동작 번호
 function beatLoop() {
   if (!entered || beatBusy || document.hidden) return;
   const now = Date.now(), gap = me.moving || keyWalking > 0 ? 1800 : dirty ? 900 : 7000;
   if (now - lastSent < gap) return;
   beatBusy = true; lastSent = now; dirty = false;
-  post(root.dataset.beat, myPayload()).then(onBeat).catch(() => {}).finally(() => { beatBusy = false; });
+  const payload = myPayload(), sentAct = pendingAct; pendingAct = "";
+  post(root.dataset.beat, payload).then(onBeat).catch(() => { if (sentAct && !pendingAct) pendingAct = sentAct; }).finally(() => { beatBusy = false; });
 }
 setInterval(beatLoop, 300);
 function onBeat(d) {
@@ -762,7 +874,11 @@ function onBeat(d) {
       if (entered) whisper(`${m.nick}님이 들어왔어요.`, 2600);
     }
     o.setColor(m.color); o.setKing(m.king); o.setCharm(m.charm);
+    // 친구가 한 동작을 내 화면에서도 보여 준다 (처음 본 순간의 번호는 기록만)
+    if (seenAct.has(m.id) && m.act_seq > seenAct.get(m.id) && m.act) playAct(m.act, o, false);
+    seenAct.set(m.id, m.act_seq || 0);
     o.focus = m.status === "focus";
+    o.setFocusLeft(o.focus ? m.left : null, m.plan);
     o.seat = m.seat === null || m.seat === undefined ? null : m.seat;
     if (o.seat !== null && SEATS[o.seat]) {
       const s = SEATS[o.seat];
@@ -775,7 +891,7 @@ function onBeat(d) {
       if (far > 25) o.place(m.x, m.z, m.ry);
       else if (far > 0.15) o.walkTo(P.planTo(o.pos, m.x, m.z));
       else if (!o.moving) { o.pose = m.pose === "walk" ? "stand" : m.pose; o.targetYaw = m.ry; }
-      if (m.pose === "bow" && o.bowT <= 0 && !o.moving) o.bow();
+
     }
   });
   others.forEach((o, id) => { if (!seen.has(id)) { o.dispose(); others.delete(id); } });
@@ -925,10 +1041,10 @@ function frame() {
   if (marker.material.opacity > 0) { marker.material.opacity -= dt * 0.8; marker.scale.multiplyScalar(1 + dt * 0.6); }
   // 잠깐 나타나는 물건(목탁·찻잔 등): 캐릭터 앞에 띄웠다가 사라진다
   for (let i = pops.length - 1; i >= 0; i--) {
-    const p = pops[i]; p.t -= dt; const f = new THREE.Vector3(Math.sin(me.yaw), 0, Math.cos(me.yaw));
-    p.obj.position.set(me.g.position.x + f.x * 0.62, me.g.position.y + (p.obj.userData.popY || 0.55), me.g.position.z + f.z * 0.62);
+    const p = pops[i], av = p.av || me; p.t -= dt; const f = new THREE.Vector3(Math.sin(av.yaw), 0, Math.cos(av.yaw));
+    p.obj.position.set(av.g.position.x + f.x * 0.62, av.g.position.y + (p.obj.userData.popY || 0.55), av.g.position.z + f.z * 0.62);
     const k = 1 + Math.max(0, p.t - (p.total - 0.2)) * 2.5; p.obj.scale.setScalar(k * (p.obj.userData.popScale || 1));
-    if (p.t <= 0) { p.obj.visible = false; pops.splice(i, 1); }
+    if (p.t <= 0) { p.obj.visible = false; if (p.obj.userData.tmp) scene.remove(p.obj); pops.splice(i, 1); }
   }
   if (P.update) P.update(dt, clock.elapsedTime, E);
   if (flies) {

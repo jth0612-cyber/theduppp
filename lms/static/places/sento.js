@@ -363,16 +363,27 @@ export default {
     }
 
     // ---------------------------------------------------------------- 물 튕기기
-    const drops = [];
-    for (let i = 0; i < 10; i++) {
-      const d = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), new THREE.MeshBasicMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.9 }));
-      d.visible = false; scene.add(d); drops.push(d);
+    // 물 튕기기: 손으로 물을 쳐 올리면 물방울이 튀고 물결이 퍼진다 (친구 화면에서도 같은 자리에서)
+    const drops = [], rings = [];
+    const dropM = new THREE.MeshBasicMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.9 });
+    for (let i = 0; i < 48; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 4), dropM); d.visible = false; d.userData.noOcclude = true; scene.add(d); drops.push(d); }
+    for (let i = 0; i < 6; i++) {
+      const r = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.26, 28), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+      r.rotation.x = -Math.PI / 2; r.userData = { t: 1, noOcclude: true }; scene.add(r); rings.push(r);
     }
-    let splashT = 0;
-    function splash(E) {
-      const p = E.me.g.position, f = [Math.sin(E.me.yaw), Math.cos(E.me.yaw)];
-      drops.forEach((d) => { d.visible = true; d.position.set(p.x + f[0] * 0.6, WATER_Y + 0.1, p.z + f[1] * 0.6); d.userData.v = new THREE.Vector3(f[0] * rand(0.6, 1.8) + rand(-0.6, 0.6), rand(2, 3.4), f[1] * rand(0.6, 1.8) + rand(-0.6, 0.6)); });
-      splashT = 1.2; E.sfx("splash");
+    let dropAt = 0, ringAt = 0;
+    function splash(E, av, loud) {
+      av = av || E.me; av.gesture("splash", 0.7);
+      const p = av.g.position, f = [Math.sin(av.yaw), Math.cos(av.yaw)];
+      setTimeout(() => {
+        for (let k = 0; k < 16; k++) {
+          const d = drops[dropAt++ % drops.length]; d.visible = true;
+          d.position.set(p.x + f[0] * 0.55 + rand(-0.15, 0.15), WATER_Y + 0.05, p.z + f[1] * 0.55 + rand(-0.15, 0.15));
+          d.userData.v = new THREE.Vector3(f[0] * rand(0.8, 2.2) + rand(-0.7, 0.7), rand(1.8, 3.4), f[1] * rand(0.8, 2.2) + rand(-0.7, 0.7));
+        }
+        const r = rings[ringAt++ % rings.length]; r.position.set(p.x + f[0] * 0.6, WATER_Y + 0.02, p.z + f[1] * 0.6); r.userData.t = 0;
+        if (loud !== false) E.sfx("splash"); else E.sfx("splashFar");
+      }, 220);
     }
     const waterSeat = (s) => s.kind === "water";
     const hearthSeat = (s) => s.kind === "hearth";
@@ -422,18 +433,19 @@ export default {
         splash(E) {
           if (!inPool(E.me.pos.x, E.me.pos.z) && E.me.seat === null) {
             const a = Math.atan2(E.me.pos.z - POOL.z, E.me.pos.x - POOL.x), r = poolR(a) + 0.6;
-            if (!E.walk(route(E.me.pos.x, E.me.pos.z, POOL.x + Math.cos(a) * r, POOL.z + Math.sin(a) * r), () => { E.face(POOL.x, POOL.z); setTimeout(() => splash(E), 250); })) return;
+            if (!E.walk(route(E.me.pos.x, E.me.pos.z, POOL.x + Math.cos(a) * r, POOL.z + Math.sin(a) * r), () => { E.face(POOL.x, POOL.z); setTimeout(() => { splash(E); E.share("splash"); }, 250); })) return;
             return;
           }
-          splash(E); E.whisper("찰방— 물방울이 김 속으로 흩어져요.");
+          splash(E); E.share("splash"); E.whisper("찰방— 물방울이 김 속으로 흩어져요.");
         },
       },
+      remote: { splash: (E, av) => splash(E, av, false) },
       board(lines) { drawBoard(lines); },
       chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요." },
       sounds: {
         loops: [{ f: "sento/fire", g: 0.32 }, { f: "sento/water", g: 0.75 }, { f: "sento/spout", g: 0.45 }, { f: "sanji/wind", g: 0.22 }],
         gusts: [{ f: "sento/drips", max: 0.5, every: [10, 22] }, { f: "sento/bamboo", max: 0.35, every: [18, 34] }],
-        sfx: { splash: { f: "sento/splash", g: 0.8, jitter: true }, soak: { f: "sento/splash", g: 0.45, rate: 0.8, lp: 2000 } },
+        sfx: { splash: { f: "sento/splash", g: 0.8, jitter: true }, splashFar: { f: "sento/splash", g: 0.35, jitter: true, lp: 2400 }, soak: { f: "sento/splash", g: 0.45, rate: 0.8, lp: 2000 } },
         steps: { f: "common/steps", out: 0.4, in: 0.15 },
       },
       update(dt, t, E) {
@@ -457,10 +469,8 @@ export default {
         }
         p.needsUpdate = true;
         // 물방울
-        if (splashT > 0) {
-          splashT -= dt;
-          drops.forEach((d) => { if (!d.visible) return; d.userData.v.y -= 9.8 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < WATER_Y) d.visible = false; });
-        }
+        drops.forEach((d) => { if (!d.visible) return; d.userData.v.y -= 9.8 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < WATER_Y) d.visible = false; });
+        rings.forEach((r) => { const u = r.userData; if (u.t >= 1) return; u.t = Math.min(1, u.t + dt * 0.9); r.scale.setScalar(1 + u.t * 5); r.material.opacity = 0.55 * (1 - u.t); });
         fire.update(dt, t, E.state === "focus");
         if (night) lampFires.forEach((f, i) => f.material.color.setHSL(0.09, 1, 0.72 + Math.sin(t * 6 + i * 2) * 0.03));
       },

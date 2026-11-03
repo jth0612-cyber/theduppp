@@ -279,7 +279,7 @@ export default {
     // 소원 빌기: 두 손을 모으고 오늘의 공부 목표를 떠올린 뒤 고개를 숙인다
     async function wish(E) {
       if (busy) return; busy = true;
-      E.me.pose = "gassho"; E.sync(true);
+      E.me.pose = "gassho"; E.share("wish");
       E.whisper("두 손을 모으고, 오늘 꼭 해내고 싶은 공부 목표 하나를 떠올려요.", 4200); await wait(4000);
       E.me.bow(); E.sync(true); E.whisper("마음속으로 한 번 더 말해요. 오늘은 이것만큼은 해낸다!", 3200); await wait(2600);
       E.me.pose = restPose(E); E.sync(true); busy = false;
@@ -340,32 +340,39 @@ export default {
         suzu(E) {
           if (E.state === "focus") return E.whisper("집중이 끝나면 방울을 흔들어 보세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, 0, 1.2, false).concat([[0, -0.9]]), () => {
-            E.face(0, -4); E.look(0, 6.5, 0.32); suzuSwing = 1; E.sfx("suzu"); E.whisper("딸랑딸랑— 맑은 방울 소리에 마음이 차분해져요. 이어서 소원을 빌어 보세요.", 3800);
+            E.face(0, -4); E.look(0, 6.5, 0.32); suzuSwing = 1; E.sfx("suzu"); E.share("suzu"); E.whisper("딸랑딸랑— 맑은 방울 소리에 마음이 차분해져요. 이어서 소원을 빌어 보세요.", 3800);
           });
         },
         temizu(E) {
           if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, TEMIZU.x, TEMIZU.z - 1.8, false), () => {
-            E.face(TEMIZU.x, TEMIZU.z); E.look(Math.PI, 4.2, 0.2); E.pop(ladle, 2.2); E.sfx("water");
+            E.face(TEMIZU.x, TEMIZU.z); E.look(Math.PI, 4.2, 0.2); E.pop(ladle, 2.2); E.sfx("water"); E.share("temizu");
             E.whisper("시원한 물에 손을 씻고, 마음도 한 번 맑게 해요.", 4000);
           });
         },
         omikuji(E) {
           if (E.state === "focus") return E.whisper("집중이 끝나면 오늘의 운세를 뽑아 보세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, BELL.x - 2.4, BELL.z - 0.4, false), () => {
-            E.face(BELL.x, BELL.z - 0.5); E.look(-Math.PI / 2, 5.5, 0.3); kujiShake = 1; E.sfx("kuji");
+            E.face(BELL.x, BELL.z - 0.5); E.look(-Math.PI / 2, 5.5, 0.3); kujiShake = 1; E.sfx("kuji"); E.share("fortune");
             E.post(E.root.dataset.fortune, {}).then((f) => {
               setTimeout(() => { E.pop(slip, 2.4); E.sync(true); showFortune(E, f); }, f.again ? 300 : 1300);
             }).catch(() => E.whisper("운세 통이 잠깐 말을 안 들어요. 다시 눌러 보세요."));
           });
         },
       },
+      // 친구가 한 동작을 내 화면에서 보여 주기
+      remote: {
+        wish: (E, av) => { const before = av.pose; av.pose = "gassho"; setTimeout(() => { av.bow(); }, 3800); setTimeout(() => { if (av.pose === "gassho") av.pose = before === "gassho" ? "stand" : before; }, 5600); },
+        suzu: (E) => { suzuSwing = 1; E.sfx("suzuFar"); },
+        temizu: (E, av) => { E.pop(ladle, 2.2, av); E.sfx("waterFar"); },
+        fortune: (E, av) => { kujiShake = 1; E.sfx("kujiFar"); setTimeout(() => E.pop(slip, 2.4, av), 1300); },
+      },
       sounds: {
         // 산속 숲: 나뭇잎 바람이 바탕, 새는 멀리서 왔다 갔다, 밤에는 고요한 산 마을 공기 (금속성 풍경·풀벌레 없음)
         loops: [{ f: "sanji/wind", g: 0.9 }, { f: "sanji/night", g: 0.75, when: "night" }],
         steps: { f: "common/steps", out: 0.32, in: 0.14 },
         gusts: [{ f: "sanji/birds", max: 0.6, every: [12, 26], when: "day" }, { f: "sanji/birds", max: 0.3, every: [20, 40], when: "dusk" }],
-        sfx: { suzu: { f: "sanji/suzu", g: 0.75, jitter: true }, kuji: { f: "sanji/kuji", g: 0.8 },
+        sfx: { suzu: { f: "sanji/suzu", g: 0.75, jitter: true }, suzuFar: { f: "sanji/suzu", g: 0.3, lp: 3500 }, kujiFar: { f: "sanji/kuji", g: 0.3, lp: 2500 }, waterFar: { f: "sento/splash", g: 0.15, rate: 1.15, lp: 2000 }, kuji: { f: "sanji/kuji", g: 0.8 },
                water: { f: "sento/splash", g: 0.35, rate: 1.15, lp: 2600 } },
       },
       update(dt, t) {

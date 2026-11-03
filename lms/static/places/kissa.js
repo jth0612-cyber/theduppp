@@ -103,13 +103,38 @@ export default {
     const cafeRoof = new THREE.Group(); scene.add(cafeRoof);
     {
       const cx = (CAFE.x0 + CAFE.x1) / 2, cz = (CAFE.z0 + CAFE.z1) / 2, W = CAFE.x1 - CAFE.x0, D = CAFE.z1 - CAFE.z0, H = 3.4;
-      const floor = box(W, 0.1, D, 0xb08a62, cx, 0.05, cz); pickCafe.push(floor);
-      for (let x = CAFE.x0 + 0.5; x < CAFE.x1; x += 0.5) box(0.02, 0.005, D, 0x8e6c4a, x, 0.102, cz);
-      // 벽: 올리브 회색 (뒤, 양옆), 앞은 유리
-      const wallC = 0x8c8a72;
-      box(0.2, H, D, wallC, CAFE.x1, H / 2, cz, cutaway);
-      box(W, H, 0.2, wallC, cx, H / 2, CAFE.z0, cutaway);
-      box(W, H, 0.2, wallC, cx, H / 2, CAFE.z1, cutaway);
+      // 바닥: 짙은 숯빛 나무 (참고 사진의 복도 바닥)
+      const floor = box(W, 0.1, D, 0x4a423b, cx, 0.05, cz); pickCafe.push(floor);
+      for (let x = CAFE.x0 + 0.45; x < CAFE.x1; x += 0.45) { const l = box(0.015, 0.004, D, 0x3a332d, x, 0.102, cz); l.userData.noOcclude = true; }
+      // 벽: 따뜻한 올리브빛 흙벽 (미세한 얼룩 질감) + 나무 기둥·인방
+      const plaster = (() => {
+        const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
+        x.fillStyle = "#a39a6e"; x.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 2600; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? "70,60,30" : "235,225,180"},${Math.random() * 0.07})`; x.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 3, 1 + Math.random() * 3); }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 2); return t;
+      })();
+      const wallM = new THREE.MeshLambertMaterial({ map: plaster });
+      const wall = (w, h, d, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallM); m.position.set(x, y, z); cutaway.add(m); return m; };
+      wall(0.2, H, D, CAFE.x1, H / 2, cz); wall(W, H, 0.2, cx, H / 2, CAFE.z0); wall(W, H, 0.2, cx, H / 2, CAFE.z1);
+      const woodL = 0xc89a64, woodD = 0x8a5e36;
+      for (const z of [CAFE.z0 + 0.12, CAFE.z1 - 0.12]) for (let x = CAFE.x0 + 2.4; x < CAFE.x1; x += 2.4) box(0.14, H, 0.14, woodL, x, H / 2, z, cutaway);
+      for (let z = CAFE.z0 + 2.3; z < CAFE.z1; z += 2.3) box(0.14, H, 0.14, woodL, CAFE.x1 - 0.12, H / 2, z, cutaway);
+      box(W, 0.1, 0.06, woodL, cx, 2.15, CAFE.z0 + 0.13, cutaway); box(W, 0.1, 0.06, woodL, cx, 2.15, CAFE.z1 - 0.13, cutaway);   // 인방(가모이)
+      box(0.06, 0.1, D, woodL, CAFE.x1 - 0.13, 2.15, cz, cutaway);
+      box(W, 0.12, 0.05, woodD, cx, 0.06, CAFE.z0 + 0.13, cutaway); box(W, 0.12, 0.05, woodD, cx, 0.06, CAFE.z1 - 0.13, cutaway);  // 걸레받이
+      // 미닫이 맹장지(후스마) 두 짝: 은회색 종이 + 동그란 손잡이 (앞 벽)
+      const fusuma = new THREE.MeshLambertMaterial({ color: 0xa8acb0 });
+      [9.2, 10.6].forEach((fx, i) => {
+        const f = new THREE.Mesh(new THREE.BoxGeometry(1.36, 2.05, 0.04), fusuma); f.position.set(fx, 1.04, CAFE.z1 - 0.16); cutaway.add(f);
+        box(1.4, 0.05, 0.05, woodL, fx, 2.08, CAFE.z1 - 0.18, cutaway); box(0.04, 2.05, 0.05, woodL, fx - 0.68, 1.04, CAFE.z1 - 0.18, cutaway);
+        const knob = new THREE.Mesh(new THREE.CircleGeometry(0.04, 16), new THREE.MeshBasicMaterial({ color: 0x2a2420 })); knob.rotation.y = Math.PI; knob.position.set(fx + (i ? -0.5 : 0.5), 1.0, CAFE.z1 - 0.19); cutaway.add(knob);
+      });
+      // 작은 장지창(쇼지) 네 칸 (뒷벽), 뒤에서 빛이 비친다
+      { const sx = 6.6, sy = 1.55, sz = CAFE.z0 + 0.12;
+        const pane = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ color: dark ? 0xf6e7c6 : 0xf3efe4 })); pane.position.set(sx, sy, sz + 0.02); cutaway.add(pane);
+        box(0.98, 0.05, 0.05, woodL, sx, sy + 0.47, sz + 0.03, cutaway); box(0.98, 0.05, 0.05, woodL, sx, sy - 0.47, sz + 0.03, cutaway);
+        box(0.05, 0.98, 0.05, woodL, sx - 0.47, sy, sz + 0.03, cutaway); box(0.05, 0.98, 0.05, woodL, sx + 0.47, sy, sz + 0.03, cutaway);
+        box(0.025, 0.9, 0.03, woodL, sx, sy, sz + 0.04, cutaway); box(0.9, 0.025, 0.03, woodL, sx, sy, sz + 0.04, cutaway); }
       box(0.22, 0.3, D, 0x2a2420, CAFE.x0, 0.15, cz);
       // 앞면 유리와 검은 창살, 위쪽 대나무 발(스다레)
       const glass = new THREE.MeshPhongMaterial({ color: 0xbcd0d8, transparent: true, opacity: dark ? 0.12 : 0.2, shininess: 100, depthWrite: false });
@@ -145,12 +170,37 @@ export default {
       box(0.3, 0.06, 4.6, 0x6a4a32, 12.75, 1.9, 0.8); box(0.3, 0.06, 4.6, 0x6a4a32, 12.75, 2.5, 0.8);
       for (let i = 0; i < 9; i++) cyl(0.08, 0.065, 0.16, 10, i % 3 ? 0xd4b48a : 0xf0ece2, 12.75, 2.01 + (i % 2) * 0.6, -1.1 + i * 0.5);
       const kettle = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), mat(0x8a8c90)); kettle.position.set(11.6, 1.3, 2.6); kettle.scale.y = 0.8; scene.add(kettle);
-      // 펜던트 등
-      const pend = [[8.6, -1.0], [8.6, 2.2], [10.5, -6.7], [5.0, -5]];
-      pend.forEach(([px, pz], i) => {
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffe2a8 })); s.position.set(px, 2.5, pz); cutaway.add(s);
-        cyl(0.01, 0.01, 0.9, 4, 0x222222, px, 3.0, pz, cutaway);
-        if (i < 3) { const pl = new THREE.PointLight(0xffc98a, dark ? 2.2 : 1.2, 8, 1.5); pl.position.set(px, 2.3, pz); scene.add(pl); }
+      // ---------- 천장 (참고 사진): 연한 노송나무 살대 천장 + 가운데 빛나는 격자 조명 띠 + 세로살 큰 보 + 육각 나무 등 ----------
+      const CY = H - 0.02;
+      const ceil = box(W, 0.05, D, 0xcaa77a, cx, CY + 0.03, cz);                          // 천장 판 (카메라가 이 아래에 머문다)
+      for (let z = CAFE.z0 + 0.2; z < CAFE.z1; z += 0.3) { const b = box(W, 0.07, 0.07, 0xb98d5c, cx, CY - 0.04, z); b.userData.noOcclude = true; }   // 살대
+      const latticeTex = (() => {                                                           // 장지 격자 조명 (빛이 새어 나오는 흰 종이 + 나무 살)
+        const c = document.createElement("canvas"); c.width = 256; c.height = 64; const x = c.getContext("2d");
+        x.fillStyle = "#fff6e0"; x.fillRect(0, 0, 256, 64); x.fillStyle = "#c99a62";
+        for (let i = 0; i <= 256; i += 16) x.fillRect(i, 0, 3, 64); x.fillRect(0, 0, 256, 3); x.fillRect(0, 30, 256, 3); x.fillRect(0, 61, 256, 3);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.repeat.set(D / 4, 1); return t;
+      })();
+      const lightBand = new THREE.Mesh(new THREE.PlaneGeometry(D - 1.2, 1.1), new THREE.MeshBasicMaterial({ map: latticeTex }));
+      lightBand.rotation.x = Math.PI / 2; lightBand.rotation.z = Math.PI / 2; lightBand.position.set(6.2, CY - 0.085, cz); scene.add(lightBand);
+      box(0.08, 0.14, D - 1.1, woodL, 6.2 - 0.6, CY - 0.1, cz); box(0.08, 0.14, D - 1.1, woodL, 6.2 + 0.6, CY - 0.1, cz);
+      const louverTex = (() => {                                                            // 큰 보 옆면의 가는 세로살
+        const c = document.createElement("canvas"); c.width = 128; c.height = 64; const x = c.getContext("2d");
+        x.fillStyle = "#d4ac78"; x.fillRect(0, 0, 128, 64); x.fillStyle = "#a87a48"; for (let i = 0; i < 128; i += 4) x.fillRect(i, 0, 1.5, 64);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.repeat.set(D / 1.2, 1); return t;
+      })();
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.62, D), [new THREE.MeshLambertMaterial({ map: louverTex }), new THREE.MeshLambertMaterial({ map: louverTex }),
+        new THREE.MeshLambertMaterial({ color: 0xcaa77a }), new THREE.MeshLambertMaterial({ color: 0xb08050 }), new THREE.MeshLambertMaterial({ color: 0xcaa77a }), new THREE.MeshLambertMaterial({ color: 0xcaa77a })]);
+      beam.position.set(TATAMI.x0, CY - 0.31, cz); cutaway.add(beam);
+      const glowStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, D - 0.4), new THREE.MeshBasicMaterial({ color: 0xffd896 }));       // 창 위 간접 조명
+      glowStrip.position.set(CAFE.x0 + 0.22, CY - 0.14, cz); scene.add(glowStrip);
+      // 육각 나무 등: 나뭇결이 비치는 육각 기둥 + 빛나는 육각 밑면
+      const hexWood = new THREE.MeshLambertMaterial({ color: 0xe7c48e, emissive: 0x6a4214, emissiveIntensity: dark ? 0.9 : 0.5 });
+      const hexGlow = new THREE.MeshBasicMaterial({ color: 0xfff4d8 });
+      [[8.6, -1.0], [8.6, 2.2], [10.5, -5.4], [10.5, -8.0], [4.6, -3.2], [4.6, -6.4], [4.6, 2.2]].forEach(([px, pz], i) => {
+        const hex = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.34, 6), hexWood); hex.position.set(px, CY - 0.25, pz); scene.add(hex);
+        const bot = new THREE.Mesh(new THREE.CircleGeometry(0.13, 6), hexGlow); bot.rotation.x = Math.PI / 2; bot.position.set(px, CY - 0.425, pz); scene.add(bot);
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.02, 6), mat(0x2a2420)); ring.position.set(px, CY - 0.07, pz); scene.add(ring);
+        if (i < 4) { const pl = new THREE.PointLight(0xffcf8e, dark ? 2.4 : 1.3, 8, 1.5); pl.position.set(px, CY - 0.6, pz); scene.add(pl); }
       });
 
       // 창가 자리: 유리 앞 긴 나무판 + 쟁반과 나무 컵, 등받이 살 의자 (밖을 본다)
@@ -207,10 +257,6 @@ export default {
     }
 
     // 나무 컵 (커피 한 모금) + 김
-    const cup = new THREE.Group(); cup.visible = false; scene.add(cup);
-    { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.15, 14), mat(0xd2a878, { flatShading: false })); cup.add(c);
-      const cof = new THREE.Mesh(new THREE.CircleGeometry(0.085, 14), mat(0x3a2418)); cof.rotation.x = -Math.PI / 2; cof.position.y = 0.065; cup.add(cof); }
-    cup.userData.popY = 0.75; cup.userData.popScale = 1.4;
 
     // ---------------------------------------------------------------- 비
     const rain = (() => {
@@ -287,20 +333,20 @@ export default {
       },
       custom: {
         window(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(windowSeat); s === null ? E.whisper("창가 자리가 다 찼어요. 바 자리는 어때요?") : E.sit(s); },
-        coffee(E) { E.pop(cup, 2.4); E.sfx("kettle"); E.whisper(E.state === "free" ? "따뜻한 커피를 받아 들었어요." : "커피 한 모금. 다시 한 줄만 더."); },
-        page(E) { E.sfx("page"); E.whisper("사락— 다음 장으로."); },
+        coffee(E) { E.me.gesture("sip", 3.6); E.share("coffee"); E.sfx("sip"); E.whisper(E.state === "free" ? "따뜻한 커피를 후- 불어 한 모금." : "커피 한 모금. 다시 한 줄만 더."); },
+        page(E) { E.sfx("page"); E.share("page"); E.whisper("사락— 다음 장으로."); },
       },
+      remote: { coffee: (E, av) => av.gesture("sip", 3.6), page: (E) => E.sfx("pageFar") },
       sounds: {
         loops: [{ f: "kissa/rain", g: 0.62 }, { f: "kissa/rain2", g: 0.28 }, { f: "kissa/cafe", g: 0.28 }, { f: "kissa/clock", g: 0.14 }],
         gusts: [],
-        sfx: { kettle: { f: "kissa/kettle", g: 0.55 }, page: { f: "kissa/page", g: 0.8, jitter: true }, tram: { f: "common/bowl", g: 0.32, rate: 2.6 } },
+        sfx: { kettle: { f: "kissa/kettle", g: 0.55 }, sip: { f: "kissa/kettle", g: 0.22, rate: 1.3, lp: 1800 }, page: { f: "kissa/page", g: 0.8, jitter: true }, pageFar: { f: "kissa/page", g: 0.3, lp: 2500 }, tram: { f: "common/bowl", g: 0.32, rate: 2.6 } },
         steps: { f: "common/steps", out: 0.45, in: 0.2 },
       },
       update(dt, t, E) {
         const inside = inCafe(E.me.pos.x, E.me.pos.z);
         cafeRoof.visible = !inside;
-        cut += ((inside ? 0.28 : 1) - cut) * Math.min(1, dt * 4);
-        cutaway.scale.y = cut;
+        // 천장이 생겨서 벽을 낮추지 않는다 (카메라는 벽·천장 안쪽에 머문다)
         // 비
         const p = rain.geometry.attributes.position, v = rain.userData.v, a = p.array;
         for (let i = 0; i < v.length; i++) {
