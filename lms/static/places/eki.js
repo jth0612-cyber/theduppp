@@ -13,7 +13,7 @@ export default {
     }[TIME]);
   },
   build(K) {
-    const { THREE, scene, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand } = K;
+    const { THREE, scene, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, trees } = K;
     const night = TIME === "night", dusk = TIME === "dusk";
     const pickGround = [];
     const PLAT = { x0: -15, x1: 15, z0: 0.2, z1: 3.0, h: 1.0 };
@@ -34,18 +34,10 @@ export default {
       // 선로 너머: 풀 비탈이 바다 쪽으로 내려간다
       const slope = new THREE.Mesh(new THREE.PlaneGeometry(160, 26), mat(PAL.grass)); slope.rotation.x = -Math.PI / 2 + 0.12; slope.position.set(0, -1.4, -15.5); scene.add(slope);
       const beach = new THREE.Mesh(new THREE.PlaneGeometry(160, 8), mat(TIME === "day" ? 0xd9ccb0 : 0x6a6260)); beach.rotation.x = -Math.PI / 2; beach.position.set(0, -2.95, -31); scene.add(beach);
-      // 풀 덤불
-      const bushC = TIME === "day" ? [0x5f8f3e, 0x7aa64a, 0x4d7a36] : [0x34442e, 0x3c4e34, 0x2a3828];
-      for (let i = 0; i < 70; i++) {
-        const x = rand(-40, 40), z = srand() > 0.5 ? rand(-14, -3) : rand(16, 30);
-        const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.4, 1.1), 0), mat(bushC[i % 3]));
-        b.position.set(x, z < 0 ? -0.2 - (Math.abs(z) - 3) * 0.12 : 0.2, z); b.scale.y = 0.6; scene.add(b);
-      }
-      // 선로 옆 키 큰 풀
-      for (let i = 0; i < 50; i++) {
-        const b = new THREE.Mesh(new THREE.ConeGeometry(0.18, rand(0.6, 1.2), 4), mat(bushC[(i + 1) % 3]));
-        b.position.set(rand(-40, 40), 0.3, TRACK_Z - rand(1.4, 2.6)); scene.add(b);
-      }
+      // 풀숲과 덤불 (잎 뭉치 카드)
+      const slopeY = (z) => (z < -3 ? -0.2 - (Math.abs(z) - 3) * 0.12 : 0);
+      for (let i = 0; i < 46; i++) { const x = rand(-40, 40), z = srand() > 0.5 ? rand(-14, -3) : rand(16, 30); trees.bush(x, z, rand(0.7, 1.3), { y: slopeY(z) - 0.1 }); }
+      for (let i = 0; i < 160; i++) { const x = rand(-40, 40), z = srand() > 0.35 ? TRACK_Z - rand(1.4, 3.2) : rand(-14, -3); trees.grass(x, z, rand(0.6, 1.2), { y: slopeY(z) }); }
     }
 
     // ---------------------------------------------------------------- 바다 (가까울수록 옥빛, 멀수록 짙은 파랑)
@@ -124,18 +116,9 @@ export default {
         box(4.6, 2.6, 3.6, i % 2 ? 0xe8e2d6 : 0xd8d2c4, 0, 1.3, 0, g); roof(5.4, 4.4, 1.1, 0.12, rc[i % rc.length], 0, 3.1, 0, g);
         const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), new THREE.MeshBasicMaterial({ color: TIME === "day" ? 0x8aa2b0 : 0xffd394 })); w.position.set(0, 1.5, 1.81); g.add(w);
       });
-      const blossom = TIME === "day" ? [0xf2c4cf, 0xe8aebe, 0xf7d6dc] : dusk ? [0xe6aab4, 0xd898a8, 0xeec0c6] : [0x6a5070, 0x5a4464, 0x765a7a];
-      function sakura(x, z, s, weeping) {
-        const gy = z < -3 ? -0.2 - (-z - 3) * 0.12 : 0;
-        const t = cyl(0.12 * s, 0.22 * s, 2.6 * s, 6, 0x4a3a34, x, gy + 1.3 * s, z); t.rotation.z = rand(-0.12, 0.12);
-        for (let i = 0; i < (weeping ? 12 : 9); i++) {
-          const a = Math.random() * Math.PI * 2, r = rand(0.4, 1.6) * s;
-          const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.6, 1.0) * s, 1), mat(blossom[i % 3]));
-          b.position.set(x + Math.cos(a) * r, gy + (weeping ? rand(1.2, 3.2) : rand(2.6, 3.6)) * s, z + Math.sin(a) * r);
-          if (weeping) b.scale.set(0.85, 1.25, 0.85); scene.add(b);
-        }
-      }
-      [[-14, -9, 0.85, true], [17, -10, 0.8, true], [-24, -13, 1.0, false], [27, -12, 0.9, true], [3, -26, 0.8, false]].forEach((a) => sakura(...a));
+      const blossom = TIME === "day" ? 0xfad2dc : dusk ? 0xe6aab4 : 0x6a5070;
+      [[-14, -9, 0.85, true], [17, -10, 0.8, true], [-24, -13, 1.0, false], [27, -12, 0.9, true], [3, -26, 0.8, false]].forEach(([x, z, sc, w]) =>
+        trees.broad(x, z, sc, { y: z < -3 ? -0.2 - (-z - 3) * 0.12 : 0, kind: "petal", leaf: blossom, bark: 0x3c2e2a, weeping: w }));
     }
     // 오른쪽 곶(숲 실루엣)과 등대
     {
@@ -264,22 +247,9 @@ export default {
     }
 
     // ---------------------------------------------------------------- 큰 삼나무와 소나무, 전봇대와 전선, 표지판, 거울
-    function bigCedar(x, z, s) {
-      cyl(0.35 * s, 0.5 * s, 4 * s, 7, 0x4a3628, x, 2 * s, z);
-      const g = TIME === "day" ? [0x2f5a32, 0x3a6a3a, 0x2a4e2e] : [0x18261c, 0x1e2e22, 0x15201a];
-      for (let i = 0; i < 6; i++) {
-        const c = new THREE.Mesh(new THREE.IcosahedronGeometry((3.2 - i * 0.35) * s, 0), mat(g[i % 3]));
-        c.position.set(x + rand(-0.8, 0.8) * s, (3.2 + i * 1.6) * s, z + rand(-0.8, 0.8) * s); c.scale.y = 0.75; scene.add(c);
-      }
-    }
-    bigCedar(-20, 2, 1.25); bigCedar(-25, -1, 1.05); bigCedar(-21, 9, 1.0); bigCedar(26, 16, 0.9);
-    function pine(x, z, s) {
-      const gy = z < -3 ? -0.2 - (-z - 3) * 0.12 : 0;
-      const t = cyl(0.12 * s, 0.2 * s, 3.5 * s, 6, 0x5a4232, x, gy + 1.75 * s, z); t.rotation.z = rand(-0.15, 0.15);
-      for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.2 * s, 8, 5), mat(TIME === "day" ? 0x3a5a36 : 0x18241c)); c.scale.y = 0.35; c.position.set(x + rand(-1, 1) * s, gy + (3.2 + i * 0.6) * s, z + rand(-1, 1) * s); scene.add(c); }
-    }
-    for (let i = 0; i < 12; i++) { const x = rand(-60, 60); if (Math.abs(x) < 14) continue; pine(x, rand(-26, -10), rand(1.1, 1.8)); }
-    for (let i = 0; i < 8; i++) pine(rand(-40, 40), rand(20, 34), rand(1.2, 2));
+    [[-20, 2, 1.35], [-25, -1, 1.15], [-21, 9, 1.1], [26, 16, 1.0]].forEach(([x, z, sc]) => trees.cedar(x, z, sc));
+    for (let i = 0; i < 12; i++) { const x = rand(-60, 60); if (Math.abs(x) < 14) continue; const z = rand(-26, -10); trees.pine(x, z, rand(1.0, 1.5), { y: -0.2 - (-z - 3) * 0.12 }); }
+    for (let i = 0; i < 8; i++) trees.pine(rand(-40, 40), rand(20, 34), rand(1.1, 1.7));
     // 집들 (작은 함석지붕)
     const roofC = [0xc87a8e, 0x4a6e9a, 0x6a4a3a, 0x3e6a5a];
     [[22, 9, 0.3], [27, 3, -0.2], [-30, 14, 0.5], [18, 20, 0.1]].forEach(([x, z, r], i) => {
@@ -500,7 +470,7 @@ export default {
       board(lines) { drawNotes(lines); },
       chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요." },
       sounds: {
-        loops: [{ f: "eki/shore", g: 0.85 }, { f: "eki/waves", g: 0.42 }, { f: "eki/wind", g: 0.3 }, { f: "eki/evening", g: 0.5, when: "dusk" }, { f: "common/crickets", g: 0.35, when: "night" }],
+        loops: [{ f: "eki/evening", g: 0.95 }, { f: "eki/shore", g: 0.45 }, { f: "eki/wind", g: 0.18 }, { f: "common/crickets", g: 0.3, when: "night" }],
         gusts: [{ f: "eki/gulls", max: 0.4, every: [16, 32], when: "day" }],
         sfx: { train: { f: "eki/train", g: 0.85 } },
         steps: { f: "common/steps", out: 0.5, in: 0.3 },

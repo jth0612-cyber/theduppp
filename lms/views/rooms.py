@@ -30,6 +30,18 @@ BOARDS = {"sento": {"kind": "chat", "seats": {8, 9, 10, 11}, "max": 40},
 BOARD_LINES = 5
 CHAT_GAP_SECONDS = 4
 CHAT_DAY_MAX = 60
+# 오늘의 운세: (운, 한마디, 오늘의 미션(플래너에 넣을 수 있음), 과목 칩, 행운 부적 색, 부적 이름)
+FORTUNES = [
+    ("아주 좋음", "오늘 푼 문제가 시험에 그대로 나올 것 같은 날이에요. 어려운 단원도 오늘은 술술 풀려요.", "제일 자신 없는 단원 기출 5문제", "sci", "#e2ae25", "금빛 부적"),
+    ("아주 좋음", "자료 해석에 강한 하루예요. 그래프와 표가 눈에 쏙쏙 들어와요.", "그래프·표 해석 문제 10개", "sci", "#e2ae25", "금빛 부적"),
+    ("좋음", "틀린 문제 하나가 큰 깨달음이 되는 날이에요. 오답 노트를 펼쳐 보세요.", "오답 노트 3문제 다시 풀기", "sci", "#e0708a", "벚꽃 부적"),
+    ("좋음", "모르는 건 바로 묻는 날! 질문 하나가 막힌 길을 열어 줘요.", "막힌 문제 1개 질답 게시판에 올리기", "sci", "#e0708a", "벚꽃 부적"),
+    ("좋음", "암기가 잘 되는 날이에요. 짧게 여러 번 보는 게 좋아요.", "개념 카드 한 바퀴 돌리기", "sci", "#4b8fd6", "하늘 부적"),
+    ("보통", "한 단원만 끝까지 해내면 충분한 날이에요. 작은 완주가 큰 힘이 돼요.", "한 단원 끝까지 풀기", "sci", "#5fa865", "잎새 부적"),
+    ("보통", "25분만 집중해도 잘한 날이에요. 타이머부터 켜 보세요.", "25분 집중 두 번", "etc", "#5fa865", "잎새 부적"),
+    ("조금 아쉬움", "오늘은 조금 지칠 수 있어요. 천천히 가도 멈추지만 않으면 돼요. 내일은 더 좋아요!", "쉬운 문제 10개로 몸 풀기", "sci", "#9673d4", "보랏빛 부적"),
+]
+LOW_LUCK = "조금 아쉬움"
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
 PLAN_CHOICES = (25, 50, 90)
 NOTE_MAX = 60
@@ -48,6 +60,7 @@ def _place_or_404(place):
 def _members(place):
     return query(f"""SELECT u.id, u.nickname, u.avatar_color, p.status, p.focus_since, p.plan_min,
                             p.px, p.pz, p.ry, p.pose, p.seat,
+                            (SELECT idx FROM room_fortunes rf WHERE rf.user_id = u.id AND rf.day = date('now', 'localtime')) AS fortune,
                             (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f
                              WHERE f.user_id = u.id AND date(f.ended_at) = date('now', 'localtime')) AS today
                      FROM room_presence p JOIN users u ON u.id = p.user_id
@@ -75,6 +88,7 @@ def _elapsed_min(since):
 def _member_json(m, me, king=None, follows=()):
     return {"id": m["id"], "nick": m["nickname"] or "익명", "me": m["id"] == me, "status": m["status"],
             "king": m["id"] == king, "follow": m["id"] in follows,
+            "charm": FORTUNES[m["fortune"]][4] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
             "plan": m["plan_min"], "today": m["today"],
             "x": round(m["px"], 2), "z": round(m["pz"], 2), "ry": round(m["ry"], 2), "pose": m["pose"],
@@ -326,6 +340,35 @@ def _board(place):
         rows = query("""SELECT n.id, n.body, u.nickname FROM room_notes n JOIN users u ON u.id = n.user_id
                         WHERE n.place = ? ORDER BY n.created_at DESC, n.id DESC LIMIT ?""", (place, BOARD_LINES))
     return [{"id": r["id"], "nick": r["nickname"] or "익명", "body": r["body"]} for r in reversed(rows)]
+
+
+def _fortune_json(idx, again, tied):
+    luck, text, mission, subject, color, charm = FORTUNES[idx]
+    return {"luck": luck, "text": text, "mission": mission, "subject": subject, "color": color, "charm": charm,
+            "low": luck == LOW_LUCK, "again": again, "tied": bool(tied), "day": date.today().isoformat()}
+
+
+@bp.route("/s/rooms/fortune", methods=["POST"])
+@student_required
+def fortune():
+    """오늘의 운세 뽑기: 하루에 한 번. 뽑으면 오늘 하루 캐릭터에 행운 부적이 달리고, 오늘의 미션을 플래너에 넣을 수 있다."""
+    import random
+    uid, day = g.user["id"], date.today().isoformat()
+    row = query("SELECT * FROM room_fortunes WHERE user_id = ? AND day = ?", (uid, day), one=True)
+    if row:
+        return jsonify(_fortune_json(row["idx"] % len(FORTUNES), True, row["tied"]))
+    idx = random.randrange(len(FORTUNES))
+    execute("INSERT INTO room_fortunes (user_id, day, idx) VALUES (?, ?, ?)", (uid, day, idx))
+    return jsonify(_fortune_json(idx, False, 0))
+
+
+@bp.route("/s/rooms/fortune/tie", methods=["POST"])
+@student_required
+def fortune_tie():
+    """아쉬운 운세는 종이를 줄에 묶어 두고 간다(묶어 둔 사람 수가 판에 보인다)."""
+    execute("UPDATE room_fortunes SET tied = 1 WHERE user_id = ? AND day = ?", (g.user["id"], date.today().isoformat()))
+    n = query("SELECT COUNT(*) AS n FROM room_fortunes WHERE day = ? AND tied = 1", (date.today().isoformat(),), one=True)["n"]
+    return jsonify(ok=True, tied_today=n)
 
 
 @bp.route("/s/rooms/<place>/write", methods=["POST"])

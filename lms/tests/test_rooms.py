@@ -170,6 +170,23 @@ class RoomsTest(unittest.TestCase):
         self.t.post(f"/t/rooms/chat/{cid}/delete")
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 0)
 
+    def test_fortune_once_a_day_with_charm(self):
+        a, b = self.student(0), self.student(1)
+        f1 = a.post("/s/rooms/fortune").get_json()
+        self.assertFalse(f1["again"]); self.assertIn(f1["luck"], {"아주 좋음", "좋음", "보통", "조금 아쉬움"})
+        f2 = a.post("/s/rooms/fortune").get_json()
+        self.assertTrue(f2["again"]); self.assertEqual(f1["text"], f2["text"])           # 하루에 한 번, 같은 결과
+        a.get("/s/rooms/sanji"); b.get("/s/rooms/sanji")
+        r = b.post("/s/rooms/sanji/beat", data={}).get_json()
+        friend = [m for m in r["members"] if not m["me"]][0]
+        self.assertEqual(friend["charm"], f1["color"])                                    # 친구에게 행운 부적이 보임
+        self.assertIsNone([m for m in r["members"] if m["me"]][0]["charm"])
+        self.assertEqual(a.post("/s/rooms/fortune/tie").get_json()["tied_today"], 1)
+        self.assertTrue(a.post("/s/rooms/fortune").get_json()["tied"])
+        # 오늘의 미션을 플래너에 넣기
+        a.post("/s/planner/add", data={"day": f1["day"], "body": "[오늘의 미션] " + f1["mission"], "subject": f1["subject"]})
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM planner_items", one=True)["n"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

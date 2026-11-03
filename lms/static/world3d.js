@@ -109,27 +109,152 @@ let seed = 7;
 const srand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
 // ---------------------------------------------------------------- 나무와 대나무
-function cedar(x, z, s = 1) {
-  cyl(0.18 * s, 0.25 * s, 1.6 * s, 6, 0x4a3628, x, 0.8 * s, z);
-  const greens = TIME === "night" ? [0x1f3328, 0x253c2f] : [0x2f4a38, 0x3a5a42];
-  for (let i = 0; i < 3; i++) {
-    const c = new THREE.Mesh(new THREE.ConeGeometry((1.7 - i * 0.42) * s, (2.2 - i * 0.3) * s, 7), mat(greens[i % 2]));
-    c.position.set(x, (1.9 + i * 1.15) * s, z); c.rotation.y = srand() * 3; scene.add(c);
+// 나무: 휘어진 줄기와 가지를 세우고, 가지 끝마다 '잎 뭉치 카드'(잎을 그린 반투명 판 네 장)를 붙인다.
+// 잎 뭉치는 종류별로 한 번에 그린다(인스턴싱) — 수백 그루도 가볍다.
+const flora = (() => {
+  const R = (a, b) => a + Math.random() * (b - a);
+  function leafTex(kind) {
+    const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+    if (kind === "needle") {                 // 솔잎·삼나무: 가운데서 사방으로 뻗은 가는 바늘
+      for (let i = 0; i < 260; i++) {
+        const a = R(0, Math.PI * 2), r0 = R(0, 16), r1 = R(28, 60), g = Math.floor(R(140, 255));
+        x.strokeStyle = `rgb(${g},${g},${g})`; x.lineWidth = R(1, 2.4); x.beginPath();
+        x.moveTo(64 + Math.cos(a) * r0, 64 + Math.sin(a) * r0 * 0.8); x.lineTo(64 + Math.cos(a) * r1, 64 + Math.sin(a) * r1 * 0.8); x.stroke();
+      }
+    } else if (kind === "grass") {           // 풀: 아래에서 위로 휘어 올라가는 잎
+      for (let i = 0; i < 60; i++) {
+        const bx = R(24, 104), h = R(50, 124), bend = R(-26, 26), g = Math.floor(R(140, 255));
+        x.strokeStyle = `rgb(${g},${g},${g})`; x.lineWidth = R(1.5, 3.5); x.beginPath(); x.moveTo(bx, 128); x.quadraticCurveTo(bx + bend * 0.3, 128 - h * 0.6, bx + bend, 128 - h); x.stroke();
+      }
+    } else {                                 // 넓은 잎·꽃잎: 작은 잎을 겹쳐 둥글게, 가장자리는 성기게
+      const petal = kind === "petal";
+      for (let i = 0; i < 190; i++) {
+        const a = R(0, Math.PI * 2), d = Math.pow(Math.random(), 0.65) * 54, g = Math.floor(R(150, 255));
+        x.fillStyle = `rgb(${g},${g},${g})`; x.save(); x.translate(64 + Math.cos(a) * d, 64 + Math.sin(a) * d); x.rotate(R(0, Math.PI));
+        x.beginPath(); x.ellipse(0, 0, petal ? R(3.5, 5.5) : R(5, 9), petal ? R(3, 4.5) : R(2.2, 3.8), 0, 0, Math.PI * 2); x.fill(); x.restore();
+      }
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+  function cards(withTop) {
+    const gs = [0, Math.PI / 3, (2 * Math.PI) / 3].map((r) => { const g = new THREE.PlaneGeometry(1, 1); g.rotateY(r); return g; });
+    if (withTop) { const h = new THREE.PlaneGeometry(1, 1); h.rotateX(-Math.PI / 2); gs.push(h); }
+    const pos = [], uv = [], nor = [], idx = []; let off = 0;
+    gs.forEach((g) => { pos.push(...g.attributes.position.array); uv.push(...g.attributes.uv.array); nor.push(...g.attributes.normal.array);
+      g.index.array.forEach((i) => idx.push(i + off)); off += g.attributes.position.count; });
+    const m = new THREE.BufferGeometry();
+    m.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); m.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    m.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); m.setIndex(idx); return m;
+  }
+  const geoFull = cards(true), geoCross = cards(false), kinds = {}, barkM = {}, tmpC = new THREE.Color(), UP = new THREE.Vector3(0, 1, 0);
+  const kind = (n) => kinds[n] || (kinds[n] = { tex: leafTex(n), items: [] });
+  const bark = (c) => barkM[c] || (barkM[c] = new THREE.MeshLambertMaterial({ color: c }));
+  function limb(a, b, r0, r1, col) {
+    const d = new THREE.Vector3().subVectors(b, a), len = d.length();
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, len, 6, 1), bark(col));
+    m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(UP, d.normalize()); scene.add(m); return m;
+  }
+  function leaf(name, p, size, color, jit = 0.1) {
+    tmpC.set(color).offsetHSL((Math.random() - 0.5) * 0.025, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * jit);
+    kind(name).items.push({ p: p.clone(), s: size * R(0.8, 1.2), r: Math.random() * Math.PI * 2, c: tmpC.clone() });
+  }
+  function finish() {
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3();
+    Object.entries(kinds).forEach(([name, k]) => {
+      if (!k.items.length) return;
+      const mat = new THREE.MeshLambertMaterial({ map: k.tex, alphaTest: 0.5, side: THREE.DoubleSide });
+      const im = new THREE.InstancedMesh(name === "grass" ? geoCross : geoFull, mat, k.items.length);
+      k.items.forEach((it, i) => {
+        e.set(name === "grass" ? 0 : (Math.random() - 0.5) * 0.5, it.r, name === "grass" ? 0 : (Math.random() - 0.5) * 0.5); q.setFromEuler(e);
+        sc.set(it.s, it.s * (name === "needle" ? 0.8 : 1), it.s); m4.compose(it.p, q, sc); im.setMatrixAt(i, m4); im.setColorAt(i, it.c);
+      });
+      im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; scene.add(im); k.items = [];
+    });
+  }
+  return { limb, leaf, finish };
+})();
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const night = TIME === "night";
+// 넓은 잎 나무 · 벚나무(kind: "petal")
+function broadTree(x, z, s = 1, o = {}) {
+  const y0 = o.y || 0, leafC = o.leaf || (night ? 0x2c4a34 : 0x55803f), barkC = o.bark || 0x4a3a30, kn = o.kind || "leaf";
+  const top = V3(x + (srand() - 0.5) * 0.5 * s, y0 + (o.h || 2.3) * s, z + (srand() - 0.5) * 0.4 * s);
+  const mid = V3((x + top.x) / 2 + (srand() - 0.5) * 0.2 * s, (y0 + top.y) / 2, (z + top.z) / 2);
+  flora.limb(V3(x, y0, z), mid, 0.26 * s, 0.2 * s, barkC); flora.limb(mid, top, 0.2 * s, 0.14 * s, barkC);
+  const n = o.branches || 5;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + srand() * 0.8, up = 0.5 + srand() * 1.1, out = (1.3 + srand() * 1.0) * s * (o.spread || 1);
+    const m = V3(top.x + Math.cos(a) * out * 0.5, top.y + up * 0.5 * s, top.z + Math.sin(a) * out * 0.5);
+    const e = V3(top.x + Math.cos(a) * out, top.y + up * s - (o.weeping ? 0.8 * s : 0), top.z + Math.sin(a) * out);
+    flora.limb(top, m, 0.11 * s, 0.07 * s, barkC); flora.limb(m, e, 0.07 * s, 0.035 * s, barkC);
+    for (let k = 0; k < 7; k++) {
+      const t = 0.3 + srand() * 0.8;
+      flora.leaf(kn, V3(m.x + (e.x - m.x) * t + (srand() - 0.5) * 0.9 * s, m.y + (e.y - m.y) * t + (srand() - 0.3) * 0.7 * s - (o.weeping ? srand() * 0.9 * s : 0),
+        m.z + (e.z - m.z) * t + (srand() - 0.5) * 0.9 * s), (1.0 + srand() * 0.5) * s, leafC);
+    }
+  }
+  for (let k = 0; k < 14; k++) {                              // 수관 위쪽 채우기 (위는 조금 밝게)
+    const a = srand() * Math.PI * 2, r = Math.sqrt(srand()) * 1.6 * s * (o.spread || 1), up = (0.5 + srand() * 1.3) * s;
+    flora.leaf(kn, V3(top.x + Math.cos(a) * r, top.y + up, top.z + Math.sin(a) * r), (1.1 + srand() * 0.5) * s, new THREE.Color(leafC).offsetHSL(0, 0, up / s * 0.03 - 0.02));
   }
 }
+// 해송: 비스듬히 휜 줄기, 옆으로 뻗은 가지 끝에 납작한 솔잎 방석
+function pineTree(x, z, s = 1, o = {}) {
+  const y0 = o.y || 0, leafC = o.leaf || (night ? 0x213a2a : 0x3b6a44), barkC = 0x5a463a;
+  const la = srand() * Math.PI * 2, lean = (0.5 + srand() * 0.8) * s, pts = [V3(x, y0, z)];
+  for (let i = 1; i <= 4; i++) {
+    const t = i / 4, p = V3(x + Math.cos(la) * lean * t + Math.sin(t * 5 + x) * 0.15 * s, y0 + t * 4.3 * s, z + Math.sin(la) * lean * t);
+    flora.limb(pts[i - 1], p, (0.26 - 0.045 * i) * s, (0.22 - 0.045 * i) * s, barkC); pts.push(p);
+  }
+  const pad = (c, r) => { for (let k = 0; k < 10; k++) { const a = srand() * Math.PI * 2, d = Math.sqrt(srand()) * r;
+    flora.leaf("needle", V3(c.x + Math.cos(a) * d, c.y + (srand() - 0.3) * 0.22 * r, c.z + Math.sin(a) * d), (0.75 + srand() * 0.3) * s, leafC); } };
+  pts.slice(2).forEach((p, i) => {
+    const nb = 2 + Math.floor(srand() * 2);
+    for (let b = 0; b < nb; b++) {
+      const a = srand() * Math.PI * 2, L = (1.0 + srand() * 1.3) * s * (1 - i * 0.18);
+      const e = V3(p.x + Math.cos(a) * L, p.y + (srand() * 0.4 - 0.1) * s, p.z + Math.sin(a) * L);
+      flora.limb(p, e, 0.07 * s, 0.03 * s, barkC); pad(e, (0.8 + srand() * 0.4) * s);
+    }
+  });
+  pad(V3(pts[4].x, pts[4].y + 0.2 * s, pts[4].z), 1.3 * s);
+}
+// 삼나무: 곧은 줄기, 위로 갈수록 좁아지는 층층 솔잎 (snow: 눈이 얹힘)
+function cedarTree(x, z, s = 1, o = {}) {
+  const y0 = o.y || 0, H = (6 + srand() * 2) * s, leafC = o.leaf || (night ? 0x1f3226 : 0x3a6044);
+  flora.limb(V3(x, y0, z), V3(x, y0 + H, z), 0.28 * s, 0.05 * s, 0x4a3628);
+  for (let y = 1.5 * s; y < H; y += 0.42 * s) {
+    const t = y / H, Rr = (1 - t) * 1.9 * s + 0.25 * s, n = Math.max(3, Math.round(Rr * 5));
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2 + srand() * 0.6, d = Rr * (0.55 + srand() * 0.45);
+      flora.leaf("needle", V3(x + Math.cos(a) * d, y0 + y - d * 0.25, z + Math.sin(a) * d), (0.9 + Rr * 0.35) * (0.8 + srand() * 0.3),
+        o.snow && srand() < 0.4 ? 0xe9edf4 : leafC);
+    }
+  }
+  flora.leaf("needle", V3(x, y0 + H + 0.2 * s, z), 0.8 * s, leafC);
+}
+// 덤불 · 풀숲
+function bush(x, z, s = 1, o = {}) {
+  const y0 = o.y || 0, c = o.leaf || (night ? 0x2e4430 : 0x5f8f3e);
+  for (let k = 0; k < 6; k++) { const a = srand() * Math.PI * 2, d = srand() * 0.6 * s; flora.leaf("leaf", V3(x + Math.cos(a) * d, y0 + (0.3 + srand() * 0.4) * s, z + Math.sin(a) * d), (0.8 + srand() * 0.4) * s, c); }
+}
+function grass(x, z, s = 1, o = {}) {
+  flora.leaf("grass", V3(x, (o.y || 0) + 0.5 * s, z), s, o.leaf || (night ? 0x3a4e34 : 0x7aa652), 0.14);
+}
+const cedar = (x, z, s = 1) => cedarTree(x, z, s);
 function bamboo(x, z) {
   const col = TIME === "night" ? 0x37503a : 0x7a9a5a;
   for (let i = 0; i < 7; i++) {
     const h = 5 + srand() * 4, bx = x + (srand() - 0.5) * 2, bz = z + (srand() - 0.5) * 2;
     const b = cyl(0.07, 0.09, h, 5, col, bx, h / 2, bz); b.rotation.z = (srand() - 0.5) * 0.12;
-    const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7 + srand() * 0.4, 0), mat(TIME === "night" ? 0x2a3d2c : 0x5f8a4a));
-    leaf.position.set(bx, h - 0.2, bz); leaf.scale.y = 0.6; scene.add(leaf);
+    for (let k = 0; k < 5; k++) flora.leaf("leaf", V3(bx + (srand() - 0.5) * 1.0, h - 1.6 + k * 0.4, bz + (srand() - 0.5) * 1.0), 0.8 + srand() * 0.4, TIME === "night" ? 0x2a3d2c : 0x6a9a4e);
   }
 }
 
 // ---------------------------------------------------------------- 장소 짓기
-const K = { THREE, scene, camera, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo, reduceMotion, isTouch };
+const trees = { broad: broadTree, pine: pineTree, cedar: cedarTree, bush, grass };
+const K = { THREE, scene, camera, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo, trees, reduceMotion, isTouch };
 const P = PLACE.build(K);
+flora.finish();
 const heightAt = P.heightAt;
 const SEATS = P.seats;
 const fliesArea = P.fliesArea || [-16, 16, -2, 20];
@@ -290,6 +415,18 @@ class Avatar {
     if (exhale) { this.oh.scale.setScalar(0.9 + Math.sin(this.breathT * 9) * 0.12); this.puffT -= dt; if (this.puffT <= 0) { spawnPuff(this); this.puffT = 0.55; } }
   }
   bow() { this.pose = "bow"; this.bowT = 1.6; }
+  // 오늘의 운세를 뽑으면 하루 동안 가방에 작은 행운 부적이 달린다 (친구들에게도 보인다)
+  setCharm(color) {
+    if ((this.charmColor || null) === (color || null)) return;
+    this.charmColor = color || null;
+    if (this.charm) { this.upper.remove(this.charm); this.charm = null; }
+    if (!color) return;
+    const c = new THREE.Group();
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 4), new THREE.MeshBasicMaterial({ color: 0xc8323a })); cord.position.y = 0.06; c.add(cord);
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.15, 0.03), toon(color)); bag.position.y = -0.06; c.add(bag);
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), toon(0xfff4dc)); knot.position.y = 0.015; c.add(knot);
+    c.position.set(0.23, 0.42, -0.48); this.upper.add(c); this.charm = c;
+  }
   // 이번 주 이 장소의 터줏대감(1위)은 머리 위에 작은 금관
   setKing(v) {
     if (!!v === !!this.crown) return;
@@ -468,6 +605,20 @@ const E = {
     return best;
   },
   get audioOn() { return audio.on; },
+  post: (url, data) => post(url, data),
+  root,
+  // 화면 가운데 카드 (운세 결과 같은 것). buttons: [{label, primary, onClick}] — onClick 이 false 를 돌려주면 닫지 않는다
+  card(build, buttons) {
+    const old = stage.querySelector(".w3-card"); if (old) old.remove();
+    const el = document.createElement("div"); el.className = "w3-card"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "false");
+    const body = document.createElement("div"); body.className = "w3-card-body"; build(body); el.appendChild(body);
+    const row = document.createElement("div"); row.className = "w3-card-actions";
+    (buttons || [{ label: "닫기" }]).forEach((b) => {
+      const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn" + (b.primary ? " primary" : ""); btn.textContent = b.label;
+      btn.addEventListener("click", () => { const keep = b.onClick && b.onClick(btn) === false; if (!keep) el.remove(); }); row.appendChild(btn);
+    });
+    el.appendChild(row); stage.appendChild(el); return el;
+  },
   pop(obj, secs) { pops.push({ obj, t: secs || 1, total: secs || 1 }); obj.visible = true; },
 };
 
@@ -604,13 +755,13 @@ function onBeat(d) {
   if (d.board && P.board) P.board(d.board);
   const seen = new Set();
   d.members.forEach((m) => {
-    if (m.me) { me.setKing(m.king); return; } seen.add(m.id);
+    if (m.me) { me.setKing(m.king); me.setCharm(m.charm); return; } seen.add(m.id);
     let o = others.get(m.id);
     if (!o) {
       o = new Avatar({ color: m.color, nick: m.nick }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
       if (entered) whisper(`${m.nick}님이 들어왔어요.`, 2600);
     }
-    o.setColor(m.color); o.setKing(m.king);
+    o.setColor(m.color); o.setKing(m.king); o.setCharm(m.charm);
     o.focus = m.status === "focus";
     o.seat = m.seat === null || m.seat === undefined ? null : m.seat;
     if (o.seat !== null && SEATS[o.seat]) {

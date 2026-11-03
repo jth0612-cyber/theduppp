@@ -394,6 +394,14 @@ CREATE TABLE IF NOT EXISTS notice_reads (
     read_at     TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     PRIMARY KEY (notice_id, user_id)
 );
+-- 같이 공부 '오늘의 운세' (하루에 한 번)
+CREATE TABLE IF NOT EXISTS room_fortunes (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    idx         INTEGER NOT NULL,
+    tied        INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, day)
+);
 -- 학생끼리 팔로우 (닉네임으로만 보인다)
 CREATE TABLE IF NOT EXISTS follows (
     follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

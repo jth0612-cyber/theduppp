@@ -1,4 +1,4 @@
-// 같이 공부 · 신사(神社, 학문의 신). 주홍 도리이 → 데미즈야 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
+// 같이 공부 · 신사. 주홍 기둥 문 → 손 씻는 곳 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
 export default {
   build(K) {
     const { THREE, scene, camera, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo } = K;
@@ -184,7 +184,7 @@ export default {
       if (TIME !== "day") { const pl = new THREE.PointLight(0xffb867, PAL.lamp * 3, 9, 1.8); pl.position.set(x, 2.1, z); scene.add(pl); }
     }
 
-    // ---------------------------------------------------------------- 오미쿠지 (운세 뽑기): 육각 나무통, 하얀 운세 종이를 묶어 두는 줄
+    // ---------------------------------------------------------------- 오늘의 운세: 육각 나무통, 아쉬운 운세 종이를 묶어 두는 줄
     const BELL = { x: 12.5, z: 9 };
     let kujiBox, slip;
     {
@@ -193,7 +193,7 @@ export default {
       roof(3.4, 1.6, 0.6, 0.3, 0x33383f, BELL.x, 2.9, BELL.z - 0.7);
       box(2.2, 0.9, 0.8, 0x6b4630, BELL.x, 0.75, BELL.z - 0.5);
       kujiBox = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.62, 6), mat(0x8a5a36)); kujiBox.position.set(BELL.x - 0.5, 1.5, BELL.z - 0.5); scene.add(kujiBox);
-      const kt = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.42), new THREE.MeshBasicMaterial({ map: textTexture("おみくじ", { w: 256, h: 112, fg: "#f6efe0", bg: "#a8321e", font: "600 52px 'Noto Serif KR', serif" }) }));
+      const kt = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.42), new THREE.MeshBasicMaterial({ map: textTexture("오늘의 운세", { w: 256, h: 112, fg: "#f6efe0", bg: "#a8321e", font: "600 44px 'Noto Sans KR', sans-serif" }) }));
       kt.position.set(BELL.x + 0.4, 1.5, BELL.z - 0.08); scene.add(kt);
       // 묶어 둔 운세 종이
       for (const y of [1.1, 1.6]) {
@@ -220,19 +220,9 @@ export default {
 
 
     // ---------------------------------------------------------------- 벚나무와 흩날리는 꽃잎 (봄의 경내)
-    const blossomC = TIME === "night" ? [0x6e5a78, 0x7a6684, 0x5e4c6a] : TIME === "dusk" ? [0xe8b0bc, 0xdc9cac, 0xf0c4cc] : [0xf6cdd6, 0xeeb6c4, 0xfbe0e6];
     const sakuraSpots = [[-9, 13, 1.25], [10.5, 16.5, 1.1], [-15, 7, 1.0], [17.5, 3, 1.15], [-13, -4, 1.0], [-6.5, 17.5, 0.9]];
-    const canopies = [];
-    sakuraSpots.forEach(([x, z, sc]) => {
-      const trunk = cyl(0.16 * sc, 0.3 * sc, 2.6 * sc, 7, 0x3c2e2a, x, 1.3 * sc, z); trunk.rotation.z = (srand() - 0.5) * 0.2;
-      for (let i = 0; i < 4; i++) { const br = cyl(0.06 * sc, 0.1 * sc, 1.8 * sc, 5, 0x3c2e2a, x, 2.7 * sc, z); br.rotation.z = (srand() - 0.5) * 1.6; br.rotation.y = srand() * 6; }
-      const cg = new THREE.Group(); cg.userData.at = [x, z]; scene.add(cg); canopies.push(cg);
-      for (let i = 0; i < 16; i++) {
-        const a = srand() * Math.PI * 2, r = (0.5 + srand() * 2.1) * sc;
-        const b = new THREE.Mesh(new THREE.IcosahedronGeometry((0.6 + srand() * 0.55) * sc, 1), mat(blossomC[i % 3]));
-        b.position.set(x + Math.cos(a) * r, (2.9 + srand() * 1.5) * sc, z + Math.sin(a) * r); b.scale.y = 0.75; cg.add(b);
-      }
-    });
+    const blossom = TIME === "night" ? 0x6e5a78 : TIME === "dusk" ? 0xf0bcc6 : 0xfbd8e0;
+    sakuraSpots.forEach(([x, z, sc]) => K.trees.broad(x, z, sc, { kind: "petal", leaf: blossom, bark: 0x3c2e2a, branches: 6, spread: 1.15 }));
     const petalTex = (() => {
       const c = document.createElement("canvas"); c.width = c.height = 32; const x = c.getContext("2d");
       x.fillStyle = TIME === "night" ? "#b8a4c4" : "#f8d2dc"; x.beginPath(); x.ellipse(16, 16, 12, 7, 0.4, 0, Math.PI * 2); x.fill();
@@ -278,32 +268,52 @@ export default {
     }
 
 
-    // 동작: 참배(두 번 절, 두 번 손뼉, 한 번 절) · 방울 · 손 씻기 · 오미쿠지
+    // 동작: 소원 빌기 · 방울 · 손 씻기 · 오늘의 운세
     let suzuSwing = 0, kujiShake = 0, busy = false;
     bellMesh.userData.action = "omikuji";
     suzuBell.userData.action = "suzu"; suzuRope.children.forEach((c) => (c.userData.action = "suzu"));
     emaRack.traverse((o) => { if (o.isMesh) o.userData.notes = true; });
     const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
-    const FORTUNES = [
-      "대길(大吉) · 오늘 푼 문제가 시험에 그대로 나올 것 같은 날이에요.",
-      "대길(大吉) · 자료 해석에 강한 하루. 그래프 문제부터 풀어 보세요.",
-      "길(吉) · 틀린 문제 하나가 큰 깨달음이 돼요. 오답 노트를 펼쳐 보세요.",
-      "길(吉) · 모르는 건 질답 게시판에 물으면 길이 열려요.",
-      "중길(中吉) · 한 단원만 끝까지. 작은 완주가 큰 힘이 돼요.",
-      "소길(小吉) · 25분만 집중해도 오늘은 충분히 잘한 날이에요.",
-      "말길(末吉) · 천천히 가도 멈추지만 않으면 돼요. 내일은 더 좋아요.",
-    ];
+    const CHARM_CLS = { "#e2ae25": "c-0", "#e0708a": "c-1", "#4b8fd6": "c-2", "#5fa865": "c-3", "#9673d4": "c-4" };
     const restPose = (E) => (E.me.seat !== null ? "sit" : "stand");
-    async function sanpai(E) {
+    // 소원 빌기: 두 손을 모으고 오늘의 공부 목표를 떠올린 뒤 고개를 숙인다
+    async function wish(E) {
       if (busy) return; busy = true;
-      E.whisper("두 번, 깊이 절해요.", 3200);
-      E.me.bow(); E.sync(true); await wait(1700); E.me.bow(); E.sync(true); await wait(1800);
-      E.whisper("두 번 손뼉을 쳐요.", 2000);
-      for (let i = 0; i < 2; i++) { E.me.pose = restPose(E); await wait(160); E.me.pose = "gassho"; E.sfx("clap"); await wait(380); }
-      E.sync(true); await wait(500);
-      E.whisper("마지막으로 한 번 절하며, 오늘의 목표를 마음속으로 말해요.", 3400);
-      E.me.bow(); E.sync(true); await wait(1800);
+      E.me.pose = "gassho"; E.sync(true);
+      E.whisper("두 손을 모으고, 오늘 꼭 해내고 싶은 공부 목표 하나를 떠올려요.", 4200); await wait(4000);
+      E.me.bow(); E.sync(true); E.whisper("마음속으로 한 번 더 말해요. 오늘은 이것만큼은 해낸다!", 3200); await wait(2600);
       E.me.pose = restPose(E); E.sync(true); busy = false;
+    }
+    // 오늘의 운세: 하루에 한 번. 뽑으면 ① 오늘 하루 가방에 행운 부적이 달리고 ② 오늘의 미션을 플래너에 바로 넣을 수 있다.
+    // 아쉬운 운세는 종이를 줄에 묶어 두고 가면 '내일은 더 좋은 날'로 바뀐다.
+    function showFortune(E, f) {
+      E.card((el) => {
+        const head = document.createElement("div"); head.className = "ft-head";
+        const slipEl = document.createElement("span"); slipEl.className = "ft-slip"; slipEl.setAttribute("aria-hidden", "true");
+        const luck = document.createElement("div"); luck.className = "ft-luck"; luck.textContent = "오늘의 운세 · " + f.luck;
+        const sm = document.createElement("small"); sm.textContent = f.again ? "오늘은 이미 뽑았어요. 운세는 하루에 한 번이에요." : "오늘 하루 동안 유지돼요."; luck.appendChild(sm);
+        head.append(slipEl, luck);
+        const txt = document.createElement("p"); txt.className = "ft-text"; txt.textContent = f.tied ? "아쉬운 운은 줄에 묶어 두고 왔어요. 내일은 더 좋은 날이 될 거예요!" : f.text;
+        const charm = document.createElement("div"); charm.className = "ft-row";
+        const ci = document.createElement("span"); ci.className = "ft-charm " + (CHARM_CLS[f.color] || "c-3"); ci.setAttribute("aria-hidden", "true");
+        const ct = document.createElement("span"); ct.innerHTML = "<b>행운 부적</b>"; ct.append(f.charm + "이 오늘 하루 가방에 달려요. 친구들에게도 보여요.");
+        charm.append(ci, ct);
+        const mis = document.createElement("div"); mis.className = "ft-row";
+        const mt = document.createElement("span"); mt.innerHTML = "<b>오늘의 미션</b>"; mt.append(f.mission); mis.append(mt);
+        el.append(head, txt, charm, mis);
+      }, [
+        ...(f.low && !f.tied ? [{ label: "종이 묶어 두기", onClick: () => {
+          E.post(E.root.dataset.fortuneTie, {}).then((d) => { E.whisper(`아쉬운 운은 묶어 두고 가요. 오늘 ${d.tied_today}명이 묶어 두었어요.`, 4200); }).catch(() => {});
+          f.tied = true; setTimeout(() => showFortune(E, f), 50);
+        } }] : []),
+        { label: "플래너에 미션 넣기", primary: true, onClick: (btn) => {
+          btn.disabled = true;
+          E.post(E.root.dataset.plannerAdd, { day: f.day, body: "[오늘의 미션] " + f.mission, subject: f.subject })
+            .then(() => E.whisper("오늘 플래너에 미션을 넣었어요. 해내면 체크해요!", 3600))
+            .catch(() => E.whisper("플래너에 넣지 못했어요. 잠시 뒤 다시 해 보세요."));
+        } },
+        { label: "닫기" },
+      ]);
     }
     return {
       seats: SEATS, seatNoun: "방석", heightAt,
@@ -314,49 +324,49 @@ export default {
       planTo(from, x, z) { return route(from.x, from.z, x, z, inHall(x, z)); },
       planSeat(from, id) { const s = SEATS[id]; return route(from.x, from.z, s.x, s.z + 0.9, true).concat([[s.x, s.z]]); },
       step(x, z, nx, nz) { const onSteps = Math.abs(nx) < 2.6 && nz > -3.2 && nz < 1.0; return onSteps ? [nx, nz] : clampWalk(nx, nz, inHall(x, z)); },
-      welcome: "학문의 신을 모신 신사예요. 손을 씻고 참배한 뒤, 본전 방석에 앉아 집중해 보세요.",
+      welcome: "산속의 조용한 신사예요. 손을 씻고, 방울을 울리고, 오늘의 운세도 뽑아 본 뒤 방석에 앉아 집중해 보세요.",
       sitText: "방석에 앉았어요. 시간을 고르고 집중을 시작해 보세요.",
-      spaceAction: "sanpai",
-      actions: { free: ["sit", "sanpai", "suzu", "temizu", "omikuji"], sitting: ["focus", "breathe", "sanpai", "stand"], focus: ["breathe", "stop"] },
-      labels: { sanpai: "참배", suzu: "방울", temizu: "손 씻기", omikuji: "오미쿠지" },
+      spaceAction: "wish",
+      actions: { free: ["sit", "wish", "suzu", "temizu", "omikuji"], sitting: ["focus", "breathe", "wish", "stand"], focus: ["breathe", "stop"] },
+      labels: { wish: "소원 빌기", suzu: "방울", temizu: "손 씻기", omikuji: "오늘의 운세" },
       icons: {
-        sanpai: '<svg viewBox="0 0 24 24"><path d="M9 21v-6l-2-4 1-7 2 6M15 21v-6l2-4-1-7-2 6M5 6l-2-1M19 6l2-1M12 3v2"/></svg>',
+        wish: '<svg viewBox="0 0 24 24"><path d="M9 21v-6l-2-4 1-7 2 6M15 21v-6l2-4-1-7-2 6M5 6l-2-1M19 6l2-1M12 3v2"/></svg>',
         suzu: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.5"/><path d="M8 8h8M12 12.5V22M10 22h4"/></svg>',
         temizu: '<svg viewBox="0 0 24 24"><path d="M4 12h9v2a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM13 13l7-6M17 3c1 2 2 3 2 4.5a2 2 0 0 1-4 0C15 6 16 5 17 3z"/></svg>',
         omikuji: '<svg viewBox="0 0 24 24"><path d="M8 3h8v18l-4-2-4 2zM10 8h4M10 11h4M10 14h2"/></svg>',
       },
       custom: {
-        sanpai(E) { if (E.state === "focus") return E.whisper("집중이 끝나면 참배해 보세요."); sanpai(E); },
+        wish(E) { if (E.state === "focus") return E.whisper("집중이 끝나면 소원을 빌어 보세요."); wish(E); },
         suzu(E) {
           if (E.state === "focus") return E.whisper("집중이 끝나면 방울을 흔들어 보세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, 0, 1.2, false).concat([[0, -0.9]]), () => {
-            E.face(0, -4); E.look(0, 6.5, 0.32); suzuSwing = 1; E.sfx("suzu"); E.whisper("딸랑딸랑— 방울 소리로 왔다고 알려요. 이어서 참배해 보세요.", 3800);
+            E.face(0, -4); E.look(0, 6.5, 0.32); suzuSwing = 1; E.sfx("suzu"); E.whisper("딸랑딸랑— 맑은 방울 소리에 마음이 차분해져요. 이어서 소원을 빌어 보세요.", 3800);
           });
         },
         temizu(E) {
           if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, TEMIZU.x, TEMIZU.z - 1.8, false), () => {
             E.face(TEMIZU.x, TEMIZU.z); E.look(Math.PI, 4.2, 0.2); E.pop(ladle, 2.2); E.sfx("water");
-            E.whisper("왼손, 오른손, 그리고 입을 차례로 헹궈 마음을 맑게 해요.", 4000);
+            E.whisper("시원한 물에 손을 씻고, 마음도 한 번 맑게 해요.", 4000);
           });
         },
         omikuji(E) {
-          if (E.state === "focus") return E.whisper("집중이 끝나면 오미쿠지를 뽑아 보세요.");
+          if (E.state === "focus") return E.whisper("집중이 끝나면 오늘의 운세를 뽑아 보세요.");
           E.walk(route(E.me.pos.x, E.me.pos.z, BELL.x - 2.4, BELL.z - 0.4, false), () => {
             E.face(BELL.x, BELL.z - 0.5); E.look(-Math.PI / 2, 5.5, 0.3); kujiShake = 1; E.sfx("kuji");
-            setTimeout(() => { E.pop(slip, 3.2); E.whisper(FORTUNES[Math.floor(Math.random() * FORTUNES.length)], 6500); }, 1300);
+            E.post(E.root.dataset.fortune, {}).then((f) => {
+              setTimeout(() => { E.pop(slip, 2.4); E.sync(true); showFortune(E, f); }, f.again ? 300 : 1300);
+            }).catch(() => E.whisper("운세 통이 잠깐 말을 안 들어요. 다시 눌러 보세요."));
           });
         },
       },
       sounds: {
         loops: [{ f: "sanji/wind", g: 0.85 }, { f: "sanji/birds", g: 0.55, when: "day" }, { f: "common/crickets", g: 0.5, when: "night" }],
         gusts: [{ f: "sanji/chimes", max: 0.42, every: [14, 30] }],
-        sfx: { suzu: { f: "sanji/suzu", g: 0.75, jitter: true }, clap: { f: "sanji/clap", g: 0.8, jitter: true }, kuji: { f: "sanji/kuji", g: 0.8 },
+        sfx: { suzu: { f: "sanji/suzu", g: 0.75, jitter: true }, kuji: { f: "sanji/kuji", g: 0.8 },
                water: { f: "sento/splash", g: 0.35, rate: 1.15, lp: 2600 } },
       },
       update(dt, t) {
-        // 카메라가 벚나무 속으로 들어가면 그 나무의 꽃만 잠깐 숨긴다
-        canopies.forEach((c) => { const [cx, cz] = c.userData.at; c.visible = Math.hypot(camera.position.x - cx, camera.position.z - cz) > 3.4 || camera.position.y < 2; });
         const pp = petals.geometry.attributes.position, sd = petals.userData.seed;
         for (let i = 0; i < sd.length; i++) {
           const q = sd[i]; let y = pp.getY(i) - q.v * dt;

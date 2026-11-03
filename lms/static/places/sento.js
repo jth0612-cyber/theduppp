@@ -35,14 +35,7 @@ export default {
     }
 
     // ---------------------------------------------------------------- 눈 덮인 삼나무
-    function snowCedar(x, z, s = 1) {
-      cyl(0.16 * s, 0.24 * s, 1.6 * s, 6, 0x3e2f25, x, 0.8 * s, z);
-      for (let i = 0; i < 3; i++) {
-        const r = (1.6 - i * 0.4) * s, h = (2.1 - i * 0.3) * s, y = (1.9 + i * 1.1) * s;
-        const c = new THREE.Mesh(new THREE.ConeGeometry(r, h, 7), mat(night ? 0x1d2a26 : 0x2c4036)); c.position.set(x, y, z); scene.add(c);
-        const cap = new THREE.Mesh(new THREE.ConeGeometry(r * 0.72, h * 0.5, 7), mat(SNOW)); cap.position.set(x, y + h * 0.26, z); scene.add(cap);
-      }
-    }
+    const snowCedar = (x, z, sc) => K.trees.cedar(x, z, sc, { snow: true, leaf: night ? 0x1d2a26 : 0x2c4036 });
     for (let i = 0; i < 40; i++) {
       const a = srand() * Math.PI * 2, r = 24 + srand() * 26;
       const x = Math.cos(a) * r, z = Math.sin(a) * r - 6;
