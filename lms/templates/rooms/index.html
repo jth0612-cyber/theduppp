@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "rooms/_scenes.html" import scene %}
 {% block title %}같이 공부 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
@@ -18,7 +17,10 @@
   {% set c = counts.get(key) %}
   <li>
     <a href="{{ url_for('rooms.room', place=key) }}" class="place pl-{{ key }}">
-      {{ scene(key) }}
+      <span class="poster" aria-hidden="true">
+        <img src="{{ url_for('static', filename='rooms/thumb-' ~ key ~ '.jpg') }}" alt="" loading="lazy" width="1200" height="750">
+        <span class="poster-jp">{{ poster[key][0] }}</span><span class="poster-en">{{ poster[key][1] }}</span>
+      </span>
       <span class="place-body">
         <b>{{ p[0] }}</b>
         <span class="place-line">{{ p[1] }}</span>

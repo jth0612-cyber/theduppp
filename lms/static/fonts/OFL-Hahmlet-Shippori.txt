@@ -1,0 +1,4 @@
+Hahmlet (Copyright 2021 The Hahmlet Project Authors) — SIL Open Font License 1.1
+Shippori Mincho (Copyright 2020 The Shippori Mincho Project Authors) — SIL Open Font License 1.1
+https://openfontlicense.org
+이 사이트는 로고 글씨(정태혁 통합과학 lab)와 장소 이름(神社 등)에 필요한 글자만 담은 작은 파일로 씁니다.

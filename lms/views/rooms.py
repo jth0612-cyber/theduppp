@@ -18,6 +18,9 @@ PLACES = {
     "eki": ("바닷가 역", "노란 난간 너머 바다가 보이는 작은 무인역", "역 노트", "기차를 기다리며 노트에 한 줄", "waves"),
     "kissa": ("골목 찻집", "비 오는 성 아래 골목, 물길 옆 나무 찻집", "냅킨 메모", "냅킨에 적어 두고 가기", "rain"),
 }
+# 장소 카드의 여행 포스터: 세로 일본어 이름, 영어 이름
+POSTER = {"sanji": ("神社", "SHRINE"), "sento": ("露天風呂", "OPEN-AIR BATH"), "eki": ("汐見浜駅", "SEASIDE STATION"),
+          "kissa": ("喫茶 雨音", "ALLEY CAFÉ")}
 ENTER_TEXT = {"sanji": "신사에 들어가기", "sento": "온천에 들어가기", "eki": "역으로 올라가기", "kissa": "찻집 문 열기"}
 # 3D 장소 안 판(칠판·역 노트)에 학생 글을 띄우는 곳
 #  chat : 정해진 자리에 앉은 학생만 짧게 쓰는 칠판 (노천탕 화롯가 방석 8~11번)
@@ -162,7 +165,7 @@ def rooms():
                  (g.user["id"], monday), one=True)["m"]
     kings = {p: (_ranking(p, _since("week"), limit=1) or [None])[0] for p in PLACES}
     return render_template("rooms/index.html", places=PLACES, counts=_counts(),
-                           today=_my_today(g.user["id"]), week=week, kings=kings)
+                           today=_my_today(g.user["id"]), week=week, kings=kings, poster=POSTER)
 
 
 @bp.route("/s/rooms/<place>")

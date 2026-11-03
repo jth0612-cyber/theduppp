@@ -310,6 +310,7 @@ let myColor = root.dataset.color;
 const meName = (document.querySelector(".m-who") || {}).textContent || "나";
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", me: true });
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
+if (new URLSearchParams(location.search).has("shot")) me.g.visible = false;   // 장소 사진(썸네일) 찍을 때만 내 캐릭터를 숨긴다
 let state = "free";      // free | sitting | focus
 let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 25, focusStart = 0;
 
