@@ -291,7 +291,8 @@ export default {
         page(E) { E.sfx("page"); E.whisper("사락— 다음 장으로."); },
       },
       sounds: {
-        loops: [{ f: "kissa/rain", g: 0.62 }, { f: "kissa/rain2", g: 0.28 }, { f: "kissa/cafe", g: 0.28 }, { f: "kissa/clock", g: 0.14 }],
+        master: { lp: 6500 },
+        loops: [{ f: "common/pad_g", g: 0.28 }, { f: "kissa/rain", g: 0.62 }, { f: "kissa/rain2", g: 0.28 }, { f: "kissa/cafe", g: 0.28 }, { f: "kissa/clock", g: 0.14 }],
         gusts: [],
         sfx: { kettle: { f: "kissa/kettle", g: 0.55 }, page: { f: "kissa/page", g: 0.8, jitter: true }, tram: { f: "common/bowl", g: 0.32, rate: 2.6 } },
         steps: { f: "common/steps", out: 0.45, in: 0.2 },
