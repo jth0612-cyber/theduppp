@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     UNIQUE (assignment_id, student_id)
 );
 
--- 함께 공부하는 장소(산사·노천탕·역·찻집): 지금 있는 사람, 집중 기록, 남기고 간 글
+-- 함께 공부하는 장소(신사·노천탕·역·찻집): 지금 있는 사람, 집중 기록, 남기고 간 글
 CREATE TABLE IF NOT EXISTS room_presence (
     user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     place       TEXT NOT NULL,
@@ -367,6 +367,15 @@ CREATE TABLE IF NOT EXISTS planner_items (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_planner_user_day ON planner_items(user_id, day);
+-- 같이 공부 칠판 채팅 (노천탕 화롯가처럼 자리에 앉은 학생만 쓴다)
+CREATE TABLE IF NOT EXISTS room_chat (
+    id          INTEGER PRIMARY KEY,
+    place       TEXT NOT NULL,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_room_chat_place ON room_chat(place, id);
 -- 학생끼리 팔로우 (닉네임으로만 보인다)
 CREATE TABLE IF NOT EXISTS follows (
     follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

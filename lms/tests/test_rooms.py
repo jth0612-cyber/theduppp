@@ -1,4 +1,4 @@
-"""같이 공부(산사·목욕탕·바닷가 역·골목 찻집) 점검: python -m unittest discover tests"""
+"""같이 공부(신사·목욕탕·바닷가 역·골목 찻집) 점검: python -m unittest discover tests"""
 import os
 import sys
 import unittest
@@ -18,7 +18,7 @@ class RoomsTest(unittest.TestCase):
     def test_presence_and_focus(self):
         a, b = self.student(0), self.student(1)
         self.assertEqual(a.get("/s/rooms/nowhere").status_code, 404)
-        self.assertIn("산사", a.get("/s/rooms").data.decode())
+        self.assertIn("신사", a.get("/s/rooms").data.decode())
         a.get("/s/rooms/sanji")
         page = b.get("/s/rooms/sanji").data.decode()
         self.assertIn("닉0", page)                                     # 같은 장소의 친구가 보임
@@ -45,7 +45,7 @@ class RoomsTest(unittest.TestCase):
     def test_3d_positions(self):
         a, b = self.student(0), self.student(1)
         page = a.get("/s/rooms/sanji").data.decode()
-        self.assertIn("world3d.js", page)                                # 산사는 3D
+        self.assertIn("world3d.js", page)                                # 신사는 3D
         self.assertIn("data-enter-btn", page)
         self.assertNotIn("world3d.js", a.get("/s/rooms/sanji?flat=1").data.decode())   # 그림 버전도 남김
         for p in ("sento", "eki", "kissa"):                              # 나머지 세 곳도 3D
@@ -88,7 +88,7 @@ class RoomsTest(unittest.TestCase):
         a, b = self.student(0), self.student(1)
         page = b.get("/s/rooms/rank?place=sanji").data.decode()
         board = page[page.index('class="rank-list"'):]
-        self.assertLess(board.index("닉0"), board.index("닉1"))           # 산사는 닉0 이 1위
+        self.assertLess(board.index("닉0"), board.index("닉1"))           # 신사는 닉0 이 1위
         self.assertIn("2시간", page)
         self.assertIn("2<small>위</small>", page)                       # 닉1 의 내 순위
         eki = b.get("/s/rooms/rank?place=eki").data.decode()
@@ -135,6 +135,40 @@ class RoomsTest(unittest.TestCase):
         self.assertTrue(r.headers["Location"].endswith("/s/friends"))
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM follows", one=True)["n"], 0)
         self.assertEqual(a.get("/s/friends?q=50%25_").status_code, 200)   # 특수문자 검색도 오류 없음
+
+    def test_board_chat_and_word_filter(self):
+        a, b = self.student(0), self.student(1)
+        a.get("/s/rooms/sento"); b.get("/s/rooms/sento")
+        # 화롯가(8~11번 방석)에 앉지 않으면 칠판에 못 쓴다
+        r = a.post("/s/rooms/sento/write", data={"body": "안녕"}).get_json()
+        self.assertFalse(r["ok"]); self.assertIn("화롯가", r["error"])
+        a.post("/s/rooms/sento/beat", data={"x": "1", "z": "1", "seat": "3"})         # 탕 자리
+        self.assertFalse(a.post("/s/rooms/sento/write", data={"body": "안녕"}).get_json()["ok"])
+        a.post("/s/rooms/sento/beat", data={"x": "1", "z": "1", "seat": "9"})         # 화롯가
+        r = a.post("/s/rooms/sento/write", data={"body": "  오늘   2단원 끝!  "}).get_json()
+        self.assertTrue(r["ok"]); self.assertEqual(r["board"][-1]["body"], "오늘 2단원 끝!")
+        self.assertEqual(r["board"][-1]["nick"], "닉0")
+        self.assertFalse(a.post("/s/rooms/sento/write", data={"body": "또"}).get_json()["ok"])  # 너무 빨리
+        with self.app.app_context():
+            execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
+        r = a.post("/s/rooms/sento/write", data={"body": "시1발 졸려"}).get_json()        # 욕설 거르기
+        self.assertFalse(r["ok"]); self.assertIn("바른 말", r["error"])
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 1)
+        # 같은 장소의 친구는 beat 로 칠판 글을 받는다
+        board = b.post("/s/rooms/sento/beat", data={}).get_json()["board"]
+        self.assertEqual([x["body"] for x in board], ["오늘 2단원 끝!"])
+        # 역 노트: 누구나 쓰고(하루 5줄), 욕설은 막힌다. 아래 남기는 글 칸과 같은 곳에 저장
+        r = b.post("/s/rooms/eki/write", data={"body": "기차 오기 전에 한 단원"}).get_json()
+        self.assertTrue(r["ok"]); self.assertEqual(r["board"][-1]["body"], "기차 오기 전에 한 단원")
+        self.assertFalse(b.post("/s/rooms/eki/write", data={"body": "ㅂ ㅅ 같네"}).get_json()["ok"])
+        b.post("/s/rooms/eki/note", data={"body": "병신"})
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_notes", one=True)["n"], 1)
+        self.assertEqual(b.post("/s/rooms/kissa/write", data={"body": "x"}).status_code, 404)  # 판이 없는 곳
+        # 선생님이 칠판 글을 지울 수 있다
+        cid = self.q("SELECT id FROM room_chat", one=True)["id"]
+        self.assertIn("오늘 2단원 끝!", self.t.get("/t/rooms").data.decode())
+        self.t.post(f"/t/rooms/chat/{cid}/delete")
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 0)
 
 
 if __name__ == "__main__":

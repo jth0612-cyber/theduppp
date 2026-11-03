@@ -1097,3 +1097,9 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
 @media (max-width: 720px) {
   .p-add { bottom: calc(64px + env(safe-area-inset-bottom)); }
 }
+.w3-chat { display: flex; gap: 6px; width: min(420px, 100%); pointer-events: auto; }
+.w3-chat[hidden] { display: none; }
+.w3-chat input { flex: 1; min-width: 0; height: 42px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .5); background: rgba(255, 252, 246, .92); padding: 0 16px; font: inherit; font-size: 16px; color: #1d1b18; }
+.w3-chat input:focus { outline: 2px solid #2c6852; outline-offset: 1px; }
+.w3-chat button { height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: #1d1b18; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.w3-chat button:disabled { opacity: .5; }

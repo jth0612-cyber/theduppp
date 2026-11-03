@@ -150,7 +150,133 @@ export default {
     const HUT = { x: 9.5, z: 0.5, w: 7, d: 6, floor: 0.45 };
     const inHut = (x, z) => Math.abs(x - HUT.x) < HUT.w / 2 - 0.3 && Math.abs(z - HUT.z) < HUT.d / 2 - 0.3;
     const pickHut = [];
-    let hutRoof, board;
+    let hutRoof, board, boardTex, fire;
+
+    // ---------------------------------------------------------------- 이로리 불: 장작, 숯불, 일렁이는 불꽃, 불티, 연기, 깜빡이는 빛
+    function makeFire(cx, cy, cz) {
+      const g = new THREE.Group(); g.position.set(cx, cy, cz); scene.add(g);
+      // 장작 (끝이 탄 나무 네 토막을 엇갈려 쌓음)
+      const logM = new THREE.MeshLambertMaterial({ color: 0x4a2e1e }), charM = new THREE.MeshBasicMaterial({ color: 0x1a1210 });
+      [[0.0, 0.3], [Math.PI / 2, 0.25], [0.6, 0.22], [-0.9, 0.2]].forEach(([r, len], i) => {
+        const l = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, len * 2, 7), i % 2 ? charM : logM);
+        l.rotation.z = Math.PI / 2; l.rotation.y = r; l.position.y = 0.04 + i * 0.03; g.add(l);
+      });
+      // 숯불: 밝기가 저마다 숨 쉬듯 바뀐다
+      const coals = [];
+      for (let i = 0; i < 14; i++) {
+        const m = new THREE.MeshBasicMaterial({ color: 0xff5a1a });
+        const c = new THREE.Mesh(new THREE.DodecahedronGeometry(0.028 + Math.random() * 0.03, 0), m);
+        const a = Math.random() * Math.PI * 2, r = Math.random() * 0.2; c.position.set(Math.cos(a) * r, 0.015, Math.sin(a) * r);
+        c.userData.ph = Math.random() * 10; g.add(c); coals.push(c);
+      }
+      const glowTex = (() => {
+        const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+        const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,170,80,1)"); gr.addColorStop(0.4, "rgba(255,90,30,.5)"); gr.addColorStop(1, "rgba(255,60,20,0)");
+        x.fillStyle = gr; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      })();
+      const bed = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      bed.rotation.x = -Math.PI / 2; bed.position.y = 0.012; g.add(bed);
+      // 불꽃 모양 (아래는 희고 밝고, 위로 갈수록 가늘어지는 물방울 모양)
+      const flameTex = (() => {
+        const c = document.createElement("canvas"); c.width = 64; c.height = 128; const x = c.getContext("2d");
+        const gr = x.createRadialGradient(32, 92, 2, 32, 80, 56);
+        gr.addColorStop(0, "rgba(255,255,235,1)"); gr.addColorStop(0.25, "rgba(255,220,120,.95)"); gr.addColorStop(0.6, "rgba(255,120,30,.55)"); gr.addColorStop(1, "rgba(200,40,10,0)");
+        x.fillStyle = gr; x.beginPath(); x.moveTo(32, 2); x.bezierCurveTo(52, 50, 62, 80, 56, 102); x.bezierCurveTo(50, 124, 14, 124, 8, 102); x.bezierCurveTo(2, 80, 12, 50, 32, 2); x.fill();
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+      })();
+      const flames = [], N = 34;
+      const hot = new THREE.Color(1, 0.95, 0.75), mid = new THREE.Color(1, 0.55, 0.15), cold = new THREE.Color(0.75, 0.16, 0.04);
+      for (let i = 0; i < N; i++) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffffff }));
+        s.userData = { life: 0, total: 1, x: 0, z: 0, v: 0, w: 0, ph: Math.random() * 10 };
+        s.userData.life = -Math.random();   // 처음엔 조금씩 엇갈려 나오게
+        g.add(s); flames.push(s);
+      }
+      // 불티
+      const SPARKS = 24, sp = new Float32Array(SPARKS * 3), sv = [];
+      for (let i = 0; i < SPARKS; i++) sv.push({ life: -Math.random() * 3, total: 1, vx: 0, vy: 0, vz: 0 });
+      const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3));
+      const sparks = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffc070, size: 0.035, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      g.add(sparks);
+      // 연기
+      const smoke = [];
+      for (let i = 0; i < 6; i++) {
+        const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, transparent: true, depthWrite: false, color: 0x8a8580, opacity: 0 }));
+        s.userData = { life: (i / 6) * 3.2, total: 3.2 }; g.add(s); smoke.push(s);
+      }
+      const light = new THREE.PointLight(0xff9a4a, night ? 3 : 1.2, 8, 1.6); light.position.set(0, 0.55, 0); g.add(light);
+      const base = light.intensity;
+      const tmp = new THREE.Color();
+      return {
+        update(dt, t, calm) {
+          // 불꽃: 아래에서 생겨 흔들리며 올라가고, 흰빛 → 주황 → 붉게 식으며 사라진다
+          flames.forEach((f) => {
+            const u = f.userData; u.life -= dt;
+            if (u.life <= 0) {
+              const a = Math.random() * Math.PI * 2, r = Math.pow(Math.random(), 1.5) * 0.17;
+              u.x = Math.cos(a) * r; u.z = Math.sin(a) * r; u.total = u.life = 0.55 + Math.random() * 0.55;
+              u.v = 0.7 + Math.random() * 0.5 - r * 1.4; u.w = 0.24 + Math.random() * 0.14 - r * 0.35; u.ph = Math.random() * 10;
+            }
+            const k = 1 - u.life / u.total;                 // 0 → 1
+            const sway = Math.sin(t * 7 + u.ph) * 0.03 * k + Math.sin(t * 2.3) * 0.015 * k;
+            f.position.set(u.x * (1 - k * 0.6) + sway, 0.05 + k * u.v * u.total * 1.1, u.z * (1 - k * 0.6) + Math.cos(t * 6 + u.ph) * 0.02 * k);
+            const wdt = u.w * (1 - k * 0.75), hgt = u.w * 2.1 * (1 - k * 0.35) * (calm ? 0.85 : 1);
+            f.scale.set(Math.max(0.01, wdt), Math.max(0.02, hgt), 1);
+            if (k < 0.35) tmp.copy(hot).lerp(mid, k / 0.35); else tmp.copy(mid).lerp(cold, (k - 0.35) / 0.65);
+            f.material.color.copy(tmp);
+            f.material.opacity = (k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88) * 0.85;
+          });
+          // 숯불 숨쉬기
+          coals.forEach((c) => { const b = 0.45 + 0.35 * Math.sin(t * 1.7 + c.userData.ph) + 0.2 * Math.sin(t * 5.3 + c.userData.ph * 2); c.material.color.setRGB(0.55 + b * 0.45, 0.12 + b * 0.3, 0.02 + b * 0.05); });
+          bed.material.opacity = 0.7 + Math.sin(t * 3.1) * 0.12;
+          // 불티: 가끔 톡 튀어 올라 흩어진다
+          const pa = sg.attributes.position;
+          sv.forEach((s, i) => {
+            s.life -= dt;
+            if (s.life <= 0) {
+              if (Math.random() > 0.04) { pa.setXYZ(i, 0, -9, 0); s.life = 0.05; return; }
+              s.total = s.life = 0.9 + Math.random() * 1.2; s.vx = (Math.random() - 0.5) * 0.35; s.vz = (Math.random() - 0.5) * 0.35; s.vy = 0.8 + Math.random() * 0.9;
+              pa.setXYZ(i, (Math.random() - 0.5) * 0.2, 0.15, (Math.random() - 0.5) * 0.2); return;
+            }
+            if (pa.getY(i) < -1) return;
+            s.vy -= 0.25 * dt; s.vx += Math.sin(t * 3 + i) * 0.3 * dt;
+            pa.setXYZ(i, pa.getX(i) + s.vx * dt, pa.getY(i) + s.vy * dt, pa.getZ(i) + s.vz * dt);
+          });
+          pa.needsUpdate = true;
+          // 연기
+          smoke.forEach((s) => {
+            const u = s.userData; u.life -= dt; if (u.life <= 0) u.life = u.total;
+            const k = 1 - u.life / u.total;
+            s.position.set(Math.sin(t * 0.5 + u.total * k * 3) * 0.12 * k, 0.6 + k * 1.6, Math.cos(t * 0.4) * 0.08 * k);
+            s.scale.setScalar(0.25 + k * 0.9); s.material.opacity = Math.sin(k * Math.PI) * (night ? 0.08 : 0.16);
+          });
+          // 빛 깜빡임 (빠른 떨림 + 느린 일렁임)
+          light.intensity = base * (0.82 + Math.sin(t * 9.1) * 0.06 + Math.sin(t * 23.7) * 0.05 + Math.sin(t * 2.2) * 0.07 + (Math.random() - 0.5) * 0.06);
+          light.position.x = Math.sin(t * 3.3) * 0.04;
+        },
+      };
+    }
+
+    // 칠판: 화롯가에 앉은 학생들이 쓰는 오늘의 한 줄 (분필 글씨)
+    const boardCanvas = document.createElement("canvas"); boardCanvas.width = 768; boardCanvas.height = 480;
+    function drawBoard(lines) {
+      const x = boardCanvas.getContext("2d");
+      x.fillStyle = "#2f3b33"; x.fillRect(0, 0, 768, 480);
+      for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`; x.fillRect(Math.random() * 768, Math.random() * 480, 2 + Math.random() * 30, 1 + Math.random() * 3); }
+      x.fillStyle = "#e8efe6"; x.font = "600 44px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText("오늘의 한 줄", 384, 52);
+      x.strokeStyle = "rgba(232,239,230,.35)"; x.lineWidth = 2; x.beginPath(); x.moveTo(250, 86); x.lineTo(518, 86); x.stroke();
+      x.textAlign = "left"; x.font = "400 30px 'Noto Sans KR', sans-serif";
+      if (!lines || !lines.length) { x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 260); }
+      else lines.slice(-5).forEach((l, i) => {
+        const y = 136 + i * 72;
+        x.fillStyle = "#f2d98a"; x.font = "600 24px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y - 14);
+        x.fillStyle = "#eef3ec"; x.font = "400 31px 'Noto Sans KR', sans-serif";
+        let s = l.body; while (x.measureText(s).width > 690 && s.length > 1) s = s.slice(0, -1);
+        x.fillText(s === l.body ? s : s + "…", 40, y + 20);
+      });
+      if (boardTex) boardTex.needsUpdate = true;
+    }
     {
       const fl = box(HUT.w, HUT.floor, HUT.d, 0xe9e4da, HUT.x, HUT.floor / 2, HUT.z); pickHut.push(fl);
       box(HUT.w + 0.2, 0.12, HUT.d + 0.2, 0x5a4232, HUT.x, HUT.floor - 0.1, HUT.z);
@@ -173,22 +299,22 @@ export default {
       const tri = 0x3a2a22;
       for (const [dx, dz] of [[-0.3, -0.18], [0.3, -0.18], [-0.3, 0.18], [0.3, 0.18]]) box(0.03, 0.22, 0.03, tri, IR.x + dx, HUT.floor + 0.12, IR.z + dz);
       box(0.64, 0.03, 0.03, tri, IR.x, HUT.floor + 0.23, IR.z - 0.18); box(0.64, 0.03, 0.03, tri, IR.x, HUT.floor + 0.23, IR.z + 0.18);
-      const ember = new THREE.Mesh(new THREE.DodecahedronGeometry(0.16, 0), new THREE.MeshBasicMaterial({ color: night ? 0xff7a3a : 0x6b4a3a }));
-      ember.position.set(IR.x, HUT.floor + 0.06, IR.z); ember.scale.set(1.6, 0.5, 1); scene.add(ember);
-      if (night) { const pl = new THREE.PointLight(0xff9a50, 2.4, 7, 1.6); pl.position.set(IR.x, HUT.floor + 0.6, IR.z); scene.add(pl); }
+      fire = makeFire(IR.x, HUT.floor + 0.02, IR.z);
       // 방석 4장: 테라코타, 슬레이트 블루, 남색, 녹슨 빨강
       const felt = [0xb5582f, 0x5f7688, 0x2c3446, 0x8c3a2e];
       [[0, -1.55, 0], [1.55, 0, -Math.PI / 2], [0, 1.55, Math.PI], [-1.55, 0, Math.PI / 2]].forEach(([dx, dz, yaw], i) => {
         const x = IR.x + dx, z = IR.z + dz, id = SEATS.length;
         const c = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.52, 0.1, 28), mat(felt[i], { flatShading: false }));
         c.position.set(x, HUT.floor + 0.05, z); c.userData.seat = id; scene.add(c); pickSeats.push(c);
-        SEATS.push({ x, z, yaw, y: HUT.floor, lift: 0.1, kind: "hearth" });
+        SEATS.push({ x, z, yaw, y: HUT.floor, lift: 0.1, kind: "hearth", camPitch: 0.98, camDist: 4.6 });
       });
       // 칠판(남기는 글)
-      board = box(1.6, 1.0, 0.06, 0x2f3b33, HUT.x - 1.6, HUT.floor + 1.5, HUT.z - HUT.d / 2 + 0.2);
-      box(1.7, 0.08, 0.1, 0x8a6a4a, HUT.x - 1.6, HUT.floor + 0.98, HUT.z - HUT.d / 2 + 0.24);
-      const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.35), new THREE.MeshBasicMaterial({ map: textTexture("오늘의 한 줄", { w: 512, h: 128, fg: "#e8efe6", bg: null, font: "500 54px 'Noto Sans KR', sans-serif" }), transparent: true }));
-      chalk.position.set(HUT.x - 1.6, HUT.floor + 1.72, HUT.z - HUT.d / 2 + 0.24); scene.add(chalk);
+      board = box(2.5, 1.62, 0.06, 0x5a4232, HUT.x - 1.4, HUT.floor + 1.45, HUT.z - HUT.d / 2 + 0.2);
+      box(2.6, 0.08, 0.12, 0x8a6a4a, HUT.x - 1.4, HUT.floor + 0.62, HUT.z - HUT.d / 2 + 0.26);
+      drawBoard([]);
+      boardTex = new THREE.CanvasTexture(boardCanvas); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4;
+      const chalk = new THREE.Mesh(new THREE.PlaneGeometry(2.36, 1.48), new THREE.MeshBasicMaterial({ map: boardTex }));
+      chalk.position.set(HUT.x - 1.4, HUT.floor + 1.45, HUT.z - HUT.d / 2 + 0.24); scene.add(chalk);
       board.userData.notes = true; chalk.userData.notes = true; pickHut.push(board, chalk);
       // 노렌(湯) 걸린 입구 쪽 기둥 사이
       const noren = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshLambertMaterial({ map: textTexture("ゆ", { w: 256, h: 160, fg: "#f4efe4", bg: "#2b3a55", radius: 0, font: "500 96px 'Noto Serif KR', serif" }), side: THREE.DoubleSide }));
@@ -309,8 +435,10 @@ export default {
           splash(E); E.whisper("찰방— 물방울이 김 속으로 흩어져요.");
         },
       },
+      board(lines) { drawBoard(lines); },
+      chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요." },
       sounds: {
-        loops: [{ f: "sento/water", g: 0.75 }, { f: "sento/spout", g: 0.45 }, { f: "sanji/wind", g: 0.22 }],
+        loops: [{ f: "sento/fire", g: 0.32 }, { f: "sento/water", g: 0.75 }, { f: "sento/spout", g: 0.45 }, { f: "sanji/wind", g: 0.22 }],
         gusts: [{ f: "sento/drips", max: 0.5, every: [10, 22] }, { f: "sento/bamboo", max: 0.35, every: [18, 34] }],
         sfx: { splash: { f: "sento/splash", g: 0.8, jitter: true }, soak: { f: "sento/splash", g: 0.45, rate: 0.8, lp: 2000 } },
         steps: { f: "common/steps", out: 0.4, in: 0.15 },
@@ -340,6 +468,7 @@ export default {
           splashT -= dt;
           drops.forEach((d) => { if (!d.visible) return; d.userData.v.y -= 9.8 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < WATER_Y) d.visible = false; });
         }
+        fire.update(dt, t, E.state === "focus");
         if (night) lampFires.forEach((f, i) => f.material.color.setHSL(0.09, 1, 0.72 + Math.sin(t * 6 + i * 2) * 0.03));
       },
     };

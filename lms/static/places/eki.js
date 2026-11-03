@@ -6,8 +6,8 @@ export default {
     Object.assign(PAL, {
       // 맑은 여름 아침의 투명한 파랑
       day:   { top: 0x3f7fc4, horizon: 0xd8e8f2, fog: 0xcfe0ec, hemiSky: 0xfdf6e6, hemiGround: 0x5f7a4a, hemi: 1.05, sun: 0xfff2d8, sunI: 1.7, ground: 0x8d8a86, grass: 0x6f9a48, lamp: 0.4 },
-      // 짙은 구름 아래 수평선만 주황색으로 타는 저녁
-      dusk:  { top: 0x2a2e3a, horizon: 0xe8823a, fog: 0x4c4a54, hemiSky: 0xb0a8b8, hemiGround: 0x3a383e, hemi: 0.8, sun: 0xff9a5a, sunI: 0.75, ground: 0x6a6668, grass: 0x44523a, lamp: 1.6 },
+      // 해가 넘어간 뒤의 파스텔 하늘: 위는 옅은 하늘색, 수평선은 크림·복숭아빛 (참고 영상)
+      dusk:  { top: 0x7f9fc8, horizon: 0xf4d6b0, fog: 0xdccab8, hemiSky: 0xece6e4, hemiGround: 0x5a5650, hemi: 0.95, sun: 0xffc890, sunI: 0.85, ground: 0x8a8480, grass: 0x66784a, lamp: 1.3 },
       // 푸른 시간
       night: { top: 0x141f55, horizon: 0x6a5aa0, fog: 0x2a3168, hemiSky: 0x9aa0e8, hemiGround: 0x2a2a3a, hemi: 0.95, sun: 0xa8b4f0, sunI: 0.35, ground: 0x4a4a5a, grass: 0x2a3a34, lamp: 2.2 },
     }[TIME]);
@@ -48,22 +48,94 @@ export default {
       }
     }
 
-    // ---------------------------------------------------------------- 바다
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(500, 220, 60, 24),
-      new THREE.MeshPhongMaterial({ color: TIME === "day" ? 0x2f6fa8 : dusk ? 0x3a3a48 : 0x26306e, shininess: 70, specular: dusk ? 0xffa060 : 0x99bbdd, flatShading: true }));
-    sea.rotation.x = -Math.PI / 2; sea.position.set(0, -3.1, -140); scene.add(sea);
-    const seaBase = sea.geometry.attributes.position.array.slice();
-    // 수평선의 빛 띠 (저녁엔 주황, 밤엔 분홍)
-    if (TIME !== "day") {
-      const band = new THREE.Mesh(new THREE.PlaneGeometry(500, 6), new THREE.MeshBasicMaterial({ color: dusk ? 0xffa050 : 0xd890c8, transparent: true, opacity: dusk ? 0.75 : 0.45, fog: false }));
-      band.position.set(0, 3, -215); scene.add(band);
-      const glow = new THREE.Mesh(new THREE.PlaneGeometry(260, 70), new THREE.MeshBasicMaterial({ color: dusk ? 0xff8a3a : 0xc890d0, transparent: true, opacity: 0.18, fog: false, depthWrite: false }));
-      glow.rotation.x = -Math.PI / 2; glow.position.set(0, -3.0, -170); scene.add(glow);
-      // 낮게 깔린 짙은 구름
-      for (let i = 0; i < 14; i++) {
-        const c = new THREE.Mesh(new THREE.SphereGeometry(rand(10, 22), 10, 6), new THREE.MeshBasicMaterial({ color: dusk ? 0x2c2e38 : 0x1e2658, fog: false }));
-        c.scale.y = 0.22; c.position.set(rand(-180, 180), rand(16, 30), -205 + rand(-6, 6)); scene.add(c);
+    // ---------------------------------------------------------------- 바다 (가까울수록 옥빛, 멀수록 짙은 파랑)
+    const SHORE_Z = -31, SEA_Y = -3.05;
+    const seaG = new THREE.PlaneGeometry(500, 230, 90, 46);
+    {
+      const near = new THREE.Color(TIME === "day" ? 0x6aa9ac : dusk ? 0xa8bcc4 : 0x2c3a6e);
+      const far = new THREE.Color(TIME === "day" ? 0x2c5f8c : dusk ? 0x8ea0bc : 0x1c2456);
+      const cols = [], pa = seaG.attributes.position;
+      for (let i = 0; i < pa.count; i++) { const k = Math.min(1, Math.max(0, (pa.getY(i) + 115) / 230)); const c = far.clone().lerp(near, Math.pow(k, 2.2)); cols.push(c.r, c.g, c.b); }
+      seaG.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+    }
+    const sea = new THREE.Mesh(seaG, new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 90, specular: dusk ? 0xffd2a0 : TIME === "day" ? 0xcfe4f0 : 0x8890d0 }));
+    sea.rotation.x = -Math.PI / 2; sea.position.set(0, SEA_Y, SHORE_Z - 115); scene.add(sea);
+    const seaBase = seaG.attributes.position.array.slice();
+    // 젖은 모래 띠
+    { const wet = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.2), mat(TIME === "day" ? 0xb9ab90 : dusk ? 0x9a8c80 : 0x4a4652)); wet.rotation.x = -Math.PI / 2; wet.position.set(0, -2.94, SHORE_Z - 0.6); scene.add(wet); }
+    // 밀려와 부서지는 흰 파도: 거품 띠가 바다 쪽에서 모래까지 밀려왔다 스며든다
+    const foamTex = (() => {
+      const c = document.createElement("canvas"); c.width = 512; c.height = 64; const x = c.getContext("2d");
+      for (let i = 0; i < 900; i++) { const y = 8 + Math.pow(Math.random(), 1.6) * 52; x.fillStyle = `rgba(255,255,255,${0.15 + Math.random() * 0.5})`; x.beginPath(); x.ellipse(Math.random() * 512, y, 2 + Math.random() * 10, 1 + Math.random() * 2.5, 0, 0, Math.PI * 2); x.fill(); }
+      const gr = x.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, "rgba(255,255,255,0.95)"); gr.addColorStop(0.18, "rgba(255,255,255,0.75)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+      x.globalCompositeOperation = "destination-in"; x.fillStyle = gr; x.fillRect(0, 0, 512, 64);
+      const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.repeat.set(10, 1); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const foams = [];
+    for (let i = 0; i < 3; i++) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(170, 3.2), new THREE.MeshBasicMaterial({ map: foamTex.clone(), transparent: true, depthWrite: false, opacity: 0, color: dusk ? 0xfff0e0 : TIME === "day" ? 0xffffff : 0xb8c0e8 }));
+      m.material.map.needsUpdate = true; m.material.map.offset.x = Math.random();
+      m.rotation.x = -Math.PI / 2; scene.add(m);
+      const lip = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 170, 8, 1, true), new THREE.MeshPhongMaterial({ color: TIME === "day" ? 0x8cc6c2 : dusk ? 0xb0c0c4 : 0x3a4a80, transparent: true, opacity: 0, shininess: 60, depthWrite: false }));
+      lip.rotation.z = Math.PI / 2; scene.add(lip);
+      foams.push({ m, lip, ph: i / 3 });
+    }
+    // 방파 블록(테트라포드) 줄
+    {
+      const tM = mat(TIME === "day" ? 0xa9a6a0 : dusk ? 0x8e8a88 : 0x3a3a44);
+      for (const [x0, x1, z] of [[-70, -22, -58], [14, 58, -62]]) for (let x = x0; x < x1; x += 1.3) {
+        const tp = new THREE.Mesh(new THREE.TetrahedronGeometry(0.9 + Math.random() * 0.3, 0), tM);
+        tp.position.set(x, SEA_Y + 0.25, z + (Math.random() - 0.5) * 1.2); tp.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); scene.add(tp);
       }
+    }
+    // 구름: 낮엔 몽글한 뭉게구름, 저녁엔 길게 늘어진 새털구름(복숭아빛), 밤엔 낮게 깔린 짙은 구름
+    const cloudTex = (() => {
+      const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+      for (let i = 0; i < 14; i++) { const cx = 30 + Math.random() * 68, cy = 50 + Math.random() * 40, r = 18 + Math.random() * 26;
+        const gr = x.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, "rgba(255,255,255,.55)"); gr.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gr; x.fillRect(0, 0, 128, 128); }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const clouds = [];
+    for (let i = 0; i < (TIME === "day" ? 10 : 14); i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, fog: false,
+        color: TIME === "day" ? 0xffffff : dusk ? (i % 3 ? 0xffe2c8 : 0xf6c8b8) : 0x2a3266, opacity: TIME === "day" ? 0.85 : dusk ? 0.6 : 0.8 }));
+      const w = TIME === "day" ? rand(30, 60) : dusk ? rand(70, 140) : rand(40, 90);
+      s.scale.set(w, TIME === "day" ? w * 0.45 : dusk ? w * 0.09 : w * 0.18, 1);
+      s.position.set(rand(-200, 200), TIME === "day" ? rand(30, 70) : dusk ? rand(28, 90) : rand(14, 32), rand(-205, -150));
+      s.userData.v = rand(0.3, 0.9); scene.add(s); clouds.push(s);
+    }
+    if (dusk) {   // 지는 해 쪽 수평선이 크림빛으로 번진다
+      const gc = document.createElement("canvas"); gc.width = 8; gc.height = 128; const gx = gc.getContext("2d");
+      const gg = gx.createLinearGradient(0, 0, 0, 128); gg.addColorStop(0, "rgba(255,216,168,0)"); gg.addColorStop(0.75, "rgba(255,216,168,.5)"); gg.addColorStop(1, "rgba(255,226,190,.7)");
+      gx.fillStyle = gg; gx.fillRect(0, 0, 8, 128); const gt = new THREE.CanvasTexture(gc); gt.colorSpace = THREE.SRGBColorSpace;
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(520, 40), new THREE.MeshBasicMaterial({ map: gt, transparent: true, fog: false, depthWrite: false }));
+      glow.position.set(0, 16, -214); scene.add(glow);
+    }
+    if (night) {
+      const band = new THREE.Mesh(new THREE.PlaneGeometry(500, 6), new THREE.MeshBasicMaterial({ color: 0xd890c8, transparent: true, opacity: 0.4, fog: false }));
+      band.position.set(0, 3, -215); scene.add(band);
+    }
+    // 승강장 아래 비탈의 마을: 파란·빨간 함석지붕 집, 가지 늘어진 벚나무
+    {
+      const rc = [0x4a6e9a, 0x7a3e3a, 0x3e6a8a, 0x8a5a4a, 0x5a7a9a];
+      [[-19, -21, 0.2], [-8, -25, -0.1], [13, -23, 0.15], [24, -20, -0.2], [-30, -19, 0.3], [34, -17, 0]].forEach(([x, z, r], i) => {
+        const gy = -0.2 - (-z - 3) * 0.12;
+        const g = new THREE.Group(); g.position.set(x, gy, z); g.rotation.y = r; scene.add(g);
+        box(4.6, 2.6, 3.6, i % 2 ? 0xe8e2d6 : 0xd8d2c4, 0, 1.3, 0, g); roof(5.4, 4.4, 1.1, 0.12, rc[i % rc.length], 0, 3.1, 0, g);
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), new THREE.MeshBasicMaterial({ color: TIME === "day" ? 0x8aa2b0 : 0xffd394 })); w.position.set(0, 1.5, 1.81); g.add(w);
+      });
+      const blossom = TIME === "day" ? [0xf2c4cf, 0xe8aebe, 0xf7d6dc] : dusk ? [0xe6aab4, 0xd898a8, 0xeec0c6] : [0x6a5070, 0x5a4464, 0x765a7a];
+      function sakura(x, z, s, weeping) {
+        const gy = z < -3 ? -0.2 - (-z - 3) * 0.12 : 0;
+        const t = cyl(0.12 * s, 0.22 * s, 2.6 * s, 6, 0x4a3a34, x, gy + 1.3 * s, z); t.rotation.z = rand(-0.12, 0.12);
+        for (let i = 0; i < (weeping ? 12 : 9); i++) {
+          const a = Math.random() * Math.PI * 2, r = rand(0.4, 1.6) * s;
+          const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.6, 1.0) * s, 1), mat(blossom[i % 3]));
+          b.position.set(x + Math.cos(a) * r, gy + (weeping ? rand(1.2, 3.2) : rand(2.6, 3.6)) * s, z + Math.sin(a) * r);
+          if (weeping) b.scale.set(0.85, 1.25, 0.85); scene.add(b);
+        }
+      }
+      [[-14, -9, 0.85, true], [17, -10, 0.8, true], [-24, -13, 1.0, false], [27, -12, 0.9, true], [3, -26, 0.8, false]].forEach((a) => sakura(...a));
     }
     // 오른쪽 곶(숲 실루엣)과 등대
     {
@@ -166,6 +238,31 @@ export default {
       SEATS.push({ x, z, yaw: Math.PI, y: 0.28, lift: 0.12, kind: "lot" });
     });
 
+    // 역 노트 판: 학생들이 남긴 최근 글 다섯 줄 (줄 공책 모양)
+    const noteCanvas = document.createElement("canvas"); noteCanvas.width = 768; noteCanvas.height = 414;
+    let noteTex = null;
+    function drawNotes(lines) {
+      const x = noteCanvas.getContext("2d");
+      x.fillStyle = "#f6f2e6"; x.fillRect(0, 0, 768, 414);
+      x.fillStyle = "#1f8a5c"; x.fillRect(0, 0, 768, 64);
+      x.fillStyle = "#fff"; x.font = "700 32px 'Noto Sans KR', sans-serif"; x.textBaseline = "middle"; x.fillText("역 노트", 28, 33);
+      x.font = "500 22px 'Noto Serif KR', serif"; x.textAlign = "right"; x.fillText("汐見浜駅", 740, 34); x.textAlign = "left";
+      x.strokeStyle = "rgba(90,120,160,.28)"; x.lineWidth = 2;
+      for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(24, 134 + i * 68); x.lineTo(744, 134 + i * 68); x.stroke(); }
+      x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(150, 70); x.lineTo(150, 414); x.stroke();
+      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 26px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 170, 110); }
+      else lines.slice(-5).forEach((l, i) => {
+        const y = 108 + i * 68;
+        x.fillStyle = "#2c6852"; x.font = "600 20px 'Noto Sans KR', sans-serif";
+        let n = l.nick; while (x.measureText(n).width > 118 && n.length > 1) n = n.slice(0, -1);
+        x.fillText(n, 24, y);
+        x.fillStyle = "#2a2622"; x.font = "400 28px 'Noto Sans KR', sans-serif";
+        let t = l.body; while (x.measureText(t).width > 580 && t.length > 1) t = t.slice(0, -1);
+        x.fillText(t === l.body ? t : t + "…", 170, y);
+      });
+      if (noteTex) noteTex.needsUpdate = true;
+    }
+
     // ---------------------------------------------------------------- 큰 삼나무와 소나무, 전봇대와 전선, 표지판, 거울
     function bigCedar(x, z, s) {
       cyl(0.35 * s, 0.5 * s, 4 * s, 7, 0x4a3628, x, 2 * s, z);
@@ -221,33 +318,106 @@ export default {
       const mf = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 20), mat(0xd86a3a)); mf.rotation.x = Math.PI / 2; mf.position.set(9.2, 4.3, 5.68); scene.add(mf);
       const mg = new THREE.Mesh(new THREE.CircleGeometry(0.46, 20), new THREE.MeshBasicMaterial({ color: TIME === "day" ? 0x6ea8d8 : 0x3a4268 })); mg.position.set(9.2, 4.3, 5.75); scene.add(mg);
       // 돌 받침 안내판 (남기는 글)
-      box(0.3, 0.9, 0.3, 0xb4b0a8, -3.6, 0.45, 6.4); box(0.3, 0.9, 0.3, 0xb4b0a8, -1.6, 0.45, 6.4);
-      const board = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.9, 0.08), mat(0xe8ecee)); board.position.set(-2.6, 1.2, 6.4); board.rotation.x = -0.35; scene.add(board);
-      const bt = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.7), new THREE.MeshBasicMaterial({ map: textTexture("역 노트", { w: 512, h: 192, fg: "#1f6a4a", bg: "#f4f2ea", font: "600 60px 'Noto Sans KR', sans-serif" }) }));
-      bt.position.set(-2.6, 1.22, 6.46); bt.rotation.x = -0.35; scene.add(bt);
+      box(0.3, 1.0, 0.3, 0xb4b0a8, -3.7, 0.5, 6.35); box(0.3, 1.0, 0.3, 0xb4b0a8, -1.5, 0.5, 6.35);
+      const board = new THREE.Mesh(new THREE.BoxGeometry(2.7, 1.5, 0.08), mat(0x6a6e72)); board.position.set(-2.6, 1.45, 6.4); board.rotation.x = -0.3; scene.add(board);
+      noteTex = new THREE.CanvasTexture(noteCanvas); noteTex.colorSpace = THREE.SRGBColorSpace; noteTex.anisotropy = 4; drawNotes([]);
+      const bt = new THREE.Mesh(new THREE.PlaneGeometry(2.56, 1.38), new THREE.MeshBasicMaterial({ map: noteTex }));
+      bt.position.set(-2.6, 1.46, 6.455); bt.rotation.x = -0.3; scene.add(bt);
       board.userData.notes = true; bt.userData.notes = true; pickSeats.push(board, bt);
     }
 
-    // ---------------------------------------------------------------- 열차 (흰 몸체에 바다색 띠, 두 칸)
+    // ---------------------------------------------------------------- 열차: JR 313계 모양 (스테인리스 은색 차체, 주황 띠, 검은 앞창, 두 칸)
     const train = new THREE.Group(); scene.add(train);
     {
-      const body = 0xf2f1ec, stripe = 0x2a8ab0, stripe2 = 0x7ac8d8, winC = TIME === "day" ? 0x3a4a58 : 0xffe8b0;
-      for (let c = 0; c < 2; c++) {
-        const g = new THREE.Group(); g.position.x = c * 20.6; train.add(g);
-        box(20, 2.9, 2.8, body, 0, 2.15, 0, g);
-        box(20.02, 0.32, 2.82, stripe, 0, 1.3, 0, g); box(20.02, 0.12, 2.82, stripe2, 0, 1.55, 0, g);
-        box(20, 0.25, 2.6, 0xd8d6d0, 0, 3.7, 0, g);
-        for (let i = 0; i < 7; i++) {
-          const wm = new THREE.MeshBasicMaterial({ color: winC });
-          for (const sd of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), wm); w.position.set(-8 + i * 2.6, 2.5, sd * 1.41); if (sd < 0) w.rotation.y = Math.PI; g.add(w); }
+      const L = 20, W = 2.95, H = 3.0, FLOOR = 0.95;          // 한 칸 길이·폭·높이, 차체 밑면 높이
+      const lit = TIME !== "day";
+      // 차체 단면: 아래는 곧고 지붕 어깨가 둥근 모양을 길이 방향으로 밀어낸다
+      const sec = new THREE.Shape(), r = 0.45;
+      sec.moveTo(-W / 2, 0); sec.lineTo(W / 2, 0); sec.lineTo(W / 2, H - r); sec.quadraticCurveTo(W / 2, H, W / 2 - r, H);
+      sec.lineTo(-W / 2 + r, H); sec.quadraticCurveTo(-W / 2, H, -W / 2, H - r); sec.lineTo(-W / 2, 0);
+      const bodyGeo = new THREE.ExtrudeGeometry(sec, { depth: L, bevelEnabled: false, curveSegments: 8 });
+      bodyGeo.translate(0, 0, -L / 2); bodyGeo.rotateY(Math.PI / 2);
+      const steel = new THREE.MeshPhongMaterial({ color: 0xc9cdd2, shininess: 90, specular: 0x9aa0a8 });
+      // 옆면 그림 (창, 문 세 짝, 주황 띠, 스테인리스 결)
+      function sideTex(carNo) {
+        const c = document.createElement("canvas"); c.width = 2048; c.height = 300; const x = c.getContext("2d");
+        const gr = x.createLinearGradient(0, 0, 0, 300); gr.addColorStop(0, "#d9dde1"); gr.addColorStop(0.5, "#c6cace"); gr.addColorStop(1, "#b4b8bd");
+        x.fillStyle = gr; x.fillRect(0, 0, 2048, 300);
+        for (let i = 0; i < 2048; i += 3) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`; x.fillRect(i, 0, 1, 300); }
+        for (let y of [40, 262]) { x.fillStyle = "rgba(120,126,132,.5)"; x.fillRect(0, y, 2048, 2); }
+        const m = 2048 / L, doors = [3.6, 10, 16.4];
+        // 창 (문 사이에 두 장씩)
+        const winY = 88, winH = 86;
+        const winCol = lit ? "#ffe4ad" : "#2b3137";
+        const bays = [[0.6, 2.7], [4.5, 9.1], [10.9, 15.5], [17.3, 19.4]];
+        bays.forEach(([a, b]) => {
+          const n = b - a > 3 ? 2 : 1, gap = 0.18, w = (b - a - gap * (n - 1)) / n;
+          for (let k = 0; k < n; k++) {
+            const x0 = (a + k * (w + gap)) * m;
+            x.fillStyle = "#6a7076"; x.fillRect(x0 - 3, winY - 3, w * m + 6, winH + 6);
+            const wg = x.createLinearGradient(0, winY, 0, winY + winH); wg.addColorStop(0, lit ? "#ffeec8" : "#3c444c"); wg.addColorStop(1, winCol);
+            x.fillStyle = wg; x.fillRect(x0, winY, w * m, winH);
+            x.fillStyle = "rgba(255,255,255,.16)"; x.fillRect(x0 + 6, winY + 4, w * m * 0.35, 6);
+          }
+        });
+        // 주황 띠 (창 아래)
+        x.fillStyle = "#e3642b"; x.fillRect(0, 186, 2048, 26);
+        x.fillStyle = "#f08a50"; x.fillRect(0, 186, 2048, 4);
+        // 문
+        doors.forEach((d) => {
+          const x0 = (d - 0.65) * m, w = 1.3 * m;
+          x.fillStyle = "#7d838a"; x.fillRect(x0 - 3, 46, w + 6, 254);
+          x.fillStyle = "#cfd3d7"; x.fillRect(x0, 50, w / 2 - 2, 250); x.fillRect(x0 + w / 2 + 2, 50, w / 2 - 2, 250);
+          x.fillStyle = winCol; x.fillRect(x0 + 10, 82, w / 2 - 22, 84); x.fillRect(x0 + w / 2 + 12, 82, w / 2 - 22, 84);
+          x.fillStyle = "#e3642b"; x.fillRect(x0, 186, w, 26);
+        });
+        x.fillStyle = "#3a3f44"; x.font = "600 20px sans-serif"; x.fillText("クハ313-" + carNo, 30, 245);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+      }
+      // 앞면 그림 (검은 앞창, 가운데 통로문, 행선 표시, 주황 띠, 전조등)
+      function rr(x, l, t, w, h, r) { x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r); x.arcTo(l, t + h, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath(); }
+      function frontTex() {
+        const c = document.createElement("canvas"); c.width = 512; c.height = 520; const x = c.getContext("2d");
+        x.fillStyle = "#d3d7db"; x.fillRect(0, 0, 512, 520);
+        x.fillStyle = "#1b1f24"; rr(x, 26, 60, 460, 200, 26); x.fill();
+        x.fillStyle = "rgba(120,150,180,.22)"; x.beginPath(); x.moveTo(40, 70); x.lineTo(200, 70); x.lineTo(120, 250); x.lineTo(40, 250); x.fill();
+        x.fillStyle = "#c9cdd1"; x.fillRect(196, 48, 120, 330);                    // 통로문
+        x.fillStyle = "#1b1f24"; x.fillRect(214, 90, 84, 150);
+        x.fillStyle = "#2a2e33"; x.fillRect(206, 18, 100, 24); x.fillStyle = "#ffb43a"; x.font = "700 18px sans-serif"; x.textAlign = "center"; x.fillText("普通 八戸", 256, 37);
+        x.fillStyle = "#2a2e33"; x.fillRect(60, 20, 110, 30); x.fillRect(342, 20, 110, 30);
+        x.fillStyle = "#ffb43a"; x.fillText("普通", 115, 42); x.fillText("2両", 397, 42);
+        x.fillStyle = "#e3642b"; x.fillRect(0, 300, 196, 40); x.fillRect(316, 300, 196, 40);
+        x.fillStyle = "#e3642b"; x.fillRect(196, 300, 120, 40);
+        for (const hx of [70, 442]) { x.fillStyle = "#3a3f44"; rr(x, hx - 44, 352, 88, 40, 10); x.fill(); x.fillStyle = lit ? "#fff6dc" : "#f2f0e8"; rr(x, hx - 36, 358, 72, 28, 8); x.fill(); }
+        x.fillStyle = "#8d9399"; x.fillRect(0, 430, 512, 90);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+      }
+      const fTex = frontTex();
+      for (let ci = 0; ci < 2; ci++) {
+        const g = new THREE.Group(); g.position.x = ci * (L + 0.6); train.add(g);
+        const body = new THREE.Mesh(bodyGeo, steel); body.position.y = FLOOR; g.add(body);
+        const st = sideTex(ci === 0 ? 5001 : 5301), sm = new THREE.MeshPhongMaterial({ map: st, shininess: 70, specular: 0x777c82 });
+        for (const sd of [-1, 1]) {
+          const side = new THREE.Mesh(new THREE.PlaneGeometry(L, H - 0.45), sm);
+          side.position.set(0, FLOOR + (H - 0.45) / 2, sd * (W / 2 + 0.006)); if (sd < 0) { side.rotation.y = Math.PI; } g.add(side);
         }
-        box(1.2, 2.0, 2.84, 0xc8c6c0, -6, 2.0, 0, g); box(1.2, 2.0, 2.84, 0xc8c6c0, 6, 2.0, 0, g);
-        box(16, 0.6, 2.2, 0x2a2a2a, 0, 0.75, 0, g);
+        // 지붕 위 냉방 장치, 바닥 밑 기기와 대차(바퀴)
+        for (const ax of [-5.5, 5.5]) box(2.6, 0.32, 1.7, 0xb5b9be, ax, FLOOR + H + 0.12, 0, g);
+        box(L - 5, 0.55, 2.3, 0x3a3d42, 0, FLOOR - 0.25, 0, g);
+        for (const bx of [-7, 7]) {
+          box(2.6, 0.45, 2.2, 0x2a2c30, bx, 0.45, 0, g);
+          for (const wx of [-0.9, 0.9]) for (const sd of [-1, 1]) { const wh = cyl(0.42, 0.42, 0.12, 14, 0x1c1d20, bx + wx, 0.42, sd * 0.78, g); wh.rotation.x = Math.PI / 2; }
+        }
+        // 앞머리 (두 칸 모두 바깥쪽 끝이 운전석)
+        const endX = ci === 0 ? -L / 2 : L / 2, dir = ci === 0 ? -1 : 1;
+        const nose = new THREE.Mesh(new THREE.ExtrudeGeometry(sec, { depth: 0.35, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.12, bevelSegments: 4, curveSegments: 8 }), steel);
+        nose.rotation.y = dir < 0 ? -Math.PI / 2 : Math.PI / 2; nose.position.set(endX, FLOOR, 0); g.add(nose);
+        const face = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.1, H - 0.1), new THREE.MeshPhongMaterial({ map: fTex, shininess: 60 }));
+        face.position.set(endX + dir * 0.5, FLOOR + H / 2 - 0.02, 0); face.rotation.y = dir < 0 ? -Math.PI / 2 : Math.PI / 2; g.add(face);
+        box(0.3, 0.5, 2.4, 0x2a2c30, endX + dir * 0.45, FLOOR - 0.2, 0, g);        // 연결기·스커트
+        if (lit) { const pl = new THREE.PointLight(0xfff0d0, 2.2, 14, 1.6); pl.position.set(endX + dir * 1.2, 1.4, 0); g.add(pl); }
       }
-      for (const end of [-10.02, 30.62]) {
-        const f = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.1), new THREE.MeshBasicMaterial({ color: 0x2a3440 })); f.position.set(end, 2.6, 0); f.rotation.y = end < 0 ? -Math.PI / 2 : Math.PI / 2; train.add(f);
-        if (TIME !== "day") for (const sd of [-0.8, 0.8]) { const h = new THREE.Mesh(new THREE.CircleGeometry(0.16, 10), new THREE.MeshBasicMaterial({ color: 0xfff6d8 })); h.position.set(end + (end < 0 ? -0.01 : 0.01), 1.6, sd); h.rotation.y = end < 0 ? -Math.PI / 2 : Math.PI / 2; train.add(h); }
-      }
+      box(0.6, 2.4, 2.2, 0x3a3d42, L / 2 + 0.3, FLOOR + 1.3, 0, train);            // 칸 사이 통로막
       train.position.set(400, 0.48, TRACK_Z);
     }
     // 모두가 같은 시간에 같은 열차를 보도록 시계에 맞춘 주기(3분)
@@ -327,8 +497,10 @@ export default {
           E.whisper(`다음 기차까지 ${m ? m + "분 " : ""}${s}초 남았어요.`);
         },
       },
+      board(lines) { drawNotes(lines); },
+      chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요." },
       sounds: {
-        loops: [{ f: "eki/waves", g: 0.8 }, { f: "eki/wind", g: 0.35 }, { f: "common/crickets", g: 0.35, when: "night" }],
+        loops: [{ f: "eki/shore", g: 0.85 }, { f: "eki/waves", g: 0.42 }, { f: "eki/wind", g: 0.3 }, { f: "eki/evening", g: 0.5, when: "dusk" }, { f: "common/crickets", g: 0.35, when: "night" }],
         gusts: [{ f: "eki/gulls", max: 0.4, every: [16, 32], when: "day" }],
         sfx: { train: { f: "eki/train", g: 0.85 } },
         steps: { f: "common/steps", out: 0.5, in: 0.3 },
@@ -336,8 +508,19 @@ export default {
       update(dt, t, E) {
         // 파도
         const pos = sea.geometry.attributes.position;
-        for (let i = 0; i < pos.count; i++) { const bx = seaBase[i * 3], by = seaBase[i * 3 + 1]; pos.setZ(i, Math.sin(bx * 0.08 + t * 0.9) * 0.25 + Math.cos(by * 0.12 + t * 0.6) * 0.2); }
-        pos.needsUpdate = true;
+        for (let i = 0; i < pos.count; i++) { const bx = seaBase[i * 3], by = seaBase[i * 3 + 1]; pos.setZ(i, Math.sin(bx * 0.05 + by * 0.11 + t * 0.8) * 0.22 + Math.sin(bx * 0.13 - by * 0.07 + t * 1.3) * 0.12 + Math.sin(bx * 0.31 + by * 0.27 + t * 2.1) * 0.05); }
+        pos.needsUpdate = true; seaG.computeVertexNormals();
+        // 부서지는 파도: 9초마다 한 줄씩, 바다 쪽에서 밀려와 모래 위로 얇게 퍼진다
+        foams.forEach((f, i) => {
+          const k = ((t / 9) + f.ph) % 1, z = SHORE_Z - 12 + k * 12.4;
+          f.lip.position.set(0, SEA_Y + 0.12 + Math.sin(Math.min(1, k * 1.4) * Math.PI) * 0.25, z - 1.4);
+          f.lip.material.opacity = k < 0.75 ? Math.sin(Math.min(1, k / 0.75) * Math.PI) * 0.7 : 0;
+          f.m.position.set(0, SEA_Y + 0.14 + (k > 0.85 ? (k - 0.85) * 0.8 : 0), z);
+          f.m.scale.y = 0.7 + k * 1.2;
+          f.m.material.opacity = k < 0.55 ? k / 0.55 * 0.4 : k < 0.85 ? 0.4 + (k - 0.55) * 1.6 : Math.max(0, 0.88 - (k - 0.85) * 6);
+          f.m.material.map.offset.x += dt * 0.004 * (i % 2 ? 1 : -1);
+        });
+        clouds.forEach((c) => { c.position.x += c.userData.v * dt; if (c.position.x > 230) c.position.x = -230; });
         beam.rotation.y = t * 0.6;
         boat.position.x = -50 + Math.sin(t * 0.02) * 20;
         // 열차

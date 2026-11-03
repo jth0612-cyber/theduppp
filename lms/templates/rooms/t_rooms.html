@@ -2,7 +2,7 @@
 {% from "_macros.html" import csrf %}
 {% block title %}같이 공부 현황 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>같이 공부 현황</h1><p class="muted small">학생들이 산사·노천탕·바닷가 역·골목 찻집에서 집중한 기록입니다. 지금 있는 사람은 1분 안쪽 신호 기준.</p></div></div>
+<div class="page-head"><div><h1>같이 공부 현황</h1><p class="muted small">학생들이 신사·노천탕·바닷가 역·골목 찻집에서 집중한 기록입니다. 지금 있는 사람은 1분 안쪽 신호 기준.</p></div></div>
 <div class="grid grid-4">
   {% for key, p in places.items() %}
   <div class="card"><h2>{{ p[0] }}</h2>
@@ -15,6 +15,13 @@
   {% if week %}<div class="table-wrap"><table><thead><tr><th>학생</th><th>반</th><th class="num">집중 횟수</th><th class="num">합계</th></tr></thead><tbody>
   {% for r in week %}<tr><td><a href="{{ url_for('teacher.student_detail', sid=r.sid) }}">{{ r.name }}</a> <span class="muted small">{{ r.student_no }}</span></td><td>{{ r.class_name }}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.m // 60 }}시간 {{ r.m % 60 }}분</td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">아직 기록이 없습니다.</p>{% endif %}
+</div>
+<div class="card">
+  <h2>노천탕 칠판 (화롯가 채팅)</h2>
+  {% if chat %}<div class="table-wrap"><table><thead><tr><th>글</th><th>작성</th><th></th></tr></thead><tbody>
+  {% for c in chat %}<tr><td>{{ c.body }}</td><td class="small muted">{{ c.name or '' }} ({{ c.nickname }}) · {{ c.created_at[5:16] }}</td>
+    <td class="num"><form method="post" action="{{ url_for('rooms.t_chat_delete', cid=c.id) }}" class="inline-form">{{ csrf() }}<button class="btn small" data-confirm="이 글을 지울까요?">지우기</button></form></td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted">없음</p>{% endif %}
 </div>
 <div class="card">
   <h2>남긴 글</h2>

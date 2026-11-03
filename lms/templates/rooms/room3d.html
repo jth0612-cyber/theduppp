@@ -9,7 +9,7 @@
      data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/') }}"
      data-three="{{ url_for('static', filename='vendor/three.module.min.js') }}"
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}"
-     data-color="{{ my_color }}" data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
+     data-color="{{ my_color }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
     <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
@@ -31,6 +31,10 @@
       <div class="w3-plans" data-plans hidden role="radiogroup" aria-label="집중 시간">
         {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
       </div>
+      {% if board_on %}<form class="w3-chat" data-chat hidden>
+        <input type="text" name="body" maxlength="40" autocomplete="off" enterkeyhint="send" aria-label="판에 쓸 한 줄" placeholder="한 줄 쓰기">
+        <button type="submit">쓰기</button>
+      </form>{% endif %}
       <nav class="w3-actions" data-actions aria-label="동작"></nav>
       <p class="w3-hint" data-hint>바닥을 누르면 걸어가요 · 끌어서 둘러보기</p>
     </div>

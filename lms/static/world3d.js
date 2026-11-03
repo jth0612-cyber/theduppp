@@ -1,4 +1,4 @@
-// 같이 공부 3D 공통 엔진. 장소(산사·노천탕·바닷가 역·골목 찻집)는 places/*.js 가 그리고,
+// 같이 공부 3D 공통 엔진. 장소(신사·노천탕·바닷가 역·골목 찻집)는 places/*.js 가 그리고,
 // 캐릭터·카메라·조작·친구 동기화·집중 타이머·소리는 여기서 함께 쓴다.
 import * as THREE from "./vendor/three.module.min.js";
 
@@ -161,6 +161,30 @@ const sharedM = { robe: toon(0xeee4d2), skin: toon(SKIN), pom: toon(0xfff7ec), b
   blush: new THREE.MeshBasicMaterial({ color: 0xf3a08e, transparent: true, opacity: 0.65 }) };
 const crownM = new THREE.MeshToonMaterial({ color: 0xf0c040 });
 function part(g, m, x, y, z, parent) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); parent.add(o); return o; }
+// 입김: 하얀 구름이 입 앞에서 몽글 피어올라 사라진다
+const puffTex = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+  const gr = x.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, "rgba(255,255,255,0.95)"); gr.addColorStop(0.6, "rgba(255,255,255,0.55)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const puffs = [];
+function spawnPuff(av) {
+  let p = puffs.find((q) => q.life <= 0);
+  if (!p) { if (puffs.length > 24) return; p = { s: new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, transparent: true, depthWrite: false })) }; scene.add(p.s); puffs.push(p); }
+  const f = new THREE.Vector3(Math.sin(av.yaw), 0, Math.cos(av.yaw));
+  p.s.position.set(av.g.position.x + f.x * 0.55, av.g.position.y + av.upper.position.y + 1.0, av.g.position.z + f.z * 0.55);
+  p.v = f.multiplyScalar(0.45).add(new THREE.Vector3((Math.random() - 0.5) * 0.12, 0.16, (Math.random() - 0.5) * 0.12));
+  p.life = p.total = 1.8; p.s.visible = true;
+}
+function updatePuffs(dt) {
+  puffs.forEach((p) => {
+    if (p.life <= 0) return; p.life -= dt;
+    const k = 1 - Math.max(0, p.life) / p.total;
+    p.s.position.addScaledVector(p.v, dt); p.s.scale.setScalar(0.12 + k * 0.32);
+    p.s.material.opacity = Math.sin(Math.min(1, k * 1.4) * Math.PI) * 0.75;
+    if (p.life <= 0) p.s.visible = false;
+  });
+}
 class Avatar {
   constructor({ color, nick, me = false }) {
     this.me = me; this.g = new THREE.Group(); this.upper = new THREE.Group(); this.g.add(this.upper);
@@ -173,12 +197,15 @@ class Avatar {
     const hat = part(new THREE.SphereGeometry(0.5, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), this.colorMat, 0, 1.22, 0, U); hat.scale.y = 0.95;
     const rim = part(new THREE.TorusGeometry(0.47, 0.07, 10, 28), this.rimMat, 0, 1.24, 0, U); rim.rotation.x = Math.PI / 2;
     this.pom = part(new THREE.SphereGeometry(0.12, 14, 10), sharedM.pom, 0, 1.74, 0, U);
+    this.eyes = [];
     for (const sd of [-1, 1]) {
-      const e = part(new THREE.SphereGeometry(0.058, 12, 8), sharedM.eye, sd * 0.15, 1.08, 0.45, U); e.scale.set(1, 1.25, 0.6);
+      const e = part(new THREE.SphereGeometry(0.058, 12, 8), sharedM.eye, sd * 0.15, 1.08, 0.45, U); e.scale.set(1, 1.25, 0.6); this.eyes.push(e);
       part(new THREE.SphereGeometry(0.016, 6, 4), sharedM.shine, sd * 0.15 + 0.015, 1.105, 0.48, U);
       const bl = part(new THREE.CircleGeometry(0.06, 14), sharedM.blush, sd * 0.25, 1.0, 0.44, U); bl.lookAt(sd * 1, 1.0, 3);
     }
-    const mouth = part(new THREE.TorusGeometry(0.035, 0.011, 6, 12, Math.PI), sharedM.eye, 0, 1.01, 0.46, U); mouth.rotation.z = Math.PI;
+    const mouth = part(new THREE.TorusGeometry(0.035, 0.011, 6, 12, Math.PI), sharedM.eye, 0, 1.01, 0.46, U); mouth.rotation.z = Math.PI; this.mouth = mouth;
+    this.oh = part(new THREE.TorusGeometry(0.03, 0.012, 6, 14), sharedM.eye, 0, 1.0, 0.465, U); this.oh.visible = false;   // 숨 내쉴 때 '후-' 입
+    this.breathT = -1; this.puffT = 0;
     part(new THREE.BoxGeometry(0.42, 0.42, 0.18), sharedM.bag, 0, 0.5, -0.38, U);
     part(new THREE.BoxGeometry(0.44, 0.12, 0.2), sharedM.bagTop, 0, 0.66, -0.38, U);
     this.hands = [-1, 1].map((sd) => { const h = part(new THREE.SphereGeometry(0.1, 12, 8), this.colorMat, sd * 0.42, 0.42, 0.06, U); h.userData.side = sd; return h; });
@@ -218,8 +245,9 @@ class Avatar {
     const bob = walk && !reduceMotion ? Math.abs(Math.sin(this.t * 11)) * 0.07 : 0;
     this.upper.position.y = (sitting ? -0.06 : 0) + bob;
     this.upper.rotation.z = walk && !reduceMotion ? Math.sin(this.t * 11) * 0.05 : 0;
-    const breathe = (this.pose === "breathe" || this.focus) && !reduceMotion ? 1 + Math.sin(this.t * (Math.PI * 2 / 6)) * 0.025 : 1;
+    const breathe = this.focus && !reduceMotion ? 1 + Math.sin(this.t * (Math.PI * 2 / 6)) * 0.025 : 1;
     this.upper.scale.set(breathe, sitting ? 0.92 : 1, breathe);
+    this.breatheMotion(dt);
     // 절: 잠깐 앞으로 숙였다 돌아옴
     if (this.bowT > 0) { this.bowT -= dt; const k = Math.sin(Math.min(1, (1.6 - this.bowT) / 1.6) * Math.PI); this.upper.rotation.x = k * 0.75; if (this.bowT <= 0) { this.upper.rotation.x = 0; if (this.pose === "bow") this.pose = this.seat !== null ? "sit" : "stand"; } }
     const gassho = this.pose === "gassho" || this.pose === "bow";
@@ -240,6 +268,26 @@ class Avatar {
     if (this.me) this.tag.visible = this.seat === null;
     const ringTarget = this.focus ? 0.55 + Math.sin(this.t * 2) * 0.15 : 0;
     this.ring.material.opacity += (ringTarget - this.ring.material.opacity) * Math.min(1, dt * 3);
+  }
+  // 숨 고르기: 4초 들이쉬며 어깨가 살짝 올라가고 고개가 뒤로, 2초 멈춤(눈 감음), 6초 '후-' 하고 입김을 내쉰다
+  breatheMotion(dt) {
+    const on = this.pose === "breathe" && !reduceMotion;
+    if (!on) {
+      if (this.breathT >= 0) { this.breathT = -1; this.eyes.forEach((e) => e.scale.set(1, 1.25, 0.6)); this.mouth.visible = true; this.oh.visible = false; this.upper.rotation.x = 0; }
+      return;
+    }
+    if (this.breathT < 0) this.breathT = 0;
+    this.breathT += dt;
+    const c = this.breathT % 12, ease = (x) => 0.5 - Math.cos(Math.PI * x) / 2;
+    const k = c < 4 ? ease(c / 4) : c < 6 ? 1 : 1 - ease((c - 6) / 6);
+    this.upper.position.y += k * 0.06;
+    this.upper.scale.x *= 1 + k * 0.05; this.upper.scale.z *= 1 + k * 0.05; this.upper.scale.y *= 1 + k * 0.04;
+    this.upper.rotation.x = -k * 0.12;
+    const shut = c > 3.2 ? 0.18 : 1.25;                 // 들이쉬기 끝부터 눈을 꼭 감는다 (^ ^)
+    this.eyes.forEach((e) => { e.scale.y += (shut - e.scale.y) * Math.min(1, dt * 10); });
+    const exhale = c >= 6 && c < 10.5;
+    this.mouth.visible = !exhale; this.oh.visible = exhale;
+    if (exhale) { this.oh.scale.setScalar(0.9 + Math.sin(this.breathT * 9) * 0.12); this.puffT -= dt; if (this.puffT <= 0) { spawnPuff(this); this.puffT = 0.55; } }
   }
   bow() { this.pose = "bow"; this.bowT = 1.6; }
   // 이번 주 이 장소의 터줏대감(1위)은 머리 위에 작은 금관
@@ -386,7 +434,7 @@ function goSit(id) {
 function sitAt(id) {
   const s = SEATS[id], yaw = s.yaw !== undefined ? s.yaw : Math.PI;
   me.place(s.x, s.z); me.yaw = yaw; me.targetYaw = yaw; me.pose = "sit"; me.seat = id; mySeat = id; me.lastSeat = id;
-  state = "sitting"; camBehind(CAM.seated, CAM.seatPitch);
+  state = "sitting"; camBehind(s.camDist || CAM.seated, s.camPitch || CAM.seatPitch);
   audio.sfx((typeof P.sitSound === "function" ? P.sitSound(s) : P.sitSound) || "cushion");
   whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요. 시간을 고르고 집중을 시작해 보세요.");
   render(); sync(true);
@@ -431,7 +479,18 @@ const ICON = {
   bell: '<svg viewBox="0 0 24 24"><path d="M6 16c1-1 1-3 1-6a5 5 0 0 1 10 0c0 3 0 5 1 6zM10 19a2 2 0 0 0 4 0"/></svg>',
   dot: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg>',
 };
-const actionsEl = $("[data-actions]"), plansEl = $("[data-plans]");
+const actionsEl = $("[data-actions]"), plansEl = $("[data-plans]"), chatEl = $("[data-chat]");
+// 판(칠판·역 노트)에 한 줄 쓰기
+if (chatEl) chatEl.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const inp = chatEl.querySelector("input"), body = inp.value.trim(); if (!body) return;
+  const b = chatEl.querySelector("button"); b.disabled = true;
+  post(root.dataset.write, { body }).then((d) => {
+    if (d.board && P.board) P.board(d.board);
+    if (d.ok) { inp.value = ""; inp.blur(); audio.sfx(P.writeSound || "cushion"); if (P.chat && P.chat.done) whisper(P.chat.done); }
+    else whisper(d.error || "다시 시도해 주세요.", 3600);
+  }).catch(() => whisper("연결이 불안정해요. 잠시 뒤 다시 눌러 주세요.")).finally(() => { b.disabled = false; });
+});
 Object.assign(ICON, P.icons || {});
 const LABEL = Object.assign({ sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
 function btn(id, primary) { return `<button type="button" class="w3-act${primary ? " is-primary" : ""}" data-act="${id}">${ICON[id] || ICON.dot}<span>${LABEL[id] || id}</span></button>`; }
@@ -440,6 +499,10 @@ function render() {
   html = (P.actions[state] || []).map((id, i) => btn(id, i === 0 && state !== "focus")).join("");
   actionsEl.innerHTML = html;
   plansEl.hidden = state !== "sitting";
+  if (chatEl) {
+    const can = !!(P.chat && P.chat.can(mySeat !== null ? SEATS[mySeat] : null, state));
+    chatEl.hidden = !can; if (can && P.chat.placeholder) chatEl.querySelector("input").placeholder = P.chat.placeholder;
+  }
   $("[data-timer]").hidden = state !== "focus";
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
@@ -469,12 +532,12 @@ function whisper(text, ms = 3200) {
 let breathing = false;
 async function breathe() {
   if (breathing) return; breathing = true;
-  const prev = me.pose; me.pose = me.seat !== null ? "breathe" : prev;
+  me.pose = "breathe"; sync(true);
   const steps = [["숨을 천천히 들이쉬어요", 4000], ["잠깐 멈추고", 2000], ["어깨 힘을 빼고 길게 내쉬어요", 6000]];
   for (let r = 0; r < 3 && breathing; r++) for (const [t, ms] of steps) { whisper(t, ms - 150); await new Promise((ok) => setTimeout(ok, ms)); }
   whisper("좋아요. 다시 공부로 돌아가요.");
   if (me.pose === "breathe") me.pose = me.seat !== null ? "sit" : "stand";
-  breathing = false;
+  breathing = false; sync(true);
 }
 
 // ---------------------------------------------------------------- 집중 타이머 (서버가 잰 시간만 인정)
@@ -533,6 +596,7 @@ function beatLoop() {
 setInterval(beatLoop, 300);
 function onBeat(d) {
   if (!d || !d.members) return;
+  if (d.board && P.board) P.board(d.board);
   const seen = new Set();
   d.members.forEach((m) => {
     if (m.me) { me.setKing(m.king); return; } seen.add(m.id);
@@ -632,7 +696,7 @@ const audio = (() => {
       if (on) return label(); on = true;
       master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
       const S = P.sounds || {};
-      const fits = (w) => !w || (w === "day" ? TIME === "day" : TIME !== "day");
+      const fits = (w) => !w || (w === "day" ? TIME === "day" : w === "dusk" ? TIME === "dusk" : TIME !== "day");
       (S.loops || []).forEach((l) => { if (fits(l.when)) loop(l.f, l.g, l.rate || 1); });
       loop(STEPS.f, 0.0, 1);
       Object.values(S.sfx || {}).forEach((x) => load(x.f));
@@ -700,7 +764,7 @@ function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   keyMove(dt);
   if (keyWalking > 0) { keyWalking -= dt; if (keyWalking <= 0 && me.pose === "walk" && !me.moving) me.pose = "stand"; }
-  me.update(dt); others.forEach((o) => o.update(dt));
+  me.update(dt); others.forEach((o) => o.update(dt)); updatePuffs(dt);
   audio.walking(me.pose === "walk", P.indoor ? P.indoor(me.pos.x, me.pos.z) : false);
   if (marker.material.opacity > 0) { marker.material.opacity -= dt * 0.8; marker.scale.multiplyScalar(1 + dt * 0.6); }
   // 잠깐 나타나는 물건(목탁·찻잔 등): 캐릭터 앞에 띄웠다가 사라진다

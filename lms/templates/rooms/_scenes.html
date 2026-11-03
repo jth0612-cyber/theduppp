@@ -1,6 +1,6 @@
 {# 장소 그림: 직접 그린 단순한 겹 그림(SVG). 움직임은 CSS 클래스로만(CSP: 인라인 스타일 금지). #}
 {% macro scene(key, cls='', align='xMidYMid') %}
-<svg class="scene {{ cls }}" viewBox="0 0 400 240" preserveAspectRatio="{{ align }} slice" role="img" aria-label="{{ {'sanji': '해 질 녘 산사의 돌계단과 석등', 'sento': '눈 내리는 산골 마을의 노천탕', 'eki': '노을 지는 바닷가의 작은 역', 'kissa': '비 오는 밤 골목의 불 켜진 찻집'}[key] }}">
+<svg class="scene {{ cls }}" viewBox="0 0 400 240" preserveAspectRatio="{{ align }} slice" role="img" aria-label="{{ {'sanji': '해 질 녘 신사의 돌계단과 석등', 'sento': '눈 내리는 산골 마을의 노천탕', 'eki': '노을 지는 바닷가의 작은 역', 'kissa': '비 오는 밤 골목의 불 켜진 찻집'}[key] }}">
 {% if key == 'sanji' %}
   <defs>
     <linearGradient id="sj-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4256"/><stop offset=".55" stop-color="#8a7a86"/><stop offset="1" stop-color="#d9b89a"/></linearGradient>

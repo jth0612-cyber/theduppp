@@ -1,4 +1,4 @@
-// 같이 공부 · 산사. 일주문 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
+// 같이 공부 · 신사(神社). 주홍 도리이 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
 export default {
   build(K) {
     const { THREE, scene, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo } = K;
@@ -31,12 +31,15 @@ export default {
       }
     }
 
-    // ---------------------------------------------------------------- 일주문
+    // ---------------------------------------------------------------- 도리이 (주홍 기둥, 검은 가사기)
     {
-      const red = 0x8e3b2a;
-      cyl(0.28, 0.32, 4.2, 8, red, -2.6, 2.1, 20.5); cyl(0.28, 0.32, 4.2, 8, red, 2.6, 2.1, 20.5);
-      box(7, 0.45, 0.5, 0x5a2a20, 0, 4.0, 20.5);
-      roof(8.4, 2.4, 1.0, 0.35, 0x353a41, 0, 4.75, 20.5);
+      const ver = 0xd2452c, blk = 0x1f1c1c;
+      for (const x of [-2.7, 2.7]) { cyl(0.3, 0.34, 5.2, 12, ver, x, 2.6, 20.5); cyl(0.42, 0.42, 0.35, 12, blk, x, 0.17, 20.5); }
+      box(7.0, 0.32, 0.36, ver, 0, 4.2, 20.5);                                    // 누키
+      box(0.42, 0.7, 0.3, ver, 0, 4.7, 20.5);                                     // 가쿠즈카
+      box(8.6, 0.42, 0.62, ver, 0, 5.05, 20.5);                                   // 시마키
+      const k2 = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.32, 0.72), mat(blk)); k2.position.set(0, 5.42, 20.5); scene.add(k2);
+      for (const sd of [-1, 1]) { const tip = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.72), mat(blk)); tip.position.set(sd * 5.05, 5.55, 20.5); tip.rotation.z = sd * 0.22; scene.add(tip); }
     }
 
     // ---------------------------------------------------------------- 법당
@@ -144,6 +147,31 @@ export default {
     }
 
 
+    // ---------------------------------------------------------------- 벚나무와 흩날리는 꽃잎 (봄의 경내)
+    const blossomC = TIME === "night" ? [0x6e5a78, 0x7a6684, 0x5e4c6a] : TIME === "dusk" ? [0xe8b0bc, 0xdc9cac, 0xf0c4cc] : [0xf6cdd6, 0xeeb6c4, 0xfbe0e6];
+    const sakuraSpots = [[-9, 13, 1.25], [9.5, 15, 1.1], [-15, 7, 1.0], [15.5, 9, 1.15], [-13, -4, 1.0], [-6.5, 17.5, 0.9]];
+    sakuraSpots.forEach(([x, z, sc]) => {
+      const trunk = cyl(0.16 * sc, 0.3 * sc, 2.6 * sc, 7, 0x3c2e2a, x, 1.3 * sc, z); trunk.rotation.z = (srand() - 0.5) * 0.2;
+      for (let i = 0; i < 4; i++) { const br = cyl(0.06 * sc, 0.1 * sc, 1.8 * sc, 5, 0x3c2e2a, x, 2.7 * sc, z); br.rotation.z = (srand() - 0.5) * 1.6; br.rotation.y = srand() * 6; }
+      for (let i = 0; i < 16; i++) {
+        const a = srand() * Math.PI * 2, r = (0.5 + srand() * 2.1) * sc;
+        const b = new THREE.Mesh(new THREE.IcosahedronGeometry((0.6 + srand() * 0.55) * sc, 1), mat(blossomC[i % 3]));
+        b.position.set(x + Math.cos(a) * r, (2.9 + srand() * 1.5) * sc, z + Math.sin(a) * r); b.scale.y = 0.75; scene.add(b);
+      }
+    });
+    const petalTex = (() => {
+      const c = document.createElement("canvas"); c.width = c.height = 32; const x = c.getContext("2d");
+      x.fillStyle = TIME === "night" ? "#b8a4c4" : "#f8d2dc"; x.beginPath(); x.ellipse(16, 16, 12, 7, 0.4, 0, Math.PI * 2); x.fill();
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const petals = (() => {
+      const n = 160, p = new Float32Array(n * 3), seed = [];
+      for (let i = 0; i < n; i++) { const [sx, sz] = sakuraSpots[i % sakuraSpots.length]; p.set([sx + rand(-3, 3), rand(0, 5), sz + rand(-3, 3)], i * 3); seed.push({ x: sx, z: sz, v: rand(0.25, 0.55), ph: rand(0, 10) }); }
+      const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(p, 3));
+      const pts = new THREE.Points(g, new THREE.PointsMaterial({ map: petalTex, size: 0.16, transparent: true, depthWrite: false, alphaTest: 0.2 }));
+      pts.userData.seed = seed; scene.add(pts); return pts;
+    })();
+
     // ---------------------------------------------------------------- 걸을 수 있는 곳과 높이
     function heightAt(x, z) {
       if (Math.abs(x) < HALL.x && z < HALL.zFront && z > HALL.zBack) return HALL.floor;
@@ -188,7 +216,7 @@ export default {
       planTo(from, x, z) { return route(from.x, from.z, x, z, inHall(x, z)); },
       planSeat(from, id) { const s = SEATS[id]; return route(from.x, from.z, s.x, s.z + 0.9, true).concat([[s.x, s.z]]); },
       step(x, z, nx, nz) { const onSteps = Math.abs(nx) < 2.6 && nz > -3.2 && nz < 1.0; return onSteps ? [nx, nz] : clampWalk(nx, nz, inHall(x, z)); },
-      welcome: "고요한 산사예요. 법당 방석에 앉아 집중을 시작해 보세요.",
+      welcome: "고요한 신사예요. 본전 방석에 앉아 집중을 시작해 보세요.",
       sitText: "방석에 앉았어요. 시간을 고르고 집중을 시작해 보세요.",
       actions: { free: ["sit", "gassho", "bow", "moktak", "bell"], sitting: ["focus", "breathe", "moktak", "gassho", "stand"], focus: ["breathe", "moktak", "stop"] },
       labels: { moktak: "목탁", bell: "종 치기" },
@@ -206,7 +234,16 @@ export default {
         gusts: [{ f: "sanji/chimes", max: 0.42, every: [14, 30] }],
         sfx: { moktak: { f: "sanji/moktak", g: 0.9, jitter: true }, bell: { f: "common/bowl", g: 1.0, rate: 0.42, lp: 1400 } },
       },
-      update(dt) { if (bellSwing > 0) { bellSwing -= dt * 0.35; bellMesh.rotation.x = Math.sin((1 - bellSwing) * 14) * 0.12 * bellSwing; } },
+      update(dt, t) {
+        const pp = petals.geometry.attributes.position, sd = petals.userData.seed;
+        for (let i = 0; i < sd.length; i++) {
+          const q = sd[i]; let y = pp.getY(i) - q.v * dt;
+          let x = pp.getX(i) + (Math.sin(t * 0.9 + q.ph) * 0.35 + 0.25) * dt, z = pp.getZ(i) + Math.cos(t * 0.7 + q.ph) * 0.25 * dt;
+          if (y < 0.02) { y = rand(3.2, 5.2); x = q.x + rand(-2.5, 2.5); z = q.z + rand(-2.5, 2.5); }
+          pp.setXYZ(i, x, y, z);
+        }
+        pp.needsUpdate = true;
+        if (bellSwing > 0) { bellSwing -= dt * 0.35; bellMesh.rotation.x = Math.sin((1 - bellSwing) * 14) * 0.12 * bellSwing; } },
     };
   },
 };
