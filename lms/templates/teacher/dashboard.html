@@ -11,11 +11,7 @@
   </form>
 </div>
 
-<div class="grid grid-4">
-  <div class="card stat"><div class="num">{{ stats.classes }}</div><div class="label">담당 반</div></div>
-  <div class="card stat"><div class="num">{{ stats.students }}</div><div class="label">재원 학생</div></div>
-  <div class="card stat"><div class="num">{{ stats.open_questions }}</div><div class="label">답변 대기 질문</div></div>
-  <div class="card stat"><div class="num">{{ stats.exams }}</div><div class="label">등록한 시험</div></div>
+<p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 답변 대기 질문 <b>{{ stats.open_questions }}</b>개 · 등록한 시험 <b>{{ stats.exams }}</b>개</p>
 </div>
 
 <div class="grid grid-2">

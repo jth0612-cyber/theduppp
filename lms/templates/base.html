@@ -11,7 +11,7 @@
   <link rel="manifest" href="{{ url_for('pwa.manifest') }}">
   <link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}" type="image/png">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
-  <meta name="theme-color" content="#f4efe7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#f2f3f2" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="통합과학 lab">
@@ -70,7 +70,7 @@
   </nav>
   <div class="m-menu" id="m-menu" hidden role="dialog" aria-modal="true" aria-label="전체 메뉴">
     <div class="m-menu-head">
-      <div><p class="kicker">Menu</p><b>{{ who }}</b></div>
+      <div><b>{{ who }}</b></div>
       <button type="button" class="m-close" data-menu-close aria-label="메뉴 닫기">{{ nav.icon('close') }}</button>
     </div>
     {% call(groups) nav.nav_groups(ep) %}

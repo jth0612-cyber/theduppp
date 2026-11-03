@@ -3,7 +3,7 @@
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <p class="kicker">Timetable · {{ me.class_name }}</p>
+    <p class="kicker">{{ me.class_name }}</p>
     <h1>시간표</h1>
     <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> 수업 중 · {{ current.ends }}까지{% elif upnext %}다음 수업 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% else %}오늘 남은 수업이 없어요.{% endif %}</p>
   </div>

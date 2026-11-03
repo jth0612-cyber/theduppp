@@ -62,7 +62,7 @@
           state.results = res.results;
           renderStrands();
           q("result-title").textContent = res.timeout ? "시간 초과!" :
-            (res.correct === res.total ? "완벽해요! 🎉" : res.correct + " / " + res.total + " 맞았어요");
+            (res.correct === res.total ? "모두 맞혔어요" : res.correct + " / " + res.total + " 맞았어요");
           q("result-detail").textContent = "걸린 시간 " + res.elapsed + "초" +
             (res.correct < res.total ? " (정답: 3'-" + res.answer + "-5')" : "");
           q("result").classList.remove("hidden");
@@ -134,14 +134,14 @@
       show(mc, "loading");
       post(mc.dataset.start.replace(/\/start$/, "/" + game.id + "/submit"), { answers: game.answers })
         .then(function (res) {
-          m("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점! 🎉" : " 맞았어요");
+          m("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점" : " 맞았어요");
           m("result-detail").textContent = res.score === res.total ? "모두 맞혔어요." : "아래 해설로 틀린 문제를 다시 확인해 보세요.";
           var review = m("review");
           review.textContent = "";
           res.results.forEach(function (r, i) {
             var item = game.questions[i];
             var box = el("div", "review-item " + (r.correct ? "ok" : "wrong"));
-            box.appendChild(el("b", "", (r.correct ? "⭕ " : "❌ ") + (i + 1) + ". " + item.question));
+            box.appendChild(el("b", "", (r.correct ? "맞음 · " : "틀림 · ") + (i + 1) + ". " + item.question));
             var mine = r.pick >= 0 ? item.choices[r.pick] : "(선택 안 함)";
             if (!r.correct) box.appendChild(el("div", "small", "내 답: " + mine));
             box.appendChild(el("div", "small", "정답: " + item.choices[r.answer_index]));

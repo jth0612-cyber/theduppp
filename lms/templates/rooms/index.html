@@ -3,9 +3,8 @@
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <p class="kicker">Study together</p>
-    <h1>어디서 공부할까요?</h1>
-    <p class="ed-lede">일본 소도시의 조용한 네 곳. 들어가면 같은 자리의 친구들이 보이고, 각자 타이머를 돌리며 함께 집중합니다.</p>
+    <h1>같이 공부</h1>
+    <p class="ed-lede">한 곳에 들어가 자리에 앉고 타이머를 켜면, 같은 곳에 있는 친구들이 보여요. 5분 이상 집중한 시간만 기록돼요.</p>
   </div>
   <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
@@ -19,7 +18,7 @@
     <a href="{{ url_for('rooms.room', place=key) }}" class="place pl-{{ key }}">
       <span class="poster" aria-hidden="true">
         <img src="{{ url_for('static', filename='rooms/thumb-' ~ key ~ '.jpg') }}" alt="" loading="lazy" width="1200" height="750">
-        <span class="poster-jp">{{ poster[key][0] }}</span><span class="poster-en">{{ poster[key][1] }}</span>
+        <span class="poster-jp">{{ poster[key][0] }}</span>
       </span>
       <span class="place-body">
         <b>{{ p[0] }}</b>

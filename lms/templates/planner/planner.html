@@ -25,7 +25,7 @@
 {%- endmacro %}
 
 <header class="p-head">
-  <p class="kicker">Planner · {{ d.month }}월 {{ d.day }}일 {{ wd }}요일</p>
+  <p class="kicker">{{ d.month }}월 {{ d.day }}일 {{ wd }}요일</p>
   <h1>{% if view == 'week' %}이번 주{% else %}{{ label }} 할 일{% endif %}</h1>
 </header>
 

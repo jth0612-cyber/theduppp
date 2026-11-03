@@ -64,7 +64,7 @@ def manifest():
         "start_url": "/?source=app",
         "scope": "/",
         "display": "standalone",
-        "background_color": "#f4efe7",
+        "background_color": "#f2f3f2",
         "theme_color": "#1d1b18",
         "lang": "ko",
         "icons": [

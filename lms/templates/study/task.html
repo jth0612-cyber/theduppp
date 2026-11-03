@@ -27,7 +27,7 @@
   <div class="tk-score-big"><b>{{ an.correct }}</b><span>/ {{ an.total }}</span><em>{{ an.pct }}점</em></div>
   <div class="tk-findings">
     <h2>{% if target %}{{ target.name }} 학생의 문제점{% else %}나의 문제점{% endif %}</h2>
-    <ul>{% for kind, text in an.findings %}<li class="fd-{{ kind }}">{{ text }}</li>{% endfor %}</ul>
+    <ul>{% for kind, text in an.findings %}<li class="fd-{{ kind }}" data-k="{{ {'weak': '약한 단원', 'slip': '실수 의심', 'hard': '어려운 문제', 'lure': '매력적 오답', 'time': '시간 배분', 'blank': '빈칸', 'perfect': '만점', 'ok': '괜찮아요'}[kind] }}">{{ text }}</li>{% endfor %}</ul>
   </div>
 </section>
 <section class="panel">
@@ -48,7 +48,7 @@
     </li>
   {% endif %}{% endfor %}
   </ul>
-  {% if not ns.any %}<p class="muted">틀린 문제가 없어요. 👏</p>{% endif %}
+  {% if not ns.any %}<p class="muted">틀린 문제가 없어요.</p>{% endif %}
 </section>
 {% endif %}
 {% endblock %}
