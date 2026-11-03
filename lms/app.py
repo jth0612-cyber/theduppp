@@ -80,6 +80,8 @@ def create_app(test_config=None):
     from views.study import bp as study_bp
     app.register_blueprint(rooms_bp)
     app.register_blueprint(study_bp)
+    from views.planner import bp as planner_bp
+    app.register_blueprint(planner_bp)
     app.register_blueprint(pwa_bp)
     app.jinja_env.globals["google_enabled"] = google_enabled
 

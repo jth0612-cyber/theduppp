@@ -55,6 +55,7 @@
   (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
   ('수업', [
     ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
+    ('planner.planner', '플래너', 'plan', ep == 'planner.planner', 0),
     ('study.timetable', '시간표', 'timetable', ep == 'study.timetable', 0),
     ('study.tasks', '과제', 'task', ep == 'study.tasks', 0),
     ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),
@@ -87,7 +88,7 @@
 {%- else -%}
 {%- set items = [('student.home', '홈', 'home', ep == 'student.home'),
                  ('rooms.rooms', '같이 공부', 'torii', ep.startswith('rooms.')),
-                 ('study.timetable', '시간표', 'timetable', ep == 'study.timetable'),
+                 ('planner.planner', '플래너', 'plan', ep == 'planner.planner'),
                  ('student.questions', '질답', 'chat', ep.startswith('student.question'))] -%}
 {%- endif -%}
 {{ caller(items) }}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}플래너 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+{% set here = request.full_path.rstrip('?') %}
+{% macro chip(key) -%}{% if key and subject_of.get(key) %}{% set s = subject_of[key] %}<span class="p-chip tone-{{ s[1] }}">{{ s[0] }}</span>{% endif %}{%- endmacro %}
+{% macro item_row(it, compact=False) -%}
+<li class="p-item{{ ' is-done' if it.done }}" data-item>
+  <form method="post" action="{{ url_for('planner.toggle', iid=it.id) }}" data-toggle>
+    {{ csrf() }}<input type="hidden" name="next" value="{{ here }}">
+    <button class="p-check" aria-pressed="{{ 'true' if it.done else 'false' }}" aria-label="{{ it.body }} {{ '완료 취소' if it.done else '완료' }}"></button>
+  </form>
+  <span class="p-body">{{ it.body }}</span>
+  {{ chip(it.subject) }}
+  {% if not compact %}
+  <details class="p-more">
+    <summary aria-label="더보기">⋯</summary>
+    <div class="p-menu">
+      {% if not it.done %}<form method="post" action="{{ url_for('planner.later', iid=it.id) }}">{{ csrf() }}<input type="hidden" name="next" value="{{ here }}"><button>다음 날로 넘기기</button></form>{% endif %}
+      <form method="post" action="{{ url_for('planner.delete', iid=it.id) }}">{{ csrf() }}<input type="hidden" name="next" value="{{ here }}"><button class="danger">지우기</button></form>
+    </div>
+  </details>
+  {% endif %}
+</li>
+{%- endmacro %}
+
+<header class="p-head">
+  <p class="kicker">Planner · {{ d.month }}월 {{ d.day }}일 {{ wd }}요일</p>
+  <h1>{% if view == 'week' %}이번 주{% else %}{{ label }} 할 일{% endif %}</h1>
+</header>
+
+<nav class="p-seg" aria-label="보기">
+  <a href="{{ url_for('planner.planner') }}" class="{{ 'is-on' if view == 'today' }}">오늘</a>
+  <a href="{{ url_for('planner.planner', view='tomorrow') }}" class="{{ 'is-on' if view == 'tomorrow' }}">내일</a>
+  <a href="{{ url_for('planner.planner', view='week') }}" class="{{ 'is-on' if view == 'week' }}">이번 주</a>
+</nav>
+
+<ol class="p-week" aria-label="이번 주 날짜">
+  {% for s in strip %}
+  <li><a href="{{ url_for('planner.planner', view='day', d=s.iso) }}" class="{{ 'is-on' if s.on }}{{ ' is-today' if s.today }}"{% if s.on %} aria-current="date"{% endif %}>
+    <span>{{ s.wd }}</span><b>{{ s.d.day }}</b>
+    <i class="p-dots" aria-label="{{ s.rows|length }}개 중 {{ s.rows|selectattr('done')|list|length }}개 끝">{% for it in s.rows[:5] %}<s class="{{ 'f' if it.done }}"></s>{% endfor %}</i>
+  </a></li>
+  {% endfor %}
+</ol>
+
+{% if view == 'week' %}
+  {% for day in week %}
+  <section class="p-wday{{ ' is-today' if day.today }}">
+    <div class="p-wday-head">
+      <a href="{{ url_for('planner.planner', view='day', d=day.iso) }}"><b>{{ day.d.day }}</b> {{ day.wd }}{% if day.label in ('오늘', '내일') %} · {{ day.label }}{% endif %}</a>
+      <span class="small muted">{% if day['items'] %}{{ day['items']|selectattr('done')|list|length }}/{{ day['items']|length }}{% endif %}</span>
+    </div>
+    {% if day.classes or day.tasks %}<p class="p-auto small">{% for c in day.classes %}<span class="p-tag tone-{{ c.tone }}">{{ c.starts }} {{ c.title }}</span>{% endfor %}{% for t in day.tasks %}{% if t.due_on == day.iso %}<span class="p-tag is-due">과제 마감 · {{ t.title }}</span>{% endif %}{% endfor %}</p>{% endif %}
+    {% if day['items'] %}<ul class="p-list p-compact">{% for it in day['items'] %}{{ item_row(it, True) }}{% endfor %}</ul>
+    {% else %}<p class="small muted"><a href="{{ url_for('planner.planner', view='day', d=day.iso) }}">+ 할 일 적기</a></p>{% endif %}
+  </section>
+  {% endfor %}
+  <p class="small mt"><a href="{{ url_for('study.timetable') }}">시간표 전체 보기 →</a></p>
+{% else %}
+  {% if classes or tasks %}
+  <div class="p-autos">
+    {% if classes %}<p class="p-auto"><i>수업</i>{% for c in classes %}<span>{{ c.starts }} {{ c.title }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    {% for t in tasks %}<p class="p-auto"><i>과제</i><a href="{{ url_for('study.tasks') }}">{{ t.title }}</a> · {% if t.due_on == iso %}오늘 마감{% else %}{{ t.due_on[5:].replace('-', '/') }} 마감{% endif %}</p>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if left %}
+  <form method="post" action="{{ url_for('planner.carry') }}" class="p-carry">
+    {{ csrf() }}<span>지난 며칠 못 한 일이 <b>{{ left }}개</b> 있어요.</span><button class="btn small">오늘로 가져오기</button>
+  </form>
+  {% endif %}
+
+  {% if items %}
+  <div class="p-prog"><span>{{ items|length }}개 중 <b data-done-n>{{ done_n }}</b>개 끝</span><span data-pct>{{ (done_n * 100 / items|length)|round|int }}%</span></div>
+  <div class="p-bar" aria-hidden="true"><i data-bar data-total="{{ items|length }}"></i></div>
+  <ul class="p-list" data-list>{% for it in items %}{{ item_row(it) }}{% endfor %}</ul>
+  {% else %}
+  <div class="p-empty"><p>{{ label }}은 아직 비어 있어요.</p><p class="small muted">할 일을 한 줄씩, 3~5개면 충분해요.</p></div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('planner.add') }}" class="p-add">
+    {{ csrf() }}<input type="hidden" name="day" value="{{ iso }}"><input type="hidden" name="next" value="{{ here }}">
+    <div class="p-field">
+      <input type="text" name="body" maxlength="{{ body_max }}" required placeholder="할 일 한 줄 적기" aria-label="{{ label }} 할 일" autocomplete="off" enterkeyhint="done">
+      <button aria-label="추가">+</button>
+    </div>
+    <div class="p-chips" role="radiogroup" aria-label="과목">
+      {% for k, n, t in subjects %}<label class="p-chip tone-{{ t }}"><input type="radio" name="subject" value="{{ k }}"><span>{{ n }}</span></label>{% endfor %}
+    </div>
+  </form>
+{% endif %}
+<script src="{{ url_for('static', filename='planner.js') }}" defer></script>
+{% endblock %}

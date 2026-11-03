@@ -354,6 +354,19 @@ CREATE TABLE IF NOT EXISTS focus_logs (
     ended_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_focus_user ON focus_logs(user_id, ended_at);
+-- 플래너: 하루 할 일 한 줄씩 (학생 본인만 본다)
+CREATE TABLE IF NOT EXISTS planner_items (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    body        TEXT NOT NULL,
+    subject     TEXT NOT NULL DEFAULT '',
+    done        INTEGER NOT NULL DEFAULT 0,
+    done_at     TEXT,
+    position    INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_planner_user_day ON planner_items(user_id, day);
 -- 학생끼리 팔로우 (닉네임으로만 보인다)
 CREATE TABLE IF NOT EXISTS follows (
     follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -139,7 +139,6 @@ class StudyTest(unittest.TestCase):
         self.assertIn("D-10", home)
         self.assertIn("오늘 13:00 통합과학 정규", home)
         self.assertEqual(s.get("/s/calendar").status_code, 404)              # 일정 기능 없음
-        self.assertEqual(s.get("/s/planner").status_code, 404)
         self.assertNotIn("통합과학 정규", self.student(2).get("/s/timetable").data.decode())  # 다른 반
         tid = self.q("SELECT id FROM timetable LIMIT 1", one=True)["id"]
         self.t.post(f"/t/timetable/slot/{tid}/delete")
@@ -201,6 +200,48 @@ class StudyTest(unittest.TestCase):
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM push_subs", one=True)["n"], 0)
         self.assertEqual(self.app.test_client().post("/push/subscribe", json=sub).status_code, 302)  # 로그인 필요
 
+
+    def test_planner(self):
+        wd = date.today().weekday()
+        self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": str(wd),
+                                          "starts": "13:00", "ends": "15:50", "title": "통합과학 정규"})
+        self.t.post("/t/tasks", data={"class_id": str(self.cid), "title": "2단원 기출", "due_on": (date.today() + timedelta(days=1)).isoformat()})
+        s = self.student(0)
+        today, tomorrow = date.today().isoformat(), (date.today() + timedelta(days=1)).isoformat()
+        page = s.get("/s/planner").data.decode()
+        self.assertIn("오늘 할 일", page)
+        self.assertIn("13:00 통합과학 정규", page)                         # 오늘 수업 자동
+        self.assertIn("2단원 기출", page)                                   # 내일 마감 과제 자동
+        s.post("/s/planner/add", data={"day": today, "body": "  비문학   지문 3개 ", "subject": "kor"})
+        s.post("/s/planner/add", data={"day": today, "body": "영단어", "subject": "nope"})
+        s.post("/s/planner/add", data={"day": tomorrow, "body": "미적분 복습", "subject": "math"})
+        s.post("/s/planner/add", data={"day": "2000-01-01", "body": "너무 먼 날"})
+        s.post("/s/planner/add", data={"day": today, "body": "   "})
+        rows = self.q("SELECT * FROM planner_items ORDER BY id")
+        self.assertEqual([(r["body"], r["subject"]) for r in rows], [("비문학 지문 3개", "kor"), ("영단어", ""), ("미적분 복습", "math")])
+        page = s.get("/s/planner").data.decode()
+        self.assertIn("비문학 지문 3개", page); self.assertNotIn("미적분 복습", page)
+        self.assertIn("미적분 복습", s.get("/s/planner?view=tomorrow").data.decode())
+        self.assertIn("미적분 복습", s.get("/s/planner?view=week").data.decode())
+        # 체크 (fetch) · 다른 학생은 못 건드림
+        iid = rows[0]["id"]
+        self.assertTrue(s.post(f"/s/planner/{iid}/toggle", headers={"X-Requested-With": "fetch"}).get_json()["done"])
+        self.assertEqual(self.student(1).post(f"/s/planner/{iid}/toggle").status_code, 404)
+        self.assertNotIn("비문학", self.student(1).get("/s/planner").data.decode())
+        self.assertIn("2개 중 <b data-done-n>1</b>개 끝", s.get("/s/planner").data.decode())
+        # 다음 날로 넘기기, 지우기
+        s.post(f"/s/planner/{rows[1]['id']}/later")
+        self.assertEqual(self.q("SELECT day FROM planner_items WHERE id=?", (rows[1]["id"],), one=True)["day"], tomorrow)
+        s.post(f"/s/planner/{rows[2]['id']}/delete")
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM planner_items", one=True)["n"], 2)
+        # 어제 못 한 일 → 오늘로 가져오기
+        with self.app.app_context():
+            execute("UPDATE planner_items SET day = ?, done = 0 WHERE id = ?", ((date.today() - timedelta(days=1)).isoformat(), iid))
+        self.assertIn("오늘로 가져오기", s.get("/s/planner").data.decode())
+        s.post("/s/planner/carry")
+        self.assertEqual(self.q("SELECT day FROM planner_items WHERE id=?", (iid,), one=True)["day"], today)
+        self.assertIn("플래너", s.get("/s/").data.decode())                 # 아래 탭에 플래너
+        self.assertEqual(self.t.get("/s/planner").status_code, 403)         # 선생님 화면 아님
 
 if __name__ == "__main__":
     unittest.main()
