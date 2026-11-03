@@ -438,9 +438,7 @@ export default {
       board(lines) { drawBoard(lines); },
       chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요." },
       sounds: {
-        master: { lp: 4800 },
-        chimes: [{ f: "common/bowl", g: 0.09, rates: [1.33, 1.5, 1.78, 2.0, 2.67], every: [22, 45], lp: 3000 }],
-        loops: [{ f: "common/pad_d", g: 0.4 }, { f: "sento/fire", g: 0.32 }, { f: "sento/water", g: 0.7, lp: 2600 }, { f: "sento/spout", g: 0.42, lp: 3200 }, { f: "sanji/wind", g: 0.22 }],
+        loops: [{ f: "sento/fire", g: 0.32 }, { f: "sento/water", g: 0.75 }, { f: "sento/spout", g: 0.45 }, { f: "sanji/wind", g: 0.22 }],
         gusts: [{ f: "sento/drips", max: 0.5, every: [10, 22] }, { f: "sento/bamboo", max: 0.35, every: [18, 34] }],
         sfx: { splash: { f: "sento/splash", g: 0.8, jitter: true }, soak: { f: "sento/splash", g: 0.45, rate: 0.8, lp: 2000 } },
         steps: { f: "common/steps", out: 0.4, in: 0.15 },

@@ -500,8 +500,7 @@ export default {
       board(lines) { drawNotes(lines); },
       chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요." },
       sounds: {
-        master: { lp: 8000 },
-        loops: [{ f: "common/pad_f", g: 0.26 }, { f: "eki/shore", g: 0.85 }, { f: "eki/waves", g: 0.42 }, { f: "eki/wind", g: 0.3 }, { f: "eki/evening", g: 0.5, when: "dusk" }, { f: "common/crickets", g: 0.35, when: "night" }],
+        loops: [{ f: "eki/shore", g: 0.85 }, { f: "eki/waves", g: 0.42 }, { f: "eki/wind", g: 0.3 }, { f: "eki/evening", g: 0.5, when: "dusk" }, { f: "common/crickets", g: 0.35, when: "night" }],
         gusts: [{ f: "eki/gulls", max: 0.4, every: [16, 32], when: "day" }],
         sfx: { train: { f: "eki/train", g: 0.85 } },
         steps: { f: "common/steps", out: 0.5, in: 0.3 },

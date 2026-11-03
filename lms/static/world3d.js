@@ -671,14 +671,12 @@ const audio = (() => {
     if (buffers[name]) return Promise.resolve(buffers[name]);
     return fetch(base + name + ".mp3").then((r) => r.arrayBuffer()).then((ab) => new Promise((ok, no) => ctx.decodeAudioData(ab, ok, no))).then((b) => (buffers[name] = b));
   }
-  function loop(name, gain, rate = 1, lowpass) {
+  function loop(name, gain, rate = 1) {
     return load(name).then((b) => {
       if (!on || loops[name]) return;
       const s = ctx.createBufferSource(); s.buffer = b; s.loop = true; s.loopStart = 0.06; s.loopEnd = b.duration - 0.06; s.playbackRate.value = rate;
       const g = ctx.createGain(); g.gain.value = 0; g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 2.5);
-      let node = s;
-      if (lowpass) { const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lowpass; f.Q.value = 0.5; s.connect(f); node = f; }
-      node.connect(g); g.connect(master); s.start(0, Math.random() * (b.duration - 1)); loops[name] = { s, g, base: gain };
+      s.connect(g); g.connect(master); s.start(0, Math.random() * (b.duration - 1)); loops[name] = { s, g, base: gain };
     }).catch(() => {});
   }
   function one(name, gain = 1, rate = 1, lowpass) {
@@ -696,20 +694,10 @@ const audio = (() => {
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === "suspended") ctx.resume();
       if (on) return label(); on = true;
-      // 전체 소리는 부드럽게: 높은 '쉬익'을 덜어 내고(저역 통과), 갑자기 커지는 소리를 눌러 준다
+      master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
       const S = P.sounds || {};
-      master = ctx.createGain(); master.gain.value = 0.9;
-      const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = (S.master && S.master.lp) || 9000; tone.Q.value = 0.4;
-      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 18; comp.ratio.value = 3; comp.attack.value = 0.02; comp.release.value = 0.4;
-      master.connect(tone); tone.connect(comp); comp.connect(ctx.destination);
       const fits = (w) => !w || (w === "day" ? TIME === "day" : w === "dusk" ? TIME === "dusk" : TIME !== "day");
-      (S.loops || []).forEach((l) => { if (fits(l.when)) loop(l.f, l.g, l.rate || 1, l.lp); });
-      // 가끔 울리는 맑은 소리(작은 종): 정해진 음 중 하나를 골라 아주 작게
-      (S.chimes || []).forEach((c) => {
-        if (!fits(c.when)) return; load(c.f);
-        const ring = () => { if (!on) return; if (state !== "focus" || c.inFocus) one(c.f, c.g * rand(0.7, 1), c.rates[Math.floor(Math.random() * c.rates.length)], c.lp); timers.push(setTimeout(ring, rand(c.every[0] * 1000, c.every[1] * 1000))); };
-        timers.push(setTimeout(ring, rand(6000, 14000)));
-      });
+      (S.loops || []).forEach((l) => { if (fits(l.when)) loop(l.f, l.g, l.rate || 1); });
       loop(STEPS.f, 0.0, 1);
       Object.values(S.sfx || {}).forEach((x) => load(x.f));
       // 가끔 불어오는 소리(풍경·갈매기 등): 정해진 간격마다 커졌다 작아진다

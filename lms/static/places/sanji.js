@@ -230,9 +230,7 @@ export default {
         },
       },
       sounds: {
-        master: { lp: 7000 },
-        chimes: [{ f: "common/bowl", g: 0.1, rates: [1.5, 1.68, 2.0, 2.24, 2.52], every: [28, 55], lp: 3500 }],
-        loops: [{ f: "common/pad_a", g: 0.32 }, { f: "sanji/wind", g: 0.85 }, { f: "sanji/birds", g: 0.55, when: "day" }, { f: "common/crickets", g: 0.5, when: "night" }],
+        loops: [{ f: "sanji/wind", g: 0.85 }, { f: "sanji/birds", g: 0.55, when: "day" }, { f: "common/crickets", g: 0.5, when: "night" }],
         gusts: [{ f: "sanji/chimes", max: 0.42, every: [14, 30] }],
         sfx: { moktak: { f: "sanji/moktak", g: 0.9, jitter: true }, bell: { f: "common/bowl", g: 1.0, rate: 0.42, lp: 1400 } },
       },
