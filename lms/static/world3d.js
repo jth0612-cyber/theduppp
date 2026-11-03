@@ -310,7 +310,10 @@ let myColor = root.dataset.color;
 const meName = (document.querySelector(".m-who") || {}).textContent || "나";
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", me: true });
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
-if (new URLSearchParams(location.search).has("shot")) me.g.visible = false;   // 장소 사진(썸네일) 찍을 때만 내 캐릭터를 숨긴다
+// 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
+const QS = new URLSearchParams(location.search);
+const SHOT = QS.has("shot") && QS.get("cam") ? { p: QS.get("cam").split(",").map(Number), t: (QS.get("look") || "0,0,0").split(",").map(Number), fov: +QS.get("fov") || 50 } : null;
+if (QS.has("shot")) me.g.visible = false;
 let state = "free";      // free | sitting | focus
 let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 25, focusStart = 0;
 
@@ -328,6 +331,7 @@ function updateCamera(dt, snap) {
   const cy = camTarget.y + Math.sin(cam.pitch) * cam.dist;
   camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.6), cz);
   camera.lookAt(camTarget);
+  if (SHOT) { camera.position.set(...SHOT.p); camera.lookAt(...SHOT.t); if (camera.fov !== SHOT.fov) { camera.fov = SHOT.fov; camera.updateProjectionMatrix(); } }
 }
 function camBehind(dist, pitch) {
   const want = me.yaw + Math.PI, d = Math.atan2(Math.sin(want - cam.tYaw), Math.cos(want - cam.tYaw));
