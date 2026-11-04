@@ -1,4 +1,4 @@
-// 같이 공부 · 신사. 주홍 기둥 문 → 손 씻는 곳 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
+// 소도시 명상 · 신사. 주홍 기둥 문 → 손 씻는 곳 → 돌길과 석등이 있는 마당 → 계단 → 법당(靜學堂, 방석 24개), 종각과 에마 걸이.
 export default {
   build(K) {
     const { THREE, scene, camera, TIME, PAL, mat, box, cyl, roof, textTexture, rand, srand, cedar, bamboo } = K;

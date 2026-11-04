@@ -203,3 +203,66 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
   if (e.persisted) document.documentElement.classList.remove("entering");
   document.querySelectorAll("form[data-enter]").forEach(function (f) { f.__entering = false; });
 });
+
+// ---------- 질문 쓰기: 적은 내용 지키기 (임시 저장 · 사진 확인 · 미리보기) ----------
+(function () {
+  var MAX = 20 * 1024 * 1024 - 256 * 1024;   // 서버 한도(20MB)보다 조금 작게
+  function box(key) {
+    return {
+      get: function () { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } },
+      set: function (v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} },
+      del: function () { try { localStorage.removeItem(key); } catch (e) {} }
+    };
+  }
+  // 등록을 마치고 넘어온 화면이면 임시 저장을 지운다
+  document.querySelectorAll("[data-draft-clear]").forEach(function (el) {
+    el.getAttribute("data-draft-clear").split(" ").forEach(function (k) { box(k).del(); });
+  });
+  document.querySelectorAll("form[data-qform]").forEach(function (f) {
+    var store = box(f.getAttribute("data-draft-key"));
+    var fields = Array.prototype.filter.call(f.elements, function (el) { return ["title", "body", "qtype"].indexOf(el.name) >= 0; });
+    var note = f.querySelector("[data-draft-note]");
+    if (!f.hasAttribute("data-has-draft")) {        // 서버가 돌려준 내용이 없을 때만, 지난번에 쓰던 내용을 불러온다
+      var d = store.get();
+      if (d && fields.some(function (el) { return !el.value && d[el.name]; })) {
+        fields.forEach(function (el) { if (!el.value && d[el.name]) el.value = d[el.name]; });
+        if (note) note.hidden = false;
+        var det = f.closest("details"); if (det) det.open = true;
+      }
+    }
+    function save() {
+      var v = {}, any = false;
+      fields.forEach(function (el) { v[el.name] = el.value; if (el.name !== "qtype" && el.value.trim()) any = true; });
+      if (any) store.set(v); else store.del();
+    }
+    var t; f.addEventListener("input", function () { clearTimeout(t); t = setTimeout(save, 400); });
+
+    var wrap = f.querySelector("[data-photo]"); if (!wrap) return;
+    var inp = wrap.querySelector("input[type=file]"), err = wrap.querySelector("[data-photo-err]"),
+        pv = wrap.querySelector("[data-photo-preview]"), img = pv.querySelector("img"), qt = f.querySelector("[data-qtype]");
+    function showErr(msg) { err.textContent = msg || ""; err.hidden = !msg; wrap.classList.toggle("has-err", !!msg); }
+    function clearPhoto() { inp.value = ""; pv.hidden = true; if (img.src) { URL.revokeObjectURL(img.src); img.removeAttribute("src"); } }
+    inp.addEventListener("change", function () {
+      var file = inp.files && inp.files[0];
+      if (!file) { clearPhoto(); return; }
+      if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
+        clearPhoto(); return showErr("PNG나 JPG 사진만 올릴 수 있어요. 아이폰이라면 스크린샷으로 찍어 올리면 돼요.");
+      }
+      if (file.size > MAX) { clearPhoto(); return showErr("사진이 20MB보다 커요. 스크린샷으로 찍어 올리면 돼요."); }
+      showErr("");
+      if (img.src) URL.revokeObjectURL(img.src);
+      img.src = URL.createObjectURL(file); pv.querySelector("span").textContent = file.name; pv.hidden = false;
+    });
+    pv.querySelector("[data-photo-clear]").addEventListener("click", function () { clearPhoto(); inp.focus(); });
+    if (qt) qt.addEventListener("change", function () { if (qt.value !== "학습질문") showErr(""); });
+    f.addEventListener("submit", function (e) {
+      save();
+      if (qt && qt.value === "학습질문" && !(inp.files && inp.files.length)) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        showErr("학습질문은 문제 사진이 꼭 필요해요. 사진을 붙이고 다시 '질문 등록'을 눌러 주세요. 적은 내용은 그대로 있어요.");
+        wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+        inp.focus();
+      }
+    });
+  });
+})();

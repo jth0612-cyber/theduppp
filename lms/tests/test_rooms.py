@@ -1,4 +1,4 @@
-"""같이 공부(신사·목욕탕·바닷가 역·골목 찻집) 점검: python -m unittest discover tests"""
+"""소도시 명상(신사·목욕탕·바닷가 역·골목 찻집) 점검: python -m unittest discover tests"""
 import os
 import sys
 import unittest
@@ -126,7 +126,7 @@ class RoomsTest(unittest.TestCase):
         mine = mine[mine.index('class="rank-list"'):]
         self.assertIn("닉1", mine); self.assertNotIn("닉2", mine)
         self.assertIn("닉2", a.get("/s/rooms/rank?place=sento").data.decode())
-        # 같이 공부 목록에 팔로잉 표시
+        # 소도시 명상 목록에 팔로잉 표시
         b.get("/s/rooms/sento")
         r = a.post("/s/rooms/sento/beat", data={}).get_json()
         self.assertTrue([m for m in r["members"] if m["id"] == u1][0]["follow"])

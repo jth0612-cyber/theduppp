@@ -2,6 +2,7 @@
 성적·자료·공지·영상은 본인/본인 반으로 제한한다. 질답 게시판은 학습질문만 전체 공개(작성자는 닉네임)하고,
 행정문의는 본인과 선생님만 본다."""
 import os
+from datetime import date, timedelta
 
 from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
                    send_file, session, url_for)
@@ -155,6 +156,19 @@ _PUBLIC_QUESTION_SELECT = """
     FROM questions q LEFT JOIN users u ON u.student_id = q.student_id"""
 
 
+WEEK_BEST = 3
+
+
+def _week_best():
+    """이번 주(월요일부터) 가장 많이 본 학습질문. 한 사람이 하루 한 번만 센다."""
+    monday = (date.today() - timedelta(days=date.today().weekday())).isoformat()
+    return query(f"""SELECT q.id, q.title, q.status, COUNT(*) AS views,
+                            (SELECT COUNT(*) FROM answers WHERE question_id = q.id) AS answer_count
+                     FROM question_views v JOIN questions q ON q.id = v.question_id
+                     WHERE v.day >= ? AND q.qtype = '학습질문'
+                     GROUP BY q.id HAVING views >= 2 ORDER BY views DESC, q.created_at DESC LIMIT {WEEK_BEST}""", (monday,))
+
+
 def _upload_image(required):
     img = request.files.get("image")
     if not img or not img.filename:
@@ -168,27 +182,31 @@ def _upload_image(required):
 @student_required
 def questions():
     me = _me()
+    draft, form_err = None, None
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         body = request.form.get("body", "").strip()
         qtype = request.form.get("qtype", "")
+        draft = {"title": title, "body": body, "qtype": qtype}
         if qtype not in QUESTION_TYPES:
-            flash("질문 유형을 선택하세요.", "error")
-        elif not title or not body:
-            flash("제목과 내용을 입력하세요.", "error")
+            form_err = ("qtype", "질문 유형을 골라 주세요.")
+        elif not title:
+            form_err = ("title", "제목을 적어 주세요.")
+        elif not body:
+            form_err = ("body", "내용을 적어 주세요.")
         elif len(title) > 120 or len(body) > 5000:
-            flash("제목은 120자, 내용은 5000자 이내로 입력하세요.", "error")
+            form_err = ("body", "제목은 120자, 내용은 5000자 이내로 적어 주세요.")
         else:
             try:
                 image_id = _upload_image(required=qtype == "학습질문")
             except ValueError as e:
-                flash(str(e), "error")
-                return redirect(url_for("student.questions", ask=1) + "#ask")
-            qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype) VALUES (?, ?, ?, ?, ?)",
-                          (me["id"], title, body, image_id, qtype))
-            audit("question_create", f"question:{qid}")
-            flash("질문을 등록했습니다.", "ok")
-            return redirect(url_for("student.question_detail", qid=qid))
+                form_err = ("image", str(e) + " 적은 내용은 그대로 남아 있어요. 사진만 붙여서 다시 등록하면 돼요.")
+            else:
+                qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype) VALUES (?, ?, ?, ?, ?)",
+                              (me["id"], title, body, image_id, qtype))
+                audit("question_create", f"question:{qid}")
+                flash("질문을 등록했습니다.", "ok")
+                return redirect(url_for("student.question_detail", qid=qid, posted=1))
     view = "mine" if request.args.get("view") == "mine" else "all"
     qtype = request.args.get("qtype", "")
     q = request.args.get("q", "").strip()[:50]
@@ -213,9 +231,10 @@ def questions():
                  [me["id"]] + args + [QUESTIONS_PER_PAGE, (page - 1) * QUESTIONS_PER_PAGE])
     faqs = query("""SELECT id, title FROM questions WHERE faq = 1 AND qtype = '학습질문'
                     ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
+    best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
     return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs,
-                           qtype=qtype, qtypes=QUESTION_TYPES,
-                           pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total)
+                           qtype=qtype, qtypes=QUESTION_TYPES, draft=draft, form_err=form_err, best=best,
+                           pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total), 400 if form_err else 200
 
 
 def _get_visible_question(qid, me):
@@ -242,6 +261,9 @@ def question_thread(qid):
 def question_detail(qid):
     me = _me()
     q = _get_visible_question(qid, me)
+    if not q["is_mine"]:   # 내가 쓴 질문을 내가 여는 건 세지 않는다
+        execute("INSERT OR IGNORE INTO question_views (question_id, user_id, day) VALUES (?, ?, date('now', 'localtime'))",
+                (qid, g.user["id"]))
     can_follow_up = q["is_mine"] and q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
     return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),
                            can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS)
@@ -260,18 +282,24 @@ def question_followup(qid):
         flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 가능합니다. 새 질문으로 올려 주세요.", "error")
     else:
         body = request.form.get("body", "").strip()
+        err = None
         if not body or len(body) > 3000:
-            flash("추가 질문 내용을 3000자 이내로 입력하세요.", "error")
+            err = "추가 질문 내용을 3000자 이내로 적어 주세요."
         else:
             try:
                 image_id = _upload_image(required=False)
             except ValueError as e:
-                flash(str(e), "error")
-                return redirect(url_for("student.question_detail", qid=qid))
-            execute("INSERT INTO followups (question_id, body, image_id) VALUES (?, ?, ?)", (qid, body, image_id))
-            execute("UPDATE questions SET status = 'open' WHERE id = ?", (qid,))
-            audit("question_followup", f"question:{qid}")
-            flash("추가 질문을 보냈습니다.", "ok")
+                err = str(e) + " 적은 내용은 그대로 남아 있어요."
+        if err:   # 적은 내용을 날리지 않고 같은 화면에 그대로 돌려준다
+            can_follow_up = q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
+            return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),
+                                   can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS,
+                                   fu_body=body, fu_err=err), 400
+        execute("INSERT INTO followups (question_id, body, image_id) VALUES (?, ?, ?)", (qid, body, image_id))
+        execute("UPDATE questions SET status = 'open' WHERE id = ?", (qid,))
+        audit("question_followup", f"question:{qid}")
+        flash("추가 질문을 보냈습니다.", "ok")
+        return redirect(url_for("student.question_detail", qid=qid, posted=1) + "#thread")
     return redirect(url_for("student.question_detail", qid=qid) + "#thread")
 
 

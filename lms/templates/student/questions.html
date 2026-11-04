@@ -9,18 +9,21 @@
   </div>
 </div>
 
-<details class="card" id="ask" {{ 'open' if request.args.get('ask') }}>
+{% set dq = draft.qtype if draft else qtype %}
+{% set fe = form_err[0] if form_err else None %}
+<details class="card" id="ask" {{ 'open' if request.args.get('ask') or draft }}>
   <summary>질문 쓰기</summary>
-  <form method="post" enctype="multipart/form-data">
+  {% if form_err %}<p class="form-err" role="alert">{{ form_err[1] }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" data-qform data-draft-key="q-draft-{{ g.user.id }}"{% if draft %} data-has-draft{% endif %}>
     {{ csrf() }}
     <div class="row">
-      <div class="field shrink"><label>질문 유형</label>
-        <select name="qtype" required>
+      <div class="field shrink{{ ' has-err' if fe == 'qtype' }}"><label for="q-type">질문 유형</label>
+        <select id="q-type" name="qtype" required data-qtype>
           <option value="">선택</option>
-          {% for t in qtypes %}<option value="{{ t }}" {{ "selected" if t == qtype }}>{{ t }}</option>{% endfor %}
+          {% for t in qtypes %}<option value="{{ t }}" {{ "selected" if t == dq }}>{{ t }}</option>{% endfor %}
         </select></div>
-      <div class="field wide"><label>제목</label>
-        <input type="text" name="title" maxlength="120" required placeholder="[교재-페이지-번호] 예) 개념서 42p 3번"></div>
+      <div class="field wide{{ ' has-err' if fe == 'title' }}"><label for="q-title">제목</label>
+        <input type="text" id="q-title" name="title" maxlength="120" required value="{{ draft.title if draft else '' }}" placeholder="[교재-페이지-번호] 예) 개념서 42p 3번"></div>
     </div>
     <div class="guide small">
       <b>질문 작성 안내</b>
@@ -32,11 +35,27 @@
         <li>학습질문은 공개됩니다. 이름이나 연락처 같은 개인정보는 적지 마세요.</li>
       </ul>
     </div>
-    <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required></textarea></div>
-    <div class="field"><label>사진 첨부 (PNG/JPG · 최대 20MB · 학습질문은 필수)</label><input type="file" name="image" accept=".png,.jpg,.jpeg"></div>
+    <div class="field{{ ' has-err' if fe == 'body' }}"><label for="q-body">내용</label><textarea id="q-body" name="body" maxlength="5000" required>{{ draft.body if draft else '' }}</textarea></div>
+    <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
+      <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 최대 20MB{{ ' · 학습질문은 필수' }})</span></label>
+      <input type="file" id="q-image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+      <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 적은 내용은 그대로 있어요.{% endif %}</p>
+      <div class="photo-preview" data-photo-preview hidden><img alt="첨부할 사진 미리보기"><span></span><button type="button" class="btn small" data-photo-clear>빼기</button></div>
+    </div>
     <button class="btn primary">질문 등록</button>
+    <p class="small muted draft-note" data-draft-note hidden>쓰던 내용을 불러왔어요.</p>
   </form>
 </details>
+
+{% if best %}
+<section class="panel week-best" aria-labelledby="h-best">
+  <div class="sec-head"><h2 id="h-best">이번 주 많이 본 질문</h2><span>월요일부터 · 한 사람 하루 한 번</span></div>
+  <ol class="best-list">
+    {% for b in best %}<li><a href="{{ url_for('student.question_detail', qid=b.id) }}"><span class="best-no">{{ loop.index }}</span><b>{{ b.title }}</b></a>
+      <span class="best-meta">조회 {{ b.views }}{% if b.answer_count %} · 답변 {{ b.answer_count }}{% else %} · 답변 대기{% endif %}</span></li>{% endfor %}
+  </ol>
+</section>
+{% endif %}
 
 {% if faqs %}
 <section class="panel faq" aria-labelledby="h-faq">

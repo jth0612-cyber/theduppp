@@ -5,6 +5,7 @@ import re
 import sys
 import tempfile
 import unittest
+from datetime import date
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,7 +73,7 @@ class AppTest(unittest.TestCase):
         if image:
             data["image"] = (io.BytesIO(PNG), "q.png")
         r = client.post("/s/questions", data=data, content_type="multipart/form-data")
-        return int(r.headers["Location"].rsplit("/", 1)[-1])
+        return int(r.headers["Location"].split("?")[0].rsplit("/", 1)[-1])
 
     # ---------- 기능 ----------
 
@@ -237,6 +238,81 @@ class FeatureTest(AppTest):
         cid = self.setup_class_with_students()
         accounts = self.issue_accounts(cid)
         return cid, self.student_client("A001", accounts["A001"]), self.student_client("A002", accounts["A002"])
+
+    def test_question_form_keeps_what_was_written(self):
+        _, s1, _ = self._students()
+        # 사진 없이 학습질문을 올리면: 등록되지 않지만, 적은 제목·내용은 그대로 돌려주고 사진 칸에 안내
+        r = s1.post("/s/questions", data={"title": "개념서 42p 3번", "body": "보기 ㄴ에서 막혔어요", "qtype": "학습질문"})
+        page = r.data.decode()
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('value="개념서 42p 3번"', page)
+        self.assertIn("보기 ㄴ에서 막혔어요</textarea>", page)
+        self.assertIn("사진만 붙여서 다시 등록하면 돼요", page)
+        self.assertIn('<option value="학습질문" selected', page)
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) n FROM questions", one=True)["n"], 0)
+        # 이어서 사진만 붙여 보내면 등록
+        qid = self.ask(s1, "개념서 42p 3번", body="보기 ㄴ에서 막혔어요")
+        self.assertIn("보기 ㄴ에서 막혔어요", s1.get(f"/s/questions/{qid}").data.decode())
+
+    def test_followup_keeps_body_on_error(self):
+        _, s1, _ = self._students()
+        qid = self.ask(s1, "42p 3번")
+        self.c.post(f"/t/questions/{qid}", data={"body": "답변"})
+        r = s1.post(f"/s/questions/{qid}/followup", data={"body": "추가로 궁금", "image": (io.BytesIO(b"not an image"), "x.gif")},
+                    content_type="multipart/form-data")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("추가로 궁금</textarea>", r.data.decode())
+
+    def test_week_best_questions(self):
+        _, s1, s2 = self._students()
+        hot = self.ask(s1, "많이 본 질문")
+        self.ask(s1, "덜 본 질문")
+        self.assertNotIn("이번 주 많이 본 질문", s2.get("/s/questions").data.decode())
+        for _ in range(3):
+            s2.get(f"/s/questions/{hot}")          # 같은 사람이 여러 번 봐도 하루 한 번
+        s1.get(f"/s/questions/{hot}")              # 작성자 본인은 세지 않음
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) n FROM question_views", one=True)["n"], 1)
+            uid = query("SELECT id FROM users WHERE role='student' ORDER BY id DESC LIMIT 1", one=True)["id"]
+            execute("INSERT INTO question_views (question_id, user_id, day) VALUES (?, ?, date('now','localtime','-1 day'))",
+                    (hot, uid))
+        page = s2.get("/s/questions").data.decode()
+        if date.today().weekday() == 0:   # 월요일이면 어제 본 기록은 지난주
+            self.assertNotIn("이번 주 많이 본 질문", page)
+        else:
+            self.assertIn("이번 주 많이 본 질문", page)
+            self.assertIn("조회 2", page)
+            self.assertLess(page.index("이번 주 많이 본 질문"), page.index("<table"))
+
+    def test_staff_can_join_rooms_with_caption(self):
+        _, s1, _ = self._students()
+        ta = self._make_assistant()
+        self.assertEqual(ta.get("/s/rooms").status_code, 200)
+        self.assertEqual(self.c.get("/s/rooms/sanji").status_code, 200)        # 선생님도
+        page = ta.get("/s/rooms/sanji").data.decode()
+        self.assertIn('data-me-name="김조교" data-me-cap="조교"', page)
+        self.assertNotIn("data-planner-add", page)                               # 플래너는 학생만
+        r = s1.post("/s/rooms/sanji/beat", data={}).get_json()
+        tas = [m for m in r["members"] if m.get("cap") == "조교"]
+        self.assertEqual((tas[0]["nick"], tas[0]["cap"]), ("김조교", "조교"))
+        teacher = [m for m in r["members"] if m.get("cap") == "선생님"]
+        self.assertEqual(len(teacher), 1)
+        self.assertIn('<span class="cap">조교</span> 김조교', s1.get("/s/rooms/sanji").data.decode())
+        # 조교도 집중 기록은 남지만, 학생 순위(터줏대감)에는 들지 않는다
+        ta.post("/s/rooms/sanji/beat", data={"action": "start", "plan": "25"})
+        with self.app.app_context():
+            execute("UPDATE room_presence SET focus_since = datetime('now', 'localtime', '-30 minutes')")
+        self.assertEqual(ta.post("/s/rooms/sanji/done", data={"minutes": "25"}).get_json()["minutes"], 25)
+        self.assertEqual(ta.get("/s/rooms/rank?place=sanji").status_code, 200)
+        with self.app.app_context():
+            from views.rooms import _ranking, _since
+            ta_id = query("SELECT id FROM users WHERE username='ta_kim'", one=True)["id"]
+            self.assertNotIn(ta_id, [r["id"] for r in _ranking("sanji", _since("week"))])
+        # 친구·팔로우는 학생끼리
+        self.assertNotEqual(ta.get("/s/friends").status_code, 200)
+        # 메뉴에 '소도시 명상'
+        self.assertIn("/s/rooms", ta.get("/t/questions").data.decode())
 
     def test_question_types_and_privacy(self):
         _, s1, s2 = self._students()
@@ -430,10 +506,9 @@ class FeatureTest(AppTest):
         self.assertEqual(ta.get(f"/t/questions/{admin_q}").status_code, 200)
         self.assertEqual(ta.get(f"/s/file/{fid}").status_code, 200)
         ta.post(f"/t/questions/{qid}", data={"body": "조교가 설명할게요"})
-        # 학생에게는 '조교 답변 (김조교)' 로 보임
+        # 학생에게는 '[조교] 김조교 답변' 으로 보임 (본명 앞에 캡션)
         student_view = s1.get(f"/s/questions/{qid}").data.decode()
-        self.assertIn("조교 답변", student_view)
-        self.assertIn("김조교", student_view)
+        self.assertIn('<span class="cap">조교</span> 김조교 답변', student_view)
         # 조교도 볼 수 있는 화면 (보기 위주로 열어 둠)
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
                     "/t/timetable", "/t/tasks", "/t/cards", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:

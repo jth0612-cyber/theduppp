@@ -1,4 +1,4 @@
-// 같이 공부: 타이머, 25초마다 '여기 있어요' 신호, 장소별 배경 소리(파일 없이 브라우저에서 합성).
+// 소도시 명상: 타이머, 25초마다 '여기 있어요' 신호, 장소별 배경 소리(파일 없이 브라우저에서 합성).
 (function () {
 function initRoom(room) {
   var beatUrl = room.getAttribute("data-beat"), doneUrl = room.getAttribute("data-done");
@@ -38,7 +38,9 @@ function initRoom(room) {
       var li = document.createElement("li");
       li.className = (m.status === "focus" ? "is-focus" : "") + (m.me ? " is-me" : "");
       var seat = document.createElement("i"); seat.className = "seat"; seat.setAttribute("aria-hidden", "true");
-      var b = document.createElement("b"); b.textContent = m.nick + (m.me ? " (나)" : "");
+      var b = document.createElement("b");
+      if (m.cap) { var cp = document.createElement("span"); cp.className = "cap"; cp.textContent = m.cap; b.appendChild(cp); b.appendChild(document.createTextNode(" ")); }
+      b.appendChild(document.createTextNode(m.nick + (m.me ? " (나)" : "")));
       var s = document.createElement("span");
       s.textContent = (m.status === "focus" ? "집중 " + m.elapsed + "/" + m.plan + "분" : "쉬는 중") + " · 오늘 " + m.today + "분";
       li.appendChild(seat); li.appendChild(b); li.appendChild(s); list.appendChild(li);

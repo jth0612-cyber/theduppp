@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}같이 공부 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}소도시 명상 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>같이 공부</h1>
+    <h1>소도시 명상</h1>
     <p class="ed-lede">한 곳에 들어가 자리에 앉고 타이머를 켜면, 같은 곳에 있는 친구들이 보여요. 5분 이상 집중한 시간만 기록돼요.</p>
   </div>
   <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
-  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a> · <a href="{{ url_for('rooms.friends') }}">친구</a></p>
+  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a>{% if g.user.role == 'student' %} · <a href="{{ url_for('rooms.friends') }}">친구</a>{% endif %}</p>
   </div>
 </header>
 <ul class="place-list">

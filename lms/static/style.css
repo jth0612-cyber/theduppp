@@ -936,12 +936,13 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
   font-family: var(--font-display); font-size: clamp(15px, 2.2vw, 19px); color: #fff; text-shadow: 0 1px 10px rgba(0, 0, 0, .55);
   opacity: 0; transition: opacity .9s ease, transform .9s ease; pointer-events: none; }
 .w3-whisper.is-on { opacity: 1; transform: translate(-50%, 0); }
-.w3-timer { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); text-align: center; color: #fff; pointer-events: none; text-shadow: 0 2px 18px rgba(0, 0, 0, .5); }
+.w3-timer { text-align: center; color: #fff; pointer-events: none; text-shadow: 0 2px 18px rgba(0, 0, 0, .55); }
 .w3-timer p { margin: 0; }
-.w3-timer-time { font-family: var(--font-display); font-weight: 600; font-size: clamp(56px, 11vw, 96px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.w3-timer-time { font-family: var(--font-display); font-weight: 600; font-size: clamp(44px, 8vw, 72px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .w3-timer-state { font-size: 13px; letter-spacing: .2em; opacity: .9; margin-top: 6px !important; }
 .w3-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: grid; justify-items: center; gap: 10px; padding: 0 12px 14px; pointer-events: none; }
 .w3-bottom > * { pointer-events: auto; }
+.w3-bottom > .w3-timer { pointer-events: none; }
 .w3-plans { display: flex; gap: 6px; }
 .w3-chip { position: relative; margin: 0; }
 .w3-chip input { position: absolute; opacity: 0; }
@@ -1218,3 +1219,27 @@ body.entered .side .nav { animation: rail-in 520ms 160ms cubic-bezier(.2, .7, .2
   html.entering::after, body.entered::after { animation: none; display: none; }
   body.entered .sheet, body.entered .side .nav, html.entering body > main { animation: none; transition: none; transform: none; }
 }
+
+/* 폼 오류: 어느 칸이 문제인지 그 자리에서 */
+.form-err { margin: 0 0 14px; padding: 10px 14px; border-radius: 8px; background: var(--danger-soft); color: var(--danger); font-size: 14px; }
+.field-err { margin: 6px 0 0; color: var(--danger); font-size: 13px; }
+.has-err input, .has-err select, .has-err textarea { border-color: var(--danger) !important; }
+.photo-field.has-err input[type=file]::file-selector-button { border-color: var(--danger); color: var(--danger); }
+.photo-preview { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 8px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); }
+.photo-preview[hidden] { display: none; }
+.photo-preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; background: var(--sheet); }
+.photo-preview span { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.draft-note { margin: 8px 0 0; }
+
+/* 질답: 이번 주 많이 본 질문 */
+.best-list { list-style: none; margin: 0; padding: 0; }
+.best-list li { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); }
+.best-list li:first-child { border-top: 0; }
+.best-list a { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; color: var(--ink); }
+.best-list a b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.best-no { flex: none; width: 1.2em; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700; }
+.best-meta { flex: none; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* 조교·선생님 캡션: 본명 앞 작은 표시 */
+.cap { display: inline-block; padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent-ink); font-size: 11.5px; font-weight: 600; line-height: 1.6; vertical-align: 1px; letter-spacing: 0; }
+.side .cap, .m-top .cap { background: var(--accent); color: #fff; }

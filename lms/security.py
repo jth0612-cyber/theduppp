@@ -92,6 +92,23 @@ def authenticate(username, password):
     return user, None
 
 
+# ---------- 화면에 보이는 이름 ----------
+# 학생은 닉네임, 조교·선생님은 본명 + 앞에 작은 캡션
+ROLE_CAPTION = {"assistant": "조교", "teacher": "선생님"}
+_ROLE_FALLBACK = {"assistant": "조교", "teacher": "정태혁"}   # 본명을 비워 둔 계정
+
+
+def shown_name(row):
+    role = row["role"] if "role" in row.keys() else "student"
+    if role in ROLE_CAPTION:
+        return (row["display_name"] or "").strip() or _ROLE_FALLBACK[role]
+    return row["nickname"] or "익명"
+
+
+def role_caption(row):
+    return ROLE_CAPTION.get(row["role"] if "role" in row.keys() else "student")
+
+
 # ---------- 세션 / 권한 ----------
 
 def login_user(user):
@@ -151,6 +168,11 @@ def login_required(role=None):
 teacher_required = login_required("teacher")
 staff_required = login_required(("teacher", "assistant"))  # 질문답변처럼 조교도 하는 일
 student_required = login_required("student")
+
+
+def member_required(view):
+    """학생·조교·선생님 모두 (소도시 명상 공간처럼 함께 쓰는 곳)."""
+    return login_required(("student", "teacher", "assistant"))(view)
 
 
 def teacher_only():

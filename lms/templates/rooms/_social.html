@@ -1,4 +1,4 @@
-{# 팔로우 버튼 · 순위 한 줄 (같이 공부 화면들이 함께 쓴다) #}
+{# 팔로우 버튼 · 순위 한 줄 (소도시 명상 화면들이 함께 쓴다) #}
 {% from "_macros.html" import csrf %}
 {% macro follow_btn(uid, on, next_url) -%}
 <form method="post" action="{{ url_for('rooms.follow', uid=uid) }}" class="inline-form" data-follow>
@@ -12,6 +12,6 @@
   <i class="rank-dot {{ r.avatar_color|avatar_cls }}" aria-hidden="true"></i>
   <b class="rank-nick">{{ r.nickname or '익명' }}{% if r.id == me %} <small>(나)</small>{% endif %}</b>
   <span class="rank-m">{{ r.m|hm }}</span>
-  {% if r.id != me %}{{ follow_btn(r.id, r.id in follows, next_url) }}{% endif %}
+  {% if r.id != me and g.user.role == 'student' %}{{ follow_btn(r.id, r.id in follows, next_url) }}{% endif %}
 </li>
 {%- endmacro %}

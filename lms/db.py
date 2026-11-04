@@ -367,7 +367,7 @@ CREATE TABLE IF NOT EXISTS planner_items (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_planner_user_day ON planner_items(user_id, day);
--- 같이 공부 칠판 채팅 (노천탕 화롯가처럼 자리에 앉은 학생만 쓴다)
+-- 소도시 명상 칠판 채팅 (노천탕 화롯가처럼 자리에 앉은 학생만 쓴다)
 CREATE TABLE IF NOT EXISTS room_chat (
     id          INTEGER PRIMARY KEY,
     place       TEXT NOT NULL,
@@ -394,7 +394,7 @@ CREATE TABLE IF NOT EXISTS notice_reads (
     read_at     TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     PRIMARY KEY (notice_id, user_id)
 );
--- 같이 공부 '오늘의 운세' (하루에 한 번)
+-- 소도시 명상 '오늘의 운세' (하루에 한 번)
 CREATE TABLE IF NOT EXISTS room_fortunes (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     day         TEXT NOT NULL,
@@ -420,6 +420,15 @@ CREATE TABLE IF NOT EXISTS room_notes (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_room_notes_place ON room_notes(place, created_at);
+
+-- 질문 조회: 한 사람이 하루에 한 번만 센다 (새로고침으로 부풀지 않게)
+CREATE TABLE IF NOT EXISTS question_views (
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    PRIMARY KEY (question_id, user_id, day)
+);
+CREATE INDEX IF NOT EXISTS idx_question_views_day ON question_views(day);
 
 -- 웹 푸시 구독 (브라우저마다 하나)
 CREATE TABLE IF NOT EXISTS push_subs (
@@ -492,7 +501,7 @@ def init_db(path):
     # 자주 묻는 질문(FAQ)으로 고정
     _add_column(conn, "questions", "faq", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "timetable", "room", "TEXT NOT NULL DEFAULT ''")
-    # 3D 같이 공부: 위치·자세·캐릭터 색
+    # 3D 소도시 명상: 위치·자세·캐릭터 색
     _add_column(conn, "room_presence", "px", "REAL NOT NULL DEFAULT 0")
     _add_column(conn, "room_presence", "pz", "REAL NOT NULL DEFAULT 0")
     _add_column(conn, "room_presence", "ry", "REAL NOT NULL DEFAULT 0")

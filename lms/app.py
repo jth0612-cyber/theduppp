@@ -84,6 +84,9 @@ def create_app(test_config=None):
     app.register_blueprint(planner_bp)
     app.register_blueprint(pwa_bp)
     app.jinja_env.globals["google_enabled"] = google_enabled
+    from security import role_caption, shown_name
+    app.jinja_env.globals["shown_name"] = shown_name
+    app.jinja_env.globals["role_caption"] = role_caption
 
     def site_contact():
         # instance/.env 에서 읽는다. 비어 있으면 문의 버튼은 질답 게시판(행정문의)으로 연결된다
@@ -98,7 +101,7 @@ def create_app(test_config=None):
     def security_headers(resp):
         resp.headers["Content-Security-Policy"] = (
             # i.ytimg.com: 유튜브 강의 영상 썸네일
-            "default-src 'self'; img-src 'self' data: https://i.ytimg.com; style-src 'self'; script-src 'self'; "
+            "default-src 'self'; img-src 'self' data: blob: https://i.ytimg.com; style-src 'self'; script-src 'self'; "
             "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         )
         resp.headers["X-Content-Type-Options"] = "nosniff"

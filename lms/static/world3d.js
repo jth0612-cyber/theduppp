@@ -1,4 +1,4 @@
-// 같이 공부 3D 공통 엔진. 장소(신사·노천탕·바닷가 역·골목 찻집)는 places/*.js 가 그리고,
+// 소도시 명상 3D 공통 엔진. 장소(신사·노천탕·바닷가 역·골목 찻집)는 places/*.js 가 그리고,
 // 캐릭터·카메라·조작·친구 동기화·집중 타이머·소리는 여기서 함께 쓴다.
 import * as THREE from "./vendor/three.module.min.js";
 
@@ -285,8 +285,24 @@ if (TIME !== "day" && !reduceMotion && P.fireflies !== false) {
 }
 
 // ---------------------------------------------------------------- 캐릭터
-function nameSprite(text, me) {
+function nameSprite(text, me, cap) {
+  if (cap) return capSprite(text, me, cap);
   const t = textTexture(text, { w: 384, h: 96, font: "600 40px 'Noto Sans KR', sans-serif", fg: me ? "#fff" : "#2a2622", bg: me ? "rgba(30,28,24,0.82)" : "rgba(255,252,246,0.86)", radius: 48 });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+  s.scale.set(1.5, 0.375, 1); s.position.y = 1.72; s.renderOrder = 10; return s;
+}
+// 조교·선생님 이름표: 초록 캡션 + 본명
+function capSprite(text, me, cap) {
+  const c = document.createElement("canvas"); c.width = 384; c.height = 96; const x = c.getContext("2d");
+  const rr = (x0, y0, w, h, r) => { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.fill(); };
+  x.font = "700 30px 'Noto Sans KR', sans-serif"; const cw = x.measureText(cap).width + 26;
+  x.font = "600 40px 'Noto Sans KR', sans-serif"; const nw = Math.min(384 - cw - 44, x.measureText(text).width);
+  const W = Math.min(384, cw + nw + 44), X = (384 - W) / 2;
+  x.fillStyle = me ? "rgba(30,28,24,0.82)" : "rgba(255,252,246,0.9)"; rr(X, 4, W, 88, 44);
+  x.fillStyle = "#2c6852"; rr(X + 12, 22, cw, 52, 14);
+  x.fillStyle = "#fff"; x.font = "700 30px 'Noto Sans KR', sans-serif"; x.textBaseline = "middle"; x.textAlign = "center"; x.fillText(cap, X + 12 + cw / 2, 49);
+  x.fillStyle = me ? "#fff" : "#2a2622"; x.font = "600 40px 'Noto Sans KR', sans-serif"; x.textAlign = "left"; x.fillText(text, X + 22 + cw, 50, nw);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
   s.scale.set(1.5, 0.375, 1); s.position.y = 1.72; s.renderOrder = 10; return s;
 }
@@ -323,7 +339,7 @@ function updatePuffs(dt) {
   });
 }
 class Avatar {
-  constructor({ color, nick, me = false }) {
+  constructor({ color, nick, cap = null, me = false }) {
     this.me = me; this.g = new THREE.Group(); this.upper = new THREE.Group(); this.g.add(this.upper);
     this.colorMat = toon(color); this.rimMat = toon(new THREE.Color(color).offsetHSL(0, 0, 0.18));
     const U = this.upper;
@@ -351,7 +367,7 @@ class Avatar {
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; this.g.add(shadow);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.0, depthWrite: false, side: THREE.DoubleSide }));
     this.ring.rotation.x = -Math.PI / 2; this.ring.position.y = 0.04; this.g.add(this.ring);
-    this.tag = nameSprite(nick, me); this.tag.position.y = 2.15; this.g.add(this.tag);
+    this.tag = nameSprite(nick, me, cap); this.tag.position.y = 2.15; this.g.add(this.tag);
     this.pos = new THREE.Vector3(); this.path = []; this.yaw = 0; this.pose = "stand"; this.t = Math.random() * 10;
     this.focus = false; this.seat = null; this.bowT = 0; this.speed = me ? 3.6 : 3.8;
     scene.add(this.g);
@@ -518,8 +534,8 @@ class Avatar {
 // ---------------------------------------------------------------- 나
 const colors = root.dataset.colors.split(",");
 let myColor = root.dataset.color;
-const meName = (document.querySelector(".m-who") || {}).textContent || "나";
-const me = new Avatar({ color: myColor, nick: meName.trim() || "나", me: true });
+const meName = root.dataset.meName || (document.querySelector(".m-who") || {}).textContent || "나", meCap = root.dataset.meCap || null;
+const me = new Avatar({ color: myColor, nick: meName.trim() || "나", cap: meCap, me: true });
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
 // 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
 const QS = new URLSearchParams(location.search);
@@ -532,7 +548,7 @@ let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 25, focusStart =
 const CAM = Object.assign({ free: isTouch ? 9.5 : 8.5, seated: isTouch ? 6.4 : 6.0, focus: isTouch ? 5.8 : 5.4, pitch: 0.42, seatPitch: 0.36, focusPitch: 0.3 }, P.cam || {});
 const cam = { yaw: P.spawn.camYaw || 0, pitch: CAM.pitch, dist: CAM.free, tYaw: P.spawn.camYaw || 0, tPitch: CAM.pitch, tDist: CAM.free };
 const camTarget = new THREE.Vector3();
-let camFree = CAM.free, camLift = 0;
+let camFree = CAM.free, camLift = 0, camYawOff = 0;
 const camDir = new THREE.Vector3(), _tmpDir = new THREE.Vector3();
 function updateCamera(dt, snap) {
   // 부드럽게 따라가기: 손으로 돌릴 때는 빠르게, 저절로 돌아갈 때는 천천히 (지수 감쇠라 화면 빠르기와 상관없이 같은 느낌)
@@ -542,8 +558,9 @@ function updateCamera(dt, snap) {
   const tgt = new THREE.Vector3(me.g.position.x, me.g.position.y + (state === "free" ? 1.3 : 1.15), me.g.position.z);
   camTarget.lerp(tgt, snap ? 1 : 1 - Math.exp(-dt * 8));
   // 카메라와 캐릭터 사이에 벽이 있으면: 조금 더 위에서 내려다보는 각도로 비켜 보고, 그래도 막히면 벽 앞까지만
-  const freeAt = (pitch, dir) => {
-    dir.set(Math.sin(cam.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(cam.yaw) * Math.cos(pitch));
+  const freeAt = (pitch, dir, yo = 0) => {
+    const yw = cam.yaw + yo;
+    dir.set(Math.sin(yw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yw) * Math.cos(pitch));
     occRay.set(camTarget, dir); occRay.far = cam.dist + 0.4;
     const h = occRay.intersectObjects(occluders, false).find((x) => shown(x.object));
     return h ? Math.max(0.9, h.distance - 0.35) : cam.dist;
@@ -555,16 +572,25 @@ function updateCamera(dt, snap) {
       if (f2 > free + 0.6) { free = f2; lift = p2 - cam.pitch; if (f2 >= cam.dist * 0.75) break; }
     }
   }
+  // 위로 비켜도 막히면(천장 있는 실내) 어깨 너머로 옆으로 조금 돌아서 본다
+  let yawOff = 0;
+  if (free < cam.dist * 0.6 && !(drag && drag.moved)) {
+    let best = free;
+    for (const yo of [0.5, -0.5, 0.9, -0.9]) { const f = freeAt(cam.pitch + lift, _tmpDir, yo); if (f > best + 0.5) { best = f; yawOff = yo; } }
+    free = best;
+  }
+  camYawOff = snap ? yawOff : camYawOff + (yawOff - camYawOff) * (1 - Math.exp(-dt * 2.2));
   camLift += (lift - camLift) * (1 - Math.exp(-dt * (lift > camLift ? 10 : 2.5)));
-  const pe = cam.pitch + camLift;
-  camDir.set(Math.sin(cam.yaw) * Math.cos(pe), Math.sin(pe), Math.cos(cam.yaw) * Math.cos(pe));
+  const pe = cam.pitch + camLift, ye = cam.yaw + camYawOff;
+  if (Math.abs(camYawOff - yawOff) > 0.02 || Math.abs(camLift - lift) > 0.02) free = Math.min(free, freeAt(pe, _tmpDir, camYawOff));   // 도는 중에도 벽을 뚫지 않게
+  camDir.set(Math.sin(ye) * Math.cos(pe), Math.sin(pe), Math.cos(ye) * Math.cos(pe));
   camFree = free < camFree || snap ? free : camFree + (free - camFree) * (1 - Math.exp(-dt * 2.5));
   const d = Math.min(cam.dist, camFree);
   const cx = camTarget.x + camDir.x * d, cz = camTarget.z + camDir.z * d, cy = camTarget.y + camDir.y * d;
   camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.5), cz);
   camera.lookAt(camTarget);
   // 카메라가 캐릭터에 너무 붙으면 내 캐릭터를 잠깐 숨긴다 (머리 속이 보이지 않게)
-  me.g.visible = !QS.has("shot") && d > 1.15;
+  me.g.visible = !QS.has("shot") && d > 2.2;   // 벽 때문에 카메라가 바짝 붙으면 머리가 화면을 가리지 않게 숨긴다
   if (me.tag) me.tag.material.opacity = Math.max(0, Math.min(1, (d - 2.2) / 1.2));   // 가까우면 내 이름표는 흐리게
   if (SHOT) { camera.position.set(...SHOT.p); camera.lookAt(...SHOT.t); if (camera.fov !== SHOT.fov) { camera.fov = SHOT.fov; camera.updateProjectionMatrix(); } }
 }
@@ -811,6 +837,7 @@ function chosenPlan() { const c = plansEl.querySelector('input[name="plan"]:chec
 function startFocus() {
   if (state !== "sitting") return;
   planMin = chosenPlan(); state = "focus"; focusStart = Date.now(); me.focus = true;
+  me.setFocusLeft(planMin * 60, planMin);   // 친구들이 보는 것처럼 내 머리 위에도 남은 시간
   camBehind(CAM.focus, CAM.focusPitch);
   audio.sfx("bowl"); audio.duck(true);
   whisper(P.focusText ? P.focusText(planMin) : planMin + "분, 지금부터 고요히.");
@@ -821,7 +848,7 @@ function finishFocus(complete) {
   if (state !== "focus" || finishing) return; finishing = true;
   const minutes = Math.floor((Date.now() - focusStart) / 60000);
   post(root.dataset.done, { minutes: complete ? planMin : minutes }).then((d) => {
-    state = "sitting"; me.focus = false; audio.duck(false); audio.sfx("bowl");
+    state = "sitting"; me.focus = false; me.setFocusLeft(null); audio.duck(false); audio.sfx("bowl");
     camBehind(CAM.seated, CAM.seatPitch); render();
     const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분.` : `5분이 안 돼서 기록하지 않았어요. 오늘 ${d.today}분.`;
     whisper(complete ? "수고했어요. " + m : m, 5000); msgEl.textContent = m;
@@ -838,7 +865,7 @@ setInterval(tickTimer, 500);
 
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
-if (QS.has("debug")) window.__w3 = { others, me: () => me };
+if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }) };
 const listEl = root.querySelector("[data-members]");
 function post(url, data) {
   const fd = new FormData(); fd.append("csrf_token", csrf());
@@ -867,11 +894,11 @@ function onBeat(d) {
   if (d.board && P.board) P.board(d.board);
   const seen = new Set();
   d.members.forEach((m) => {
-    if (m.me) { me.setKing(m.king); me.setCharm(m.charm); return; } seen.add(m.id);
+    if (m.me) { me.setKing(m.king); me.setCharm(m.charm); me.setFocusLeft(m.status === "focus" ? m.left : null, m.plan); return; } seen.add(m.id);
     let o = others.get(m.id);
     if (!o) {
-      o = new Avatar({ color: m.color, nick: m.nick }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
-      if (entered) whisper(`${m.nick}님이 들어왔어요.`, 2600);
+      o = new Avatar({ color: m.color, nick: m.nick, cap: m.cap }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
+      if (entered) whisper(m.cap ? `${m.nick} ${m.cap === "선생님" ? "선생님이" : "조교님이"} 들어왔어요.` : `${m.nick}님이 들어왔어요.`, 2600);
     }
     o.setColor(m.color); o.setKing(m.king); o.setCharm(m.charm);
     // 친구가 한 동작을 내 화면에서도 보여 준다 (처음 본 순간의 번호는 기록만)
@@ -904,7 +931,9 @@ function drawList(ms) {
     const li = document.createElement("li");
     li.className = (m.status === "focus" ? "is-focus" : "") + (m.me ? " is-me" : "");
     const seat = document.createElement("i"); seat.className = "seat"; seat.setAttribute("aria-hidden", "true");
-    const b = document.createElement("b"); b.textContent = m.nick + (m.me ? " (나)" : "");
+    const b = document.createElement("b");
+    if (m.cap) { const c = document.createElement("span"); c.className = "cap"; c.textContent = m.cap; b.append(c, " "); }
+    b.append(m.nick + (m.me ? " (나)" : ""));
     if (m.king) { const k = document.createElement("small"); k.className = "here-tag is-king"; k.textContent = "터줏대감"; b.append(" ", k); }
     else if (m.follow) { const k = document.createElement("small"); k.className = "here-tag"; k.textContent = "팔로잉"; b.append(" ", k); }
     const s = document.createElement("span");
@@ -1063,5 +1092,5 @@ function frame() {
   if (slowT > 3) { const fps = frames / slowT; if (fps < 28 && pixelRatio > 1) { pixelRatio = Math.max(1, pixelRatio - 0.5); renderer.setPixelRatio(pixelRatio); resize(); } frames = 0; slowT = 0; }
 }
 render();
-document.fonts && document.fonts.ready.then(() => { me.g.remove(me.tag); me.tag = nameSprite(meName.trim() || "나", true); me.tag.position.y = me.crown ? 2.35 : 2.15; me.g.add(me.tag); });
+document.fonts && document.fonts.ready.then(() => { me.g.remove(me.tag); me.tag = nameSprite(meName.trim() || "나", true, meCap); me.tag.position.y = me.crown ? 2.35 : 2.15; me.g.add(me.tag); });
 requestAnimationFrame(frame);

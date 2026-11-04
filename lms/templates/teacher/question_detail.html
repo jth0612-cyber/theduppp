@@ -27,7 +27,7 @@
 </div>
 {% for m in thread %}
   {% if m.kind == 'answer' %}
-  <div class="answer"><div class="small muted">{{ '조교' if m.author_role == 'assistant' else '선생님' }} 답변{% if m.author_name %} ({{ m.author_name }}){% endif %} · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
+  <div class="answer"><div class="small muted answer-by"><span class="cap">{{ '조교' if m.author_role == 'assistant' else '선생님' }}</span> {{ m.author_name or ('조교' if m.author_role == 'assistant' else '선생님') }} 답변 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
   {% else %}
   <div class="followup"><div class="small muted">학생 추가 질문 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div>
     {% if m.image_id %}<p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=m.image_id, inline=1) }}" alt="추가 질문 사진"></p>{% endif %}

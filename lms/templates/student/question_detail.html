@@ -2,6 +2,7 @@
 {% from "_macros.html" import csrf, status_badge, qtype_badge %}
 {% block title %}{{ q.title }} · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
+{% if request.args.get('posted') %}<i hidden data-draft-clear="q-draft-{{ g.user.id }} fu-draft-{{ q.id }}"></i>{% endif %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('student.questions') }}">질답 게시판</a> /</p>
@@ -24,7 +25,7 @@
 <div id="thread">
 {% for m in thread %}
   {% if m.kind == 'answer' %}
-  <div class="answer"><div class="small muted">{{ '조교 답변' if m.author_role == 'assistant' else '선생님 답변' }}{% if m.author_role == 'assistant' and m.author_name %} ({{ m.author_name }}){% endif %} · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
+  <div class="answer"><div class="small muted answer-by"><span class="cap">{{ '조교' if m.author_role == 'assistant' else '선생님' }}</span> {{ m.author_name or ('조교' if m.author_role == 'assistant' else '선생님') }} 답변 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
   {% else %}
   <div class="followup"><div class="small muted">추가 질문 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div>
     {% if m.image_id %}<p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=m.image_id, inline=1) }}" alt="추가 질문 사진"></p>{% endif %}
@@ -38,14 +39,19 @@
 {% if q.is_mine %}
 <p class="small muted center">질문 횟수 {{ 1 + q.followup_count }} / {{ 1 + max_followups }}</p>
 {% if can_follow_up %}
-<form method="post" action="{{ url_for('student.question_followup', qid=q.id) }}" enctype="multipart/form-data" class="card">
+<form method="post" action="{{ url_for('student.question_followup', qid=q.id) }}#fu" enctype="multipart/form-data" class="card" id="fu" data-qform data-draft-key="fu-draft-{{ q.id }}"{% if fu_body %} data-has-draft{% endif %}>
   {{ csrf() }}
-  <div class="field"><label>추가 질문 (남은 횟수 {{ max_followups - q.followup_count }}번)</label>
-    <textarea name="body" maxlength="3000" required placeholder="답변에서 더 궁금한 점을 적어 주세요."></textarea></div>
-  <div class="row">
-    <div class="field"><input type="file" name="image" accept=".png,.jpg,.jpeg"></div>
-    <div class="field shrink"><button class="btn primary">보내기</button></div>
+  {% if fu_err %}<p class="form-err" role="alert">{{ fu_err }}</p>{% endif %}
+  <div class="field"><label for="fu-body">추가 질문 (남은 횟수 {{ max_followups - q.followup_count }}번)</label>
+    <textarea id="fu-body" name="body" maxlength="3000" required placeholder="답변에서 더 궁금한 점을 적어 주세요.">{{ fu_body or '' }}</textarea></div>
+  <div class="field photo-field" data-photo>
+    <label for="fu-image">사진 첨부 <span class="muted">(선택 · PNG·JPG, 최대 20MB)</span></label>
+    <input type="file" id="fu-image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+    <p class="field-err" data-photo-err hidden></p>
+    <div class="photo-preview" data-photo-preview hidden><img alt="첨부할 사진 미리보기"><span></span><button type="button" class="btn small" data-photo-clear>빼기</button></div>
   </div>
+  <button class="btn primary">보내기</button>
+  <p class="small muted draft-note" data-draft-note hidden>쓰던 내용을 불러왔어요.</p>
 </form>
 {% elif q.answer_count and q.followup_count >= max_followups %}
 <p class="small muted center">추가 질문을 모두 사용했어요. 더 궁금하면 새 질문으로 올려 주세요.</p>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
 {% from "rooms/_social.html" import rank_row %}
-{% block title %}{{ info[0] }} · 같이 공부{% endblock %}
+{% block title %}{{ info[0] }} · 소도시 명상{% endblock %}
 {% block body_class %}in-room3d{% endblock %}
 {% block content %}
 <div class="w3" id="w3" data-room="{{ key }}"
@@ -9,7 +9,7 @@
      data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/') }}"
      data-three="{{ url_for('static', filename='vendor/three.module.min.js') }}"
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}"
-     data-color="{{ my_color }}" data-fortune="{{ url_for('rooms.fortune') }}" data-fortune-tie="{{ url_for('rooms.fortune_tie') }}" data-planner-add="{{ url_for('planner.add') }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
+     data-color="{{ my_color }}" data-fortune="{{ url_for('rooms.fortune') }}" data-fortune-tie="{{ url_for('rooms.fortune_tie') }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if is_student %} data-planner-add="{{ url_for('planner.add') }}"{% endif %}{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
     <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
@@ -22,12 +22,11 @@
 
     <p class="w3-whisper" data-whisper aria-live="polite"></p>
 
-    <div class="w3-timer" data-timer hidden>
-      <p class="w3-timer-time" data-clock>25:00</p>
-      <p class="w3-timer-state" data-state>집중 중</p>
-    </div>
-
     <div class="w3-bottom">
+      <div class="w3-timer" data-timer hidden>
+        <p class="w3-timer-time" data-clock>25:00</p>
+        <p class="w3-timer-state" data-state>집중 중</p>
+      </div>
       <div class="w3-plans" data-plans hidden role="radiogroup" aria-label="집중 시간">
         {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
       </div>
@@ -55,7 +54,7 @@
       <div class="sec-head"><h2 id="h-here">지금 여기</h2><span data-count>{{ members|length }}명</span></div>
       <ul class="here-list" data-members>
         {% for m in members %}
-        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% elif m.follow %} <small class="here-tag">팔로잉</small>{% endif %}</b>
+        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{% if m.cap %}<span class="cap">{{ m.cap }}</span> {% endif %}{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% elif m.follow %} <small class="here-tag">팔로잉</small>{% endif %}</b>
           <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %} · 오늘 {{ m.today }}분</span></li>
         {% endfor %}
       </ul>
@@ -81,7 +80,7 @@
       {% if not notes %}<p class="muted small">아직 아무도 걸지 않았어요. 첫 글을 남겨 보세요.</p>{% endif %}
       <ul class="note-wall wall-{{ key }}">
         {% for n in notes %}
-        <li><p>{{ n.body }}</p><span>{{ n.nickname or '익명' }} · {{ n.created_at[5:10] }}</span>
+        <li><p>{{ n.body }}</p><span>{% if role_caption(n) %}<span class="cap">{{ role_caption(n) }}</span> {% endif %}{{ shown_name(n) }} · {{ n.created_at[5:10] }}</span>
           {% if n.mine %}<form method="post" action="{{ url_for('rooms.note_delete', nid=n.id) }}">{{ csrf() }}<button class="x" aria-label="내 글 지우기">×</button></form>{% endif %}</li>
         {% endfor %}
       </ul>

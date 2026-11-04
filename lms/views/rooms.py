@@ -6,7 +6,8 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
 from db import execute, get_db, query
-from security import audit, student_required, staff_required, teacher_only, teacher_required
+from security import (audit, member_required, role_caption, shown_name, student_required, staff_required,
+                      teacher_only, teacher_required)
 from wordfilter import bad_word
 
 bp = Blueprint("rooms", __name__)
@@ -59,7 +60,7 @@ def _place_or_404(place):
 
 
 def _members(place):
-    return query(f"""SELECT u.id, u.nickname, u.avatar_color, p.status, p.focus_since, p.plan_min,
+    return query(f"""SELECT u.id, u.nickname, u.role, u.display_name, u.avatar_color, p.status, p.focus_since, p.plan_min,
                             p.px, p.pz, p.ry, p.pose, p.seat, p.act, p.act_seq,
                             (SELECT idx FROM room_fortunes rf WHERE rf.user_id = u.id AND rf.day = date('now', 'localtime')) AS fortune,
                             (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f
@@ -94,7 +95,7 @@ def _elapsed_min(since):
 
 
 def _member_json(m, me, king=None, follows=()):
-    return {"id": m["id"], "nick": m["nickname"] or "익명", "me": m["id"] == me, "status": m["status"],
+    return {"id": m["id"], "nick": shown_name(m), "cap": role_caption(m), "me": m["id"] == me, "status": m["status"],
             "king": m["id"] == king, "follow": m["id"] in follows, "act": m["act"], "act_seq": m["act_seq"],
             "charm": FORTUNES[m["fortune"]][4] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
@@ -180,7 +181,7 @@ def hm(minutes):
 # ---------- 학생 ----------
 
 @bp.route("/s/rooms")
-@student_required
+@member_required
 def rooms():
     today = date.today()
     monday = (today - timedelta(days=today.weekday())).isoformat()
@@ -192,7 +193,7 @@ def rooms():
 
 
 @bp.route("/s/rooms/<place>")
-@student_required
+@member_required
 def room(place):
     info = _place_or_404(place)
     # 들어오면 바로 '여기 있음'. 다른 장소에 있었다면 옮긴다(집중 중이던 시간은 버리지 않도록 화면에서 먼저 끝내게 한다)
@@ -202,7 +203,7 @@ def room(place):
                focus_since = CASE WHEN room_presence.place = excluded.place THEN room_presence.focus_since END,
                last_seen = datetime('now', 'localtime')""", (g.user["id"], place))
     me = query("SELECT * FROM room_presence WHERE user_id = ?", (g.user["id"],), one=True)
-    notes = query("""SELECT n.id, n.body, n.created_at, u.nickname, n.user_id = ? AS mine FROM room_notes n
+    notes = query("""SELECT n.id, n.body, n.created_at, u.nickname, u.role, u.display_name, n.user_id = ? AS mine FROM room_notes n
                      JOIN users u ON u.id = n.user_id WHERE n.place = ? ORDER BY n.created_at DESC LIMIT 40""",
                   (g.user["id"], place))
     tpl = "rooms/room3d.html" if place in PLACES_3D and request.args.get("flat") != "1" else "rooms/room.html"
@@ -215,11 +216,11 @@ def room(place):
                            rank=_ranking(place, _since("week"), limit=5), my_rank=_my_rank(place, _since("week"), g.user["id"]),
                            notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, note_max=NOTE_MAX,
                            enter_text=ENTER_TEXT.get(place, "들어가기"), follows=follows,
-                           board_on=place in BOARDS)
+                           board_on=place in BOARDS, is_student=g.user["role"] == "student")
 
 
 @bp.route("/s/rooms/rank")
-@student_required
+@member_required
 def rank():
     place = request.args.get("place", "sanji")
     _place_or_404(place)
@@ -285,7 +286,7 @@ def friends():
 
 
 @bp.route("/s/rooms/<place>/beat", methods=["POST"])
-@student_required
+@member_required
 def beat(place):
     _place_or_404(place)
     action = request.form.get("action", "")
@@ -322,7 +323,7 @@ def beat(place):
 
 
 @bp.route("/s/rooms/<place>/done", methods=["POST"])
-@student_required
+@member_required
 def done(place):
     """집중 끝(타이머 완료 또는 중간에 멈춤). 서버가 잰 시간까지만 기록한다."""
     _place_or_404(place)
@@ -345,13 +346,14 @@ def _board(place):
     if b is None:
         return None
     if b["kind"] == "chat":
-        rows = query("""SELECT c.id, c.body, u.nickname FROM room_chat c JOIN users u ON u.id = c.user_id
+        rows = query("""SELECT c.id, c.body, u.nickname, u.role, u.display_name FROM room_chat c JOIN users u ON u.id = c.user_id
                         WHERE c.place = ? AND date(c.created_at) = date('now', 'localtime')
                         ORDER BY c.id DESC LIMIT ?""", (place, BOARD_LINES))
     else:
-        rows = query("""SELECT n.id, n.body, u.nickname FROM room_notes n JOIN users u ON u.id = n.user_id
+        rows = query("""SELECT n.id, n.body, u.nickname, u.role, u.display_name FROM room_notes n JOIN users u ON u.id = n.user_id
                         WHERE n.place = ? ORDER BY n.created_at DESC, n.id DESC LIMIT ?""", (place, BOARD_LINES))
-    return [{"id": r["id"], "nick": r["nickname"] or "익명", "body": r["body"]} for r in reversed(rows)]
+    return [{"id": r["id"], "nick": ((role_caption(r) + " ") if role_caption(r) else "") + shown_name(r), "body": r["body"]}
+            for r in reversed(rows)]
 
 
 def _fortune_json(idx, again, tied):
@@ -361,7 +363,7 @@ def _fortune_json(idx, again, tied):
 
 
 @bp.route("/s/rooms/fortune", methods=["POST"])
-@student_required
+@member_required
 def fortune():
     """오늘의 운세 뽑기: 하루에 한 번. 뽑으면 오늘 하루 캐릭터에 행운 부적이 달리고, 오늘의 미션을 플래너에 넣을 수 있다."""
     import random
@@ -375,7 +377,7 @@ def fortune():
 
 
 @bp.route("/s/rooms/fortune/tie", methods=["POST"])
-@student_required
+@member_required
 def fortune_tie():
     """아쉬운 운세는 종이를 줄에 묶어 두고 간다(묶어 둔 사람 수가 판에 보인다)."""
     execute("UPDATE room_fortunes SET tied = 1 WHERE user_id = ? AND day = ?", (g.user["id"], date.today().isoformat()))
@@ -384,7 +386,7 @@ def fortune_tie():
 
 
 @bp.route("/s/rooms/<place>/write", methods=["POST"])
-@student_required
+@member_required
 def write(place):
     """3D 화면 안에서 판에 한 줄 쓰기."""
     _place_or_404(place)
@@ -421,7 +423,7 @@ def write(place):
 
 
 @bp.route("/s/rooms/<place>/note", methods=["POST"])
-@student_required
+@member_required
 def note(place):
     _place_or_404(place)
     body = " ".join(request.form.get("body", "").split())[:NOTE_MAX]
@@ -438,7 +440,7 @@ def note(place):
 
 
 @bp.route("/s/rooms/notes/<int:nid>/delete", methods=["POST"])
-@student_required
+@member_required
 def note_delete(nid):
     n = query("SELECT place FROM room_notes WHERE id = ? AND user_id = ?", (nid, g.user["id"]), one=True)
     if n is None:
@@ -460,9 +462,9 @@ def t_rooms():
                     JOIN classes c ON c.id = s.class_id
                     WHERE f.ended_at >= date('now', 'localtime', '-6 days')
                     GROUP BY s.id ORDER BY m DESC LIMIT 100""")
-    notes = query("""SELECT n.*, u.nickname, s.name FROM room_notes n JOIN users u ON u.id = n.user_id
+    notes = query("""SELECT n.*, u.nickname, u.role, u.display_name, s.name FROM room_notes n JOIN users u ON u.id = n.user_id
                      LEFT JOIN students s ON s.id = u.student_id ORDER BY n.created_at DESC LIMIT 60""")
-    chat = query("""SELECT c.*, u.nickname, s.name FROM room_chat c JOIN users u ON u.id = c.user_id
+    chat = query("""SELECT c.*, u.nickname, u.role, u.display_name, s.name FROM room_chat c JOIN users u ON u.id = c.user_id
                     LEFT JOIN students s ON s.id = u.student_id ORDER BY c.id DESC LIMIT 60""")
     return render_template("rooms/t_rooms.html", places=PLACES, now=now, week=week, notes=notes, chat=chat)
 
