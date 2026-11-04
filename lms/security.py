@@ -100,6 +100,7 @@ def login_user(user):
     session["uid"] = user["id"]
     session["role"] = user["role"]
     session["last_seen"] = datetime.now().isoformat(timespec="seconds")
+    session["entered"] = 1  # 로그인 직후 첫 화면에서 한 번만 '입장' 연출
     if user["role"] == "student":
         # 학생 계정은 한 기기에서만: 새로 로그인하면 이전 기기의 로그인은 끊긴다 (교재 분석실 동시 접속 1대)
         version = (user["session_version"] or 0) + 1

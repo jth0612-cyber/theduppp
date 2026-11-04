@@ -398,7 +398,13 @@ body.pub, body.no-shell { background: #f2f3f2; }
 .pub-login { border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
 .pub-nav a:hover { text-decoration: none; color: var(--pub-muted); }
 
-.pub-top { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; padding: 4px 0 clamp(28px, 4vw, 44px); }
+.pub-door { padding: 4px 0 clamp(28px, 4vw, 44px); }
+.door-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; max-width: 620px; }
+.door-form input { font: inherit; font-size: 15px; min-height: 46px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 0; background: var(--sheet); color: var(--ink); }
+.door-form input:focus { outline: none; border-color: var(--ink); }
+.door-form .btn.primary { min-width: 96px; }
+.door-links { display: flex; gap: 20px; flex-wrap: wrap; margin: 14px 0 0; font-size: 13.5px; }
+@media (max-width: 560px) { .door-form { grid-template-columns: minmax(0, 1fr); } }
 .book-photo { margin: 0; background: var(--photo); overflow: hidden; }
 .book-photo img { display: block; width: 100%; height: auto; }
 .pub .btn.primary { border-radius: 0; min-height: 46px; padding: 0 26px; letter-spacing: 0.02em; }
@@ -1169,3 +1175,46 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
 .ft-charm.c-0 { background: #e2ae25; } .ft-charm.c-1 { background: #e0708a; } .ft-charm.c-2 { background: #4b8fd6; } .ft-charm.c-3 { background: #5fa865; } .ft-charm.c-4 { background: #9673d4; }
 .dash-sum { margin: 0 0 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dash-sum b { color: var(--ink); font-weight: 700; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ================= 안쪽(로그인 후): 어두운 틀 위에 흰 종이 — 바깥 교재 페이지와 다른 '내 공간' ================= */
+:root { --rail: #161917; --rail-2: #202422; --rail-edge: #323834; --rail-ink: #eef0ef; --rail-muted: #9aa29e; --rail-faint: #6f7773; }
+body.has-shell { background: var(--rail); }
+.side { color: var(--rail-ink); }
+.side .brand { color: var(--rail-ink); }
+.side .nav a { color: var(--rail-muted); }
+.side .nav a:hover { background: var(--rail-2); color: var(--rail-ink); }
+.side .nav a.active { background: var(--accent); color: #fff; }
+.side .nav-group { color: var(--rail-faint); }
+.side .pref { color: var(--rail-muted); border-color: var(--rail-edge); }
+.side .pref:hover { color: var(--rail-ink); border-color: var(--rail-ink); }
+.side .userbox a { color: var(--rail-ink); }
+.side .btn.small { background: transparent; color: var(--rail-ink); border-color: var(--rail-edge); }
+.side .btn.small:hover { background: var(--rail-2); border-color: var(--rail-ink); }
+.side .affil { filter: brightness(0) invert(1); opacity: .55; }
+.has-shell .sheet { border-color: transparent; }
+@media (max-width: 900px) {
+  .m-top { background: var(--rail); border-bottom-color: var(--rail); }
+  .m-brand { color: var(--rail-ink); }
+  .m-who { color: var(--rail-muted); }
+  .has-shell .sheet { border-radius: 14px 14px 0 0; }
+  .m-tabs { background: var(--rail); border-top-color: var(--rail); }
+  .m-tabs a, .m-tabs button { color: var(--rail-faint); }
+  .m-tabs a.active, .m-tabs button[aria-expanded="true"] { color: var(--rail-ink); }
+}
+
+/* 입장 연출: 누르면 화면이 어두워지고(0.34초), 안쪽 첫 화면에서 어둠이 걷히며 종이가 올라온다 */
+html.entering::after { content: ""; position: fixed; inset: 0; z-index: 9999; background: var(--rail); animation: door-close 340ms cubic-bezier(.4, 0, .2, 1) forwards; }
+html.entering body > main { transition: transform 340ms cubic-bezier(.4, 0, .2, 1); transform: scale(.985); }
+@keyframes door-close { from { opacity: 0; } to { opacity: 1; } }
+body.entered::after { content: ""; position: fixed; inset: 0; z-index: 9999; background: var(--rail); pointer-events: none; animation: door-open 420ms 60ms cubic-bezier(.2, .7, .2, 1) both; }
+body.entered .sheet { animation: sheet-rise 620ms 80ms cubic-bezier(.2, .7, .2, 1) both; }
+body.entered .side .nav { animation: rail-in 520ms 160ms cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes door-open { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sheet-rise { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rail-in { from { transform: translateX(-10px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  html.entering::after, body.entered::after { animation: none; display: none; }
+  body.entered .sheet, body.entered .side .nav, html.entering body > main { animation: none; transition: none; transform: none; }
+}

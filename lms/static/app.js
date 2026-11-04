@@ -188,3 +188,18 @@ document.addEventListener("click", function (e) {
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && document.body.classList.contains("menu-open")) setMenu(false);
 });
+
+// ---------- 로그인 '입장' 연출: 화면이 한 번 닫혔다가 안쪽이 열린다 ----------
+document.addEventListener("submit", function (e) {
+  var f = e.target;
+  if (!f.hasAttribute || !f.hasAttribute("data-enter") || e.defaultPrevented || f.__entering) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  e.preventDefault();
+  f.__entering = true;
+  document.documentElement.classList.add("entering");
+  setTimeout(function () { f.submit(); }, 340);
+});
+window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아왔을 때 닫힌 화면이 남지 않게
+  if (e.persisted) document.documentElement.classList.remove("entering");
+  document.querySelectorAll("form[data-enter]").forEach(function (f) { f.__entering = false; });
+});

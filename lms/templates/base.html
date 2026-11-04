@@ -18,7 +18,8 @@
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
-<body class="{% block body_class %}{% endblock %} {{ 'has-shell' if g.user and not g.user.must_change_pw else 'no-shell' }}">
+{% set entered = g.user and not g.user.must_change_pw and session.pop('entered', None) %}
+<body class="{% block body_class %}{% endblock %} {{ 'has-shell' if g.user and not g.user.must_change_pw else 'no-shell' }}{{ ' entered' if entered }}">
 {% if g.user and not g.user.must_change_pw %}
 {% set ep = request.endpoint or '' %}
 {% import "_nav.html" as nav with context %}

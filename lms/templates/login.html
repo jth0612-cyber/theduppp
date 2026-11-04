@@ -5,7 +5,7 @@
 <div class="card">
   <h1>로그인</h1>
   <p class="muted small">강사·조교는 발급받은 아이디로, 학생은 수험번호로 로그인하세요.</p>
-  <form method="post" autocomplete="on">
+  <form method="post" autocomplete="on" data-enter>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">
       <label for="username">아이디</label>
