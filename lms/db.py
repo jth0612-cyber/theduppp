@@ -500,6 +500,7 @@ def init_db(path):
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_classes_join_code ON classes(join_code)")
     # 자주 묻는 질문(FAQ)으로 고정
     _add_column(conn, "questions", "faq", "INTEGER NOT NULL DEFAULT 0")
+    _add_column(conn, "game_rounds", "picks", "TEXT")   # 객관식: 문제마다 바로 채점한 답 (한 번 고르면 고정)
     _add_column(conn, "timetable", "room", "TEXT NOT NULL DEFAULT ''")
     # 3D 소도시 명상: 위치·자세·캐릭터 색
     _add_column(conn, "room_presence", "px", "REAL NOT NULL DEFAULT 0")

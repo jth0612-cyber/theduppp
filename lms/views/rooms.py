@@ -39,12 +39,13 @@ FORTUNES = [
     ("좋음", "모르는 건 바로 묻는 날! 질문 하나가 막힌 길을 열어 줘요.", "막힌 문제 1개 질답 게시판에 올리기", "sci", "#e0708a", "벚꽃 부적"),
     ("좋음", "암기가 잘 되는 날이에요. 짧게 여러 번 보는 게 좋아요.", "개념 카드 한 바퀴 돌리기", "sci", "#4b8fd6", "하늘 부적"),
     ("보통", "한 단원만 끝까지 해내면 충분한 날이에요. 작은 완주가 큰 힘이 돼요.", "한 단원 끝까지 풀기", "sci", "#5fa865", "잎새 부적"),
-    ("보통", "25분만 집중해도 잘한 날이에요. 타이머부터 켜 보세요.", "25분 집중 두 번", "etc", "#5fa865", "잎새 부적"),
+    ("보통", "15분만 집중해도 잘한 날이에요. 타이머부터 켜 보세요.", "40분 집중 두 번", "etc", "#5fa865", "잎새 부적"),
     ("조금 아쉬움", "오늘은 조금 지칠 수 있어요. 천천히 가도 멈추지만 않으면 돼요. 내일은 더 좋아요!", "쉬운 문제 10개로 몸 풀기", "sci", "#9673d4", "보랏빛 부적"),
 ]
 LOW_LUCK = "조금 아쉬움"
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
-PLAN_CHOICES = (25, 50, 90)
+PLAN_CHOICES = (15, 40, 80, 100)
+PLAN_DEFAULT = 40
 NOTE_MAX = 60
 # 3D 장소 (나머지는 그림 버전)
 PLACES_3D = set(PLACES)
@@ -214,7 +215,7 @@ def room(place):
                            elapsed=_elapsed_min(me["focus_since"]) if me["status"] == "focus" else 0,
                            members=[_member_json(m, g.user["id"], king, follows) for m in _members(place)],
                            rank=_ranking(place, _since("week"), limit=5), my_rank=_my_rank(place, _since("week"), g.user["id"]),
-                           notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, note_max=NOTE_MAX,
+                           notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, plan_default=PLAN_DEFAULT, note_max=NOTE_MAX,
                            enter_text=ENTER_TEXT.get(place, "들어가기"), follows=follows,
                            board_on=place in BOARDS, is_student=g.user["role"] == "student")
 
@@ -294,7 +295,7 @@ def beat(place):
     db = get_db()
     if action == "start":
         plan = request.form.get("plan", type=int)
-        plan = plan if plan in PLAN_CHOICES else 25
+        plan = plan if plan in PLAN_CHOICES else PLAN_DEFAULT
         db.execute("""INSERT INTO room_presence (user_id, place, status, focus_since, plan_min)
                       VALUES (?, ?, 'focus', datetime('now', 'localtime'), ?)
                       ON CONFLICT(user_id) DO UPDATE SET place = excluded.place, status = 'focus',

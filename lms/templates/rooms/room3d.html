@@ -28,7 +28,7 @@
         <p class="w3-timer-state" data-state>집중 중</p>
       </div>
       <div class="w3-plans" data-plans hidden role="radiogroup" aria-label="집중 시간">
-        {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
+        {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == (me.plan_min if me.plan_min in plans else plan_default) }}><span>{{ m }}분</span></label>{% endfor %}
       </div>
       {% if board_on %}<form class="w3-chat" data-chat hidden>
         <input type="text" name="body" maxlength="40" autocomplete="off" enterkeyhint="send" aria-label="판에 쓸 한 줄" placeholder="한 줄 쓰기">

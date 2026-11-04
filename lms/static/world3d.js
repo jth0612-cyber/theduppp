@@ -291,6 +291,30 @@ function nameSprite(text, me, cap) {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
   s.scale.set(1.5, 0.375, 1); s.position.y = 1.72; s.renderOrder = 10; return s;
 }
+// ---------------------------------------------------------------- 열공 단계 효과
+// 집중이 길어질수록: 5분 발밑 온기 → 15분 어깨 위로 오르는 불티 → 40분 등 뒤 불꽃 → 80분 푸른 불꽃
+const FOCUS_STAGES = [5, 15, 40, 80];
+const stageFor = (min) => FOCUS_STAGES.reduce((n, m) => (min >= m ? n + 1 : n), 0);
+const glowTex = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+  const g = x.createRadialGradient(64, 64, 4, 64, 64, 62); g.addColorStop(0, "rgba(255,214,140,0.95)"); g.addColorStop(0.45, "rgba(255,150,60,0.45)"); g.addColorStop(1, "rgba(255,120,40,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const flameTex = (() => {
+  // 아래는 둥글고 위로 갈수록 가늘게 갈라지는 불꽃 한 장: 바깥은 진하고 안쪽은 밝게
+  const c = document.createElement("canvas"); c.width = 128; c.height = 256; const x = c.getContext("2d");
+  const shape = (k) => { x.beginPath(); x.moveTo(64, 8 + 20 * (1 - k)); x.bezierCurveTo(64 + 46 * k, 70, 64 + 60 * k, 150, 64 + 52 * k, 196); x.bezierCurveTo(64 + 40 * k, 244, 64 - 40 * k, 244, 64 - 52 * k, 196); x.bezierCurveTo(64 - 60 * k, 150, 64 - 46 * k, 70, 64, 8 + 20 * (1 - k)); x.closePath(); };
+  let g = x.createLinearGradient(0, 250, 0, 0); g.addColorStop(0, "rgba(255,255,255,0.0)"); g.addColorStop(0.18, "rgba(255,255,255,0.9)"); g.addColorStop(0.75, "rgba(255,255,255,0.75)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  shape(1); x.fillStyle = g; x.globalAlpha = 0.85; x.fill();
+  // 가운데 밝은 심지 (색을 곱해도 밝게 남도록 거의 흰색)
+  shape(0.5); g = x.createRadialGradient(64, 190, 4, 64, 170, 90); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0.15)");
+  x.globalAlpha = 1; x.fillStyle = g; x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const FLAME_HOT = [new THREE.Color(0xff6a1f), new THREE.Color(0xff4a12), new THREE.Color(0xff8a2a)];
+const FLAME_BLUE = [new THREE.Color(0x3d8bff), new THREE.Color(0x2a5cff), new THREE.Color(0x5fb0ff)];
+const _away = new THREE.Vector3();
+
 // 조교·선생님 이름표: 초록 캡션 + 본명
 function capSprite(text, me, cap) {
   const c = document.createElement("canvas"); c.width = 384; c.height = 96; const x = c.getContext("2d");
@@ -423,6 +447,7 @@ class Avatar {
     if (this.timer && this.timer.visible) { this.timer.position.y = this.tag.position.y + 0.48; this.drawFocusTimer(); }
     const ringTarget = this.focus ? 0.55 + Math.sin(this.t * 2) * 0.15 : 0;
     this.ring.material.opacity += (ringTarget - this.ring.material.opacity) * Math.min(1, dt * 3);
+    this.focusFx(dt);
   }
   // 숨 고르기: 4초 들이쉬며 어깨가 살짝 올라가고 고개가 뒤로, 2초 멈춤(눈 감음), 6초 '후-' 하고 입김을 내쉰다
   breatheMotion(dt) {
@@ -496,7 +521,7 @@ class Avatar {
     if (left === null || left === undefined) { this.focusEnd = null; if (this.timer) this.timer.visible = false; return; }
     const end = Date.now() + left * 1000;
     if (!this.focusEnd || Math.abs(end - this.focusEnd) > 2500) this.focusEnd = end;   // 신호가 늦게 와도 덜컥거리지 않게
-    this.focusPlan = (plan || 25) * 60;
+    this.focusPlan = (plan || 40) * 60;
     if (!this.timer) {
       const c = document.createElement("canvas"); c.width = 256; c.height = 96;
       const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
@@ -528,7 +553,80 @@ class Avatar {
       c.position.y = 1.93; this.upper.add(c); this.crown = c; this.tag.position.y = 2.35;
     } else { this.upper.remove(this.crown); this.crown = null; this.tag.position.y = 2.15; }
   }
-  dispose() { scene.remove(this.g); }
+  setFocusStage(n) {
+    if (n === this.stage) return;
+    const up = n > (this.stage || 0); this.stage = n;
+    if (n >= 1 && !this.glow) {
+      this.glow = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.9), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
+      this.glow.rotation.x = -Math.PI / 2; this.glow.position.y = 0.05; this.g.add(this.glow);
+    }
+    if (n >= 2 && !this.embers) {
+      const N = 26, geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+      geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.17, map: puffTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      pts.frustumCulled = false; scene.add(pts);
+      this.embers = { pts, life: new Float32Array(N), total: new Float32Array(N), v: new Float32Array(N * 3) };
+    }
+    if (n >= 3 && !this.flames) {
+      this.flames = [0, 1, 2].map((i) => {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, depthWrite: false, opacity: 0 }));
+        sp.userData.ph = i * 2.1; sp.userData.side = (i - 1) * 0.5; sp.renderOrder = 1; scene.add(sp); return sp;
+      });
+    }
+    if (this.flames) this.flames.forEach((f, i) => f.material.color.copy((n >= 4 ? FLAME_BLUE : FLAME_HOT)[i]));
+    if (this.me && up && this.onStageUp) this.onStageUp(n);
+  }
+  focusFx(dt) {
+    const n = this.stage || 0, shown = this.g.visible;
+    if (this.glow) {
+      const tgt = n >= 1 ? (n >= 3 ? 0.95 : 0.8) + (reduceMotion ? 0 : Math.sin(this.t * 2.2) * 0.15) : 0;
+      this.glow.material.opacity += (tgt - this.glow.material.opacity) * Math.min(1, dt * 2);
+      this.glow.scale.setScalar(n >= 4 ? 1.35 : n >= 3 ? 1.2 : 1.05);
+    }
+    if (this.embers) {
+      const E = this.embers, pos = E.pts.geometry.attributes.position, col = E.pts.geometry.attributes.color, N = E.life.length;
+      const on = n >= 2 && shown, gp = this.g.position, top = this.upper.position.y;
+      const tint = n >= 4 ? [0.35, 0.65, 1] : [1, 0.42, 0.08];
+      for (let i = 0; i < N; i++) {
+        if (E.life[i] <= 0) {
+          if (!on || Math.random() > dt * (n >= 3 ? 14 : 8)) { col.setXYZ(i, 0, 0, 0); continue; }
+          const a = Math.random() * Math.PI * 2, r = 0.25 + Math.random() * 0.25;
+          pos.setXYZ(i, gp.x + Math.cos(a) * r, gp.y + top + 0.5 + Math.random() * 0.6, gp.z + Math.sin(a) * r);
+          E.v[i * 3] = (Math.random() - 0.5) * 0.15; E.v[i * 3 + 1] = 0.55 + Math.random() * 0.5; E.v[i * 3 + 2] = (Math.random() - 0.5) * 0.15;
+          E.life[i] = E.total[i] = 1.1 + Math.random() * 0.9;
+        }
+        E.life[i] -= dt;
+        const k = Math.max(0, E.life[i] / E.total[i]), w = reduceMotion ? 0 : Math.sin((this.t + i) * 7) * 0.08;
+        pos.setXYZ(i, pos.getX(i) + (E.v[i * 3] + w) * dt, pos.getY(i) + E.v[i * 3 + 1] * dt, pos.getZ(i) + E.v[i * 3 + 2] * dt);
+        const f = Math.sin(k * Math.PI);
+        col.setXYZ(i, tint[0] * f, tint[1] * f, tint[2] * f);
+      }
+      pos.needsUpdate = true; col.needsUpdate = true;
+    }
+    if (this.flames) {
+      // 보는 사람 카메라 반대쪽(=캐릭터 등 뒤)에 세워, 어느 쪽에서 봐도 캐릭터 뒤에서 타오른다
+      _away.subVectors(this.g.position, camera.position); _away.y = 0;
+      if (_away.lengthSq() < 1e-4) _away.set(0, 0, -1); _away.normalize();
+      const side = new THREE.Vector3(-_away.z, 0, _away.x);
+      const tgt = n >= 3 && shown ? 0.92 : 0;
+      this.flames.forEach((f) => {
+        const ph = f.userData.ph, fl = reduceMotion ? 0 : Math.sin(this.t * 9 + ph) * 0.06 + Math.sin(this.t * 13.7 + ph * 2) * 0.04;
+        f.material.opacity += (tgt - f.material.opacity) * Math.min(1, dt * 2.5);
+        f.visible = f.material.opacity > 0.01;
+        const big = n >= 4 ? 1.2 : 1, mid = f.userData.side === 0;
+        const h = (mid ? 2.5 : 1.8) * big * (1 + fl), wdt = (mid ? 1.5 : 1.0) * big * (1 - fl * 0.5);
+        f.scale.set(wdt, h, 1);
+        f.position.copy(this.g.position).addScaledVector(_away, 0.5).addScaledVector(side, f.userData.side);
+        f.position.y += this.upper.position.y + h * 0.5 - 0.1;
+      });
+    }
+  }
+  dispose() {
+    scene.remove(this.g);
+    if (this.embers) { scene.remove(this.embers.pts); this.embers.pts.geometry.dispose(); }
+    if (this.flames) this.flames.forEach((f) => scene.remove(f));
+  }
 }
 
 // ---------------------------------------------------------------- 나
@@ -536,13 +634,14 @@ const colors = root.dataset.colors.split(",");
 let myColor = root.dataset.color;
 const meName = root.dataset.meName || (document.querySelector(".m-who") || {}).textContent || "나", meCap = root.dataset.meCap || null;
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", cap: meCap, me: true });
+me.onStageUp = (n) => whisper(["5분째 집중 중. 발밑이 따뜻해졌어요.", "15분! 어깨 위로 불티가 오르기 시작해요.", "40분! 등 뒤로 열공 불꽃이 타올라요.", "80분! 푸른 불꽃까지 왔어요. 대단해요."][n - 1], 4200);
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
 // 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
 const QS = new URLSearchParams(location.search);
 const SHOT = QS.has("shot") && QS.get("cam") ? { p: QS.get("cam").split(",").map(Number), t: (QS.get("look") || "0,0,0").split(",").map(Number), fov: +QS.get("fov") || 50 } : null;
 if (QS.has("shot")) me.g.visible = false;
 let state = "free";      // free | sitting | focus
-let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 25, focusStart = 0;
+let mySeat = null, planMin = parseInt(root.dataset.plan, 10) || 40, focusStart = 0;
 
 // ---------------------------------------------------------------- 카메라 (내 캐릭터를 따라 돈다)
 const CAM = Object.assign({ free: isTouch ? 9.5 : 8.5, seated: isTouch ? 6.4 : 6.0, focus: isTouch ? 5.8 : 5.4, pitch: 0.42, seatPitch: 0.36, focusPitch: 0.3 }, P.cam || {});
@@ -833,7 +932,7 @@ async function breathe() {
 // ---------------------------------------------------------------- 집중 타이머 (서버가 잰 시간만 인정)
 const clockEl = $("[data-clock]"), msgEl = $("[data-msg]");
 const pad = (n) => (n < 10 ? "0" : "") + n;
-function chosenPlan() { const c = plansEl.querySelector('input[name="plan"]:checked'); return c ? parseInt(c.value, 10) : 25; }
+function chosenPlan() { const c = plansEl.querySelector('input[name="plan"]:checked'); return c ? parseInt(c.value, 10) : 40; }
 function startFocus() {
   if (state !== "sitting") return;
   planMin = chosenPlan(); state = "focus"; focusStart = Date.now(); me.focus = true;
@@ -865,7 +964,8 @@ setInterval(tickTimer, 500);
 
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
-if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }) };
+if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }),
+  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; } };
 const listEl = root.querySelector("[data-members]");
 function post(url, data) {
   const fd = new FormData(); fd.append("csrf_token", csrf());
@@ -906,6 +1006,7 @@ function onBeat(d) {
     seenAct.set(m.id, m.act_seq || 0);
     o.focus = m.status === "focus";
     o.setFocusLeft(o.focus ? m.left : null, m.plan);
+    o.setFocusStage(o.focus ? stageFor(m.elapsed || 0) : 0);
     o.seat = m.seat === null || m.seat === undefined ? null : m.seat;
     if (o.seat !== null && SEATS[o.seat]) {
       const s = SEATS[o.seat];
@@ -1043,7 +1144,7 @@ $("[data-enter-btn]").addEventListener("click", () => {
   render(); sync(true);
   if (root.dataset.status === "focus") {      // 집중 중에 나갔다 돌아온 경우: 빈 방석에 앉혀 이어간다
     const s = nearestFreeSeat();
-    if (s !== null) { sitAt(s); state = "focus"; me.focus = true; planMin = parseInt(root.dataset.plan, 10) || 25;
+    if (s !== null) { sitAt(s); state = "focus"; me.focus = true; planMin = parseInt(root.dataset.plan, 10) || 40;
       focusStart = Date.now() - (parseInt(root.dataset.elapsed, 10) || 0) * 60000; camBehind(CAM.focus, CAM.focusPitch); render(); }
   }
 });
@@ -1065,6 +1166,7 @@ function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   keyMove(dt);
   if (keyWalking > 0) { keyWalking -= dt; if (keyWalking <= 0 && me.pose === "walk" && !me.moving) me.pose = "stand"; }
+  me.setFocusStage(state === "focus" ? stageFor((Date.now() - focusStart) / 60000) : 0);
   me.update(dt); others.forEach((o) => o.update(dt)); updatePuffs(dt);
   audio.walking(me.pose === "walk", P.indoor ? P.indoor(me.pos.x, me.pos.z) : false);
   if (marker.material.opacity > 0) { marker.material.opacity -= dt * 0.8; marker.scale.multiplyScalar(1 + dt * 0.6); }

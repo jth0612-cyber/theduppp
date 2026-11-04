@@ -369,7 +369,8 @@ export default {
       },
       sounds: {
         // 산속 숲: 나뭇잎 바람이 바탕, 새는 멀리서 왔다 갔다, 밤에는 고요한 산 마을 공기 (금속성 풍경·풀벌레 없음)
-        loops: [{ f: "sanji/wind", g: 0.9 }, { f: "sanji/night", g: 0.75, when: "night" }],
+        // 밤: 개 짖는 소리가 섞인 마을 소리 대신, 바람 소리를 낮게 깔아 더 고요하게
+        loops: [{ f: "sanji/wind", g: 0.9 }, { f: "sanji/night-calm", g: 0.45, when: "night" }],
         steps: { f: "common/steps", out: 0.32, in: 0.14 },
         gusts: [{ f: "sanji/birds", max: 0.6, every: [12, 26], when: "day" }, { f: "sanji/birds", max: 0.3, every: [20, 40], when: "dusk" }],
         sfx: { suzu: { f: "sanji/suzu", g: 0.75, jitter: true }, suzuFar: { f: "sanji/suzu", g: 0.3, lp: 3500 }, kujiFar: { f: "sanji/kuji", g: 0.3, lp: 2500 }, waterFar: { f: "sento/splash", g: 0.15, rate: 1.15, lp: 2000 }, kuji: { f: "sanji/kuji", g: 0.8 },

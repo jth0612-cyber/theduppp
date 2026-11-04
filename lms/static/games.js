@@ -115,19 +115,52 @@
     var renderQuestion = function () {
       var item = game.questions[game.i];
       m("progress").textContent = (game.i + 1) + " / " + game.questions.length;
+      m("score").textContent = game.i ? "맞힌 문제 " + game.score : "";
       m("question").textContent = item.question;
-      var box = m("choices");
-      box.textContent = "";
+      var box = m("choices"), fb = m("feedback");
+      box.textContent = ""; fb.textContent = ""; fb.className = "mc-feedback hidden";
+      var buttons = [];
       item.choices.forEach(function (c, idx) {
         var b = el("button", "btn mc-choice", (idx + 1) + ". " + c);
         b.type = "button";
-        b.addEventListener("click", function () {
-          game.answers.push(idx);
-          game.i += 1;
-          if (game.i < game.questions.length) renderQuestion(); else submit();
-        });
-        box.appendChild(b);
+        b.addEventListener("click", function () { check(idx, buttons); });
+        buttons.push(b); box.appendChild(b);
       });
+      if (buttons[0]) buttons[0].focus({ preventScroll: true });
+    };
+
+    // 한 문제 고르면 바로 채점: 맞으면 초록, 틀리면 빨강 + 정답 초록, 해설과 '다음 문제'
+    var check = function (idx, buttons) {
+      if (game.busy) return; game.busy = true;
+      buttons.forEach(function (b) { b.disabled = true; });
+      buttons[idx].classList.add("is-picked");
+      post(mc.dataset.start.replace(/\/start$/, "/" + game.id + "/check"), { i: game.i, pick: idx })
+        .then(function (res) {
+          game.answers[game.i] = res.pick; game.score = res.score;
+          if (buttons[res.answer_index]) buttons[res.answer_index].classList.add("is-right");
+          if (!res.correct && buttons[res.pick]) buttons[res.pick].classList.add("is-wrong");
+          var fb = m("feedback");
+          fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong");
+          fb.textContent = "";
+          fb.appendChild(el("b", "", res.correct ? "정답이에요" : "아쉬워요. 정답은 " + (res.answer_index + 1) + "번"));
+          if (res.explanation) fb.appendChild(el("p", "", res.explanation));
+          var last = game.i + 1 >= game.questions.length;
+          var next = el("button", "btn primary", last ? "결과 보기" : "다음 문제");
+          next.type = "button";
+          next.addEventListener("click", function () {
+            game.i += 1;
+            if (game.i < game.questions.length) renderQuestion(); else submit();
+          });
+          fb.appendChild(next);
+          m("score").textContent = "맞힌 문제 " + res.score;
+          next.focus({ preventScroll: true });
+          fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        })
+        .catch(function (e) {
+          buttons.forEach(function (b) { b.disabled = false; b.classList.remove("is-picked"); });
+          alert(e.message);
+        })
+        .then(function () { game.busy = false; });
     };
 
     var submit = function () {
@@ -158,7 +191,7 @@
       show(mc, "loading");
       post(mc.dataset.start, topic ? { topic: topic.value } : {})
         .then(function (res) {
-          game = { id: res.round_id, questions: res.questions, answers: [], i: 0 };
+          game = { id: res.round_id, questions: res.questions, answers: [], i: 0, score: 0, busy: false };
           show(mc, "play");
           renderQuestion();
         })

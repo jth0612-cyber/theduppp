@@ -104,9 +104,28 @@ def _public(items):
     return [{"question": it["question"], "choices": it["choices"]} for it in items]
 
 
+def _check_mc(r):
+    """한 문제 바로 채점. 한 번 고른 답은 바꿀 수 없다(다시 보내면 처음 답을 돌려준다)."""
+    items = json.loads(r["answer"])
+    body = _json_body()
+    i, pick = body.get("i"), body.get("pick")
+    if not isinstance(i, int) or not 0 <= i < len(items) or not isinstance(pick, int):
+        abort(400)
+    picks = json.loads(r["picks"] or "null") or [None] * len(items)
+    if picks[i] is None:
+        picks[i] = pick if 0 <= pick < len(items[i]["choices"]) else -1
+        execute("UPDATE game_rounds SET picks = ? WHERE id = ?", (json.dumps(picks), r["id"]))
+    it = items[i]
+    done = [p for p in picks if p is not None]
+    score = sum(1 for k, p in enumerate(picks) if p is not None and p == items[k]["answer_index"])
+    return jsonify(correct=picks[i] == it["answer_index"], pick=picks[i], answer_index=it["answer_index"],
+                   explanation=it["explanation"], answered=len(done), score=score, total=len(items))
+
+
 def _grade_mc(r, label):
     items = json.loads(r["answer"])
-    picks = _json_body().get("answers")
+    stored = json.loads(r["picks"] or "null")
+    picks = [(-1 if p is None else p) for p in stored] if stored else _json_body().get("answers")
     if not isinstance(picks, list):
         abort(400)
     results = []
@@ -134,6 +153,12 @@ def chargaff_start():
     return jsonify(round_id=rid, questions=_public(items), source="generated")
 
 
+@bp.route("/chargaff/<int:rid>/check", methods=["POST"])
+@student_required
+def chargaff_check(rid):
+    return _check_mc(_open_round(rid, "chargaff"))
+
+
 @bp.route("/chargaff/<int:rid>/submit", methods=["POST"])
 @student_required
 def chargaff_submit(rid):
@@ -144,7 +169,7 @@ def chargaff_submit(rid):
 @student_required
 def quiz_page():
     return render_template("student/games/mc.html", game="quiz", title="통합과학 퀴즈",
-                           intro="단원을 고르면 문제은행에서 4지선다 5문제가 나와요. 선택지 순서는 매번 바뀌어요.",
+                           intro="단원을 고르면 4지선다 5문제가 나와요. 한 문제씩 고르면 바로 정답과 해설이 나와요.",
                            topics=[(k, v[0]) for k, v in quiz.TOPICS.items()])
 
 
@@ -157,6 +182,12 @@ def quiz_start():
     items = quiz.bank_quiz(topic)
     rid = _new_round("quiz", _public(items), items, topic=topic)
     return jsonify(round_id=rid, questions=_public(items))
+
+
+@bp.route("/quiz/<int:rid>/check", methods=["POST"])
+@student_required
+def quiz_check(rid):
+    return _check_mc(_open_round(rid, "quiz"))
 
 
 @bp.route("/quiz/<int:rid>/submit", methods=["POST"])

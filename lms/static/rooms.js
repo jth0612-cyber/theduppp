@@ -6,7 +6,7 @@ function initRoom(room) {
   var startBtn = room.querySelector("[data-start]"), stopBtn = room.querySelector("[data-stop]");
   var msg = room.querySelector("[data-msg]"), list = room.querySelector("[data-members]"), count = room.querySelector("[data-count]");
   var status = room.getAttribute("data-status");
-  var plan = parseInt(room.getAttribute("data-plan"), 10) || 25;
+  var plan = parseInt(room.getAttribute("data-plan"), 10) || 40;
   var startTs = status === "focus" ? Date.now() - (parseInt(room.getAttribute("data-elapsed"), 10) || 0) * 60000 : 0;
   var tick = null;
 
@@ -17,7 +17,7 @@ function initRoom(room) {
     return fetch(url, { method: "POST", body: fd, credentials: "same-origin" }).then(function (r) { return r.json(); });
   }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
-  function chosenPlan() { var c = room.querySelector('input[name="plan"]:checked'); return c ? parseInt(c.value, 10) : 25; }
+  function chosenPlan() { var c = room.querySelector('input[name="plan"]:checked'); return c ? parseInt(c.value, 10) : 40; }
 
   function render() {
     var focusing = status === "focus";

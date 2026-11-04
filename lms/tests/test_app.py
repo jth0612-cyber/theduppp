@@ -300,10 +300,10 @@ class FeatureTest(AppTest):
         self.assertEqual(len(teacher), 1)
         self.assertIn('<span class="cap">조교</span> 김조교', s1.get("/s/rooms/sanji").data.decode())
         # 조교도 집중 기록은 남지만, 학생 순위(터줏대감)에는 들지 않는다
-        ta.post("/s/rooms/sanji/beat", data={"action": "start", "plan": "25"})
+        ta.post("/s/rooms/sanji/beat", data={"action": "start", "plan": "15"})
         with self.app.app_context():
             execute("UPDATE room_presence SET focus_since = datetime('now', 'localtime', '-30 minutes')")
-        self.assertEqual(ta.post("/s/rooms/sanji/done", data={"minutes": "25"}).get_json()["minutes"], 25)
+        self.assertEqual(ta.post("/s/rooms/sanji/done", data={"minutes": "15"}).get_json()["minutes"], 15)
         self.assertEqual(ta.get("/s/rooms/rank?place=sanji").status_code, 200)
         with self.app.app_context():
             from views.rooms import _ranking, _since
@@ -456,6 +456,30 @@ class FeatureTest(AppTest):
             res = s1.post(f"/s/games/quiz/{start['round_id']}/submit",
                           json={"answers": [a["answer_index"] for a in ans]}).get_json()
             self.assertEqual(res["score"], res["total"])
+
+    def test_quiz_checks_each_question_right_away(self):
+        import json as _json
+        _, s1, s2 = self._students()
+        start = s1.post("/s/games/quiz/start", json={"topic": "life"}).get_json()
+        rid = start["round_id"]
+        with self.app.app_context():
+            ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+        # 1번: 맞게 고르면 바로 정답·해설
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 0, "pick": ans[0]["answer_index"]}).get_json()
+        self.assertTrue(r["correct"]); self.assertEqual((r["score"], r["answered"]), (1, 1)); self.assertTrue(r["explanation"])
+        # 2번: 틀리면 정답 번호를 알려 주고, 다시 보내도 처음 답이 그대로 (답 바꾸기 불가)
+        wrong = (ans[1]["answer_index"] + 1) % len(ans[1]["choices"])
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": wrong}).get_json()
+        self.assertFalse(r["correct"]); self.assertEqual(r["answer_index"], ans[1]["answer_index"])
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": ans[1]["answer_index"]}).get_json()
+        self.assertFalse(r["correct"]); self.assertEqual(r["score"], 1)
+        self.assertEqual(s2.post(f"/s/games/quiz/{rid}/check", json={"i": 2, "pick": 0}).status_code, 404)   # 남의 판
+        self.assertEqual(s1.post(f"/s/games/quiz/{rid}/check", json={"i": 9, "pick": 0}).status_code, 400)
+        for i in range(2, len(ans)):
+            s1.post(f"/s/games/quiz/{rid}/check", json={"i": i, "pick": ans[i]["answer_index"]})
+        # 마지막 결과는 서버에 남은 답으로 (화면이 보낸 답을 믿지 않음)
+        res = s1.post(f"/s/games/quiz/{rid}/submit", json={"answers": [a["answer_index"] for a in ans]}).get_json()
+        self.assertEqual(res["score"], len(ans) - 1)
 
     def test_behind_synology_https_proxy(self):
         """시놀로지 리버스 프록시(HTTPS) 뒤에서 CSRF·보안 쿠키·실제 IP 기록이 동작하는지."""

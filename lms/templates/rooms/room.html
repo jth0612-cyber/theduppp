@@ -22,7 +22,7 @@
 
   <section class="room-controls" aria-label="집중 타이머">
     <div class="plan-pick" role="radiogroup" aria-label="집중 시간">
-      {% for m in plans %}<label class="chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == me.plan_min }}><span>{{ m }}분</span></label>{% endfor %}
+      {% for m in plans %}<label class="chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == (me.plan_min if me.plan_min in plans else plan_default) }}><span>{{ m }}분</span></label>{% endfor %}
     </div>
     <div class="room-buttons">
       <button type="button" class="btn primary big" data-start>집중 시작</button>

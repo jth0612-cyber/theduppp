@@ -6,3 +6,4 @@
   같은 Moodist 프로젝트의 Pixabay·CC0 음원을 잘라 다듬음.
 - eki/shore, eki/evening: 선생님이 직접 찍은 바닷가 영상의 소리(파도, 저녁 새소리)를 잘라 이어 붙여 반복용으로 다듬음.
 - 2026-11-03 다시 다듬음: 딸깍 소리 제거, 4.5kHz 이상 쇳소리 대역을 그때그때 눌러 줌, 금속성 풍경 소리·합성 풀벌레 소리는 뺌.
+- 2026-11-04: sanji/night-calm(밤, 바람 소리를 낮게 거른 것 — 개 짖는 소리 섞인 night 대신), sento/water-soft·spout-soft·drips-soft(고음을 깎아 부드럽게).
