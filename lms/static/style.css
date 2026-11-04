@@ -409,7 +409,7 @@ body.pub, body.no-shell { background: #f2f3f2; }
 .pub-sec-head .kicker { margin: 0; }
 .pub-sec-head h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.02em; }
 .book-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 3vw, 40px); }
-.book-photo { aspect-ratio: 1 / 1; }
+.book-photo { aspect-ratio: 3 / 2; }
 .book-photo img { height: 100%; object-fit: cover; transition: transform 600ms cubic-bezier(.2, .7, .2, 1); }
 .book-item:hover .book-photo img { transform: scale(1.03); }
 .book-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 0 0; border-bottom: 1px solid var(--pub-rule); padding-bottom: 14px; }
