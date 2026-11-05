@@ -538,7 +538,7 @@ export default {
       chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요." },
       sounds: {
         // 바닷가: 파도가 주인공(먼 파도 + 가까이 부서지는 파도), 바람은 넓게, 저녁 마을 소리는 작게, 갈매기는 아주 가끔
-        loops: [{ f: "eki/waves", g: 0.9 }, { f: "eki/shore", g: 0.55 }, { f: "eki/wind", g: 0.28 }, { f: "eki/evening", g: 0.28 }],
+        loops: [{ f: "eki/waves", g: 0.9 }, { f: "eki/shore", g: 0.28 }, { f: "eki/wind", g: 0.28 }, { f: "eki/evening", g: 0.28 }],
         gusts: [{ f: "eki/gulls", max: 0.28, every: [30, 60], when: "day" }],
         sfx: { train: { f: "eki/train", g: 0.85 } },
         steps: { f: "common/steps", out: 0.32, in: 0.22 },

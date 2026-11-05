@@ -1164,15 +1164,20 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .w3-card { animation: none; } }
 .w3-card-body { display: grid; gap: 10px; }
 .w3-card-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 14px; }
-.ft-head { display: flex; align-items: center; gap: 10px; }
-.ft-slip { width: 28px; height: 44px; border-radius: 3px; background: #fbf8f0; border: 1px solid var(--edge); position: relative; flex: none; }
-.ft-slip::after { content: ""; position: absolute; left: 6px; right: 6px; top: 8px; height: 3px; background: #c8323a; box-shadow: 0 8px 0 var(--edge), 0 14px 0 var(--edge), 0 20px 0 var(--edge); }
-.ft-luck { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
-.ft-luck small { display: block; font-family: var(--font-ui); font-size: 12px; font-weight: 400; color: var(--muted); }
-.ft-text { margin: 0; font-size: 14.5px; line-height: 1.65; }
-.ft-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--raised); font-size: 13.5px; }
-.ft-row b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
-.ft-charm { width: 18px; height: 24px; border-radius: 4px; flex: none; }
+/* 오늘의 운세: 신사에 어울리는 종이 쪽지 (위에 얇은 주홍 띠, 가운데 정렬, 상자 없이) */
+.w3-card.is-fortune { background: #fbf7ee; color: #3a3129; border-top: 4px solid #b8432f; border-radius: 6px 6px 14px 14px; padding: 22px 22px 16px; text-align: center; width: min(320px, calc(100% - 32px)); }
+.w3-card.is-fortune .w3-card-body { gap: 8px; justify-items: center; }
+.w3-card.is-fortune .w3-card-actions { justify-content: center; }
+.w3-card.is-fortune .btn { background: transparent; border-color: #d8ccb6; color: #3a3129; }
+.w3-card.is-fortune .btn.primary { background: #3a3129; border-color: #3a3129; color: #fbf7ee; }
+.ft-kicker { margin: 0; font-size: 12px; letter-spacing: .18em; color: #9a8467; }
+.ft-luck { margin: 0; font-family: "Noto Serif KR", serif; font-size: 28px; font-weight: 600; letter-spacing: .02em; line-height: 1.25; }
+.ft-luck.l-great { color: #a8551a; } .ft-luck.l-good { color: #9b3f4f; } .ft-luck.l-ok { color: #4f6b46; } .ft-luck.l-low { color: #6b5a86; }
+.ft-rule { width: 28px; height: 1px; background: #d8ccb6; border: 0; margin: 4px 0; }
+.ft-text { margin: 0; font-size: 14.5px; line-height: 1.75; color: #3a3129; word-break: keep-all; }
+.ft-charm-line { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 12.5px; color: #85745f; }
+.ft-again { margin: 0; font-size: 12px; color: #9a8467; }
+.ft-charm { width: 9px; height: 12px; border-radius: 2px; flex: none; }
 .ft-charm.c-0 { background: #e2ae25; } .ft-charm.c-1 { background: #e0708a; } .ft-charm.c-2 { background: #4b8fd6; } .ft-charm.c-3 { background: #5fa865; } .ft-charm.c-4 { background: #9673d4; }
 .dash-sum { margin: 0 0 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dash-sum b { color: var(--ink); font-weight: 700; }
@@ -1254,3 +1259,8 @@ body.entered .side .nav { animation: rail-in 520ms 160ms cubic-bezier(.2, .7, .2
 .mc-feedback b { display: block; }
 .mc-feedback p { margin: 6px 0 12px; font-size: 14px; color: var(--ink); }
 .mc-feedback .btn { margin-top: 2px; }
+
+/* 왼쪽 메뉴가 길어 스크롤해도 맨 위 로고는 그대로 */
+@media (min-width: 901px) {
+  .side .brand { position: sticky; top: -20px; z-index: 2; margin: -20px -12px 0 -16px; padding: 20px 20px 22px 24px; background: var(--rail); }
+}

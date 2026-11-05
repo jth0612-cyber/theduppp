@@ -45,7 +45,7 @@
         <button type="button" class="pref" data-push aria-pressed="false">알림 켜기</button>
         <button type="button" class="pref" data-theme-toggle>화면: 자동</button>
       </div>
-      <img class="affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">
+      <img class="affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">
       <div class="userbox">
         <a href="{{ url_for('auth.change_password') }}" title="내 계정">{% if who_cap %}<span class="cap">{{ who_cap }}</span> {% endif %}{{ who }}</a>
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
@@ -93,7 +93,7 @@
         <button class="pref">로그아웃</button>
       </form>
     </div>
-    <img class="m-affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">
+    <img class="m-affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">
   </div>
   <main class="sheet {% block main_class %}container{% endblock %}">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -114,7 +114,7 @@
   {% endwith %}
   {% block content_auth %}{{ self.content() }}{% endblock %}
   {% include "_contact_footer.html" %}
-  {% block auth_affil %}<img class="auth-affil" src="{{ url_for('static', filename='img/sdij-n-jaesu.svg') }}" alt="시대인재 N 재수종합">{% endblock %}
+  {% block auth_affil %}<img class="auth-affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">{% endblock %}
 </main>
 {% endif %}
 </body>

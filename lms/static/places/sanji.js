@@ -284,36 +284,28 @@ export default {
       E.me.bow(); E.sync(true); E.whisper("마음속으로 한 번 더 말해요. 오늘은 이것만큼은 해낸다!", 3200); await wait(2600);
       E.me.pose = restPose(E); E.sync(true); busy = false;
     }
-    // 오늘의 운세: 하루에 한 번. 뽑으면 ① 오늘 하루 가방에 행운 부적이 달리고 ② 오늘의 미션을 플래너에 바로 넣을 수 있다.
+    // 오늘의 운세: 하루에 한 번. 뽑으면 오늘 하루 가방에 행운 부적이 달린다(친구에게도 보임).
     // 아쉬운 운세는 종이를 줄에 묶어 두고 가면 '내일은 더 좋은 날'로 바뀐다.
+    const LUCK_CLS = { "아주 좋음": "l-great", "좋음": "l-good", "보통": "l-ok", "조금 아쉬움": "l-low" };
     function showFortune(E, f) {
-      E.card((el) => {
-        const head = document.createElement("div"); head.className = "ft-head";
-        const slipEl = document.createElement("span"); slipEl.className = "ft-slip"; slipEl.setAttribute("aria-hidden", "true");
-        const luck = document.createElement("div"); luck.className = "ft-luck"; luck.textContent = "오늘의 운세 · " + f.luck;
-        const sm = document.createElement("small"); sm.textContent = f.again ? "오늘은 이미 뽑았어요. 운세는 하루에 한 번이에요." : "오늘 하루 동안 유지돼요."; luck.appendChild(sm);
-        head.append(slipEl, luck);
-        const txt = document.createElement("p"); txt.className = "ft-text"; txt.textContent = f.tied ? "아쉬운 운은 줄에 묶어 두고 왔어요. 내일은 더 좋은 날이 될 거예요!" : f.text;
-        const charm = document.createElement("div"); charm.className = "ft-row";
-        const ci = document.createElement("span"); ci.className = "ft-charm " + (CHARM_CLS[f.color] || "c-3"); ci.setAttribute("aria-hidden", "true");
-        const ct = document.createElement("span"); ct.innerHTML = "<b>행운 부적</b>"; ct.append(f.charm + "이 오늘 하루 가방에 달려요. 친구들에게도 보여요.");
-        charm.append(ci, ct);
-        const mis = document.createElement("div"); mis.className = "ft-row";
-        const mt = document.createElement("span"); mt.innerHTML = "<b>오늘의 미션</b>"; mt.append(f.mission); mis.append(mt);
-        el.append(head, txt, charm, mis);
+      const card = E.card((el) => {
+        const k = document.createElement("p"); k.className = "ft-kicker"; k.textContent = "오늘의 운세";
+        const luck = document.createElement("p"); luck.className = "ft-luck " + (LUCK_CLS[f.luck] || "l-ok"); luck.textContent = f.luck;
+        const rule = document.createElement("hr"); rule.className = "ft-rule";
+        const txt = document.createElement("p"); txt.className = "ft-text"; txt.textContent = f.tied ? "아쉬운 운은 줄에 묶어 두고 왔어요. 내일은 더 좋은 날이 될 거예요." : f.text;
+        const charm = document.createElement("span"); charm.className = "ft-charm-line";
+        const ci = document.createElement("i"); ci.className = "ft-charm " + (CHARM_CLS[f.color] || "c-3"); ci.setAttribute("aria-hidden", "true");
+        charm.append(ci, f.charm + " · 오늘 하루 가방에 달려요");
+        el.append(k, luck, rule, txt, charm);
+        if (f.again) { const ag = document.createElement("p"); ag.className = "ft-again"; ag.textContent = "운세는 하루에 한 번이에요."; el.append(ag); }
       }, [
         ...(f.low && !f.tied ? [{ label: "종이 묶어 두기", onClick: () => {
           E.post(E.root.dataset.fortuneTie, {}).then((d) => { E.whisper(`아쉬운 운은 묶어 두고 가요. 오늘 ${d.tied_today}명이 묶어 두었어요.`, 4200); }).catch(() => {});
           f.tied = true; setTimeout(() => showFortune(E, f), 50);
         } }] : []),
-        { label: "플래너에 미션 넣기", primary: true, onClick: (btn) => {
-          btn.disabled = true;
-          E.post(E.root.dataset.plannerAdd, { day: f.day, body: "[오늘의 미션] " + f.mission, subject: f.subject })
-            .then(() => E.whisper("오늘 플래너에 미션을 넣었어요. 해내면 체크해요!", 3600))
-            .catch(() => E.whisper("플래너에 넣지 못했어요. 잠시 뒤 다시 해 보세요."));
-        } },
-        { label: "닫기" },
+        { label: "닫기", primary: true },
       ]);
+      card.classList.add("is-fortune");
     }
     return {
       seats: SEATS, seatNoun: "방석", heightAt,

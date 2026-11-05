@@ -185,9 +185,7 @@ class RoomsTest(unittest.TestCase):
         self.assertIsNone([m for m in r["members"] if m["me"]][0]["charm"])
         self.assertEqual(a.post("/s/rooms/fortune/tie").get_json()["tied_today"], 1)
         self.assertTrue(a.post("/s/rooms/fortune").get_json()["tied"])
-        # 오늘의 미션을 플래너에 넣기
-        a.post("/s/planner/add", data={"day": f1["day"], "body": "[오늘의 미션] " + f1["mission"], "subject": f1["subject"]})
-        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM planner_items", one=True)["n"], 1)
+        self.assertNotIn("mission", f1)                                                   # 오늘의 미션은 없앰
 
     def test_shared_actions_reach_friends(self):
         a, b = self.student(0), self.student(1)

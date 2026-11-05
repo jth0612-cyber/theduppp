@@ -311,9 +311,96 @@ const flameTex = (() => {
   x.globalAlpha = 1; x.fillStyle = g; x.fill();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 })();
-const FLAME_HOT = [new THREE.Color(0xff6a1f), new THREE.Color(0xff4a12), new THREE.Color(0xff8a2a)];
-const FLAME_BLUE = [new THREE.Color(0x3d8bff), new THREE.Color(0x2a5cff), new THREE.Color(0x5fb0ff)];
-const _away = new THREE.Vector3();
+const _away = new THREE.Vector3(), _side = new THREE.Vector3();
+const auraTex = (() => {
+  // 가운데는 비고 테두리 쪽이 밝은 세로 타원: 캐릭터 둘레로 '기운'이 비치는 모양
+  const c = document.createElement("canvas"); c.width = 128; c.height = 256; const x = c.getContext("2d");
+  x.translate(64, 140); x.scale(1, 1.9);
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, 62); g.addColorStop(0, "rgba(255,255,255,0.15)"); g.addColorStop(0.62, "rgba(255,255,255,0.5)"); g.addColorStop(0.8, "rgba(255,255,255,0.95)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, 62, 0, Math.PI * 2); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+// 40분 이후 등 뒤 불꽃. 시안: a 불길(입자) · b 만화 오라(셰이더) · c 은은한 기운
+const FLAME_STYLE = (new URLSearchParams(location.search).get("flame") || "b").slice(0, 1);
+const RAMP_HOT = [[1, 0.8, 0.28], [1, 0.48, 0.1], [0.84, 0.18, 0.05], [0.48, 0.07, 0.03]];
+const RAMP_BLUE = [[0.55, 0.82, 1], [0.28, 0.55, 1], [0.14, 0.28, 0.9], [0.08, 0.1, 0.45]];
+function rampAt(r, k) { const i = Math.min(r.length - 2, Math.floor(k * (r.length - 1))), f = k * (r.length - 1) - i; return r[i].map((v, j) => v + (r[i + 1][j] - v) * f); }
+function makeFire(style) {
+  if (style === "b") {
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { uT: { value: 0 }, uA: { value: new THREE.Color() }, uB: { value: new THREE.Color() }, uC: { value: new THREE.Color() }, uO: { value: 0 } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+      fragmentShader: `varying vec2 vUv; uniform float uT, uO; uniform vec3 uA, uB, uC;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+        float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { v += a * n(p); p *= 2.03; a *= 0.5; } return v; }
+        void main(){
+          vec2 u = vUv; float x = abs(u.x - 0.5) * 2.0, y = u.y;
+          float nz = fbm(vec2(u.x * 3.2, y * 2.2 - uT * 1.7)) + 0.5 * fbm(vec2(u.x * 7.0 + 3.0, y * 4.0 - uT * 3.1));
+          float f = 1.0 - x * (1.15 + 0.9 * y) - y * 0.95 + (nz - 0.62) * 0.95;
+          f *= smoothstep(0.0, 0.12, y);
+          if (f < 0.06) discard;
+          vec3 c = f > 0.5 ? uA : f > 0.26 ? uB : uC;
+          float a = smoothstep(0.06, 0.1, f) * uO;
+          gl_FragColor = vec4(c, a);
+        }` });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 3.1), mat); m.renderOrder = 1; scene.add(m);
+    return {
+      parts: [m],
+      update(av, dt, n, on) {
+        mat.uniforms.uT.value = reduceMotion ? 0.5 : av.t;
+        const r = n >= 4 ? RAMP_BLUE : RAMP_HOT;
+        mat.uniforms.uA.value.setRGB(...r[0]); mat.uniforms.uB.value.setRGB(...r[1]); mat.uniforms.uC.value.setRGB(...r[2]);
+        mat.uniforms.uO.value += ((on ? 0.95 : 0) - mat.uniforms.uO.value) * Math.min(1, dt * 2.5);
+        m.visible = mat.uniforms.uO.value > 0.01;
+        m.quaternion.copy(camera.quaternion);
+        const big = n >= 4 ? 1.18 : 1; m.scale.set(big, big, 1);
+        m.position.copy(av.g.position).addScaledVector(_away, 0.45); m.position.y += av.upper.position.y + 1.45 * big - 0.15;
+      } };
+  }
+  // a: 작은 불덩이가 계속 피어오르는 불길 / c: 등 뒤가 은은하게 빛나고 가는 불줄기가 천천히
+  const calm = style === "c", N = calm ? 16 : 54, sprites = [];
+  for (let i = 0; i < N; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, depthWrite: false, opacity: 0 }));
+    sp.visible = false; sp.renderOrder = 1; sp.userData = { life: 0, total: 1, x: 0, y: 0, vx: 0, vy: 0, s: 1 }; scene.add(sp); sprites.push(sp);
+  }
+  let halo = null;
+  if (calm) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: auraTex, transparent: true, depthWrite: false, opacity: 0 })); halo.renderOrder = 0; scene.add(halo); }
+  let level = 0, acc = 0;
+  return {
+    parts: halo ? sprites.concat([halo]) : sprites,
+    update(av, dt, n, on) {
+      level += ((on ? 1 : 0) - level) * Math.min(1, dt * 2.5);
+      const ramp = n >= 4 ? RAMP_BLUE : RAMP_HOT, big = n >= 4 ? 1.2 : 1;
+      const base = av.g.position, y0 = base.y + av.upper.position.y;
+      if (halo) {
+        halo.visible = level > 0.01; halo.material.opacity = level * (0.85 + (reduceMotion ? 0 : Math.sin(av.t * 1.6) * 0.1));
+        halo.material.color.setRGB(...rampAt(ramp, 0.2)); halo.scale.set(2.5 * big, 3.3 * big, 1);
+        halo.position.copy(base).addScaledVector(_away, 0.55); halo.position.y = y0 + 1.05;
+      }
+      acc = Math.min(4, acc + (on ? (calm ? 6 : 58) : 0) * dt);
+      sprites.forEach((sp) => {
+        const u = sp.userData;
+        if (u.life <= 0) {
+          if (!on || acc < 1) { sp.visible = false; return; }
+          acc -= 1;
+          u.x = (Math.random() - 0.5) * (calm ? 1.2 : 1.35) * big; u.y = calm ? 0.4 + Math.random() * 0.5 : 0.2 + Math.random() * 0.5;
+          u.vx = -u.x * (calm ? 0.15 : 0.6); u.vy = calm ? 0.45 + Math.random() * 0.3 : 1.5 + Math.random() * 0.9;
+          u.total = u.life = calm ? 2.6 + Math.random() * 1.2 : 0.7 + Math.random() * 0.45; u.s = calm ? 1.4 + Math.random() * 0.6 : 0.8 + Math.random() * 0.45;
+        }
+        u.life -= dt; const k = 1 - Math.max(0, u.life) / u.total;
+        u.x += (u.vx + (reduceMotion ? 0 : Math.sin(av.t * 6 + u.s * 9) * (calm ? 0.05 : 0.18))) * dt; u.y += u.vy * dt * big;
+        sp.visible = level > 0.01;
+        sp.material.color.setRGB(...rampAt(ramp, calm ? 0.15 + k * 0.5 : 0.12 + k * 0.85));
+        sp.material.opacity = level * (calm ? Math.sin(k * Math.PI) * 0.9 : (k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88) * 0.95);
+        const sz = calm ? u.s * (0.35 + 0.15 * Math.sin(k * Math.PI)) : u.s * (1 - k * 0.65) * big;
+        if (calm) sp.scale.set(sz * 0.55, sz * 1.6, 1); else sp.scale.set(sz * 0.8, sz * 1.5, 1);
+        sp.position.copy(base).addScaledVector(_away, 0.5).addScaledVector(_side, u.x); sp.position.y = y0 + u.y;
+      });
+    } };
+}
 
 // 조교·선생님 이름표: 초록 캡션 + 본명
 function capSprite(text, me, cap) {
@@ -568,13 +655,7 @@ class Avatar {
       pts.frustumCulled = false; scene.add(pts);
       this.embers = { pts, life: new Float32Array(N), total: new Float32Array(N), v: new Float32Array(N * 3) };
     }
-    if (n >= 3 && !this.flames) {
-      this.flames = [0, 1, 2].map((i) => {
-        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, depthWrite: false, opacity: 0 }));
-        sp.userData.ph = i * 2.1; sp.userData.side = (i - 1) * 0.5; sp.renderOrder = 1; scene.add(sp); return sp;
-      });
-    }
-    if (this.flames) this.flames.forEach((f, i) => f.material.color.copy((n >= 4 ? FLAME_BLUE : FLAME_HOT)[i]));
+    if (n >= 3 && !this.fire) this.fire = makeFire(FLAME_STYLE);
     if (this.me && up && this.onStageUp) this.onStageUp(n);
   }
   focusFx(dt) {
@@ -604,28 +685,17 @@ class Avatar {
       }
       pos.needsUpdate = true; col.needsUpdate = true;
     }
-    if (this.flames) {
+    if (this.fire) {
       // 보는 사람 카메라 반대쪽(=캐릭터 등 뒤)에 세워, 어느 쪽에서 봐도 캐릭터 뒤에서 타오른다
       _away.subVectors(this.g.position, camera.position); _away.y = 0;
-      if (_away.lengthSq() < 1e-4) _away.set(0, 0, -1); _away.normalize();
-      const side = new THREE.Vector3(-_away.z, 0, _away.x);
-      const tgt = n >= 3 && shown ? 0.92 : 0;
-      this.flames.forEach((f) => {
-        const ph = f.userData.ph, fl = reduceMotion ? 0 : Math.sin(this.t * 9 + ph) * 0.06 + Math.sin(this.t * 13.7 + ph * 2) * 0.04;
-        f.material.opacity += (tgt - f.material.opacity) * Math.min(1, dt * 2.5);
-        f.visible = f.material.opacity > 0.01;
-        const big = n >= 4 ? 1.2 : 1, mid = f.userData.side === 0;
-        const h = (mid ? 2.5 : 1.8) * big * (1 + fl), wdt = (mid ? 1.5 : 1.0) * big * (1 - fl * 0.5);
-        f.scale.set(wdt, h, 1);
-        f.position.copy(this.g.position).addScaledVector(_away, 0.5).addScaledVector(side, f.userData.side);
-        f.position.y += this.upper.position.y + h * 0.5 - 0.1;
-      });
+      if (_away.lengthSq() < 1e-4) _away.set(0, 0, -1); _away.normalize(); _side.set(-_away.z, 0, _away.x);
+      this.fire.update(this, dt, n, n >= 3 && shown);
     }
   }
   dispose() {
     scene.remove(this.g);
     if (this.embers) { scene.remove(this.embers.pts); this.embers.pts.geometry.dispose(); }
-    if (this.flames) this.flames.forEach((f) => scene.remove(f));
+    if (this.fire) this.fire.parts.forEach((f) => scene.remove(f));
   }
 }
 

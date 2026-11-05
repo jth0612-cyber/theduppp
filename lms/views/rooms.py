@@ -31,16 +31,16 @@ BOARDS = {"sento": {"kind": "chat", "seats": {8, 9, 10, 11}, "max": 40},
 BOARD_LINES = 5
 CHAT_GAP_SECONDS = 4
 CHAT_DAY_MAX = 60
-# 오늘의 운세: (운, 한마디, 오늘의 미션(플래너에 넣을 수 있음), 과목 칩, 행운 부적 색, 부적 이름)
+# 오늘의 운세: (운, 한마디, 행운 부적 색, 부적 이름)
 FORTUNES = [
-    ("아주 좋음", "오늘 푼 문제가 시험에 그대로 나올 것 같은 날이에요. 어려운 단원도 오늘은 술술 풀려요.", "제일 자신 없는 단원 기출 5문제", "sci", "#e2ae25", "금빛 부적"),
-    ("아주 좋음", "자료 해석에 강한 하루예요. 그래프와 표가 눈에 쏙쏙 들어와요.", "그래프·표 해석 문제 10개", "sci", "#e2ae25", "금빛 부적"),
-    ("좋음", "틀린 문제 하나가 큰 깨달음이 되는 날이에요. 오답 노트를 펼쳐 보세요.", "오답 노트 3문제 다시 풀기", "sci", "#e0708a", "벚꽃 부적"),
-    ("좋음", "모르는 건 바로 묻는 날! 질문 하나가 막힌 길을 열어 줘요.", "막힌 문제 1개 질답 게시판에 올리기", "sci", "#e0708a", "벚꽃 부적"),
-    ("좋음", "암기가 잘 되는 날이에요. 짧게 여러 번 보는 게 좋아요.", "개념 카드 한 바퀴 돌리기", "sci", "#4b8fd6", "하늘 부적"),
-    ("보통", "한 단원만 끝까지 해내면 충분한 날이에요. 작은 완주가 큰 힘이 돼요.", "한 단원 끝까지 풀기", "sci", "#5fa865", "잎새 부적"),
-    ("보통", "15분만 집중해도 잘한 날이에요. 타이머부터 켜 보세요.", "40분 집중 두 번", "etc", "#5fa865", "잎새 부적"),
-    ("조금 아쉬움", "오늘은 조금 지칠 수 있어요. 천천히 가도 멈추지만 않으면 돼요. 내일은 더 좋아요!", "쉬운 문제 10개로 몸 풀기", "sci", "#9673d4", "보랏빛 부적"),
+    ("아주 좋음", "오늘 푼 문제가 시험에 그대로 나올 것 같은 날이에요. 어려운 단원도 오늘은 술술 풀려요.", "#e2ae25", "금빛 부적"),
+    ("아주 좋음", "자료 해석에 강한 하루예요. 그래프와 표가 눈에 쏙쏙 들어와요.", "#e2ae25", "금빛 부적"),
+    ("좋음", "틀린 문제 하나가 큰 깨달음이 되는 날이에요. 오답 노트를 펼쳐 보세요.", "#e0708a", "벚꽃 부적"),
+    ("좋음", "모르는 건 바로 묻는 날! 질문 하나가 막힌 길을 열어 줘요.", "#e0708a", "벚꽃 부적"),
+    ("좋음", "암기가 잘 되는 날이에요. 짧게 여러 번 보는 게 좋아요.", "#4b8fd6", "하늘 부적"),
+    ("보통", "한 단원만 끝까지 해내면 충분한 날이에요. 작은 완주가 큰 힘이 돼요.", "#5fa865", "잎새 부적"),
+    ("보통", "15분만 집중해도 잘한 날이에요. 타이머부터 켜 보세요.", "#5fa865", "잎새 부적"),
+    ("조금 아쉬움", "오늘은 조금 지칠 수 있어요. 천천히 가도 멈추지만 않으면 돼요. 내일은 더 좋아요!", "#9673d4", "보랏빛 부적"),
 ]
 LOW_LUCK = "조금 아쉬움"
 PRESENT_SECONDS = 70          # 이 시간 안에 신호가 있으면 '여기 있음'
@@ -98,7 +98,7 @@ def _elapsed_min(since):
 def _member_json(m, me, king=None, follows=()):
     return {"id": m["id"], "nick": shown_name(m), "cap": role_caption(m), "me": m["id"] == me, "status": m["status"],
             "king": m["id"] == king, "follow": m["id"] in follows, "act": m["act"], "act_seq": m["act_seq"],
-            "charm": FORTUNES[m["fortune"]][4] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
+            "charm": FORTUNES[m["fortune"]][2] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
             "left": _left_sec(m["focus_since"], m["plan_min"]) if m["status"] == "focus" else None,
             "plan": m["plan_min"], "today": m["today"],
@@ -217,7 +217,7 @@ def room(place):
                            rank=_ranking(place, _since("week"), limit=5), my_rank=_my_rank(place, _since("week"), g.user["id"]),
                            notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, plan_default=PLAN_DEFAULT, note_max=NOTE_MAX,
                            enter_text=ENTER_TEXT.get(place, "들어가기"), follows=follows,
-                           board_on=place in BOARDS, is_student=g.user["role"] == "student")
+                           board_on=place in BOARDS)
 
 
 @bp.route("/s/rooms/rank")
@@ -358,8 +358,8 @@ def _board(place):
 
 
 def _fortune_json(idx, again, tied):
-    luck, text, mission, subject, color, charm = FORTUNES[idx]
-    return {"luck": luck, "text": text, "mission": mission, "subject": subject, "color": color, "charm": charm,
+    luck, text, color, charm = FORTUNES[idx]
+    return {"luck": luck, "text": text, "color": color, "charm": charm,
             "low": luck == LOW_LUCK, "again": again, "tied": bool(tied), "day": date.today().isoformat()}
 
 

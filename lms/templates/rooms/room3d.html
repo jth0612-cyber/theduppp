@@ -9,7 +9,7 @@
      data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/') }}"
      data-three="{{ url_for('static', filename='vendor/three.module.min.js') }}"
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}"
-     data-color="{{ my_color }}" data-fortune="{{ url_for('rooms.fortune') }}" data-fortune-tie="{{ url_for('rooms.fortune_tie') }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if is_student %} data-planner-add="{{ url_for('planner.add') }}"{% endif %}{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
+     data-color="{{ my_color }}" data-fortune="{{ url_for('rooms.fortune') }}" data-fortune-tie="{{ url_for('rooms.fortune_tie') }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
     <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
