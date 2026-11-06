@@ -266,3 +266,14 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
     });
   });
 })();
+
+// ---------- 조교 답변: 기본 인사말이 미리 들어 있고, 처음 누르면 가운데 빈 줄에서 바로 쓰기 시작 ----------
+document.querySelectorAll("textarea[data-answer-tpl]").forEach(function (t) {
+  var tpl = t.value, mark = "질문 남겨주셔서 감사합니다.\n\n", at = tpl.indexOf(mark);
+  if (at < 0) return;
+  t.addEventListener("focus", function () {
+    if (t.value !== tpl) return;               // 이미 쓰기 시작했으면 그대로
+    var pos = at + mark.length;
+    setTimeout(function () { t.setSelectionRange(pos, pos); }, 0);
+  });
+});

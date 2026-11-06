@@ -38,7 +38,8 @@
   <h2>답변 작성</h2>
   <form method="post">
     {{ csrf() }}
-    <div class="field"><textarea name="body" maxlength="5000" required></textarea></div>
+    {% if g.user.role == 'assistant' %}{% set tpl = "안녕하세요 :) " ~ shown_name(g.user) ~ " 조교입니다.\n\n질문 남겨주셔서 감사합니다.\n\n\n\n혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!\n\n감사합니다 :)" %}{% endif %}
+    <div class="field"><textarea name="body" maxlength="5000" required rows="{{ 13 if tpl else 6 }}"{% if tpl %} data-answer-tpl{% endif %}>{{ tpl or '' }}</textarea></div>
     <div class="row">
       <button class="btn primary">답변 등록</button>
       <label class="small"><input type="checkbox" name="go_next" value="1" checked> 등록 후 다음 대기 질문으로 이동</label>
