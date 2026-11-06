@@ -4,7 +4,7 @@
 <div class="narrow">
 {% if step == 3 %}
   <header class="ed-head">
-    <h1>서가에 추가했어요</h1>
+    <h1>교재를 등록했어요</h1>
     <p class="ed-lede">이 교재의 모의고사 분석을 지금부터 쓸 수 있습니다.</p>
   </header>
   <div class="tag-card" aria-label="등록한 교재">
@@ -34,7 +34,7 @@
     <p class="fine" id="code-help">띄어쓰기나 하이픈은 넣지 않아도 됩니다. 숫자 0·1과 영문 O·I·L은 쓰지 않는 코드예요. 인쇄가 흐려 읽기 어렵다면 질문 게시판의 행정문의로 사진을 보내 주세요.</p>
     <button class="btn primary" type="submit">등록</button>
   </form>
-  <p class="mt"><a href="{{ url_for('books.my_books') }}">내 서가 보기</a></p>
+  <p class="mt"><a href="{{ url_for('books.analysis_home') }}">모의고사 분석으로</a></p>
 {% endif %}
 </div>
 <script src="{{ url_for('static', filename='analysis.js') }}" defer></script>

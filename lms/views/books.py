@@ -60,23 +60,12 @@ def _selected_item(stats):
 
 # ---------- 학생 ----------
 
-def _my_books():
-    return query("""SELECT b.*, ub.registered_at FROM user_books ub JOIN books b ON b.id = ub.book_id
-                    WHERE ub.user_id = ? ORDER BY ub.registered_at DESC""", (g.user["id"],))
-
-
 def _accessible_mocks():
     return query("""SELECT m.*, b.title AS book_title, b.subject FROM mocks m
                     JOIN books b ON b.id = m.book_id
                     JOIN user_books ub ON ub.book_id = b.id AND ub.user_id = ?
                     WHERE m.open = 1 AND b.expires_on >= ? ORDER BY b.title, m.round_no""",
                  (g.user["id"], _today()))
-
-
-@bp.route("/s/books")
-@student_required
-def my_books():
-    return render_template("student/books.html", books=_my_books(), today=_today())
 
 
 @bp.route("/s/books/register", methods=["GET", "POST"])
@@ -99,8 +88,8 @@ def register_book():
             error = "이용 기간이 지난 교재예요."
         elif query("SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",
                    (g.user["id"], row["book_id"]), one=True):
-            flash("이미 서가에 있는 교재예요.", "ok")
-            return redirect(url_for("books.my_books"))
+            flash("이미 등록한 교재예요.", "ok")
+            return redirect(url_for("books.analysis_home"))
         elif row["max_uses"] is not None and row["uses"] >= row["max_uses"]:
             error = "이미 다른 계정에서 쓴 코드예요. 착오라면 선생님께 알려 주세요."
         if error:

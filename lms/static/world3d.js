@@ -1106,7 +1106,6 @@ function drawList(ms) {
     if (m.cap) { const c = document.createElement("span"); c.className = "cap"; c.textContent = m.cap; b.append(c, " "); }
     b.append(m.nick + (m.me ? " (나)" : ""));
     if (m.king) { const k = document.createElement("small"); k.className = "here-tag is-king"; k.textContent = "터줏대감"; b.append(" ", k); }
-    else if (m.follow) { const k = document.createElement("small"); k.className = "here-tag"; k.textContent = "팔로잉"; b.append(" ", k); }
     const s = document.createElement("span");
     s.textContent = (m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중") + ` · 오늘 ${m.today}분`;
     li.append(seat, b, s); listEl.appendChild(li);

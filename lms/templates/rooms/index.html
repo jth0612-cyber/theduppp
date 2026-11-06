@@ -8,7 +8,7 @@
   </div>
   <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
-  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a>{% if g.user.role == 'student' %} · <a href="{{ url_for('rooms.friends') }}">친구</a>{% endif %}</p>
+  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a></p>
   </div>
 </header>
 <ul class="place-list">

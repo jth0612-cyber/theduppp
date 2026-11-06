@@ -40,8 +40,7 @@
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0)]),
   ('수업 운영', [
     ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task'), 0),
-    ('study.t_timetable', '시간표', 'timetable', ep == 'study.t_timetable', 0),
-    ('study.t_cards', '개념 카드', 'cards', ep in ('study.t_cards', 'study.t_deck'), 0),
+    ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0)]),
@@ -58,8 +57,7 @@
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0)]),
   ('수업 운영', [
     ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task'), 0),
-    ('study.t_timetable', '시간표', 'timetable', ep == 'study.t_timetable', 0),
-    ('study.t_cards', '개념 카드', 'cards', ep in ('study.t_cards', 'study.t_deck'), 0),
+    ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0)])] -%}
@@ -68,7 +66,6 @@
   (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
   ('수업', [
     ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
-    ('planner.planner', '플래너', 'plan', ep == 'planner.planner', 0),
     ('study.timetable', '시간표', 'timetable', ep == 'study.timetable', 0),
     ('study.tasks', '과제', 'task', ep == 'study.tasks', 0),
     ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),
@@ -76,15 +73,12 @@
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
   ('공부', [
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('rooms.friends', '친구', 'users', ep == 'rooms.friends', 0),
-    ('study.cards', '개념 카드', 'cards', ep in ('study.cards', 'study.deck'), 0),
+    ('games.hub', '미니 Quiz', 'game', ep.startswith('games.'), 0),
     ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
-    ('books.analysis_home', '모의고사 분석', 'chart', ep == 'books.analysis_home', 0),
-    ('books.my_books', '내 서가', 'book', ep in ('books.my_books', 'books.register_book'), 0)]),
+    ('books.analysis_home', '모의고사 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book', 0)]),
   ('기록', [
     ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
-    ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0),
-    ('games.hub', '미니게임', 'game', ep.startswith('games.'), 0)])] -%}
+    ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0)])] -%}
 {%- endif -%}
 {{ caller(groups) }}
 {% endmacro %}
@@ -104,7 +98,7 @@
 {%- else -%}
 {%- set items = [('student.home', '홈', 'home', ep == 'student.home'),
                  ('rooms.rooms', '소도시 명상', 'torii', ep.startswith('rooms.')),
-                 ('planner.planner', '플래너', 'plan', ep == 'planner.planner'),
+                 ('study.timetable', '시간표', 'timetable', ep == 'study.timetable'),
                  ('student.questions', '질답', 'chat', ep.startswith('student.question'))] -%}
 {%- endif -%}
 {{ caller(items) }}

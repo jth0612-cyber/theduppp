@@ -292,7 +292,6 @@ class FeatureTest(AppTest):
         self.assertEqual(self.c.get("/s/rooms/sanji").status_code, 200)        # 선생님도
         page = ta.get("/s/rooms/sanji").data.decode()
         self.assertIn('data-me-name="김조교" data-me-cap="조교"', page)
-        self.assertNotIn("data-planner-add", page)                               # 플래너는 학생만
         r = s1.post("/s/rooms/sanji/beat", data={}).get_json()
         tas = [m for m in r["members"] if m.get("cap") == "조교"]
         self.assertEqual((tas[0]["nick"], tas[0]["cap"]), ("김조교", "조교"))
@@ -309,8 +308,6 @@ class FeatureTest(AppTest):
             from views.rooms import _ranking, _since
             ta_id = query("SELECT id FROM users WHERE username='ta_kim'", one=True)["id"]
             self.assertNotIn(ta_id, [r["id"] for r in _ranking("sanji", _since("week"))])
-        # 친구·팔로우는 학생끼리
-        self.assertNotEqual(ta.get("/s/friends").status_code, 200)
         # 메뉴에 '소도시 명상'
         self.assertIn("/s/rooms", ta.get("/t/questions").data.decode())
 
@@ -535,7 +532,7 @@ class FeatureTest(AppTest):
         self.assertIn('<span class="cap">조교</span> 김조교 답변', student_view)
         # 조교도 볼 수 있는 화면 (보기 위주로 열어 둠)
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
-                    "/t/timetable", "/t/tasks", "/t/cards", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
+                    "/t/timetable", "/t/tasks", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
             self.assertEqual(ta.get(url).status_code, 200, url)
         # 계정·기록·삭제 같은 관리 일은 선생님만
         for url in ["/t/audit", "/t/staff", "/t/signups"]:

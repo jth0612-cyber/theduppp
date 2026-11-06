@@ -108,36 +108,6 @@ class RoomsTest(unittest.TestCase):
         self.assertIn("닉2", a.get("/s/rooms/rank?place=kissa&period=all").data.decode())
         self.assertEqual(a.get("/s/rooms/rank?place=nowhere").status_code, 404)
 
-    def test_follow_and_friends(self):
-        a, b = self.student(0), self.student(1)
-        u1 = self.q("SELECT id FROM users WHERE username='S001'", one=True)["id"]
-        u0 = self.q("SELECT id FROM users WHERE username='S000'", one=True)["id"]
-        self.assertIn("닉1", a.get("/s/friends?q=닉1").data.decode())     # 닉네임으로 찾기
-        a.post(f"/s/follow/{u1}")
-        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM follows", one=True)["n"], 1)
-        fr = a.get("/s/friends").data.decode()
-        self.assertIn("팔로잉", fr); self.assertIn("닉1", fr)
-        self.assertIn("닉0", b.get("/s/friends").data.decode())          # b 의 팔로워에 닉0
-        self.assertEqual(a.post(f"/s/follow/{u0}").status_code, 404)    # 나 자신은 안 됨
-        teacher = self.q("SELECT id FROM users WHERE role='teacher'", one=True)["id"]
-        self.assertEqual(a.post(f"/s/follow/{teacher}").status_code, 404)  # 선생님 계정은 안 됨
-        # 팔로잉끼리 순위
-        self._log(1, "sento", 30)
-        self._log(2, "sento", 90)
-        mine = a.get("/s/rooms/rank?place=sento&scope=follow").data.decode()
-        mine = mine[mine.index('class="rank-list"'):]
-        self.assertIn("닉1", mine); self.assertNotIn("닉2", mine)
-        self.assertIn("닉2", a.get("/s/rooms/rank?place=sento").data.decode())
-        # 소도시 명상 목록에 팔로잉 표시
-        b.get("/s/rooms/sento")
-        r = a.post("/s/rooms/sento/beat", data={}).get_json()
-        self.assertTrue([m for m in r["members"] if m["id"] == u1][0]["follow"])
-        # 다시 누르면 언팔로우, next 는 /s/ 안쪽만
-        r = a.post(f"/s/follow/{u1}", data={"next": "https://evil.example/"})
-        self.assertTrue(r.headers["Location"].endswith("/s/friends"))
-        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM follows", one=True)["n"], 0)
-        self.assertEqual(a.get("/s/friends?q=50%25_").status_code, 200)   # 특수문자 검색도 오류 없음
-
     def test_board_chat_and_word_filter(self):
         a, b = self.student(0), self.student(1)
         a.get("/s/rooms/sento"); b.get("/s/rooms/sento")

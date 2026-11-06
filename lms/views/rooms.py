@@ -95,9 +95,9 @@ def _elapsed_min(since):
     return int((datetime.now() - datetime.fromisoformat(since)).total_seconds() // 60)
 
 
-def _member_json(m, me, king=None, follows=()):
+def _member_json(m, me, king=None):
     return {"id": m["id"], "nick": shown_name(m), "cap": role_caption(m), "me": m["id"] == me, "status": m["status"],
-            "king": m["id"] == king, "follow": m["id"] in follows, "act": m["act"], "act_seq": m["act_seq"],
+            "king": m["id"] == king, "act": m["act"], "act_seq": m["act_seq"],
             "charm": FORTUNES[m["fortune"]][2] if m["fortune"] is not None and m["fortune"] < len(FORTUNES) else None,
             "elapsed": _elapsed_min(m["focus_since"]) if m["status"] == "focus" else 0,
             "left": _left_sec(m["focus_since"], m["plan_min"]) if m["status"] == "focus" else None,
@@ -161,10 +161,6 @@ def _king(place):
     return top[0]["id"] if top else None
 
 
-def _following(uid):
-    return {r["followee_id"] for r in query("SELECT followee_id FROM follows WHERE follower_id = ?", (uid,))}
-
-
 @bp.app_template_filter("avatar_cls")
 def avatar_cls(color):
     return f"sw-{AVATAR_COLORS.index(color) if color in AVATAR_COLORS else 6}"
@@ -209,14 +205,14 @@ def room(place):
                   (g.user["id"], place))
     tpl = "rooms/room3d.html" if place in PLACES_3D and request.args.get("flat") != "1" else "rooms/room.html"
     my_color = query("SELECT avatar_color FROM users WHERE id = ?", (g.user["id"],), one=True)["avatar_color"]
-    king, follows = _king(place), _following(g.user["id"])
+    king = _king(place)
     return render_template(tpl, key=place, info=info, places=PLACES, me=me, colors=AVATAR_COLORS,
                            my_color=my_color or AVATAR_COLORS[g.user["id"] % len(AVATAR_COLORS)],
                            elapsed=_elapsed_min(me["focus_since"]) if me["status"] == "focus" else 0,
-                           members=[_member_json(m, g.user["id"], king, follows) for m in _members(place)],
+                           members=[_member_json(m, g.user["id"], king) for m in _members(place)],
                            rank=_ranking(place, _since("week"), limit=5), my_rank=_my_rank(place, _since("week"), g.user["id"]),
                            notes=notes, today=_my_today(g.user["id"]), plans=PLAN_CHOICES, plan_default=PLAN_DEFAULT, note_max=NOTE_MAX,
-                           enter_text=ENTER_TEXT.get(place, "들어가기"), follows=follows,
+                           enter_text=ENTER_TEXT.get(place, "들어가기"),
                            board_on=place in BOARDS)
 
 
@@ -227,63 +223,11 @@ def rank():
     _place_or_404(place)
     period = request.args.get("period", "week")
     period = period if period in PERIODS else "week"
-    scope = "follow" if request.args.get("scope") == "follow" else "all"
     uid = g.user["id"]
-    follows = _following(uid)
     since = _since(period)
-    rows = _ranking(place, since, ids=(follows | {uid}) if scope == "follow" else None, limit=30)
-    return render_template("rooms/rank.html", places=PLACES, place=place, period=period, scope=scope,
-                           periods=PERIODS, rows=rows, follows=follows, me=uid, my_rank=_my_rank(place, since, uid))
-
-
-def _safe_next(default):
-    nxt = request.form.get("next", "")
-    return nxt if nxt.startswith("/s/") and "//" not in nxt else default
-
-
-@bp.route("/s/follow/<int:uid>", methods=["POST"])
-@student_required
-def follow(uid):
-    me = g.user["id"]
-    target = query("SELECT id, nickname FROM users WHERE id = ? AND role = 'student' AND disabled = 0", (uid,), one=True)
-    if target is None or uid == me:
-        abort(404)
-    if query("SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?", (me, uid), one=True):
-        execute("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?", (me, uid))
-        flash(f"{target['nickname']}님 팔로우를 그만뒀어요.", "ok")
-    else:
-        execute("INSERT INTO follows (follower_id, followee_id) VALUES (?, ?)", (me, uid))
-        flash(f"{target['nickname']}님을 팔로우했어요.", "ok")
-    if request.headers.get("X-Requested-With") == "fetch":
-        return jsonify(ok=True, following=uid in _following(me))
-    return redirect(_safe_next(url_for("rooms.friends")))
-
-
-def _friend_rows(sql, args, me):
-    since = _since("week")
-    rows = query(f"""SELECT u.id, u.nickname, u.avatar_color, p.place, p.status,
-                            p.last_seen >= datetime('now', 'localtime', '-{PRESENT_SECONDS} seconds') AS here,
-                            (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f WHERE f.user_id = u.id
-                             AND date(f.ended_at) = date('now', 'localtime')) AS today,
-                            (SELECT COALESCE(SUM(minutes), 0) FROM focus_logs f WHERE f.user_id = u.id
-                             AND f.ended_at >= ?) AS week
-                     FROM users u LEFT JOIN room_presence p ON p.user_id = u.id
-                     WHERE u.role = 'student' AND u.disabled = 0 AND {sql}
-                     ORDER BY here DESC, today DESC, u.nickname""", [since] + list(args))
-    return rows
-
-
-@bp.route("/s/friends")
-@student_required
-def friends():
-    me = g.user["id"]
-    q = request.args.get("q", "").strip()[:20]
-    following = _friend_rows("u.id IN (SELECT followee_id FROM follows WHERE follower_id = ?)", (me,), me)
-    followers = _friend_rows("u.id IN (SELECT follower_id FROM follows WHERE followee_id = ?)", (me,), me)
-    esc = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    found = _friend_rows("u.nickname LIKE ? ESCAPE '\\' AND u.id != ?", (f"%{esc}%", me), me)[:10] if len(q) >= 2 else []
-    return render_template("rooms/friends.html", following=following, followers=followers, found=found, q=q,
-                           follows=_following(me), places=PLACES)
+    rows = _ranking(place, since, limit=30)
+    return render_template("rooms/rank.html", places=PLACES, place=place, period=period,
+                           periods=PERIODS, rows=rows, me=uid, my_rank=_my_rank(place, since, uid))
 
 
 @bp.route("/s/rooms/<place>/beat", methods=["POST"])
@@ -318,8 +262,8 @@ def beat(place):
     if color in AVATAR_COLORS:
         db.execute("UPDATE users SET avatar_color = ? WHERE id = ?", (color, uid))
     db.commit()
-    king, follows = _king(place), _following(uid)
-    return jsonify(members=[_member_json(m, uid, king, follows) for m in _members(place)], today=_my_today(uid),
+    king = _king(place)
+    return jsonify(members=[_member_json(m, uid, king) for m in _members(place)], today=_my_today(uid),
                    board=_board(place))
 
 

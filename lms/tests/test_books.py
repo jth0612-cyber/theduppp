@@ -158,11 +158,11 @@ class BooksTest(unittest.TestCase):
         bid, mid = self.make_book()
         s = self.student(0)
         # 등록 전에는 분석실에 회차가 없다
-        self.assertIn("아직 서가에 등록한 교재가 없어요", s.get("/s/analysis").data.decode())
+        self.assertIn("아직 등록한 교재가 없어요", s.get("/s/analysis").data.decode())
         self.assertEqual(s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": KEY}).status_code, 404)
         code = self.shared_code(bid)
         r = s.post("/s/books/register", data={"code": analysis.format_code(code).lower()})
-        self.assertIn("서가에 추가했어요", r.data.decode())
+        self.assertIn("교재를 등록했어요", r.data.decode())
         page = s.get(f"/s/analysis?mock={mid}").data.decode()
         self.assertIn("답안지", page)
         self.assertNotIn(KEY, page)                                     # 정답은 화면에 나가지 않음
@@ -184,7 +184,7 @@ class BooksTest(unittest.TestCase):
         codes = re.findall(r"[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}", r.data.decode("utf-8-sig"))
         self.assertEqual(len(codes), 2)
         a, b = self.student(0), self.student(1)
-        self.assertIn("서가에 추가했어요", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
+        self.assertIn("교재를 등록했어요", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
         self.assertIn("이미 다른 계정에서 쓴 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
         bid2, _ = self.make_book(expires="2000-01-01")
         old = self.shared_code(bid2)

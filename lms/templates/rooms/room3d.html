@@ -54,7 +54,7 @@
       <div class="sec-head"><h2 id="h-here">지금 여기</h2><span data-count>{{ members|length }}명</span></div>
       <ul class="here-list" data-members>
         {% for m in members %}
-        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{% if m.cap %}<span class="cap">{{ m.cap }}</span> {% endif %}{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% elif m.follow %} <small class="here-tag">팔로잉</small>{% endif %}</b>
+        <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{% if m.cap %}<span class="cap">{{ m.cap }}</span> {% endif %}{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% endif %}</b>
           <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %} · 오늘 {{ m.today }}분</span></li>
         {% endfor %}
       </ul>
@@ -64,7 +64,7 @@
       </div>
       <div class="w3-rank">
         <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
-        {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id, follows, url_for('rooms.room', place=key)) }}{% endfor %}</ol>
+        {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id) }}{% endfor %}</ol>
         {% else %}<p class="muted small">이번 주에는 아직 기록이 없어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
         <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위 · {{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
       </div>

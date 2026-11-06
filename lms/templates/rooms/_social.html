@@ -1,17 +1,9 @@
-{# 팔로우 버튼 · 순위 한 줄 (소도시 명상 화면들이 함께 쓴다) #}
-{% from "_macros.html" import csrf %}
-{% macro follow_btn(uid, on, next_url) -%}
-<form method="post" action="{{ url_for('rooms.follow', uid=uid) }}" class="inline-form" data-follow>
-  {{ csrf() }}<input type="hidden" name="next" value="{{ next_url }}">
-  <button class="btn small follow-btn{{ ' is-on' if on }}" aria-pressed="{{ 'true' if on else 'false' }}">{{ '팔로잉' if on else '팔로우' }}</button>
-</form>
-{%- endmacro %}
-{% macro rank_row(r, me, follows, next_url) -%}
+{# 순위 한 줄 (소도시 명상 화면들이 함께 쓴다) #}
+{% macro rank_row(r, me) -%}
 <li class="rank-row{{ ' is-me' if r.id == me }}{{ ' is-king' if r.rank == 1 }}">
   <span class="rank-no">{% if r.rank == 1 %}<svg class="crown" viewBox="0 0 24 24" aria-label="1위"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>{% else %}{{ r.rank }}{% endif %}</span>
   <i class="rank-dot {{ r.avatar_color|avatar_cls }}" aria-hidden="true"></i>
   <b class="rank-nick">{{ r.nickname or '익명' }}{% if r.id == me %} <small>(나)</small>{% endif %}</b>
   <span class="rank-m">{{ r.m|hm }}</span>
-  {% if r.id != me and g.user.role == 'student' %}{{ follow_btn(r.id, r.id in follows, next_url) }}{% endif %}
 </li>
 {%- endmacro %}

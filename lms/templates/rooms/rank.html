@@ -12,17 +12,15 @@
     <div><dt>내 시간</dt><dd class="dd-text">{{ my_rank.m|hm }}</dd></div></dl>
 </header>
 <nav class="seg seg-wide" aria-label="장소">
-  {% for key, p in places.items() %}<a href="{{ url_for('rooms.rank', place=key, period=period, scope=scope) }}" class="{{ 'is-on' if key == place }}">{{ p[0] }}</a>{% endfor %}
+  {% for key, p in places.items() %}<a href="{{ url_for('rooms.rank', place=key, period=period) }}" class="{{ 'is-on' if key == place }}">{{ p[0] }}</a>{% endfor %}
 </nav>
 <div class="rank-filters">
-  <nav class="seg" aria-label="기간">{% for k, v in periods.items() %}<a href="{{ url_for('rooms.rank', place=place, period=k, scope=scope) }}" class="{{ 'is-on' if k == period }}">{{ v }}</a>{% endfor %}</nav>
-  {% if g.user.role == 'student' %}<nav class="seg" aria-label="범위"><a href="{{ url_for('rooms.rank', place=place, period=period, scope='all') }}" class="{{ 'is-on' if scope == 'all' }}">모두</a><a href="{{ url_for('rooms.rank', place=place, period=period, scope='follow') }}" class="{{ 'is-on' if scope == 'follow' }}">팔로잉끼리</a></nav>{% endif %}
+  <nav class="seg" aria-label="기간">{% for k, v in periods.items() %}<a href="{{ url_for('rooms.rank', place=place, period=k) }}" class="{{ 'is-on' if k == period }}">{{ v }}</a>{% endfor %}</nav>
 </div>
 <section class="panel">
   {% if rows %}
-  <ol class="rank-list">{% for r in rows %}{{ rank_row(r, me, follows, here) }}{% endfor %}</ol>
-  {% elif scope == 'follow' %}<p class="muted">아직 팔로잉한 친구의 기록이 없어요. <a href="{{ url_for('rooms.friends') }}">친구 찾기</a></p>
+  <ol class="rank-list">{% for r in rows %}{{ rank_row(r, me) }}{% endfor %}</ol>
   {% else %}<p class="muted">{{ periods[period] }}에는 아직 아무도 기록하지 않았어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
 </section>
-<p class="small mt"><a href="{{ url_for('rooms.room', place=place) }}">{{ places[place][0] }}에 들어가기 →</a>{% if g.user.role == 'student' %} · <a href="{{ url_for('rooms.friends') }}">친구</a>{% endif %}</p>
+<p class="small mt"><a href="{{ url_for('rooms.room', place=place) }}">{{ places[place][0] }}에 들어가기 →</a></p>
 {% endblock %}
