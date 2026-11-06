@@ -1,59 +1,10 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}시간표 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}수능 D-day · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>시간표</h1><p class="muted small">반별 주간 시간표와 D-day를 관리합니다. 학생의 시간표 화면과 홈 화면에 그대로 보입니다.</p></div>
-  {% if classes %}
-  <form method="get" class="row">
-    <select name="class_id" aria-label="반 고르기">{% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if c.id == cid }}>{{ c.name }}</option>{% endfor %}</select>
-    <button class="btn">보기</button>
-  </form>
-  {% endif %}
+  <div><h1>수능 D-day</h1><p class="muted small">학생 홈과 시간표 위에 보이는 D-day입니다. 시간표는 이제 학생이 각자 만들어요.</p></div>
 </div>
-
-{% if cid %}
-<section class="card">
-  <h2>수업 넣기</h2>
-  <form method="post">
-    {{ csrf() }}<input type="hidden" name="action" value="slot"><input type="hidden" name="class_id" value="{{ cid }}">
-    <fieldset class="day-pick">
-      <legend class="small">요일 (여러 개 고르면 한 번에 들어가요)</legend>
-      {% for w in weekdays %}<label class="chip"><input type="checkbox" name="weekday" value="{{ loop.index0 }}"><span>{{ w }}</span></label>{% endfor %}
-    </fieldset>
-    <div class="row">
-      <div class="field shrink"><label for="starts">시작</label><input type="time" id="starts" name="starts" required></div>
-      <div class="field shrink"><label for="ends">끝</label><input type="time" id="ends" name="ends" required></div>
-      <div class="field wide"><label for="tt_title">수업</label><input type="text" id="tt_title" name="title" maxlength="40" required placeholder="예: 통합과학 정규"></div>
-      <div class="field"><label for="tt_room">강의실·메모 (선택)</label><input type="text" id="tt_room" name="room" maxlength="30" placeholder="예: 302호"></div>
-      <div class="field shrink"><button class="btn primary">넣기</button></div>
-    </div>
-  </form>
-</section>
-
-<section class="card">
-  <h2>{{ (classes|selectattr('id', 'equalto', cid)|first).name }} 주간 시간표</h2>
-  {% if slots %}
-  <ol class="tt-week">
-    {% for c in cols %}
-    <li class="tt-day">
-      <h3>{{ c.label }}</h3>
-      <div class="tt-list">
-    {% for s in c.slots %}
-      <div class="tt-slot tone-{{ s.tone }}">
-        <span class="tt-time">{{ s.starts }}–{{ s.ends }}</span>
-        <b>{{ s.title }}</b>
-        {% if s.room %}<span class="tt-room">{{ s.room }}</span>{% endif %}
-        <form method="post" action="{{ url_for('study.t_slot_delete', tid=s.id) }}">{{ csrf() }}<button class="x" aria-label="{{ c.label }} {{ s.starts }} {{ s.title }} 지우기" data-confirm="{{ c.label }}요일 {{ s.starts }} {{ s.title }}을 지울까요?">×</button></form>
-      </div>
-      {% else %}<p class="tt-empty">–</p>{% endfor %}
-      </div>
-    </li>
-    {% endfor %}
-  </ol>
-  {% else %}<p class="muted">아직 넣은 수업이 없습니다.</p>{% endif %}
-</section>
-{% endif %}
 
 <section class="card">
   <h2>D-day</h2>

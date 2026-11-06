@@ -310,6 +310,19 @@ CREATE TABLE IF NOT EXISTS timetable (
     title       TEXT NOT NULL,
     room        TEXT NOT NULL DEFAULT ''
 );
+-- 학생이 직접 만드는 시간표 (에브리타임처럼, 한 사람에 하나)
+CREATE TABLE IF NOT EXISTS my_timetable (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    weekday     INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+    starts      TEXT NOT NULL,
+    ends        TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    room        TEXT NOT NULL DEFAULT '',
+    tone        INTEGER NOT NULL DEFAULT 2,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_my_timetable_user ON my_timetable(user_id, weekday, starts);
 CREATE TABLE IF NOT EXISTS settings (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL

@@ -55,7 +55,7 @@ def home():
                       (me["id"], me["class_id"]))
     return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
                            streak=streak_info(g.user["id"]),
-                           dday=dday_info(), classes_today=today_classes(me["class_id"]), open_wrong=open_wrong,
+                           dday=dday_info(), classes_today=today_classes(g.user["id"]), open_wrong=open_wrong,
                            tasks_due=tasks_due, focus_today=focus_today)
 
 

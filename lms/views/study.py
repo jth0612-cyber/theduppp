@@ -60,10 +60,14 @@ def class_slots(class_id):
     return [dict(r, tone=tones[r["title"].replace(" ", "")]) for r in rows]
 
 
-def today_classes(class_id):
-    """오늘 요일의 수업 (지금 이후 수업이 먼저 오도록 시작 시간 순)."""
+def my_slots(user_id):
+    return [dict(r) for r in query("SELECT * FROM my_timetable WHERE user_id = ? ORDER BY weekday, starts, id", (user_id,))]
+
+
+def today_classes(user_id):
+    """오늘 요일의 내 시간표 (시작 시간 순)."""
     wd = date.today().weekday()
-    return [s for s in class_slots(class_id) if s["weekday"] == wd]
+    return [s for s in my_slots(user_id) if s["weekday"] == wd]
 
 
 # =====================================================================
@@ -142,78 +146,169 @@ def _classes():
 # 5. 시간표 · D-day
 # =====================================================================
 
-def _week_columns(slots):
-    today = date.today().weekday()
-    cols = [{"i": i, "label": WEEKDAYS[i], "today": i == today, "slots": [s for s in slots if s["weekday"] == i]}
-            for i in range(7)]
-    # 주말에 수업이 없으면 월~금만 보여 준다
-    if not any(c["slots"] for c in cols[5:]):
-        cols = cols[:5]
-    return cols
-
-
 def _valid_time(t):
     return len(t) == 5 and t[2] == ":" and t[:2].isdigit() and t[3:].isdigit() and int(t[:2]) < 24 and int(t[3:]) < 60
 
 
-@bp.route("/s/timetable")
+TT_STEP = 10            # 격자 한 칸 = 10분
+TT_FIRST, TT_LAST = 7, 24   # 고를 수 있는 시간 범위 (07:00 ~ 24:00)
+
+
+def _mins(t):
+    return int(t[:2]) * 60 + int(t[3:])
+
+
+def _tt_grid(slots):
+    """에브리타임처럼 요일 × 시간 격자. 칸 위치는 CSS 클래스(tt-rN, tt-spN, tt-cN)로만 정한다(CSP: 인라인 style 금지)."""
+    first = min([_mins(s["starts"]) // 60 for s in slots] + [9])
+    last = max([-(-_mins(s["ends"]) // 60) for s in slots] + [22])
+    first, last = max(TT_FIRST, first), min(TT_LAST, last)
+    days = list(range(5)) + [d for d in (5, 6) if any(s["weekday"] == d for s in slots)]
+    if 5 not in days:
+        days.append(5)                                   # 토요일은 늘 보여 준다 (재수생은 토요일도 공부)
+    days.sort()
+    col = {d: i + 1 for i, d in enumerate(days)}
+    blocks = []
+    for s in slots:
+        if s["weekday"] not in col:
+            continue
+        st = max(_mins(s["starts"]), first * 60)
+        en = min(_mins(s["ends"]), last * 60)
+        r0 = (st - first * 60) // TT_STEP + 1
+        span = max(3, -(-(en - st) // TT_STEP))
+        blocks.append(dict(s, r=r0, sp=span, c=col[s["weekday"]], short=span < 6))
+    hours = list(range(first, last))
+    return {"days": [{"i": d, "label": WEEKDAYS[d], "c": col[d], "today": d == date.today().weekday()} for d in days],
+            "hours": [{"h": h, "r": (h - first) * 60 // TT_STEP + 1} for h in hours], "blocks": blocks,
+            "rows": (last - first) * 60 // TT_STEP, "first": first, "ncols": len(days)}
+
+
+def _slot_form():
+    """시간표 칸 입력값 확인. 돌려주는 값: (요일 목록, 시작, 끝, 이름, 장소, 색) 또는 오류 문장."""
+    days = sorted({int(x) for x in request.form.getlist("weekday") if x.isdigit() and 0 <= int(x) <= 6})
+    starts, ends = request.form.get("starts", ""), request.form.get("ends", "")
+    title = request.form.get("title", "").strip()[:30]
+    room = request.form.get("room", "").strip()[:30]
+    tone = request.form.get("tone", type=int)
+    if not title:
+        return "이름을 적어 주세요."
+    if not days:
+        return "요일을 하나 이상 골라 주세요."
+    if not (_valid_time(starts) and _valid_time(ends)):
+        return "시작·끝 시간을 확인해 주세요."
+    if starts >= ends:
+        return "끝나는 시간이 시작 시간보다 뒤여야 해요."
+    if starts < f"{TT_FIRST:02d}:00" or (ends > "24:00"):
+        return "07:00부터 24:00 사이로 넣어 주세요."
+    return days, starts, ends, title, room, tone if tone is not None and 0 <= tone < 8 else None
+
+
+def _overlap(uid, wd, starts, ends, skip=None):
+    return query("""SELECT title, starts, ends FROM my_timetable WHERE user_id = ? AND weekday = ? AND id != ?
+                    AND starts < ? AND ends > ? LIMIT 1""", (uid, wd, skip or 0, ends, starts), one=True)
+
+
+def _auto_tone(uid, title):
+    """같은 이름은 같은 색, 새 이름은 아직 안 쓴 색부터."""
+    same = query("SELECT tone FROM my_timetable WHERE user_id = ? AND REPLACE(title, ' ', '') = ? LIMIT 1",
+                 (uid, title.replace(" ", "")), one=True)
+    if same:
+        return same["tone"]
+    used = [r["tone"] for r in query("SELECT DISTINCT tone FROM my_timetable WHERE user_id = ?", (uid,))]
+    return next((t for t in TONE_ORDER if t not in used), TONE_ORDER[len(used) % len(TONE_ORDER)])
+
+
+@bp.route("/s/timetable", methods=["GET", "POST"])
 @student_required
 def timetable():
     me = _me()
-    slots = class_slots(me["class_id"])
-    now = date.today()
+    uid = g.user["id"]
+    if request.method == "POST":
+        got = _slot_form()
+        if isinstance(got, str):
+            flash(got, "error")
+        else:
+            days, starts, ends, title, room, tone = got
+            clash = next(((d, c) for d in days if (c := _overlap(uid, d, starts, ends))), None)
+            if clash:
+                d, c = clash
+                flash(f"{WEEKDAYS[d]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 겹쳐요.", "error")
+            else:
+                tone = _auto_tone(uid, title) if tone is None else tone
+                for d in days:
+                    execute("INSERT INTO my_timetable (user_id, weekday, starts, ends, title, room, tone) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (uid, d, starts, ends, title, room, tone))
+                flash(f"{', '.join(WEEKDAYS[d] for d in days)}요일 {starts}–{ends}에 '{title}'을 넣었어요.", "ok")
+        return redirect(url_for("study.timetable"))
+    slots = my_slots(uid)
     hm = datetime.now().strftime("%H:%M")
-    today = [s for s in slots if s["weekday"] == now.weekday()]
+    today = [s for s in slots if s["weekday"] == date.today().weekday()]
     current = next((s for s in today if s["starts"] <= hm < s["ends"]), None)
     upnext = next((s for s in today if s["starts"] > hm), None)
-    return render_template("study/timetable.html", cols=_week_columns(slots), dday=dday_info(), me=me,
-                           current=current, upnext=upnext, has_slots=bool(slots))
+    class_has = bool(me["class_id"]) and bool(query("SELECT 1 FROM timetable WHERE class_id = ? LIMIT 1", (me["class_id"],), one=True))
+    return render_template("study/timetable.html", grid=_tt_grid(slots), dday=dday_info(), me=me, weekdays=WEEKDAYS,
+                           current=current, upnext=upnext, has_slots=bool(slots), class_has=class_has and not slots)
+
+
+@bp.route("/s/timetable/<int:tid>", methods=["POST"])
+@student_required
+def timetable_edit(tid):
+    uid = g.user["id"]
+    row = query("SELECT * FROM my_timetable WHERE id = ? AND user_id = ?", (tid, uid), one=True)
+    if row is None:
+        abort(404)
+    if request.form.get("action") == "delete":
+        execute("DELETE FROM my_timetable WHERE id = ?", (tid,))
+        flash(f"'{row['title']}'을 지웠어요.", "ok")
+        return redirect(url_for("study.timetable"))
+    got = _slot_form()
+    if isinstance(got, str):
+        flash(got, "error")
+        return redirect(url_for("study.timetable"))
+    days, starts, ends, title, room, tone = got
+    wd = days[0]
+    c = _overlap(uid, wd, starts, ends, skip=tid)
+    if c:
+        flash(f"{WEEKDAYS[wd]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 겹쳐요.", "error")
+    else:
+        execute("UPDATE my_timetable SET weekday = ?, starts = ?, ends = ?, title = ?, room = ?, tone = ? WHERE id = ?",
+                (wd, starts, ends, title, room, row["tone"] if tone is None else tone, tid))
+        flash("고쳤어요.", "ok")
+    return redirect(url_for("study.timetable"))
+
+
+@bp.route("/s/timetable/import", methods=["POST"])
+@student_required
+def timetable_import():
+    """처음 시작할 때만: 예전에 선생님이 넣어 둔 반 시간표를 내 시간표로 한 번에 가져온다."""
+    me, uid = _me(), g.user["id"]
+    if query("SELECT 1 FROM my_timetable WHERE user_id = ? LIMIT 1", (uid,), one=True):
+        flash("이미 내 시간표가 있어요.", "error")
+        return redirect(url_for("study.timetable"))
+    rows = class_slots(me["class_id"]) if me["class_id"] else []
+    for r in rows:
+        execute("INSERT INTO my_timetable (user_id, weekday, starts, ends, title, room, tone) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (uid, r["weekday"], r["starts"], r["ends"], r["title"], r["room"], r["tone"]))
+    flash(f"반 시간표 {len(rows)}칸을 가져왔어요. 이제 마음대로 고칠 수 있어요.", "ok")
+    return redirect(url_for("study.timetable"))
 
 
 @bp.route("/t/timetable", methods=["GET", "POST"])
 @staff_required
 def t_timetable():
+    """수능 D-day 설정 (시간표는 학생이 각자 만든다)."""
     if request.method == "POST":
         teacher_only()  # 조교는 보기만
-    classes = _classes()
-    cid = request.values.get("class_id", type=int) or (classes[0]["id"] if classes else None)
-    if request.method == "POST":
-        action = request.form.get("action")
-        if action == "dday":
-            d = _parse_day(request.form.get("exam_day"))
-            label = request.form.get("exam_label", "").strip()[:20] or "수능"
-            if d is None:
-                flash("날짜를 확인하세요.", "error")
-            else:
-                set_setting("exam_day", d.isoformat())
-                set_setting("exam_label", label)
-                flash(f"{label} 날짜를 {d.isoformat()}로 정했습니다.", "ok")
-        elif action == "slot":
-            days = [int(x) for x in request.form.getlist("weekday") if x.isdigit() and 0 <= int(x) <= 6]
-            starts, ends = request.form.get("starts", ""), request.form.get("ends", "")
-            title = request.form.get("title", "").strip()[:40]
-            room = request.form.get("room", "").strip()[:30]
-            if not cid or not days or not title or not (_valid_time(starts) and _valid_time(ends)) or starts >= ends:
-                flash("반, 요일(하나 이상), 시작·끝 시간, 수업 이름을 확인하세요.", "error")
-            else:
-                for wd in days:
-                    execute("INSERT INTO timetable (class_id, weekday, starts, ends, title, room) VALUES (?, ?, ?, ?, ?, ?)",
-                            (cid, wd, starts, ends, title, room))
-                flash(f"{', '.join(WEEKDAYS[d] for d in days)}요일에 '{title}'을 넣었습니다.", "ok")
-        return redirect(url_for("study.t_timetable", class_id=cid))
-    slots = class_slots(cid) if cid else []
-    return render_template("study/t_timetable.html", classes=classes, cid=cid, cols=_week_columns(slots),
-                           slots=slots, weekdays=WEEKDAYS, dday=dday_info(), exam_label=get_setting("exam_label", "수능"))
-
-
-@bp.route("/t/timetable/slot/<int:tid>/delete", methods=["POST"])
-@teacher_required
-def t_slot_delete(tid):
-    row = query("SELECT class_id FROM timetable WHERE id = ?", (tid,), one=True)
-    if row is None:
-        abort(404)
-    execute("DELETE FROM timetable WHERE id = ?", (tid,))
-    return redirect(url_for("study.t_timetable", class_id=row["class_id"]))
+        d = _parse_day(request.form.get("exam_day"))
+        label = request.form.get("exam_label", "").strip()[:20] or "수능"
+        if d is None:
+            flash("날짜를 확인하세요.", "error")
+        else:
+            set_setting("exam_day", d.isoformat())
+            set_setting("exam_label", label)
+            flash(f"{label} 날짜를 {d.isoformat()}로 정했습니다.", "ok")
+        return redirect(url_for("study.t_timetable"))
+    return render_template("study/t_timetable.html", cid=None, dday=dday_info(), exam_label=get_setting("exam_label", "수능"))
 
 
 # =====================================================================

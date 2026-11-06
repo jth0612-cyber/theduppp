@@ -1,32 +1,59 @@
 {% extends "base.html" %}
+{% from "_macros.html" import csrf %}
 {% block title %}시간표 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <p class="kicker">{{ me.class_name }}</p>
-    <h1>시간표</h1>
-    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> 수업 중 · {{ current.ends }}까지{% elif upnext %}다음 수업 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% else %}오늘 남은 수업이 없어요.{% endif %}</p>
+    <h1>내 시간표</h1>
+    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> · {{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없어요.{% else %}빈 칸을 눌러 수업·자습·인강을 넣어 보세요.{% endif %}</p>
   </div>
-  {% if dday %}<p class="dday"><span>{{ dday.label }}</span><b>{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</b></p>{% endif %}
+  <div class="tt-head-side">
+    {% if dday %}<p class="dday"><span>{{ dday.label }}</span><b>{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</b></p>{% endif %}
+    <button type="button" class="btn primary" data-tt-new>일정 추가</button>
+  </div>
 </header>
-{% if has_slots %}
-<ol class="tt-week">
-  {% for c in cols %}
-  <li class="tt-day{{ ' is-today' if c.today }}">
-    <h2>{{ c.label }}{% if c.today %} <small>오늘</small>{% endif %}</h2>
-    <div class="tt-list">
-    {% for s in c.slots %}
-    <div class="tt-slot tone-{{ s.tone }}{{ ' is-now' if current and current.id == s.id }}">
-      <span class="tt-time">{{ s.starts }}–{{ s.ends }}</span>
-      <b>{{ s.title }}</b>
-      {% if s.room %}<span class="tt-room">{{ s.room }}</span>{% endif %}
-    </div>
-    {% else %}<p class="tt-empty">수업 없음</p>{% endfor %}
-    </div>
-  </li>
-  {% endfor %}
-</ol>
-{% else %}
-<div class="quiet-box"><p>아직 시간표가 없어요.</p><p class="muted small">선생님이 반 시간표를 넣으면 여기에 보여요.</p></div>
+
+{% if class_has %}
+<form method="post" action="{{ url_for('study.timetable_import') }}" class="tt-import">
+  {{ csrf() }}<span>선생님이 넣어 둔 반 시간표가 있어요.</span><button class="btn small">반 시간표로 시작하기</button>
+</form>
 {% endif %}
+
+<div class="tt-grid tt-cols-{{ grid.ncols }}" data-tt data-first="{{ grid.first }}" data-rows="{{ grid.rows }}">
+  <div class="tt-corner" aria-hidden="true"></div>
+  {% for d in grid.days %}<div class="tt-dayhead tt-c{{ d.c }}{{ ' is-today' if d.today }}">{{ d.label }}</div>{% endfor %}
+  {% for h in grid.hours %}<div class="tt-hour tt-r{{ h.r }}" aria-hidden="true">{{ h.h }}</div>{% endfor %}
+  {% for d in grid.days %}<button type="button" class="tt-col tt-c{{ d.c }} tt-r1 tt-sp{{ grid.rows }}{{ ' is-today' if d.today }}" data-tt-day="{{ d.i }}" aria-label="{{ d.label }}요일에 일정 추가"></button>{% endfor %}
+  {% for b in grid.blocks %}
+  <button type="button" class="tt-block tone-{{ b.tone }} tt-c{{ b.c }} tt-r{{ b.r }} tt-sp{{ b.sp }}{{ ' is-short' if b.short }}{{ ' is-now' if current and current.id == b.id }}"
+          data-tt-edit="{{ b.id }}" data-day="{{ b.weekday }}" data-starts="{{ b.starts }}" data-ends="{{ b.ends }}"
+          data-title="{{ b.title }}" data-room="{{ b.room }}" data-tone="{{ b.tone }}">
+    <b>{{ b.title }}</b>{% if not b.short %}<span>{{ b.starts }}–{{ b.ends }}</span>{% if b.room %}<span>{{ b.room }}</span>{% endif %}{% endif %}
+  </button>
+  {% endfor %}
+</div>
+
+<div class="tt-sheet" data-tt-sheet hidden role="dialog" aria-modal="true" aria-labelledby="tt-sheet-title">
+  <form method="post" action="{{ url_for('study.timetable') }}" class="tt-form" data-tt-form data-new="{{ url_for('study.timetable') }}" data-edit="{{ url_for('study.timetable_edit', tid=0) }}">
+    {{ csrf() }}
+    <div class="tt-form-head"><h2 id="tt-sheet-title" data-tt-title>일정 추가</h2><button type="button" class="m-close" data-tt-close aria-label="닫기">×</button></div>
+    <div class="field"><label for="tt-name">이름</label><input id="tt-name" name="title" maxlength="30" required placeholder="예) 통합과학 정규, 자습, 영어 인강"></div>
+    <div class="field"><label>요일</label>
+      <div class="tt-days" data-tt-days>{% for w in weekdays %}<label class="chip"><input type="checkbox" name="weekday" value="{{ loop.index0 }}"><span>{{ w }}</span></label>{% endfor %}</div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="tt-s">시작</label><input id="tt-s" type="time" name="starts" step="300" min="07:00" max="23:59" required></div>
+      <div class="field"><label for="tt-e">끝</label><input id="tt-e" type="time" name="ends" step="300" min="07:00" max="23:59" required></div>
+    </div>
+    <div class="field"><label for="tt-room">장소 <span class="muted">(선택)</span></label><input id="tt-room" name="room" maxlength="30" placeholder="예) 3강의실, 독서실"></div>
+    <div class="field"><label>색</label>
+      <div class="tt-tones">{% for t in range(8) %}<label class="tt-tone tone-{{ t }}"><input type="radio" name="tone" value="{{ t }}"><span class="sr-only">색 {{ t + 1 }}</span></label>{% endfor %}</div>
+    </div>
+    <div class="tt-form-actions">
+      <button class="btn danger" name="action" value="delete" data-tt-del hidden formnovalidate data-confirm="이 일정을 지울까요?">지우기</button>
+      <button class="btn primary" data-tt-save>넣기</button>
+    </div>
+  </form>
+</div>
+<script src="{{ url_for('static', filename='timetable.js') }}" defer></script>
 {% endblock %}

@@ -95,28 +95,33 @@ class StudyTest(unittest.TestCase):
 
     # 3
     def test_timetable_and_dday(self):
-        self.t.post("/t/timetable", data={"action": "dday", "exam_day": (date.today() + timedelta(days=10)).isoformat(),
-                                          "exam_label": "수능"})
+        self.t.post("/t/timetable", data={"exam_day": (date.today() + timedelta(days=10)).isoformat(), "exam_label": "수능"})
         wd = date.today().weekday()
-        self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": [str(wd), str((wd + 2) % 7)],
-                                          "starts": "13:00", "ends": "15:50", "title": "통합과학 정규", "room": "302호"})
-        self.t.post("/t/timetable", data={"action": "slot", "class_id": str(self.cid), "weekday": "1",
-                                          "starts": "15:00", "ends": "14:00", "title": "거꾸로"})    # 끝이 시작보다 빠름
-        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM timetable", one=True)["n"], 2)
         s = self.student(0)
+        # 학생이 스스로 넣는다 (여러 요일 한 번에)
+        s.post("/s/timetable", data={"weekday": [str(wd), str((wd + 2) % 7)], "starts": "13:00", "ends": "15:50",
+                                     "title": "통합과학 정규", "room": "302호"})
+        s.post("/s/timetable", data={"weekday": "1", "starts": "15:00", "ends": "14:00", "title": "거꾸로"})   # 끝이 시작보다 빠름
+        r = s.post("/s/timetable", data={"weekday": str(wd), "starts": "15:00", "ends": "16:00", "title": "겹침"}, follow_redirects=True)
+        self.assertIn("시간이 겹쳐요", r.data.decode())
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM my_timetable", one=True)["n"], 2)
         page = s.get("/s/timetable").data.decode()
         self.assertIn("D-10", page)
         self.assertIn("302호", page)
         self.assertIn("13:00–15:50", page)
-        self.assertIn("tt-slot tone-", page)                                 # 수업마다 색
+        self.assertIn("tt-block tone-", page)
         home = s.get("/s/").data.decode()
         self.assertIn("D-10", home)
         self.assertIn("오늘 13:00 통합과학 정규", home)
-        self.assertEqual(s.get("/s/calendar").status_code, 404)              # 일정 기능 없음
-        self.assertNotIn("통합과학 정규", self.student(2).get("/s/timetable").data.decode())  # 다른 반
-        tid = self.q("SELECT id FROM timetable LIMIT 1", one=True)["id"]
-        self.t.post(f"/t/timetable/slot/{tid}/delete")
-        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM timetable", one=True)["n"], 1)
+        self.assertNotIn("13:00–15:50", self.student(1).get("/s/timetable").data.decode())   # 같은 반 친구에게도 안 보임 (내 시간표)
+        # 고치기·지우기는 본인 것만
+        tid = self.q("SELECT id FROM my_timetable ORDER BY id LIMIT 1", one=True)["id"]
+        self.assertEqual(self.student(1).post(f"/s/timetable/{tid}", data={"action": "delete"}).status_code, 404)
+        s.post(f"/s/timetable/{tid}", data={"weekday": str(wd), "starts": "09:00", "ends": "10:30", "title": "아침 자습", "room": ""})
+        self.assertEqual(self.q("SELECT starts, title FROM my_timetable WHERE id = ?", (tid,), one=True)["title"], "아침 자습")
+        s.post(f"/s/timetable/{tid}", data={"action": "delete"})
+        self.assertEqual(self.q("SELECT COUNT(*) AS n FROM my_timetable", one=True)["n"], 1)
+        self.assertEqual(s.get("/s/calendar").status_code, 404)
 
     # 7 과제: 정답·해설 PDF → 학생 답 입력 → 채점·분석
     def test_tasks(self):

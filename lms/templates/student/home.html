@@ -14,9 +14,9 @@
 
 <section class="glance" aria-label="오늘 한눈에">
   <a class="gl" href="{{ url_for('study.timetable') }}">
-    <span class="gl-k">{{ dday.label if dday else '오늘 수업' }}</span>
+    <span class="gl-k">{{ dday.label if dday else '오늘 일정' }}</span>
     <b>{% if dday %}{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}{% else %}{{ classes_today|length }}<small>개</small>{% endif %}</b>
-    <span class="gl-s">{% if classes_today %}오늘 {% for c in classes_today %}{{ c.starts }} {{ c.title }}{% if not loop.last %} · {% endif %}{% endfor %}{% else %}오늘은 수업이 없어요{% endif %}</span>
+    <span class="gl-s">{% if classes_today %}오늘 {% for c in classes_today %}{{ c.starts }} {{ c.title }}{% if not loop.last %} · {% endif %}{% endfor %}{% else %}시간표에 오늘 일정을 넣어 보세요{% endif %}</span>
   </a>
   <a class="gl" href="{{ url_for('rooms.rooms') }}">
     <span class="gl-k">오늘 집중</span>
