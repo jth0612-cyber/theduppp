@@ -199,4 +199,19 @@
     });
     m("again").addEventListener("click", function () { show(mc, "start"); });
   }
+
+  // ---------- 영단어 카드: 누르면 뜻, '뜻 모두 보기' ----------
+  var voca = document.querySelector("[data-voca]");
+  if (voca) {
+    voca.addEventListener("click", function (e) {
+      var c = e.target.closest(".voca-card"); if (!c) return;
+      c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    });
+    var vt = document.querySelector("[data-voca-toggle]");
+    if (vt) vt.addEventListener("click", function () {
+      var on = vt.getAttribute("aria-pressed") !== "true";
+      vt.setAttribute("aria-pressed", on ? "true" : "false"); vt.textContent = on ? "뜻 모두 가리기" : "뜻 모두 보기";
+      voca.querySelectorAll(".voca-card").forEach(function (c) { c.setAttribute("aria-pressed", on ? "true" : "false"); });
+    });
+  }
 })();

@@ -310,6 +310,26 @@ CREATE TABLE IF NOT EXISTS timetable (
     title       TEXT NOT NULL,
     room        TEXT NOT NULL DEFAULT ''
 );
+-- 미니 Quiz · 영단어: 날마다 20개 (하루 한 묶음) + 단어별 맞힘·틀림
+CREATE TABLE IF NOT EXISTS vocab_days (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    day_no      INTEGER NOT NULL,
+    words       TEXT NOT NULL,
+    score       INTEGER,
+    total       INTEGER,
+    done_at     TEXT,
+    UNIQUE (user_id, day)
+);
+CREATE TABLE IF NOT EXISTS vocab_marks (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    word        TEXT NOT NULL,
+    n_right     INTEGER NOT NULL DEFAULT 0,
+    n_wrong     INTEGER NOT NULL DEFAULT 0,
+    last        TEXT,
+    PRIMARY KEY (user_id, word)
+);
 -- 학생이 직접 만드는 시간표 (에브리타임처럼, 한 사람에 하나)
 CREATE TABLE IF NOT EXISTS my_timetable (
     id          INTEGER PRIMARY KEY,

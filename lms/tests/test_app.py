@@ -478,6 +478,57 @@ class FeatureTest(AppTest):
         res = s1.post(f"/s/games/quiz/{rid}/submit", json={"answers": [a["answer_index"] for a in ans]}).get_json()
         self.assertEqual(res["score"], len(ans) - 1)
 
+    def test_vocab_daily_20_and_review(self):
+        import json as _json
+        import vocab
+        _, s1, s2 = self._students()
+        self.assertGreaterEqual(len(vocab.WORDS), 600)
+        page = s1.get("/s/games/vocab").data.decode()
+        self.assertIn("Day 1", page)
+        with self.app.app_context():
+            day = query("SELECT * FROM vocab_days", one=True)
+        words = _json.loads(day["words"])
+        self.assertEqual(len(words), 20)
+        self.assertIn(words[0], page)
+        self.assertEqual(s1.get("/s/games/vocab").data.decode().count('class="voca-card"'), 20)   # 하루 동안 같은 20개
+        start = s1.post("/s/games/vocab/start", json={}).get_json()
+        self.assertEqual(len(start["questions"]), 20)
+        self.assertNotIn("answer_index", str(start))
+        rid = start["round_id"]
+        with self.app.app_context():
+            ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+        for i, a in enumerate(ans):                       # 앞의 3개만 틀리게
+            pick = a["answer_index"] if i >= 3 else (a["answer_index"] + 1) % 4
+            r = s1.post(f"/s/games/vocab/{rid}/check", json={"i": i, "pick": pick}).get_json()
+            self.assertEqual(r["correct"], i >= 3)
+        res = s1.post(f"/s/games/vocab/{rid}/submit", json={}).get_json()
+        self.assertEqual(res["score"], 17)
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) n FROM vocab_marks", one=True)["n"], 20)
+            self.assertEqual(query("SELECT score FROM vocab_days", one=True)["score"], 17)
+        hub = s1.get("/s/games/").data.decode()
+        self.assertIn("3<small>단어</small>", hub)               # 복습 3개
+        # 복습에서 맞히면 빠진다
+        rv = s1.post("/s/games/vocab/review/start", json={}).get_json()
+        self.assertEqual(len(rv["questions"]), 3)
+        with self.app.app_context():
+            ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rv["round_id"],), one=True)["answer"])
+        for i, a in enumerate(ans):
+            s1.post(f"/s/games/vocab/review/{rv['round_id']}/check", json={"i": i, "pick": a["answer_index"]})
+        s1.post(f"/s/games/vocab/review/{rv['round_id']}/submit", json={})
+        self.assertEqual(s1.post("/s/games/vocab/review/start", json={}).status_code, 400)
+        self.assertIn("0<small>단어</small>", s1.get("/s/games/").data.decode())
+        # 다른 학생은 자기 Day 1 (같은 순서로 시작)
+        self.assertIn("Day 1", s2.get("/s/games/vocab").data.decode())
+        self.assertEqual(s2.post(f"/s/games/vocab/{rid}/check", json={"i": 0, "pick": 0}).status_code, 404)
+
+    def test_quiz_hub_shows_categories(self):
+        _, s1, _ = self._students()
+        hub = s1.get("/s/games/").data.decode()
+        for t in ("영단어", "오늘의 20단어", "통합과학", "역학 시스템", "샤가프 법칙", "염기 짝 맞추기"):
+            self.assertIn(t, hub)
+        self.assertIn('value="mechanics" selected', s1.get("/s/games/quiz?topic=mechanics").data.decode())
+
     def test_behind_synology_https_proxy(self):
         """시놀로지 리버스 프록시(HTTPS) 뒤에서 CSRF·보안 쿠키·실제 IP 기록이 동작하는지."""
         from unittest import mock

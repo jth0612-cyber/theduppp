@@ -1,0 +1,413 @@
+# 수능 영단어 (기본 → 심화 순). 한 줄에: 단어<TAB>뜻
+abandon	버리다, 포기하다
+ability	능력
+absorb	흡수하다
+abstract	추상적인
+academic	학업의, 학문의
+accept	받아들이다
+access	접근; 이용하다
+accompany	동반하다, 함께 가다
+accomplish	성취하다, 해내다
+account	설명; 계좌; 차지하다
+accurate	정확한
+accuse	고발하다, 비난하다
+achieve	성취하다, 달성하다
+acknowledge	인정하다
+acquire	얻다, 습득하다
+adapt	적응하다, 각색하다
+adequate	충분한, 적절한
+adjust	조정하다, 적응하다
+admire	존경하다, 감탄하다
+admit	인정하다, 입장을 허락하다
+adopt	채택하다, 입양하다
+advantage	이점, 장점
+affect	영향을 미치다
+afford	~할 여유가 있다
+agriculture	농업
+aim	목표; 겨냥하다
+alter	바꾸다, 변경하다
+alternative	대안; 대안의
+amount	양, 액수
+analyze	분석하다
+ancestor	조상
+ancient	고대의
+anniversary	기념일
+announce	발표하다, 알리다
+annual	매년의, 연간의
+anxiety	불안, 걱정
+apparent	분명한, 겉보기의
+appeal	호소하다; 매력
+appetite	식욕, 욕구
+apply	지원하다, 적용하다
+appoint	임명하다, 지정하다
+appreciate	감사하다, 진가를 알다
+approach	접근하다; 접근법
+appropriate	적절한
+approve	승인하다, 찬성하다
+approximately	대략
+argue	주장하다, 논쟁하다
+arise	생기다, 발생하다
+arrange	정리하다, 준비하다
+aspect	측면, 양상
+assess	평가하다
+assign	배정하다, 할당하다
+assist	돕다
+associate	연관 짓다, 교제하다
+assume	가정하다, (책임을) 맡다
+atmosphere	대기, 분위기
+attach	붙이다, 첨부하다
+attain	이루다, 달성하다
+attempt	시도; 시도하다
+attend	참석하다, 주의를 기울이다
+attitude	태도
+attract	끌다, 매혹하다
+attribute	~의 탓으로 돌리다; 속성
+audience	청중, 관객
+authority	권위, 당국
+available	이용 가능한
+avoid	피하다
+aware	알고 있는, 의식하는
+awkward	어색한, 서투른
+background	배경
+balance	균형; 균형을 잡다
+barrier	장벽
+behavior	행동
+belong	속하다
+beneficial	이로운
+benefit	이익, 혜택; 이익을 얻다
+bias	편견, 편향
+biology	생물학
+blame	비난하다, ~의 탓으로 돌리다
+boost	높이다, 북돋우다
+boundary	경계
+breathe	숨 쉬다
+budget	예산
+burden	부담, 짐
+calculate	계산하다
+candidate	후보자, 지원자
+capable	~할 수 있는, 유능한
+capacity	수용력, 능력
+capture	붙잡다, 포착하다
+career	직업, 경력
+category	범주
+cease	중단하다, 그치다
+celebrate	축하하다, 기념하다
+challenge	도전; 이의를 제기하다
+character	성격, 등장인물
+characteristic	특징; 특유의
+charity	자선, 자선 단체
+chemical	화학의; 화학 물질
+circumstance	상황, 환경
+cite	인용하다, 언급하다
+civilization	문명
+claim	주장하다; 주장
+classify	분류하다
+client	고객, 의뢰인
+climate	기후
+cognitive	인지의
+collapse	붕괴하다; 붕괴
+colleague	동료
+combine	결합하다
+comfort	위로; 편안함
+command	명령; 명령하다
+comment	논평, 의견
+commercial	상업의; 광고
+commit	저지르다, 전념하다
+communicate	의사소통하다
+community	공동체, 지역 사회
+compare	비교하다
+compete	경쟁하다
+competent	유능한
+complain	불평하다
+complex	복잡한; 복합 건물
+complicated	복잡한
+component	구성 요소
+compose	구성하다, 작곡하다
+comprehend	이해하다
+concentrate	집중하다
+concept	개념
+concern	걱정; 관련되다
+conclude	결론짓다
+conduct	수행하다; 행동
+conference	회의
+confidence	자신감, 신뢰
+confirm	확인하다
+conflict	갈등, 충돌
+confront	직면하다, 맞서다
+confuse	혼란스럽게 하다
+connect	연결하다
+conscious	의식하는, 의식적인
+consequence	결과
+conservation	보존, 보호
+consider	고려하다, 여기다
+consist	구성되다(of)
+consistent	일관된
+constant	끊임없는, 일정한
+construct	건설하다, 구성하다
+consume	소비하다
+contact	접촉; 연락하다
+contain	포함하다
+contemporary	현대의, 동시대의
+content	내용; 만족하는
+context	맥락, 문맥
+continent	대륙
+contract	계약; 수축하다
+contrast	대조; 대조하다
+contribute	기여하다, 원인이 되다
+convenient	편리한
+convention	관습, 대회
+convert	전환하다, 개조하다
+convince	확신시키다, 설득하다
+cooperate	협력하다
+cope	대처하다(with)
+correspond	일치하다, 서신을 주고받다
+costly	값비싼, 대가가 큰
+counterpart	상대, 대응하는 것
+craft	공예; 정성 들여 만들다
+create	창조하다
+creature	생물, 동물
+crisis	위기
+criteria	기준(criterion의 복수)
+critical	비판적인, 중요한
+criticize	비판하다
+crop	농작물
+crucial	결정적인, 매우 중요한
+cultivate	경작하다, 기르다
+curiosity	호기심
+current	현재의; 흐름
+custom	관습
+damage	손상; 손상시키다
+debate	토론; 토론하다
+decade	10년
+decline	감소하다, 거절하다; 감소
+decrease	감소하다; 감소
+dedicate	바치다, 헌신하다
+defeat	패배시키다; 패배
+defend	방어하다, 옹호하다
+define	정의하다
+deliberate	고의의, 신중한
+deliver	배달하다, 전달하다
+demand	요구; 요구하다
+demonstrate	증명하다, 시연하다
+deny	부정하다, 거부하다
+depend	의존하다, ~에 달려 있다
+deposit	예금; 맡기다, 퇴적시키다
+depression	우울, 불경기
+deprive	빼앗다(of)
+derive	끌어내다, 유래하다
+describe	묘사하다
+deserve	~을 받을 만하다
+design	설계; 설계하다
+desire	욕구; 바라다
+despite	~에도 불구하고
+destination	목적지
+destroy	파괴하다
+detail	세부 사항
+detect	발견하다, 감지하다
+determine	결정하다, 알아내다
+develop	개발하다, 발달하다
+device	장치
+devote	바치다, 헌신하다
+diagnose	진단하다
+differ	다르다
+dimension	차원, 크기
+diminish	줄어들다, 약화시키다
+disappear	사라지다
+discipline	규율, 훈련; 학문 분야
+discount	할인
+discourage	낙담시키다, 단념시키다
+discover	발견하다
+discrimination	차별
+disease	질병
+dismiss	묵살하다, 해고하다
+display	전시하다; 전시
+dispose	처리하다(of)
+distinct	뚜렷한, 별개의
+distinguish	구별하다
+distract	(주의를) 산만하게 하다
+distribute	분배하다, 유통하다
+diverse	다양한
+divide	나누다
+domestic	국내의, 가정의
+dominate	지배하다
+donate	기부하다
+dramatic	극적인
+drought	가뭄
+due	~ 때문에(to), 예정된
+durable	내구성 있는, 오래가는
+duty	의무, 세금
+eager	열망하는
+earn	벌다, 얻다
+economic	경제의
+edge	가장자리, 우위
+efficient	효율적인
+effort	노력
+elderly	나이 든
+element	요소, 원소
+eliminate	제거하다
+embarrass	당황하게 하다
+emerge	나타나다, 부상하다
+emergency	비상 사태
+emission	배출, 배기가스
+emotion	감정
+emphasize	강조하다
+employ	고용하다, 사용하다
+enable	가능하게 하다
+encounter	마주치다; 만남
+encourage	격려하다, 장려하다
+endanger	위험에 빠뜨리다
+endure	견디다, 지속되다
+engage	참여하다, 관여시키다
+enhance	향상시키다
+enormous	거대한, 막대한
+ensure	보장하다, 확실하게 하다
+environment	환경
+equal	같은, 동등한
+equipment	장비
+essential	필수적인
+establish	설립하다, 확립하다
+estimate	추정하다; 추정치
+evaluate	평가하다
+eventually	결국
+evidence	증거
+evolve	진화하다, 발전하다
+exaggerate	과장하다
+examine	조사하다, 검사하다
+exceed	초과하다
+exception	예외
+exchange	교환; 교환하다
+exclude	제외하다
+exhaust	다 써버리다, 지치게 하다
+exhibit	전시하다; 전시품
+exist	존재하다
+expand	확장하다
+expense	비용
+experiment	실험; 실험하다
+expert	전문가
+explore	탐험하다, 탐구하다
+expose	노출시키다, 폭로하다
+express	표현하다; 급행의
+extend	연장하다, 확장하다
+extinct	멸종한
+extraordinary	특별한, 비범한
+extreme	극단적인
+facility	시설, 재능
+factor	요인
+fade	(색이) 바래다, 서서히 사라지다
+failure	실패
+fairly	꽤, 공정하게
+familiar	익숙한, 친숙한
+fascinate	매혹하다
+feature	특징; 특징으로 삼다
+feedback	피드백, 의견
+fertile	비옥한, 생식력 있는
+figure	수치, 인물; 생각하다
+finance	재정, 금융
+flexible	유연한
+flourish	번창하다, 잘 자라다
+focus	집중하다; 초점
+forbid	금지하다
+force	힘; 강요하다
+forecast	예보; 예측하다
+former	이전의, 전자의
+fortune	운, 재산
+foster	촉진하다, 기르다
+found	설립하다
+fragile	깨지기 쉬운, 연약한
+frequent	잦은, 빈번한
+frustrate	좌절시키다
+function	기능; 작동하다
+fundamental	근본적인
+gain	얻다; 이익
+gender	성별
+generate	만들어 내다, 발생시키다
+generation	세대, 발생
+generous	관대한, 너그러운
+genetic	유전의
+genuine	진짜의, 진실한
+global	세계적인
+goal	목표
+grab	붙잡다
+gradual	점진적인
+grant	주다, 인정하다; 보조금
+grasp	붙잡다, 이해하다
+gratitude	감사
+guarantee	보장하다; 보증
+guilty	유죄의, 죄책감을 느끼는
+habit	습관
+habitat	서식지
+handle	다루다; 손잡이
+harm	해; 해치다
+harmony	조화
+harvest	수확; 수확하다
+hesitate	망설이다
+hide	숨기다, 숨다
+highlight	강조하다
+hire	고용하다
+honor	명예; 존경하다
+horizon	지평선, 시야
+hostile	적대적인
+household	가정, 가구
+humble	겸손한, 초라한
+identify	확인하다, 동일시하다
+identity	정체성, 신원
+ignore	무시하다
+illusion	환상, 착각
+illustrate	설명하다, 삽화를 넣다
+imitate	모방하다
+immediate	즉각적인
+immune	면역의
+impact	영향, 충격
+implement	실행하다; 도구
+imply	암시하다, 의미하다
+impose	부과하다, 강요하다
+impress	감동시키다, 깊은 인상을 주다
+improve	개선하다
+impulse	충동, 자극
+incentive	동기, 장려책
+incident	사건
+include	포함하다
+income	소득
+incorporate	포함하다, 통합하다
+increase	증가하다; 증가
+indicate	나타내다, 가리키다
+individual	개인; 개인의
+industry	산업, 근면
+inevitable	불가피한
+infant	유아
+infer	추론하다
+influence	영향; 영향을 미치다
+inform	알리다
+ingredient	재료, 성분
+inherit	물려받다, 상속하다
+initial	처음의, 초기의
+injure	다치게 하다
+innate	타고난, 선천적인
+innovation	혁신
+insight	통찰력
+insist	주장하다, 고집하다
+inspire	영감을 주다, 고무하다
+install	설치하다
+instance	사례, 경우
+instinct	본능
+institution	기관, 제도
+instruct	가르치다, 지시하다
+instrument	도구, 악기
+insult	모욕; 모욕하다
+insurance	보험
+intellectual	지적인
+intend	의도하다
+intense	강렬한, 극심한
+interact	상호 작용하다
+interfere	간섭하다, 방해하다
+internal	내부의
+interpret	해석하다, 통역하다
+interrupt	방해하다, 중단시키다
+intervene	개입하다
+introduce	소개하다, 도입하다
+invade	침입하다
+invest	투자하다
+investigate	조사하다
+involve	포함하다, 관련시키다
+isolate	고립시키다, 분리하다
+issue	문제, 쟁점; 발행하다

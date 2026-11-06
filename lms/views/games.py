@@ -1,4 +1,4 @@
-"""학생 미니게임: 염기 짝 맞추기, 샤가프 법칙, 통합과학 퀴즈.
+"""학생 미니 Quiz: 영단어(하루 20개·복습), 통합과학(단원별 퀴즈, 샤가프 법칙, 염기 짝 맞추기).
 문제와 정답은 서버에서 만들어 game_rounds 에 저장하고, 채점도 서버에서만 한다."""
 import json
 from datetime import datetime, timedelta
@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, abort, g, jsonify, render_template, request
 
 import quiz
+import vocab
 from db import execute, query
 from security import student_required
 
@@ -55,10 +56,11 @@ def _json_body():
 @bp.route("/")
 @student_required
 def hub():
-    best = {r["game"]: r for r in query("""SELECT game, MAX(score * 100 / total) AS best, COUNT(*) AS plays
-                                           FROM game_rounds WHERE user_id = ? AND finished_at IS NOT NULL
-                                           GROUP BY game""", (g.user["id"],))}
-    return render_template("student/games/hub.html", best=best)
+    best = {r["game"] + ":" + r["topic"]: r for r in query(
+        """SELECT game, topic, MAX(score * 100 / total) AS best, COUNT(*) AS plays FROM game_rounds
+           WHERE user_id = ? AND finished_at IS NOT NULL GROUP BY game, topic""", (g.user["id"],))}
+    return render_template("student/games/hub.html", best=best, v=vocab.stats(g.user["id"]),
+                           topics=[(k, v[0], v[1]) for k, v in quiz.TOPICS.items()])
 
 
 # ---------- 염기 짝 맞추기 ----------
@@ -122,7 +124,7 @@ def _check_mc(r):
                    explanation=it["explanation"], answered=len(done), score=score, total=len(items))
 
 
-def _grade_mc(r, label):
+def _grade_mc(r, label, after=None):
     items = json.loads(r["answer"])
     stored = json.loads(r["picks"] or "null")
     picks = [(-1 if p is None else p) for p in stored] if stored else _json_body().get("answers")
@@ -135,6 +137,8 @@ def _grade_mc(r, label):
                         "answer_index": it["answer_index"], "explanation": it["explanation"]})
     score = sum(x["correct"] for x in results)
     _finish(r["id"], score, len(items))
+    if after:
+        after(items, results)
     return jsonify(score=score, total=len(items), results=results)
 
 
@@ -168,7 +172,7 @@ def chargaff_submit(rid):
 @bp.route("/quiz", endpoint="quiz")
 @student_required
 def quiz_page():
-    return render_template("student/games/mc.html", game="quiz", title="통합과학 퀴즈",
+    return render_template("student/games/mc.html", game="quiz", title="통합과학 퀴즈", pick=request.args.get("topic", ""),
                            intro="단원을 고르면 4지선다 5문제가 나와요. 한 문제씩 고르면 바로 정답과 해설이 나와요.",
                            topics=[(k, v[0]) for k, v in quiz.TOPICS.items()])
 
@@ -196,3 +200,68 @@ def quiz_submit(rid):
     r = _open_round(rid, "quiz")
     label = quiz.TOPICS.get(r["topic"], ("퀴즈",))[0]
     return _grade_mc(r, f"퀴즈({label})")
+
+
+# ---------- 영단어 (하루 20개 · 복습) ----------
+
+@bp.route("/vocab")
+@student_required
+def vocab_page():
+    day, words = vocab.today_set(g.user["id"])
+    return render_template("student/games/vocab.html", day=day, words=[(w, vocab.MEANING[w]) for w in words],
+                           v=vocab.stats(g.user["id"]), game="vocab")
+
+
+@bp.route("/vocab/start", methods=["POST"])
+@student_required
+def vocab_start():
+    day, words = vocab.today_set(g.user["id"])
+    items = vocab.quiz_items(words)
+    rid = _new_round("vocab", _public(items), items, topic=day["day"])
+    return jsonify(round_id=rid, questions=_public(items))
+
+
+@bp.route("/vocab/<int:rid>/check", methods=["POST"])
+@student_required
+def vocab_check(rid):
+    return _check_mc(_open_round(rid, "vocab"))
+
+
+@bp.route("/vocab/<int:rid>/submit", methods=["POST"])
+@student_required
+def vocab_submit(rid):
+    r = _open_round(rid, "vocab")
+    return _grade_mc(r, "영단어", after=lambda items, res: vocab.record(g.user["id"], items, res, day=r["topic"]))
+
+
+@bp.route("/vocab/review")
+@student_required
+def vocab_review():
+    n = len(vocab.review_words(g.user["id"], limit=999))
+    return render_template("student/games/mc.html", game="vocab_review", title="영단어 복습", topics=None, empty=n == 0,
+                           intro=f"틀렸던 단어 {n}개 중 최근 것부터 최대 {vocab.DAILY}개를 다시 풀어요. 맞히면 복습 목록에서 빠져요."
+                           if n else "복습할 단어가 없어요. 오늘의 20단어를 먼저 풀어 보세요.")
+
+
+@bp.route("/vocab/review/start", methods=["POST"])
+@student_required
+def vocab_review_start():
+    words = vocab.review_words(g.user["id"])
+    if not words:
+        abort(400)
+    items = vocab.quiz_items(words)
+    rid = _new_round("vocab_review", _public(items), items)
+    return jsonify(round_id=rid, questions=_public(items))
+
+
+@bp.route("/vocab/review/<int:rid>/check", methods=["POST"])
+@student_required
+def vocab_review_check(rid):
+    return _check_mc(_open_round(rid, "vocab_review"))
+
+
+@bp.route("/vocab/review/<int:rid>/submit", methods=["POST"])
+@student_required
+def vocab_review_submit(rid):
+    r = _open_round(rid, "vocab_review")
+    return _grade_mc(r, "영단어 복습", after=lambda items, res: vocab.record(g.user["id"], items, res))

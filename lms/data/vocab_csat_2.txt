@@ -1,0 +1,362 @@
+# 수능 영단어 2 (j~z). 한 줄에: 단어<TAB>뜻
+judge	판단하다; 판사
+justify	정당화하다
+keen	열망하는, 예리한
+labor	노동
+landscape	풍경
+launch	시작하다, 출시하다
+layer	층
+lead	이끌다, (결과로) 이어지다
+legal	합법적인, 법률의
+legend	전설
+leisure	여가
+liberal	자유로운, 진보적인
+limit	한계; 제한하다
+link	연결; 연결하다
+literacy	읽고 쓰는 능력
+literature	문학
+locate	위치를 찾다, 두다
+logic	논리
+loyal	충성스러운
+maintain	유지하다, 주장하다
+major	주요한; 전공
+manage	관리하다, 해내다
+manipulate	조작하다
+manufacture	제조하다; 제조
+margin	여백, 차이
+mature	성숙한; 성숙하다
+maximize	극대화하다
+measure	측정하다; 조치
+mechanism	구조, 방법
+medium	매체, 중간의
+mental	정신의
+mention	언급하다
+merchant	상인
+merit	장점, 가치
+method	방법
+migrate	이주하다
+minimize	최소화하다
+minor	작은, 사소한; 미성년자
+miracle	기적
+mission	임무
+moderate	적당한, 온건한
+modest	겸손한, 적당한
+modify	수정하다
+monitor	감시하다, 관찰하다
+moral	도덕의; 교훈
+motivate	동기를 부여하다
+multiply	곱하다, 증가하다
+mutual	상호의
+narrative	이야기; 이야기의
+native	원주민의, 토박이의
+navigate	길을 찾다, 항해하다
+negative	부정적인
+neglect	무시하다, 방치하다
+negotiate	협상하다
+nervous	긴장한, 신경의
+neutral	중립의
+noble	고귀한, 귀족의
+notice	알아차리다; 공지
+notion	개념, 생각
+nourish	영양분을 주다
+numerous	수많은
+nutrition	영양
+obey	복종하다, 따르다
+object	물체, 목적; 반대하다
+objective	목표; 객관적인
+obligation	의무
+observe	관찰하다, 준수하다
+obstacle	장애물
+obtain	얻다
+obvious	명백한
+occasion	경우, 행사
+occupy	차지하다
+occur	일어나다, 떠오르다
+odd	이상한, 홀수의
+offend	기분을 상하게 하다
+operate	작동하다, 수술하다
+opponent	상대, 반대자
+opportunity	기회
+oppose	반대하다
+optimistic	낙관적인
+option	선택(권)
+ordinary	평범한
+organ	장기, 기관
+organize	조직하다, 정리하다
+origin	기원, 출신
+outcome	결과
+overcome	극복하다
+overlook	간과하다, 내려다보다
+overwhelm	압도하다
+participate	참여하다
+particular	특정한, 까다로운
+passion	열정
+passive	수동적인
+patient	환자; 참을성 있는
+pattern	양식, 패턴
+peculiar	특이한, 고유한
+penalty	처벌, 벌금
+perceive	인식하다, 지각하다
+perform	수행하다, 공연하다
+permanent	영구적인
+permit	허락하다; 허가증
+persist	지속되다, 고집하다
+perspective	관점, 원근법
+persuade	설득하다
+phenomenon	현상
+philosophy	철학
+physical	신체의, 물리적인
+pioneer	개척자
+plain	평범한, 분명한; 평원
+pleasant	즐거운, 쾌적한
+policy	정책
+pollution	오염
+popular	인기 있는, 대중의
+population	인구
+portion	부분, 1인분
+possess	소유하다
+potential	잠재적인; 잠재력
+poverty	가난
+practical	실용적인
+precious	귀중한
+precise	정확한
+predict	예측하다
+prefer	선호하다
+prejudice	편견
+preserve	보존하다
+pressure	압력
+prevail	우세하다, 널리 퍼지다
+prevent	막다, 예방하다
+previous	이전의
+primary	주요한, 최초의
+principle	원리, 원칙
+priority	우선순위
+private	사적인, 개인의
+procedure	절차
+proceed	진행하다
+process	과정; 처리하다
+produce	생산하다; 농산물
+profession	직업, 전문직
+profit	이익
+progress	진보; 진행하다
+prohibit	금지하다
+project	계획; 투영하다
+promote	촉진하다, 승진시키다
+prompt	신속한; 촉발하다
+proof	증거
+proper	적절한
+property	재산, 속성
+proportion	비율, 부분
+propose	제안하다
+prospect	전망, 가능성
+protect	보호하다
+protest	항의; 항의하다
+prove	증명하다, ~로 드러나다
+provide	제공하다
+psychology	심리학
+publish	출판하다
+purchase	구매; 구매하다
+pursue	추구하다, 뒤쫓다
+puzzle	수수께끼; 당황하게 하다
+quality	질, 특성
+quantity	양
+quote	인용하다
+range	범위; (범위가) 이르다
+rapid	빠른
+rare	드문, 희귀한
+rational	이성적인, 합리적인
+react	반응하다
+realistic	현실적인
+reasonable	합리적인, 적당한
+recall	기억해 내다, 회수하다
+receipt	영수증, 수령
+recognize	알아보다, 인정하다
+recommend	추천하다
+recover	회복하다
+recycle	재활용하다
+reduce	줄이다
+refer	언급하다, 참고하다(to)
+reflect	반사하다, 반영하다
+reform	개혁; 개혁하다
+refuse	거절하다
+regard	여기다; 관심, 존중
+region	지역
+register	등록하다
+regret	후회하다; 후회
+regular	규칙적인, 정기적인
+reinforce	강화하다
+reject	거절하다
+relate	관련시키다
+relationship	관계
+release	풀어주다, 공개하다
+relevant	관련 있는, 적절한
+reliable	믿을 수 있는
+relieve	완화하다, 안도시키다
+religion	종교
+reluctant	꺼리는, 마지못한
+rely	의지하다(on)
+remain	남아 있다, 여전히 ~이다
+remark	발언; 언급하다
+remarkable	놀라운, 주목할 만한
+remedy	치료법, 해결책
+remind	상기시키다
+remove	제거하다
+renew	갱신하다, 새롭게 하다
+replace	대체하다
+represent	대표하다, 나타내다
+reproduce	번식하다, 복제하다
+reputation	평판, 명성
+request	요청; 요청하다
+require	요구하다, 필요로 하다
+rescue	구조하다; 구조
+research	연구; 연구하다
+resemble	닮다
+reserve	예약하다; 비축
+resident	주민, 거주자
+resist	저항하다, 참다
+resolve	해결하다, 결심하다
+resource	자원
+respect	존경; 존중하다
+respond	반응하다, 응답하다
+responsible	책임 있는
+restore	회복시키다, 복원하다
+restrict	제한하다
+retain	유지하다, 보유하다
+retire	은퇴하다
+reveal	드러내다, 밝히다
+revenue	수입, 세입
+reverse	뒤바꾸다; 반대
+revise	수정하다, 복습하다
+reward	보상; 보상하다
+rigid	엄격한, 단단한
+ritual	의식, 의례
+role	역할
+routine	일상; 일상적인
+rural	시골의
+sacrifice	희생; 희생하다
+satisfy	만족시키다
+scarce	부족한, 드문
+scatter	흩뿌리다
+scheme	계획, 책략
+scholar	학자
+scope	범위
+secure	안전한; 확보하다
+seek	찾다, 추구하다
+select	선택하다
+sensitive	민감한, 예민한
+sequence	순서, 연속
+settle	정착하다, 해결하다
+severe	심각한, 엄격한
+shelter	피난처, 보호소
+shift	바꾸다; 변화
+signal	신호; 신호를 보내다
+significant	중요한, 상당한
+similar	비슷한
+simulate	모의 실험하다, 흉내 내다
+sincere	진실한, 진심의
+skeptical	회의적인
+solar	태양의
+solid	고체의, 단단한
+solution	해결책, 용액
+sophisticated	정교한, 세련된
+span	기간, 폭; 걸치다
+species	종(種)
+specific	구체적인, 특정한
+spectator	관중
+spontaneous	자발적인, 즉흥적인
+stable	안정된; 마구간
+statistics	통계(학)
+status	지위, 상태
+stimulate	자극하다
+strategy	전략
+strengthen	강화하다
+stress	스트레스, 강조; 강조하다
+strict	엄격한
+structure	구조
+struggle	애쓰다, 투쟁하다; 투쟁
+submit	제출하다, 굴복하다
+substance	물질, 실체
+substitute	대체하다; 대용품
+subtle	미묘한
+succeed	성공하다, 계승하다
+sufficient	충분한
+suggest	제안하다, 암시하다
+summarize	요약하다
+superior	우수한, 상급의
+supply	공급; 공급하다
+support	지지하다; 지원
+suppose	가정하다, 생각하다
+suppress	억누르다, 진압하다
+surface	표면
+surround	둘러싸다
+survey	조사; 조사하다
+survive	살아남다
+suspect	의심하다; 용의자
+sustain	유지하다, 지탱하다
+symbol	상징
+sympathy	동정, 공감
+symptom	증상
+talent	재능
+target	목표; 겨냥하다
+technique	기술, 기법
+temporary	일시적인
+tend	~하는 경향이 있다, 돌보다
+tension	긴장
+territory	영토, 영역
+theory	이론
+therapy	치료
+threat	위협
+thrive	번성하다, 잘 자라다
+tolerate	참다, 용인하다
+tradition	전통
+transform	변형시키다
+transmit	전달하다, 전송하다
+transport	운송하다; 운송
+treat	대하다, 치료하다; 대접
+tremendous	엄청난
+trend	경향, 추세
+trigger	유발하다; 방아쇠
+trust	신뢰; 신뢰하다
+typical	전형적인
+ultimate	궁극적인
+undergo	겪다
+undertake	떠맡다, 착수하다
+unique	독특한, 유일한
+universal	보편적인
+unlike	~와 달리
+urban	도시의
+urge	촉구하다; 충동
+utilize	이용하다
+vague	막연한, 모호한
+valid	타당한, 유효한
+valuable	귀중한
+variety	다양성
+vary	다르다, 변하다
+vast	방대한, 광대한
+vehicle	차량, 수단
+venture	모험; 위험을 무릅쓰다
+verify	확인하다, 입증하다
+version	판, 형태
+victim	희생자, 피해자
+view	관점; 보다
+violate	위반하다
+virtual	가상의, 사실상의
+virtue	미덕
+visible	보이는
+vital	필수적인, 생명의
+vivid	생생한
+volume	부피, 음량, (책의) 권
+voluntary	자발적인
+vulnerable	취약한
+wander	돌아다니다, 헤매다
+warn	경고하다
+wealth	부, 재산
+weigh	무게가 ~이다, 따져 보다
+welfare	복지
+widespread	널리 퍼진
+wisdom	지혜
+withdraw	철회하다, 인출하다
+witness	목격자; 목격하다
+worship	숭배; 숭배하다
+worth	가치; ~의 가치가 있는
+yield	산출하다, 양보하다; 수확량

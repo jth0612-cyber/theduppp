@@ -1,0 +1,24 @@
+{# 객관식 한 판 (통합과학 퀴즈 · 샤가프 · 영단어가 함께 쓴다). 한 문제씩 바로 채점: static/games.js #}
+<div class="card game" id="mc-game" data-game="{{ game }}" data-start="{{ url_for('games.' ~ game ~ '_start') }}">
+  <div data-role="start">
+    {% if topics %}
+    <div class="field"><label for="mc-topic">단원</label>
+      <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
+    {% endif %}
+    {% if not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}
+  </div>
+  <div class="hidden" data-role="loading"><p class="muted">문제를 준비하고 있어요…</p></div>
+  <div class="hidden" data-role="play">
+    <div class="game-bar"><span data-role="progress"></span><span class="muted" data-role="score"></span></div>
+    <p class="mc-question" data-role="question"></p>
+    <div class="mc-choices" data-role="choices"></div>
+    <div class="mc-feedback hidden" data-role="feedback" aria-live="polite"></div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <div data-role="review"></div>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
