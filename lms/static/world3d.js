@@ -1029,7 +1029,9 @@ function act(id, obj) {
 (function () {
   const btnP = $("[data-photo]"), box = document.querySelector("[data-photo-box]");
   if (!btnP || !box) return;
-  const img = box.querySelector("[data-photo-img]"), save = box.querySelector("[data-photo-save]"), share = box.querySelector("[data-photo-share]");
+  const img = box.querySelector("img") || document.createElement("img"); img.alt = "방금 찍은 사진";   // 찍기 전에는 빈 그림을 두지 않는다
+  if (!img.parentNode) (box.querySelector("[data-photo-frame]") || box.firstElementChild || box).prepend(img);
+  const save = box.querySelector("[data-photo-save]"), share = box.querySelector("[data-photo-share]");
   let blob = null;
   btnP.addEventListener("click", () => {
     renderer.render(scene, camera);                       // 바로 그린 직후에 읽어야 빈 화면이 아니다
