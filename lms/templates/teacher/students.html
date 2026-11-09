@@ -5,14 +5,14 @@
 <div class="page-head">
   <h1>학생 검색 <span class="muted small">{{ total }}명</span></h1>
   <form method="get" class="row">
-    <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 수험번호" autofocus>
+    <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디" autofocus>
     <button class="btn">검색</button>
   </form>
 </div>
 <div class="card">
   {% if students %}
   <div class="table-wrap"><table>
-    <tr><th>이름</th><th>수험번호</th><th>반</th><th>목표</th></tr>
+    <tr><th>이름</th><th>아이디</th><th>반</th><th>목표</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">
       <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>

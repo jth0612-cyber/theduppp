@@ -5,7 +5,7 @@ from datetime import datetime
 
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 
-from db import execute, query
+from db import execute, nickname_taken, normalize_student_code, query
 from security import (audit, authenticate, hash_password, login_required, login_user,
                       password_problem, verify_password)
 
@@ -137,16 +137,18 @@ def signup():
             flash("가입 시도가 너무 많습니다. 1시간 뒤에 다시 시도하세요.", "error")
             return render_template("signup.html", form=form), 429
         password = request.form.get("password", "")
-        code = form["code"].upper().replace("-", "").replace(" ", "")
-        cls = query("SELECT * FROM classes WHERE join_code = ? AND join_open = 1 AND archived = 0",
-                    (code,), one=True) if code else None
+        code = normalize_student_code(form["code"])
+        sc = query("""SELECT sc.*, c.name AS class_name FROM student_codes sc JOIN classes c ON c.id = sc.class_id
+                      WHERE sc.code = ? AND c.archived = 0""", (code,), one=True) if code else None
         error = None
-        if cls is None:
-            error = "반 가입 코드가 올바르지 않거나, 지금은 가입을 받지 않는 반이에요. 선생님께 확인하세요."
+        if sc is None:
+            error = "개인 코드가 올바르지 않아요. 선생님께 받은 코드를 다시 확인해 주세요."
+        elif sc["student_id"]:
+            error = "이미 가입에 쓴 코드예요. 착오라면 선생님께 알려 주세요."
         elif not _NAME.match(form["name"]):
             error = "이름은 한글 또는 영문 2~20자로 입력하세요."
         elif not _STUDENT_NO.match(form["student_no"]):
-            error = "수험번호는 영문·숫자·- 로 3~30자입니다."
+            error = "아이디는 영문·숫자·- 로 3~30자입니다."
         elif password != request.form.get("confirm", ""):
             error = "비밀번호가 서로 일치하지 않습니다."
         elif problem := password_problem(password):
@@ -154,22 +156,36 @@ def signup():
         elif request.form.get("consent") != "1":
             error = "개인정보 수집·이용에 동의해야 가입할 수 있어요."
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
-            error = "이미 가입된 수험번호예요. 로그인하거나 선생님께 비밀번호 초기화를 요청하세요."
-        elif query("SELECT 1 FROM signup_requests WHERE student_no = ?", (form["student_no"],), one=True):
-            error = "이미 가입 신청한 수험번호예요. 선생님 승인을 기다려 주세요."
-        elif gid and (query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True)
-                      or query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (gid["sub"],), one=True)):
-            error = "이 Google 계정은 이미 가입했거나 신청 중이에요."
+            error = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."
+        elif (roster := query("SELECT * FROM students WHERE student_no = ?", (form["student_no"],), one=True)) and \
+                (roster["class_id"] != sc["class_id"] or not roster["active"]):
+            error = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."
+        elif gid and query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True):
+            error = "이 Google 계정은 이미 가입했어요. 로그인해 주세요."
         if error:
+            if sc is None:
+                audit("signup_code_failed", f"code:{code[:4]}")
             flash(error, "error")
             return render_template("signup.html", form=form, gid=gid)
-        rid = execute("""INSERT INTO signup_requests (class_id, name, student_no, password_hash, consent_at, ip,
-                                                      google_sub, google_email)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                      (cls["id"], form["name"], form["student_no"], hash_password(password),
-                       datetime.now().isoformat(timespec="seconds"), request.remote_addr or "",
+        # 코드가 맞으면 승인 없이 바로 계정을 만든다 (코드 = 본인 확인)
+        from nickname import generate_nickname
+        roster = query("SELECT * FROM students WHERE student_no = ? AND class_id = ?", (form["student_no"], sc["class_id"]), one=True)
+        if roster:                                   # 선생님이 미리 넣어 둔 명단과 연결
+            sid = roster["id"]
+        else:
+            sid = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, ?, ?)",
+                          (sc["class_id"], form["name"], form["student_no"]))
+        uid = execute("""INSERT INTO users (role, username, nickname, password_hash, student_id, google_sub, google_email)
+                         VALUES ('student', ?, ?, ?, ?, ?, ?)""",
+                      (form["student_no"], generate_nickname(nickname_taken), hash_password(password), sid,
                        gid["sub"] if gid else None, gid["email"] if gid else None))
+        execute("UPDATE student_codes SET student_id = ?, used_at = datetime('now', 'localtime') WHERE id = ?", (sid, sc["id"]))
         session.pop("g_signup", None)
-        audit("signup_request", f"request:{rid} class:{cls['id']}", username=form["student_no"])
-        return render_template("signup_done.html", class_name=cls["name"], google=bool(gid))
+        audit("signup_code", f"student:{sid} class:{sc['class_id']} consent:{datetime.now().isoformat(timespec='seconds')}",
+              username=form["student_no"])
+        user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)
+        login_user(user)
+        g.user = user
+        flash(f"가입했어요. {sc['class_name']}에 오신 걸 환영해요!", "ok")
+        return redirect(_home_for(user))
     return render_template("signup.html", form=form, gid=gid)

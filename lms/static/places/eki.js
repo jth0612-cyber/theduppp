@@ -282,7 +282,8 @@ export default {
       const z = 2.3, id = SEATS.length;
       box(0.1, 0.42, 0.1, 0x6a6e72, x, PLAT.h + 0.21, z);
       const c = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.08, 0.55), mat(chairC[i % 4])); c.position.set(x, PLAT.h + 0.46, z); c.userData.seat = id; scene.add(c); pickSeats.push(c);
-      box(0.62, 0.5, 0.06, chairC[i % 4], x, PLAT.h + 0.74, z + 0.28);
+      const backrest = box(0.62, 0.5, 0.06, chairC[i % 4], x, PLAT.h + 0.74, z + 0.28);
+      backrest.userData.seat = id; pickSeats.push(backrest);              // 뒤에서 등받이를 눌러도 앉는다
       SEATS.push({ x, z, yaw: Math.PI, y: PLAT.h + 0.28, lift: 0.12, kind: "bench" });
     });
     // 마당 끝 나무 벤치 둘 (바다 쪽)
@@ -535,7 +536,7 @@ export default {
         },
       },
       board(lines) { drawNotes(lines); },
-      chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요." },
+      chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요.", hint: "아래 칸에 한 줄 적으면 역 노트에 붙어요." },
       sounds: {
         // 바닷가: 파도가 주인공(먼 파도 + 가까이 부서지는 파도), 바람은 넓게, 저녁 마을 소리는 작게, 갈매기는 아주 가끔
         loops: [{ f: "eki/waves", g: 0.9 }, { f: "eki/shore", g: 0.28 }, { f: "eki/wind", g: 0.28 }, { f: "eki/evening", g: 0.28 }],

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="card">
   <h1>로그인</h1>
-  <p class="muted small">강사·조교는 발급받은 아이디로, 학생은 수험번호로 로그인하세요.</p>
+  <p class="muted small">아이디와 비밀번호로 로그인하세요.</p>
   <form method="post" autocomplete="on" data-enter>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">
@@ -21,6 +21,6 @@
   <a class="btn google-btn" href="{{ url_for('google.start', mode='login') }}">Google 계정으로 로그인</a>
   <p class="small muted">Google로 가입했거나 '내 계정'에서 연결해 둔 학생은 Google로 바로 로그인할 수 있어요.</p>
   {% endif %}
-  <p class="small mt">처음이에요? <a href="{{ url_for('auth.signup') }}">학생 회원가입</a> (반 가입 코드 필요)</p>
+  <p class="small mt">처음이에요? <a href="{{ url_for('auth.signup') }}">학생 회원가입</a> (선생님께 받은 개인 코드 필요)</p>
 </div>
 {% endblock %}

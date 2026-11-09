@@ -522,7 +522,7 @@ class Avatar {
       else if (sitting) h.position.set(s * 0.18, 0.36, 0.32);
       else h.position.set(s * 0.42, 0.42 + (walk ? Math.sin(ph + (s > 0 ? Math.PI : 0)) * 0.04 : 0), walk ? Math.sin(ph + (s > 0 ? 0 : Math.PI)) * 0.14 : 0.06);
     });
-    this.gestureMotion(dt);
+    this.gestureMotion(dt); this.bubbleMotion(dt);
     this.feet.forEach((f) => {
       const s = f.userData.side;
       if (sitting) { f.position.set(s * 0.22, 0.02, 0.3); f.rotation.y = -s * 1.1; }
@@ -588,7 +588,38 @@ class Avatar {
       this.mouth.visible = !blow && !drink; this.oh.visible = blow;
       this.steam.forEach((sp, i) => { const t = (this.gT * 0.8 + i / 3) % 1; sp.position.set(Math.sin(t * 6 + i) * 0.02, 0.1 + t * 0.25, (blow ? 0.05 + t * 0.2 : 0)); sp.material.opacity = (1 - t) * 0.55 * (1 - drink); sp.scale.setScalar(0.06 + t * 0.12); });
     }
-    if (k >= 1) { this.gName = null; this.upper.rotation.x = 0; this.head.rotation.x = 0; this.mouth.visible = true; this.oh.visible = false; if (this.cup) this.cup.visible = false; }
+    else if (this.gName === "wave") {
+      // 오른손을 머리 옆으로 올려 좌우로 세 번 흔든다, 고개는 살짝 갸웃
+      const up = k < 0.15 ? ease(k / 0.15) : k < 0.85 ? 1 : 1 - ease((k - 0.85) / 0.15);
+      const sw = Math.sin(this.gT * 13) * up;
+      Rh.position.set(0.42 + up * 0.12 + sw * 0.1, 0.42 + up * 0.95, 0.06 + up * 0.12);
+      this.head.rotation.z = -0.12 * up; this.upper.rotation.z = 0.05 * up;
+    }
+    if (k >= 1) { this.gName = null; this.upper.rotation.x = 0; this.upper.rotation.z = 0; this.head.rotation.x = 0; this.head.rotation.z = 0; this.mouth.visible = true; this.oh.visible = false; if (this.cup) this.cup.visible = false; }
+  }
+  // 머리 위 말풍선 (하이! 등). 잠깐 떴다가 사라진다
+  say(text, secs = 2.6) {
+    if (!this.bubble) {
+      const c = document.createElement("canvas"); c.width = 256; c.height = 128;
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, opacity: 0 }));
+      sp.scale.set(0.95, 0.475, 1); sp.renderOrder = 12; this.g.add(sp); this.bubble = sp; this.bubbleCanvas = c;
+    }
+    const c = this.bubbleCanvas, x = c.getContext("2d"); x.clearRect(0, 0, 256, 128);
+    x.fillStyle = "#fffdf7"; x.strokeStyle = "rgba(40,36,30,.35)"; x.lineWidth = 4;
+    x.beginPath(); x.moveTo(40, 12); x.arcTo(244, 12, 244, 92, 34); x.arcTo(244, 92, 12, 92, 34); x.lineTo(150, 92); x.lineTo(122, 120); x.lineTo(118, 92);
+    x.arcTo(12, 92, 12, 12, 34); x.arcTo(12, 12, 244, 12, 34); x.closePath(); x.fill(); x.stroke();
+    x.fillStyle = "#2a2622"; x.font = "800 48px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(text, 128, 54);
+    this.bubble.material.map.needsUpdate = true; this.bubbleT = secs; this.bubbleTotal = secs;
+  }
+  bubbleMotion(dt) {
+    if (!this.bubble || this.bubbleT <= 0) { if (this.bubble) this.bubble.visible = false; return; }
+    this.bubbleT -= dt; const k = 1 - this.bubbleT / this.bubbleTotal;
+    this.bubble.visible = true;
+    this.bubble.material.opacity = k < 0.12 ? k / 0.12 : this.bubbleT < 0.4 ? this.bubbleT / 0.4 : 1;
+    const pop = k < 0.12 ? 0.7 + 0.3 * (k / 0.12) : 1;
+    this.bubble.scale.set(0.95 * pop, 0.475 * pop, 1);
+    this.bubble.position.set(0, this.tag.position.y + (this.timer && this.timer.visible ? 0.95 : 0.5), 0);
   }
   // 오늘의 운세를 뽑으면 하루 동안 가방에 작은 행운 부적이 달린다 (친구들에게도 보인다)
   setCharm(color) {
@@ -813,7 +844,11 @@ function tap(cx, cy) {
   if (!hits.length) return;
   const h = hits[0], o = h.object;
   if (o.userData.seat !== undefined) return goSit(o.userData.seat);
-  if (o.userData.notes) { document.getElementById("notes").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); return; }
+  if (o.userData.notes) {      // 판을 누르면: 쓸 수 있으면 입력칸으로, 아니면 어디 앉아야 하는지 안내
+    const inp = chatEl && !chatEl.hidden ? chatEl.querySelector("input") : null;
+    if (inp) inp.focus(); else whisper((P.chat && P.chat.hint) || "자리에 앉으면 여기에 쓸 수 있어요.");
+    return;
+  }
   if (o.userData.action) return act(o.userData.action, o);
   if (state === "focus") return whisper("집중 중에는 자리에 머물러요. 일어나려면 '그만하기'를 누르세요.");
   const pts = P.planWalk(me.pos, h.point, o);
@@ -862,8 +897,13 @@ function goSit(id) {
   if (state === "focus") return whisper("집중 중이에요. 자리를 옮기려면 먼저 '그만하기'를 누르세요.");
   if (occupiedSeats().has(id)) return whisper(`그 ${P.seatNoun}에는 이미 누가 있어요.`);
   standUp(true);
-  me.walkTo(P.planSeat(me.pos, id));
+  const path = P.planSeat(me.pos, id);
+  me.walkTo(path);
   me.onArrive = () => { sitAt(id); };
+  // 멀리 있는 자리는 걸어가는 동안 안내 (눌렀는데 아무 일 없는 것처럼 보이지 않게)
+  let far = 0, px = me.pos.x, pz = me.pos.z;
+  path.forEach(([x, z]) => { far += Math.hypot(x - px, z - pz); px = x; pz = z; });
+  if (far > 4) whisper(`${josa(P.seatNoun, "으로", "로")} 걸어가요…`, Math.min(6000, far / me.speed * 1000));
   sync(true);
 }
 function sitAt(id) {
@@ -923,10 +963,12 @@ const E = {
 function playAct(name, av, mine) {
   if (P.remote && P.remote[name]) return P.remote[name](E, av, mine);
   if (name === "bow") av.bow();
+  if (name === "hi") { av.gesture("wave", 2.2); av.say("하이!"); if (!mine) audio.sfx("hi"); }
 }
 
 // ---------------------------------------------------------------- 동작 메뉴
 const ICON = {
+  hi: '<svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7c0 4-2.5 7-6 7-2.5 0-4-1.5-5.5-4L4 12.5a1.5 1.5 0 0 1 2.5-1.6L8 13"/></svg>',
   sit: '<svg viewBox="0 0 24 24"><path d="M4 17h16M6 17l1-4h10l1 4M9 13V9a3 3 0 0 1 6 0v4"/></svg>',
   focus: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 13V9M9 3h6"/></svg>',
   breathe: '<svg viewBox="0 0 24 24"><path d="M4 9c3-3 6 3 9 0s5-1 7 0M4 14c3-3 6 3 9 0s5-1 7 0"/></svg>',
@@ -951,11 +993,13 @@ if (chatEl) chatEl.addEventListener("submit", (e) => {
   }).catch(() => whisper("연결이 불안정해요. 잠시 뒤 다시 눌러 주세요.")).finally(() => { b.disabled = false; });
 });
 Object.assign(ICON, P.icons || {});
-const LABEL = Object.assign({ sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
+const LABEL = Object.assign({ hi: "하이!", sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
 function btn(id, primary) { return `<button type="button" class="w3-act${primary ? " is-primary" : ""}" data-act="${id}">${ICON[id] || ICON.dot}<span>${LABEL[id] || id}</span></button>`; }
 function render() {
   let html = "";
-  html = (P.actions[state] || []).map((id, i) => btn(id, i === 0 && state !== "focus")).join("");
+  let ids = (P.actions[state] || []).slice();
+  if (state !== "focus" && !ids.includes("hi")) ids.splice(Math.max(1, ids.length - (state === "sitting" ? 1 : 0)), 0, "hi");   // 누구에게나 하이!
+  html = ids.map((id, i) => btn(id, i === 0 && state !== "focus")).join("");
   actionsEl.innerHTML = html;
   plansEl.hidden = state !== "sitting";
   if (chatEl) {
@@ -975,10 +1019,43 @@ function act(id, obj) {
   if (id === "stand") return standUp();
   if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모으고, 오늘 공부할 것 하나를 떠올려요."); sync(true); return; }
   if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); E.share("bow"); return; }
+  if (id === "hi") { me.gesture("wave", 2.2); me.say("하이!"); audio.sfx("hi"); E.share("hi"); return; }
   if (id === "breathe") return breathe();
   if (id === "focus") return startFocus();
   if (id === "stop") return finishFocus(false);
 }
+
+// ---------------------------------------------------------------- 사진 찍기: 지금 화면을 찍어 창으로 띄우고 저장·공유
+(function () {
+  const btnP = $("[data-photo]"), box = document.querySelector("[data-photo-box]");
+  if (!btnP || !box) return;
+  const img = box.querySelector("[data-photo-img]"), save = box.querySelector("[data-photo-save]"), share = box.querySelector("[data-photo-share]");
+  let blob = null;
+  btnP.addEventListener("click", () => {
+    renderer.render(scene, camera);                       // 바로 그린 직후에 읽어야 빈 화면이 아니다
+    const src = renderer.domElement, W = src.width, H = src.height;
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+    x.drawImage(src, 0, 0);
+    const pad = Math.round(H * 0.035), fs = Math.max(14, Math.round(H * 0.03));
+    const now = new Date(), p2 = (n) => String(n).padStart(2, "0");
+    const label = `${$(".w3-place b") ? $(".w3-place b").textContent : "소도시 명상"} · ${now.getFullYear()}.${p2(now.getMonth() + 1)}.${p2(now.getDate())}`;
+    x.font = `600 ${fs}px 'Noto Sans KR', sans-serif`; x.textBaseline = "bottom";
+    x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = fs * 0.6; x.fillStyle = "rgba(255,255,255,.95)";
+    x.fillText(label, pad, H - pad); x.textAlign = "right"; x.font = `500 ${Math.round(fs * 0.8)}px 'Noto Sans KR', sans-serif`; x.fillText("정태혁 통합과학 lab", W - pad, H - pad);
+    const url = c.toDataURL("image/jpeg", 0.92);
+    img.src = url; save.href = url; save.download = `소도시명상-${now.getFullYear()}${p2(now.getMonth() + 1)}${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}.jpg`;
+    c.toBlob((b) => { blob = b; share.hidden = !(b && navigator.canShare && navigator.canShare({ files: [new File([b], "photo.jpg", { type: "image/jpeg" })] })); }, "image/jpeg", 0.92);
+    stage.classList.add("is-flash"); setTimeout(() => stage.classList.remove("is-flash"), 260);
+    audio.sfx("shutter");
+    box.hidden = false;
+  });
+  share.addEventListener("click", () => {
+    if (!blob) return;
+    navigator.share({ files: [new File([blob], save.download, { type: "image/jpeg" })], title: "소도시 명상" }).catch(() => {});
+  });
+  box.addEventListener("click", (e) => { if (e.target === box || e.target.closest("[data-photo-close]")) box.hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") box.hidden = true; });
+})();
 
 // ---------------------------------------------------------------- 속삭임(화면 위 안내 문장)
 const whisperEl = $("[data-whisper]"); let whisperTimer = 0;
@@ -1035,7 +1112,9 @@ setInterval(tickTimer, 500);
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
 if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }),
-  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; } };
+  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; }, sit: (i) => goSit(i),
+  pick: (cx, cy) => { const r = canvas.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); return ray.intersectObjects(P.picks, false).slice(0, 3).map((h) => [JSON.stringify(h.object.userData), h.distance.toFixed(2), h.object.geometry.type]); }, state: () => [state, mySeat], seats: () => SEATS.map((s) => s.kind),
+  project: (i) => { const s = SEATS[i], v = new THREE.Vector3(s.x, (s.y || 0) + 0.25, s.z).project(camera), r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; } };
 const listEl = root.querySelector("[data-members]");
 function post(url, data) {
   const fd = new FormData(); fd.append("csrf_token", csrf());
@@ -1198,7 +1277,7 @@ const audio = (() => {
     },
     duck(v) { if (master && ctx) master.gain.setTargetAtTime(v ? 0.6 : 0.9, ctx.currentTime, 1.2); },
     sfx(name) {
-      const x = Object.assign({ bowl: { f: "common/bowl", g: 0.75 }, cushion: { f: "common/steps", g: 0.25, rate: 0.7, lp: 900 } }, (P.sounds || {}).sfx || {})[name];
+      const x = Object.assign({ bowl: { f: "common/bowl", g: 0.75 }, cushion: { f: "common/steps", g: 0.25, rate: 0.7, lp: 900 }, hi: { f: "common/bowl", g: 0.22, rate: 2.4, lp: 3200 }, shutter: { f: "kissa/page", g: 0.6, rate: 1.6 } }, (P.sounds || {}).sfx || {})[name];
       if (x) one(x.f, x.g, (x.rate || 1) * (x.jitter ? rand(0.97, 1.03) : 1), x.lp);
     },
     raw(f, g, rate, lp) { one(f, g, rate, lp); },

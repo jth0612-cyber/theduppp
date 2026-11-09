@@ -310,6 +310,17 @@ CREATE TABLE IF NOT EXISTS timetable (
     title       TEXT NOT NULL,
     room        TEXT NOT NULL DEFAULT ''
 );
+-- 학생 개별 가입 코드: 행정 시스템에서 반마다 뽑은 난수 코드를 학생마다 하나씩. 가입하면 그 학생에 묶인다
+CREATE TABLE IF NOT EXISTS student_codes (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    code        TEXT NOT NULL UNIQUE,
+    memo        TEXT NOT NULL DEFAULT '',
+    student_id  INTEGER REFERENCES students(id) ON DELETE SET NULL,
+    used_at     TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_student_codes_class ON student_codes(class_id);
 -- 미니 Quiz · 영단어: 날마다 20개 (하루 한 묶음) + 단어별 맞힘·틀림
 CREATE TABLE IF NOT EXISTS vocab_days (
     id          INTEGER PRIMARY KEY,
@@ -607,6 +618,20 @@ def new_join_code(is_taken):
     while True:
         code = "".join(secrets.choice(_JOIN_ALPHABET) for _ in range(8))
         if not is_taken(code):
+            return code
+
+
+def normalize_student_code(raw):
+    """가입 코드 비교용: 공백·하이픈을 빼고 대문자로."""
+    return "".join(ch for ch in (raw or "").upper() if ch.isalnum())
+
+
+def new_student_code():
+    """사이트에서 만드는 학생 코드: 헷갈리는 글자(0·O·1·I·L) 없이 10자."""
+    import secrets
+    while True:
+        code = "".join(secrets.choice(_JOIN_ALPHABET) for _ in range(10))
+        if query("SELECT 1 FROM student_codes WHERE code = ?", (code,), one=True) is None:
             return code
 
 

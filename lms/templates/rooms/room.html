@@ -41,21 +41,7 @@
         {% endfor %}
       </ul>
     </section>
-    <section class="panel" id="notes" aria-labelledby="h-notes">
-      <div class="sec-head"><h2 id="h-notes">{{ info[2] }}</h2><span>{{ info[3] }}</span></div>
-      <form method="post" action="{{ url_for('rooms.note', place=key) }}" class="note-form">
-        {{ csrf() }}
-        <input type="text" name="body" maxlength="{{ note_max }}" required placeholder="예: 오늘은 2단원 기출 끝까지" aria-label="{{ info[2] }}에 남길 한 줄">
-        <button class="btn" type="submit">남기기</button>
-      </form>
-      {% if not notes %}<p class="muted small">아직 아무도 남기지 않았어요. 첫 줄을 남겨 보세요.</p>{% endif %}
-      <ul class="note-wall wall-{{ key }}">
-        {% for n in notes %}
-        <li><p>{{ n.body }}</p><span>{% if role_caption(n) %}<span class="cap">{{ role_caption(n) }}</span> {% endif %}{{ shown_name(n) }} · {{ n.created_at[5:10] }}</span>
-          {% if n.mine %}<form method="post" action="{{ url_for('rooms.note_delete', nid=n.id) }}">{{ csrf() }}<button class="x" aria-label="내 글 지우기">×</button></form>{% endif %}</li>
-        {% endfor %}
-      </ul>
-    </section>
+    
   </div>
 </div>
 <script src="{{ url_for('static', filename='rooms.js') }}" defer></script>

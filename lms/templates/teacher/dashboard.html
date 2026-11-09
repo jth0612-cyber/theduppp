@@ -6,7 +6,7 @@
     <p class="muted small">마지막 로그인 {{ g.user.last_login_at or '-' }}</p>
   </div>
   <form method="get" action="{{ url_for('teacher.students') }}" class="row">
-    <input type="search" name="q" placeholder="학생 이름 또는 수험번호">
+    <input type="search" name="q" placeholder="학생 이름 또는 아이디">
     <button class="btn">검색</button>
   </form>
 </div>

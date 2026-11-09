@@ -99,6 +99,29 @@ export default {
 
     // ---------------------------------------------------------------- 찻집
     const SEATS = [], pickSeats = [], pickCafe = [];
+    // 메모판 그림: 코르크 바탕에 냅킨 쪽지 5장 (최근 글이 아래)
+    const memoCanvas = document.createElement("canvas"); memoCanvas.width = 768; memoCanvas.height = 488; let memoTex = null;
+    function drawMemo(lines) {
+      const x = memoCanvas.getContext("2d");
+      x.fillStyle = "#b58a5a"; x.fillRect(0, 0, 768, 488);
+      for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? "90,60,30" : "230,200,150"},${Math.random() * 0.18})`; x.fillRect(Math.random() * 768, Math.random() * 488, 2 + Math.random() * 3, 2 + Math.random() * 3); }
+      x.fillStyle = "#fbf6ea"; x.fillRect(250, 18, 268, 54); x.fillStyle = "#3a2e28"; x.font = "600 30px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText("오늘의 냅킨 메모", 384, 46);
+      x.textAlign = "left";
+      if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 28px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
+      else lines.slice(-5).forEach((l, i) => {
+        const y = 92 + i * 78, tilt = ((i % 2) ? 1 : -1) * 0.008;
+        x.save(); x.translate(40, y); x.rotate(tilt);
+        x.fillStyle = "rgba(40,24,10,.25)"; x.fillRect(4, 6, 688, 66);
+        x.fillStyle = "#fdfaf2"; x.fillRect(0, 0, 688, 66);
+        x.fillStyle = "#c0392b"; x.beginPath(); x.arc(18, 14, 7, 0, Math.PI * 2); x.fill();
+        x.fillStyle = "#8a5a3a"; x.font = "600 20px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 36, 20);
+        x.fillStyle = "#2e2620"; x.font = "400 27px 'Noto Sans KR', sans-serif";
+        let t = l.body; while (x.measureText(t).width > 630 && t.length > 1) t = t.slice(0, -1);
+        x.fillText(t === l.body ? t : t + "…", 36, 48); x.restore();
+      });
+      if (memoTex) memoTex.needsUpdate = true;
+    }
     const cutaway = new THREE.Group(); scene.add(cutaway);     // 안에 들어가면 낮아지는 벽
     const cafeRoof = new THREE.Group(); scene.add(cafeRoof);
     {
@@ -233,15 +256,12 @@ export default {
         const back = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 0.5), mat(0xe2c8a0)); back.position.set(x + sd * 0.34, TATAMI.h + 0.35, z); back.rotation.z = sd * 0.25; scene.add(back);
         SEATS.push({ x, z, yaw, y: TATAMI.h + 0.02, lift: 0.12, kind: "tatami" });
       }));
-      // 주황 산 그림 (뒷벽) → 남기는 글(냅킨 메모)
-      const pc = document.createElement("canvas"); pc.width = 384; pc.height = 256; const p = pc.getContext("2d");
-      p.fillStyle = "#f1ece2"; p.fillRect(0, 0, 384, 256);
-      [["#e8a070", 170], ["#e07a4a", 195], ["#c85a3a", 220]].forEach(([c, base], i) => { p.fillStyle = c; p.beginPath(); p.moveTo(0, 256); for (let xx = 0; xx <= 384; xx += 16) p.lineTo(xx, base - Math.sin(xx / 50 + i) * 30 - (xx > 180 && xx < 260 ? 30 : 0)); p.lineTo(384, 256); p.fill(); });
-      p.fillStyle = "#3a2e28"; p.font = "500 22px 'Noto Serif KR', serif"; ["오늘의", "한 줄을", "남겨요"].forEach((t, i) => p.fillText(t, 290, 50 + i * 30));
-      const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace;
-      const painting = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.45), new THREE.MeshLambertMaterial({ map: pt }));
-      painting.rotation.y = -Math.PI / 2; painting.position.set(CAFE.x1 - 0.12, 2.0, -6.7); cutaway.add(painting);
-      painting.userData.notes = true; pickCafe.push(painting);
+      // 다다미방 뒷벽 메모판: 보라색 방석에 앉은 사람들이 쓰는 실시간 한 줄 (냅킨 메모를 핀으로 꽂은 코르크판)
+      memoTex = new THREE.CanvasTexture(memoCanvas); memoTex.colorSpace = THREE.SRGBColorSpace; memoTex.anisotropy = 4; drawMemo([]);
+      const frameM = box(0.06, 1.28, 2.0, 0x5a3e2a, CAFE.x1 - 0.14, TATAMI.h + 1.15, -6.7, cutaway);   // 앉은 눈높이 (인방 아래)
+      const memo = new THREE.Mesh(new THREE.PlaneGeometry(1.88, 1.18), new THREE.MeshBasicMaterial({ map: memoTex }));
+      memo.rotation.y = -Math.PI / 2; memo.position.set(CAFE.x1 - 0.18, TATAMI.h + 1.15, -6.7); cutaway.add(memo);
+      frameM.userData.notes = true; memo.userData.notes = true; pickCafe.push(frameM, memo);
       // 귤 상자 (문 옆)
       for (let i = 0; i < 3; i++) {
         box(0.7, 0.4, 0.5, 0xb88a52, CAFE.x0 - 0.6, 0.2 + i * 0.42, DOOR.z1 + 1.8 + (i === 2 ? 0.05 : 0));
@@ -320,6 +340,8 @@ export default {
         return [nx, nz];
       },
       welcome: "비 오는 골목 찻집이에요. 창가 자리에 앉아 빗소리를 들으며 집중해 보세요.",
+      board(lines) { drawMemo(lines); },
+      chat: { can: (s) => !!s && s.kind === "tatami", placeholder: "메모판에 한 줄 (다다미방 친구들에게)", done: "메모판에 꽂았어요.", hint: "보라색 방석에 앉으면 메모판에 쓸 수 있어요." },
       sitText: (s) => s.kind === "window" ? "창가 자리예요. 유리창에 빗방울이 맺혀요." : s.kind === "tatami" ? "보라색 방석에 앉았어요. 상 위에 책을 펼쳐요." : "바 자리에 앉았어요. 주전자에서 김이 올라와요.",
       sitSound: "cushion",
       focusText: (m) => `${m}분, 비가 그칠 때까지는 여기서.`,

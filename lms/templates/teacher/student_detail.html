@@ -122,7 +122,7 @@
     {{ csrf() }}
     <div class="row">
       <div class="field"><label>이름</label><input type="text" name="name" value="{{ s.name }}" maxlength="40" required></div>
-      <div class="field"><label>수험번호</label><input type="text" name="student_no" value="{{ s.student_no }}" maxlength="30" required></div>
+      <div class="field"><label>아이디</label><input type="text" name="student_no" value="{{ s.student_no }}" maxlength="30" required></div>
       <div class="field"><label>반</label>
         <select name="class_id">{% for c in all_classes %}<option value="{{ c.id }}" {{ 'selected' if c.id == s.class_id }}>{{ c.name }}</option>{% endfor %}</select></div>
     </div>

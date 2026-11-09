@@ -9,7 +9,8 @@ from flask import (Blueprint, Response, abort, flash, g, redirect, render_templa
                    url_for)
 
 from content import NOTICE_TAGS, QUESTION_TYPES, VIDEO_HOSTS, validate_https_url
-from db import execute, get_db, join_code_taken, new_join_code, nickname_taken, query
+from db import (execute, get_db, join_code_taken, new_join_code, new_student_code, nickname_taken,
+                normalize_student_code, query)
 from engagement import streak_info
 from nickname import generate_nickname
 from views.student import question_thread
@@ -168,6 +169,9 @@ def class_detail(cid):
             WHERE {where} ORDER BY s.active DESC, s.name LIMIT ? OFFSET ?""",
             args + [PAGE_SIZE, (page - 1) * PAGE_SIZE])
         ctx.update(q=q, page=page, pages=max(1, math.ceil(total / PAGE_SIZE)), total=total)
+        ctx["codes"] = query("""SELECT c.*, s.name AS s_name, s.student_no AS s_no FROM student_codes c
+                                LEFT JOIN students s ON s.id = c.student_id
+                                WHERE c.class_id = ? ORDER BY c.student_id IS NOT NULL, c.id""", (cid,))
     elif tab == "exams":
         ctx["exams"] = query("""SELECT e.*, COUNT(sc.id) AS n, ROUND(AVG(sc.score), 1) AS avg,
                                        MAX(sc.score) AS max, MIN(sc.score) AS min
@@ -236,7 +240,7 @@ def student_create(cid):
         flash(str(e), "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     if query("SELECT 1 FROM students WHERE student_no = ?", (f["student_no"],), one=True):
-        flash("이미 등록된 수험번호입니다.", "error")
+        flash("이미 등록된 아이디입니다.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     sid = execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc)
                      VALUES (?, ?, ?, ?, ?, ?)""",
@@ -249,7 +253,7 @@ def student_create(cid):
 @bp.route("/classes/<int:cid>/import", methods=["POST"])
 @teacher_required
 def student_import(cid):
-    """CSV 일괄 등록. 헤더: 이름,수험번호,연락처,목표,메모 (연락처 이후는 선택)"""
+    """CSV 일괄 등록. 헤더: 이름,아이디(또는 수험번호),연락처,목표,메모 (연락처 이후는 선택)"""
     _get_class(cid)
     upload = request.files.get("csv")
     if not upload or not upload.filename.lower().endswith(".csv"):
@@ -270,8 +274,8 @@ def student_import(cid):
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     reader = csv.DictReader(io.StringIO(text))
-    if not reader.fieldnames or "이름" not in reader.fieldnames or "수험번호" not in reader.fieldnames:
-        flash("첫 줄에 '이름,수험번호' 열 제목이 있어야 합니다.", "error")
+    if not reader.fieldnames or "이름" not in reader.fieldnames or not ({"아이디", "수험번호"} & set(reader.fieldnames)):
+        flash("첫 줄에 '이름,아이디' 열 제목이 있어야 합니다.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     db = get_db()
@@ -279,7 +283,7 @@ def student_import(cid):
     added, skipped = 0, []
     for line_no, row in enumerate(reader, start=2):
         name = (row.get("이름") or "").strip()
-        no = (row.get("수험번호") or "").strip()
+        no = (row.get("아이디") or row.get("수험번호") or "").strip()
         if not name or not no or len(name) > 40 or len(no) > 30:
             skipped.append(f"{line_no}행(형식 오류)")
             continue
@@ -364,7 +368,7 @@ def student_edit(sid):
     dup = dup or query("SELECT 1 FROM users WHERE username = ? AND (student_id IS NULL OR student_id != ?)",
                        (f["student_no"], sid), one=True)
     if dup:
-        flash("이미 등록된 수험번호입니다.", "error")
+        flash("이미 등록된 아이디입니다.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     active = 1 if request.form.get("active") == "1" else 0
     execute("""UPDATE students SET class_id = ?, name = ?, student_no = ?, target = ?,
@@ -583,7 +587,7 @@ def exam_export(eid):
                     WHERE s.class_id = ? AND s.active = 1 ORDER BY sc.score DESC, s.name""",
                  (eid, exam["class_id"]))
     audit("scores_export", f"exam:{eid}")
-    return _csv_response(f"exam{eid}.csv", ["이름", "수험번호", f"점수(/{exam['max_score']:g})"],
+    return _csv_response(f"exam{eid}.csv", ["이름", "아이디", f"점수(/{exam['max_score']:g})"],
                          [(r["name"], r["student_no"], "" if r["score"] is None else r["score"]) for r in rows])
 
 
@@ -792,7 +796,7 @@ def staff():
         if not _USERNAME.match(username):
             flash("아이디는 영문·숫자·_ . - 로 3~30자입니다. (예: ta_kim)", "error")
         elif query("SELECT 1 FROM users WHERE username = ?", (username,), one=True) or                 query("SELECT 1 FROM students WHERE student_no = ?", (username,), one=True):
-            flash("이미 쓰이고 있는 아이디입니다. (학생 수험번호와도 겹치면 안 됩니다)", "error")
+            flash("이미 쓰이고 있는 아이디입니다. (학생 아이디와도 겹치면 안 됩니다)", "error")
         else:
             temp = generate_temp_password()
             uid = execute("""INSERT INTO users (role, username, display_name, password_hash, must_change_pw)
@@ -836,6 +840,65 @@ def _pending_signups():
     if user is None or user["role"] != "teacher":
         return {}
     return {"pending_signups": query("SELECT COUNT(*) AS n FROM signup_requests", one=True)["n"]}
+
+
+@bp.route("/classes/<int:cid>/codes", methods=["POST"])
+@teacher_required
+def class_codes(cid):
+    """학생 개별 가입 코드: 붙여넣어 등록(행정 시스템에서 뽑은 것) / 사이트에서 난수로 만들기 / 안 쓴 코드 지우기."""
+    _get_class(cid)
+    action = request.form.get("action")
+    back = redirect(url_for("teacher.class_detail", cid=cid) + "#codes")
+    if action == "paste":
+        added, dup, bad = 0, [], []
+        for line in request.form.get("codes", "").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = [p.strip() for p in line.replace("\t", ",").split(",", 1)]
+            code, memo = normalize_student_code(parts[0]), (parts[1] if len(parts) > 1 else "")[:40]
+            if not 4 <= len(code) <= 32:
+                bad.append(parts[0][:20])
+                continue
+            if query("SELECT 1 FROM student_codes WHERE code = ?", (code,), one=True):
+                dup.append(code)
+                continue
+            execute("INSERT INTO student_codes (class_id, code, memo) VALUES (?, ?, ?)", (cid, code, memo))
+            added += 1
+        audit("student_codes_add", f"class:{cid} n:{added}")
+        if added:
+            flash(f"코드 {added}개를 등록했습니다.", "ok")
+        if dup:
+            flash(f"이미 등록된 코드 {len(dup)}개는 건너뛰었어요: {', '.join(dup[:5])}{' …' if len(dup) > 5 else ''}", "error")
+        if bad:
+            flash(f"영문·숫자 4~32자가 아닌 줄 {len(bad)}개는 건너뛰었어요: {', '.join(bad[:5])}", "error")
+        if not (added or dup or bad):
+            flash("붙여넣은 코드가 없어요.", "error")
+    elif action == "generate":
+        n = max(1, min(200, request.form.get("count", type=int) or 0))
+        for _ in range(n):
+            execute("INSERT INTO student_codes (class_id, code) VALUES (?, ?)", (cid, new_student_code()))
+        audit("student_codes_generate", f"class:{cid} n:{n}")
+        flash(f"코드 {n}개를 만들었어요. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
+    elif action == "delete":
+        ids = [int(x) for x in request.form.getlist("ids") if x.isdigit()]
+        n = 0
+        for i in ids:
+            n += get_db().execute("DELETE FROM student_codes WHERE id = ? AND class_id = ? AND student_id IS NULL", (i, cid)).rowcount
+        get_db().commit()
+        audit("student_codes_delete", f"class:{cid} n:{n}")
+        flash(f"쓰지 않은 코드 {n}개를 지웠어요.", "ok")
+    return back
+
+
+@bp.route("/classes/<int:cid>/codes.csv")
+@staff_required
+def class_codes_csv(cid):
+    cls = _get_class(cid)
+    rows = query("""SELECT c.code, c.memo, s.name, s.student_no, c.used_at FROM student_codes c
+                    LEFT JOIN students s ON s.id = c.student_id WHERE c.class_id = ? ORDER BY c.id""", (cid,))
+    return _csv_response(f"student-codes-class{cid}.csv", ["코드", "메모", "가입한 학생", "아이디", "가입 시각"],
+                         [[r["code"], r["memo"], r["name"] or "", r["student_no"] or "", r["used_at"] or ""] for r in rows])
 
 
 @bp.route("/classes/<int:cid>/joincode", methods=["POST"])

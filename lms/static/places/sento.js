@@ -140,10 +140,17 @@ export default {
     }
 
     // ---------------------------------------------------------------- 휴게소: 이로리(화로)와 둥근 펠트 방석
-    const HUT = { x: 9.5, z: 0.5, w: 7, d: 6, floor: 0.45 };
-    const inHut = (x, z) => Math.abs(x - HUT.x) < HUT.w / 2 - 0.3 && Math.abs(z - HUT.z) < HUT.d / 2 - 0.3;
+    // 화롯가 오두막 3채. door: 입구 쪽(-1 = 서쪽 면, +1 = 동쪽 면). 방석 번호는 탕 자리 8개 다음부터 4장씩
+    const HW = 7, HD = 6, HFLOOR = 0.45;
+    const HUTS = [{ x: 9.5, z: 0.5, door: -1 }, { x: 9.5, z: -8, door: -1 }, { x: -13.5, z: -8.5, door: 1 }]
+      .map((h) => Object.assign(h, { w: HW, d: HD, floor: HFLOOR }));
+    const hutOf = (x, z) => HUTS.findIndex((H) => Math.abs(x - H.x) < H.w / 2 - 0.3 && Math.abs(z - H.z) < H.d / 2 - 0.3);
+    const inHut = (x, z) => hutOf(x, z) >= 0;
+    const doorOut = (H) => [H.x + H.door * (H.w / 2 + 0.6), H.z + 1.2];      // 문 밖 한 걸음
+    const doorIn = (H) => [H.x + H.door * (H.w / 2 - 0.8), H.z + 1.2];       // 문 안 한 걸음
     const pickHut = [];
-    let hutRoof, board, boardTex, fire;
+    let boardTex;
+    const hutRoofs = [], fires = [];
 
     // ---------------------------------------------------------------- 이로리 불: 장작, 숯불, 일렁이는 불꽃, 불티, 연기, 깜빡이는 빛
     function makeFire(cx, cy, cz) {
@@ -270,49 +277,49 @@ export default {
       });
       if (boardTex) boardTex.needsUpdate = true;
     }
-    {
-      const fl = box(HUT.w, HUT.floor, HUT.d, 0xe9e4da, HUT.x, HUT.floor / 2, HUT.z); pickHut.push(fl);
-      box(HUT.w + 0.2, 0.12, HUT.d + 0.2, 0x5a4232, HUT.x, HUT.floor - 0.1, HUT.z);
+    function buildHut(H) {
+      const fl = box(H.w, H.floor, H.d, 0xe9e4da, H.x, H.floor / 2, H.z); pickHut.push(fl);
+      box(H.w + 0.2, 0.12, H.d + 0.2, 0x5a4232, H.x, H.floor - 0.1, H.z);
       // 기둥
-      for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1]]) box(0.22, 3.0, 0.22, 0x4a3426, HUT.x + dx * (HUT.w / 2 - 0.15), HUT.floor + 1.5, HUT.z + dz * (HUT.d / 2 - 0.15));
+      for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1]]) box(0.22, 3.0, 0.22, 0x4a3426, H.x + dx * (H.w / 2 - 0.15), H.floor + 1.5, H.z + dz * (H.d / 2 - 0.15));
       // 뒷벽(흰 회벽 + 검은 나무)
-      box(HUT.w, 2.2, 0.15, 0xf1ece2, HUT.x, HUT.floor + 1.1, HUT.z - HUT.d / 2 + 0.08);
-      box(HUT.w, 0.6, 0.17, 0x3b2c22, HUT.x, HUT.floor + 0.3, HUT.z - HUT.d / 2 + 0.08);
-      box(0.15, 2.2, HUT.d, 0xf1ece2, HUT.x + HUT.w / 2 - 0.08, HUT.floor + 1.1, HUT.z);
+      box(H.w, 2.2, 0.15, 0xf1ece2, H.x, H.floor + 1.1, H.z - H.d / 2 + 0.08);
+      box(H.w, 0.6, 0.17, 0x3b2c22, H.x, H.floor + 0.3, H.z - H.d / 2 + 0.08);
+      box(0.15, 2.2, H.d, 0xf1ece2, H.x - H.door * (H.w / 2 - 0.08), H.floor + 1.1, H.z);
       // 지붕(눈) — 안에 들어가면 걷힌다
-      hutRoof = new THREE.Group(); scene.add(hutRoof);
-      roof(HUT.w + 1.6, HUT.d + 1.6, 1.4, 0.35, 0x3a2e26, HUT.x, HUT.floor + 3.6, HUT.z, hutRoof);
-      roof(HUT.w + 1.4, HUT.d + 1.4, 0.7, 0.3, SNOW, HUT.x, HUT.floor + 4.25, HUT.z, hutRoof);
+      const hutRoof = new THREE.Group(); scene.add(hutRoof); hutRoofs.push(hutRoof);
+      roof(H.w + 1.6, H.d + 1.6, 1.4, 0.35, 0x3a2e26, H.x, H.floor + 3.6, H.z, hutRoof);
+      roof(H.w + 1.4, H.d + 1.4, 0.7, 0.3, SNOW, H.x, H.floor + 4.25, H.z, hutRoof);
       // 이로리: 나뭇결 테두리, 재, 쇠 받침, 숯불
-      const IR = { x: HUT.x, z: HUT.z };
+      const IR = { x: H.x, z: H.z };
       const frame = 0x9a6235;
-      box(1.9, 0.08, 0.28, frame, IR.x, HUT.floor + 0.04, IR.z - 0.81); box(1.9, 0.08, 0.28, frame, IR.x, HUT.floor + 0.04, IR.z + 0.81);
-      box(0.28, 0.08, 1.9, frame, IR.x - 0.81, HUT.floor + 0.04, IR.z); box(0.28, 0.08, 1.9, frame, IR.x + 0.81, HUT.floor + 0.04, IR.z);
-      box(1.36, 0.04, 1.36, 0xb8b2a6, IR.x, HUT.floor + 0.01, IR.z);
+      box(1.9, 0.08, 0.28, frame, IR.x, H.floor + 0.04, IR.z - 0.81); box(1.9, 0.08, 0.28, frame, IR.x, H.floor + 0.04, IR.z + 0.81);
+      box(0.28, 0.08, 1.9, frame, IR.x - 0.81, H.floor + 0.04, IR.z); box(0.28, 0.08, 1.9, frame, IR.x + 0.81, H.floor + 0.04, IR.z);
+      box(1.36, 0.04, 1.36, 0xb8b2a6, IR.x, H.floor + 0.01, IR.z);
       const tri = 0x3a2a22;
-      for (const [dx, dz] of [[-0.3, -0.18], [0.3, -0.18], [-0.3, 0.18], [0.3, 0.18]]) box(0.03, 0.22, 0.03, tri, IR.x + dx, HUT.floor + 0.12, IR.z + dz);
-      box(0.64, 0.03, 0.03, tri, IR.x, HUT.floor + 0.23, IR.z - 0.18); box(0.64, 0.03, 0.03, tri, IR.x, HUT.floor + 0.23, IR.z + 0.18);
-      fire = makeFire(IR.x, HUT.floor + 0.02, IR.z);
+      for (const [dx, dz] of [[-0.3, -0.18], [0.3, -0.18], [-0.3, 0.18], [0.3, 0.18]]) box(0.03, 0.22, 0.03, tri, IR.x + dx, H.floor + 0.12, IR.z + dz);
+      box(0.64, 0.03, 0.03, tri, IR.x, H.floor + 0.23, IR.z - 0.18); box(0.64, 0.03, 0.03, tri, IR.x, H.floor + 0.23, IR.z + 0.18);
+      fires.push(makeFire(IR.x, H.floor + 0.02, IR.z));
       // 방석 4장: 테라코타, 슬레이트 블루, 남색, 녹슨 빨강
       const felt = [0xb5582f, 0x5f7688, 0x2c3446, 0x8c3a2e];
       [[0, -1.55, 0], [1.55, 0, -Math.PI / 2], [0, 1.55, Math.PI], [-1.55, 0, Math.PI / 2]].forEach(([dx, dz, yaw], i) => {
         const x = IR.x + dx, z = IR.z + dz, id = SEATS.length;
         const c = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.52, 0.1, 28), mat(felt[i], { flatShading: false }));
-        c.position.set(x, HUT.floor + 0.05, z); c.userData.seat = id; scene.add(c); pickSeats.push(c);
-        SEATS.push({ x, z, yaw, y: HUT.floor, lift: 0.1, kind: "hearth", camPitch: 0.98, camDist: 4.6 });
+        c.position.set(x, H.floor + 0.05, z); c.userData.seat = id; scene.add(c); pickSeats.push(c);
+        SEATS.push({ x, z, yaw, y: H.floor, lift: 0.1, kind: "hearth", camPitch: 0.98, camDist: 4.6 });
       });
       // 칠판(남기는 글)
-      board = box(2.5, 1.62, 0.06, 0x5a4232, HUT.x - 1.4, HUT.floor + 1.45, HUT.z - HUT.d / 2 + 0.2);
-      box(2.6, 0.08, 0.12, 0x8a6a4a, HUT.x - 1.4, HUT.floor + 0.62, HUT.z - HUT.d / 2 + 0.26);
-      drawBoard([]);
-      boardTex = new THREE.CanvasTexture(boardCanvas); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4;
+      const board = box(2.5, 1.62, 0.06, 0x5a4232, H.x - 1.4, H.floor + 1.45, H.z - H.d / 2 + 0.2);
+      box(2.6, 0.08, 0.12, 0x8a6a4a, H.x - 1.4, H.floor + 0.62, H.z - H.d / 2 + 0.26);
+      if (!boardTex) { drawBoard([]); boardTex = new THREE.CanvasTexture(boardCanvas); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4; }
       const chalk = new THREE.Mesh(new THREE.PlaneGeometry(2.36, 1.48), new THREE.MeshBasicMaterial({ map: boardTex }));
-      chalk.position.set(HUT.x - 1.4, HUT.floor + 1.45, HUT.z - HUT.d / 2 + 0.24); scene.add(chalk);
+      chalk.position.set(H.x - 1.4, H.floor + 1.45, H.z - H.d / 2 + 0.24); scene.add(chalk);
       board.userData.notes = true; chalk.userData.notes = true; pickHut.push(board, chalk);
       // 노렌(湯) 걸린 입구 쪽 기둥 사이
       const noren = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshLambertMaterial({ map: textTexture("ゆ", { w: 256, h: 160, fg: "#f4efe4", bg: "#2b3a55", radius: 0, font: "500 96px 'Noto Serif KR', serif" }), side: THREE.DoubleSide }));
-      noren.position.set(HUT.x - HUT.w / 2 + 0.15, HUT.floor + 2.5, HUT.z + 1.2); noren.rotation.y = Math.PI / 2; hutRoof.add(noren);
-    }
+      noren.position.set(H.x + H.door * (H.w / 2 - 0.15), H.floor + 2.5, H.z + 1.2); noren.rotation.y = Math.PI / 2; hutRoof.add(noren);
+        }
+    HUTS.forEach(buildHut);
 
     // ---------------------------------------------------------------- 디딤돌과 석등
     const path = [[-2, 6.5], [0.5, 4.2], [3.2, 2.6], [5.6, 1.2]];
@@ -339,27 +346,29 @@ export default {
     // ---------------------------------------------------------------- 걷기
     const inPool = (x, z) => { const a = Math.atan2(z - POOL.z, x - POOL.x); return Math.hypot(x - POOL.x, z - POOL.z) < poolR(a) - 0.2; };
     function heightAt(x, z) {
-      if (inHut(x, z)) return HUT.floor;
+      if (inHut(x, z)) return HFLOOR;
       if (inPool(x, z)) return FLOOR_Y + 0.05;
       return 0;
     }
     const AREA = 18;
     function clampWalk(x, z) {
       x = Math.max(-AREA, Math.min(AREA - 4, x)); z = Math.max(-14, Math.min(12, z));
-      // 휴게소 벽(뒤·오른쪽)은 막고, 앞과 왼쪽으로만 드나든다
-      const lx = x - HUT.x, lz = z - HUT.z;
-      if (Math.abs(lx) < HUT.w / 2 + 0.2 && Math.abs(lz) < HUT.d / 2 + 0.2 && !inHut(x, z)) {
-        if (lz < -HUT.d / 2 + 0.3 || lx > HUT.w / 2 - 0.3) return null;
+      // 오두막 벽(뒤·문 반대쪽)은 막고, 앞과 문 쪽으로만 드나든다
+      for (const H of HUTS) {
+        const lx = x - H.x, lz = z - H.z;
+        if (Math.abs(lx) < H.w / 2 + 0.2 && Math.abs(lz) < H.d / 2 + 0.2 && !inHut(x, z)) {
+          if (lz < -H.d / 2 + 0.3 || -H.door * lx > H.w / 2 - 0.3) return null;
+        }
       }
       return [x, z];
     }
-    // 휴게소 입구는 왼쪽 면(노렌 아래)
-    const DOOR = [HUT.x - HUT.w / 2 - 0.6, HUT.z + 1.2];
+    // 오두막 사이를 오갈 때는 나가는 문 → 들어가는 문 순서로
     function route(fx, fz, tx, tz) {
-      const a = inHut(fx, fz), b = inHut(tx, tz);
+      const a = hutOf(fx, fz), b = hutOf(tx, tz);
       if (a === b) return [[tx, tz]];
-      if (b) return [DOOR, [HUT.x - HUT.w / 2 + 0.8, HUT.z + 1.2], [tx, tz]];
-      return [[HUT.x - HUT.w / 2 + 0.8, HUT.z + 1.2], DOOR, [tx, tz]];
+      const out = a >= 0 ? [doorIn(HUTS[a]), doorOut(HUTS[a])] : [];
+      const inn = b >= 0 ? [doorOut(HUTS[b]), doorIn(HUTS[b])] : [];
+      return out.concat(inn, [[tx, tz]]);
     }
 
     // ---------------------------------------------------------------- 물 튕기기
@@ -412,7 +421,8 @@ export default {
       step(x, z, nx, nz) {
         const c = clampWalk(nx, nz); if (!c) return [x, z];
         // 휴게소는 입구로만 드나든다
-        if (inHut(x, z) !== inHut(c[0], c[1]) && Math.abs(nz - DOOR[1]) > 1.1) return [x, z];
+        const ha = hutOf(x, z), hb = hutOf(c[0], c[1]);
+        if (ha !== hb) { const H = HUTS[ha >= 0 ? ha : hb]; if (!H || Math.abs(nz - (H.z + 1.2)) > 1.1) return [x, z]; }
         return c;
       },
       welcome: "눈 내리는 노천탕이에요. 탕에 몸을 담그거나 화롯가 방석에 앉아 보세요.",
@@ -441,7 +451,7 @@ export default {
       },
       remote: { splash: (E, av) => splash(E, av, false) },
       board(lines) { drawBoard(lines); },
-      chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요." },
+      chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요.", hint: "화롯가 방석에 앉으면 칠판에 쓸 수 있어요." },
       sounds: {
         // 물소리는 고음을 깎은 부드러운 판으로 낮게, 물방울·대나무는 드물게 (귀가 따갑지 않게)
         loops: [{ f: "sento/fire", g: 0.32 }, { f: "sento/water-soft", g: 0.42 }, { f: "sento/spout-soft", g: 0.2 }, { f: "sanji/wind", g: 0.26 }],
@@ -450,7 +460,8 @@ export default {
         steps: { f: "common/steps", out: 0.4, in: 0.15 },
       },
       update(dt, t, E) {
-        hutRoof.visible = !inHut(E.me.pos.x, E.me.pos.z);
+        const myHut = hutOf(E.me.pos.x, E.me.pos.z);
+        hutRoofs.forEach((r, i) => { r.visible = i !== myHut; });
         // 김: 물 위에서 천천히 올라가며 퍼졌다 사라진다
         steam.forEach((sp) => {
           const u = sp.userData; u.t += dt;
@@ -472,7 +483,7 @@ export default {
         // 물방울
         drops.forEach((d) => { if (!d.visible) return; d.userData.v.y -= 9.8 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < WATER_Y) d.visible = false; });
         rings.forEach((r) => { const u = r.userData; if (u.t >= 1) return; u.t = Math.min(1, u.t + dt * 0.9); r.scale.setScalar(1 + u.t * 5); r.material.opacity = 0.55 * (1 - u.t); });
-        fire.update(dt, t, E.state === "focus");
+        fires.forEach((f, i) => f.update(dt, t, E.state === "focus" && i === myHut));
         if (night) lampFires.forEach((f, i) => f.material.color.setHSL(0.09, 1, 0.72 + Math.sin(t * 6 + i * 2) * 0.03));
       },
     };

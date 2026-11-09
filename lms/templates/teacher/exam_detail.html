@@ -30,7 +30,7 @@
   <form method="post">
     {{ csrf() }}
     <div class="table-wrap"><table>
-      <tr><th>이름</th><th>수험번호</th><th class="num">점수</th><th class="num">석차</th></tr>
+      <tr><th>이름</th><th>아이디</th><th class="num">점수</th><th class="num">석차</th></tr>
       {% for s in students %}
       <tr>
         <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a></td>

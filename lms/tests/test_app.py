@@ -289,25 +289,25 @@ class FeatureTest(AppTest):
         _, s1, _ = self._students()
         ta = self._make_assistant()
         self.assertEqual(ta.get("/s/rooms").status_code, 200)
-        self.assertEqual(self.c.get("/s/rooms/sanji").status_code, 200)        # 선생님도
-        page = ta.get("/s/rooms/sanji").data.decode()
+        self.assertEqual(self.c.get("/s/rooms/sento").status_code, 200)        # 선생님도
+        page = ta.get("/s/rooms/sento").data.decode()
         self.assertIn('data-me-name="김조교" data-me-cap="조교"', page)
-        r = s1.post("/s/rooms/sanji/beat", data={}).get_json()
+        r = s1.post("/s/rooms/sento/beat", data={}).get_json()
         tas = [m for m in r["members"] if m.get("cap") == "조교"]
         self.assertEqual((tas[0]["nick"], tas[0]["cap"]), ("김조교", "조교"))
         teacher = [m for m in r["members"] if m.get("cap") == "선생님"]
         self.assertEqual(len(teacher), 1)
-        self.assertIn('<span class="cap">조교</span> 김조교', s1.get("/s/rooms/sanji").data.decode())
+        self.assertIn('<span class="cap">조교</span> 김조교', s1.get("/s/rooms/sento").data.decode())
         # 조교도 집중 기록은 남지만, 학생 순위(터줏대감)에는 들지 않는다
-        ta.post("/s/rooms/sanji/beat", data={"action": "start", "plan": "15"})
+        ta.post("/s/rooms/sento/beat", data={"action": "start", "plan": "15"})
         with self.app.app_context():
             execute("UPDATE room_presence SET focus_since = datetime('now', 'localtime', '-30 minutes')")
-        self.assertEqual(ta.post("/s/rooms/sanji/done", data={"minutes": "15"}).get_json()["minutes"], 15)
-        self.assertEqual(ta.get("/s/rooms/rank?place=sanji").status_code, 200)
+        self.assertEqual(ta.post("/s/rooms/sento/done", data={"minutes": "15"}).get_json()["minutes"], 15)
+        self.assertEqual(ta.get("/s/rooms/rank?place=sento").status_code, 200)
         with self.app.app_context():
             from views.rooms import _ranking, _since
             ta_id = query("SELECT id FROM users WHERE username='ta_kim'", one=True)["id"]
-            self.assertNotIn(ta_id, [r["id"] for r in _ranking("sanji", _since("week"))])
+            self.assertNotIn(ta_id, [r["id"] for r in _ranking("sento", _since("week"))])
         # 메뉴에 '소도시 명상'
         self.assertIn("/s/rooms", ta.get("/t/questions").data.decode())
 
@@ -724,75 +724,76 @@ class FeatureTest(AppTest):
         return client.post("/signup", data={"code": code, "name": name, "student_no": no,
                                             "password": pw, "confirm": pw, "consent": consent})
 
-    def test_signup_requires_code_and_approval(self):
-        cid = self.setup_class_with_students()
+    def _codes(self, cid, n=3):
+        self.c.post(f"/t/classes/{cid}/codes", data={"action": "generate", "count": str(n)})
         with self.app.app_context():
-            code = query("SELECT join_code FROM classes WHERE id=?", (cid,), one=True)["join_code"]
-        self.assertEqual(len(code), 8)
+            return [r["code"] for r in query("SELECT code FROM student_codes WHERE class_id=? ORDER BY id", (cid,))]
+
+    def test_signup_with_personal_code(self):
+        cid = self.setup_class_with_students()
+        codes = self._codes(cid)
+        self.assertEqual(len(codes), 3)
+        self.assertEqual(len(codes[0]), 10)
         anon = self.app.test_client()
         # 틀린 코드, 동의 안 함 → 거부
-        self._signup(anon, "WRONGCOD")
-        self._signup(anon, code, consent="")
+        self.assertIn("개인 코드가 올바르지", self._signup(anon, "WRONGCODE1").data.decode())
+        self._signup(anon, codes[0], consent="")
         with self.app.app_context():
-            self.assertEqual(query("SELECT COUNT(*) n FROM signup_requests", one=True)["n"], 0)
-        # 소문자·띄어쓰기 섞어 입력해도 받아줌
-        r = self._signup(anon, code.lower()[:4] + " " + code.lower()[4:])
-        self.assertIn("가입 신청 완료", r.data.decode())
-        # 승인 전 로그인 → '승인 대기' 안내, 로그인은 안 됨
-        r = self.login(anon, "S100", "Signup!2026")
-        self.assertIn("승인을 기다리고", r.data.decode())
-        self.assertEqual(anon.get("/s/").status_code, 302)
-        # 같은 수험번호로 중복 신청 불가
-        self._signup(self.app.test_client(), code, name="가짜")
-        with self.app.app_context():
-            self.assertEqual(query("SELECT COUNT(*) n FROM signup_requests", one=True)["n"], 1)
-            rid = query("SELECT id FROM signup_requests", one=True)["id"]
-        # 학생은 승인 화면 못 씀
-        self.assertIn("가입 승인", self.c.get("/t/signups").data.decode())
-        self.c.post("/t/signups", data={"action": "approve", "ids": [str(rid)]})
+            self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE role='student' AND username='S100'", one=True)["n"], 0)
+        # 소문자·띄어쓰기·하이픈 섞어 입력해도 받아주고, 승인 없이 바로 가입 + 로그인
+        messy = codes[0].lower()[:5] + "-" + codes[0].lower()[5:]
+        r = self._signup(anon, messy)
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(anon.get("/s/").status_code, 200)
         with self.app.app_context():
             u = query("SELECT * FROM users WHERE username='S100'", one=True)
             self.assertIsNotNone(u["nickname"])
-            self.assertEqual(u["must_change_pw"], 0)
             self.assertEqual(query("SELECT class_id FROM students WHERE id=?", (u["student_id"],), one=True)["class_id"], cid)
-        self.login(anon, "S100", "Signup!2026")
-        self.assertEqual(anon.get("/s/").status_code, 200)
+            row = query("SELECT * FROM student_codes WHERE code=?", (codes[0],), one=True)
+            self.assertEqual(row["student_id"], u["student_id"])
+        # 같은 코드는 다시 못 씀, 같은 아이디도 못 씀
+        self.assertIn("이미 가입에 쓴 코드", self._signup(self.app.test_client(), codes[0], no="S101").data.decode())
+        self.assertIn("이미 쓰이고 있는 아이디", self._signup(self.app.test_client(), codes[1], no="S100").data.decode())
+        # 선생님 화면: 코드 목록에 가입한 학생, CSV 받기
+        page = self.c.get(f"/t/classes/{cid}").data.decode()
+        self.assertIn(codes[0], page)
+        self.assertIn("박지민", page)
+        csvdata = self.c.get(f"/t/classes/{cid}/codes.csv").data.decode("utf-8-sig")
+        self.assertIn("코드,메모,가입한 학생,아이디", csvdata)
+        self.assertIn(codes[1], csvdata)
+        # 붙여넣기 등록 (메모, 중복, 잘못된 줄)
+        self.c.post(f"/t/classes/{cid}/codes", data={"action": "paste", "codes": "ab12-cd34-ef, 3번\nAB12CD34EF\n!!\n" + codes[2]})
+        with self.app.app_context():
+            r = query("SELECT * FROM student_codes WHERE code='AB12CD34EF'", one=True)
+            self.assertEqual(r["memo"], "3번")
+            self.assertEqual(query("SELECT COUNT(*) n FROM student_codes", one=True)["n"], 4)
+        # 안 쓴 코드만 지워진다
+        with self.app.app_context():
+            ids = [str(r["id"]) for r in query("SELECT id FROM student_codes")]
+        self.c.post(f"/t/classes/{cid}/codes", data={"action": "delete", "ids": ids})
+        with self.app.app_context():
+            self.assertEqual([r["code"] for r in query("SELECT code FROM student_codes")], [codes[0]])
+        # 조교는 코드를 볼 수 있지만 만들 수는 없다 (가입 화면 문구: 아이디)
+        self.assertIn("아이디 (영문", self.app.test_client().get("/signup").data.decode())
 
     def test_signup_requires_google_when_enabled(self):
         cid = self.setup_class_with_students()
-        with self.app.app_context():
-            code = query("SELECT join_code FROM classes WHERE id=?", (cid,), one=True)["join_code"]
+        code = self._codes(cid, 1)[0]
         ident = {"sub": "g-777", "email": "jimin@example.com", "email_verified": True}
         with mock.patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "sec"}), \
                 mock.patch("google_auth.fetch_identity", return_value=ident):
             anon = self.app.test_client()
-            # Google 확인 전에는 가입서 대신 'Google 계정으로 시작하기'만 보이고, 바로 보내도 거부
             page = anon.get("/signup").data.decode()
             self.assertIn("Google 계정으로 시작하기", page)
             self.assertNotIn('name="student_no"', page)
             self._signup(anon, code)
             with self.app.app_context():
-                self.assertEqual(query("SELECT COUNT(*) n FROM signup_requests", one=True)["n"], 0)
-            # Google 확인 → 이메일이 보이는 가입서 → 신청
+                self.assertIsNone(query("SELECT 1 FROM users WHERE username='S100'", one=True))
             r = anon.get("/auth/google/start?mode=signup")
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
             self.assertTrue(anon.get(f"/auth/google/callback?state={state}&code=x").headers["Location"].endswith("/signup"))
             self.assertIn("jimin@example.com", anon.get("/signup").data.decode())
-            self.assertIn("가입 신청 완료", self._signup(anon, code).data.decode())
-            # 승인 전 Google 로그인 → 대기 안내
-            r = anon.get("/auth/google/start?mode=login")
-            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
-            self.assertIn("승인 대기", anon.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True).data.decode())
-            # 같은 Google 계정으로 또 가입 시도 → 막힘
-            other = self.app.test_client()
-            r = other.get("/auth/google/start?mode=signup")
-            state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
-            self.assertIn("이미 가입 신청", other.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True).data.decode())
-            # 선생님 화면에 이메일이 보이고, 승인하면 Google 로 바로 로그인
-            self.assertIn("jimin@example.com", self.c.get("/t/signups").data.decode())
-            with self.app.app_context():
-                rid = query("SELECT id FROM signup_requests", one=True)["id"]
-            self.c.post("/t/signups", data={"action": "approve", "ids": [str(rid)]})
+            self.assertEqual(self._signup(anon, code).status_code, 302)        # 바로 가입
             with self.app.app_context():
                 u = query("SELECT * FROM users WHERE username='S100'", one=True)
                 self.assertEqual((u["google_sub"], u["google_email"]), ("g-777", "jimin@example.com"))
@@ -802,28 +803,14 @@ class FeatureTest(AppTest):
             r = fresh.get(f"/auth/google/callback?state={state}&code=x")
             self.assertTrue(r.headers["Location"].endswith("/s/"))
 
-    def test_signup_links_to_existing_roster_and_closed_class(self):
+    def test_signup_links_to_existing_roster(self):
         cid = self.setup_class_with_students()  # 명단에 A001 김민수 (계정 없음)
-        with self.app.app_context():
-            code = query("SELECT join_code FROM classes WHERE id=?", (cid,), one=True)["join_code"]
-        anon = self.app.test_client()
-        self._signup(anon, code, name="김민수", no="A001")
-        self.c.post("/t/signups", data={"action": "approve_all"})
+        code = self._codes(cid, 1)[0]
+        self._signup(self.app.test_client(), code, name="김민수", no="A001")
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM students WHERE student_no='A001'", one=True)["n"], 1)
             sid = query("SELECT student_id FROM users WHERE username='A001'", one=True)["student_id"]
             self.assertEqual(query("SELECT name FROM students WHERE id=?", (sid,), one=True)["name"], "김민수")
-        # 이미 계정 있는 수험번호는 가입 불가
-        r = self._signup(self.app.test_client(), code, name="김민수", no="A001")
-        self.assertIn("이미 가입된", r.data.decode())
-        # 가입 멈추기 → 코드가 맞아도 거부, 새 코드 만들면 예전 코드 무효
-        self.c.post(f"/t/classes/{cid}/joincode", data={"action": "close"})
-        self._signup(self.app.test_client(), code, no="S200")
-        self.c.post(f"/t/classes/{cid}/joincode", data={"action": "open"})
-        self.c.post(f"/t/classes/{cid}/joincode", data={"action": "regen"})
-        self._signup(self.app.test_client(), code, no="S300")
-        with self.app.app_context():
-            self.assertEqual(query("SELECT COUNT(*) n FROM signup_requests", one=True)["n"], 0)
 
     def test_signup_rate_limited(self):
         anon = self.app.test_client()

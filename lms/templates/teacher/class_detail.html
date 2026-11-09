@@ -29,20 +29,49 @@
 </nav>
 
 {% if tab == 'students' %}
-<div class="card streak">
-  <div>
-    <h2>학생 회원가입 코드</h2>
-    <p class="small muted">학생에게 이 코드와 사이트 주소를 알려주면 직접 가입 신청하고, <a href="{{ url_for('teacher.signups') }}">가입 승인</a>에서 승인하면 쓸 수 있어요.</p>
+<section class="card" id="codes" aria-labelledby="h-codes">
+  <div class="page-head">
+    <div>
+      <h2 id="h-codes">학생 개별 가입 코드</h2>
+      <p class="small muted">학생마다 다른 코드를 하나씩 나눠 주세요. 학생은 가입할 때 <b>코드 + 이름 + 아이디 + 비밀번호</b>를 넣고, 코드가 맞으면 바로 가입돼요. 한 코드는 한 번만 쓸 수 있어요.</p>
+    </div>
+    <p class="small">등록 {{ codes|length }}개 · 가입 {{ codes|selectattr('student_id')|list|length }}명{% if codes %} · <a href="{{ url_for('teacher.class_codes_csv', cid=cls.id) }}">CSV로 받기</a>{% endif %}</p>
   </div>
-  <div class="row">
-    {% if cls.join_open %}<span class="join-code">{{ cls.join_code }}</span>{% else %}<span class="badge gray">가입 받지 않음</span>{% endif %}
-    <form method="post" action="{{ url_for('teacher.class_joincode', cid=cls.id) }}" class="row">
-      {{ csrf() }}
-      <button class="btn small" name="action" value="{{ 'close' if cls.join_open else 'open' }}">{{ '가입 멈추기' if cls.join_open else '가입 받기' }}</button>
-      <button class="btn small" name="action" value="regen" data-confirm="새 코드를 만들면 예전 코드는 더 이상 쓸 수 없어요. 계속할까요?">새 코드</button>
+  {% if g.user.role == 'teacher' %}
+  <div class="grid grid-2">
+    <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
+      {{ csrf() }}<input type="hidden" name="action" value="paste">
+      <div class="field"><label for="codes-paste">행정 시스템에서 뽑은 코드 붙여넣기</label>
+        <textarea id="codes-paste" name="codes" rows="5" placeholder="한 줄에 하나씩&#10;메모를 붙이려면: 코드, 메모 (예: K7QM2XPA9R, 3번)"></textarea></div>
+      <button class="btn primary">등록</button>
+    </form>
+    <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
+      {{ csrf() }}<input type="hidden" name="action" value="generate">
+      <div class="field"><label for="codes-n">이 사이트에서 난수 코드 만들기</label>
+        <div class="row"><input id="codes-n" type="number" name="count" min="1" max="200" value="30" class="shrink"><span class="small muted">개</span></div></div>
+      <button class="btn">만들기</button>
+      <p class="small muted">만든 뒤 'CSV로 받기'로 내려받아 학생에게 하나씩 나눠 주면 돼요.</p>
     </form>
   </div>
-</div>
+  {% endif %}
+  {% if codes %}
+  <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
+    {{ csrf() }}<input type="hidden" name="action" value="delete">
+    <div class="table-wrap codes-table"><table>
+      <tr>{% if g.user.role == 'teacher' %}<th></th>{% endif %}<th>코드</th><th>메모</th><th>가입</th></tr>
+      {% for c in codes %}
+      <tr>
+        {% if g.user.role == 'teacher' %}<td>{% if not c.student_id %}<input type="checkbox" name="ids" value="{{ c.id }}" aria-label="{{ c.code }} 고르기">{% endif %}</td>{% endif %}
+        <td><code>{{ c.code }}</code></td>
+        <td class="small">{{ c.memo }}</td>
+        <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }} · {{ c.s_no }} · {{ c.used_at[5:16] }}{% else %}<span class="muted">아직</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    {% if g.user.role == 'teacher' %}<button class="btn small danger mt" data-confirm="고른 코드를 지울까요? (가입에 쓴 코드는 지워지지 않아요)">고른 코드 지우기</button>{% endif %}
+  </form>
+  {% endif %}
+</section>
 <div class="grid grid-2">
   <details class="card">
     <summary>학생 한 명 등록</summary>
@@ -50,7 +79,7 @@
       {{ csrf() }}
       <div class="row">
         <div class="field"><label>이름</label><input type="text" name="name" maxlength="40" required></div>
-        <div class="field"><label>수험번호 (로그인 아이디)</label><input type="text" name="student_no" maxlength="30" required></div>
+        <div class="field"><label>아이디 (로그인할 때 써요)</label><input type="text" name="student_no" maxlength="30" required></div>
       </div>
       <div class="row">
         <div class="field"><label>목표 (선택)</label><input type="text" name="target" maxlength="60" placeholder="예: 목표 대학·학과"></div>
@@ -64,7 +93,7 @@
     <summary>CSV로 일괄 등록 / 계정 발급</summary>
     <form method="post" action="{{ url_for('teacher.student_import', cid=cls.id) }}" enctype="multipart/form-data">
       {{ csrf() }}
-      <p class="small muted">첫 줄: <code>이름,수험번호,연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 됩니다.</p>
+      <p class="small muted">첫 줄: <code>이름,아이디,연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 됩니다.</p>
       <div class="row">
         <div class="field"><input type="file" name="csv" accept=".csv" required></div>
         <div class="field shrink"><button class="btn primary">가져오기</button></div>
@@ -85,13 +114,13 @@
     <h2>학생 {{ total }}명</h2>
     <form method="get" class="row">
       <input type="hidden" name="tab" value="students">
-      <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 수험번호">
+      <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디">
       <button class="btn">검색</button>
     </form>
   </div>
   {% if students %}
   <div class="table-wrap"><table>
-    <tr><th>이름</th><th>수험번호</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
+    <tr><th>이름</th><th>아이디</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">
       <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>

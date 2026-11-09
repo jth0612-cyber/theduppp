@@ -20,7 +20,7 @@
   <form class="door-form" method="post" action="{{ url_for('auth.login') }}" autocomplete="on" data-enter>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label class="sr-only" for="door-id">아이디</label>
-    <input type="text" id="door-id" name="username" placeholder="수험번호 또는 아이디" required autocomplete="username">
+    <input type="text" id="door-id" name="username" placeholder="아이디" required autocomplete="username">
     <label class="sr-only" for="door-pw">비밀번호</label>
     <input type="password" id="door-pw" name="password" placeholder="비밀번호" required autocomplete="current-password">
     <button class="btn primary" type="submit">입장</button>
