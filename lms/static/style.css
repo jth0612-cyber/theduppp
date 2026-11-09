@@ -1589,3 +1589,7 @@ body.tt-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .w3-stage.is-flash::after, .w3-photo-card { animation: none; } }
 .codes-table { max-height: 360px; overflow: auto; margin-top: 12px; }
 .codes-table code { font-size: 13.5px; letter-spacing: .04em; }
+
+/* 내 성적 표: 좁은 화면에서도 시험 이름·점수가 글자 중간에서 끊기지 않게 */
+.score-table td, .score-table th { white-space: nowrap; overflow-wrap: normal; }
+@media (max-width: 480px) { .score-table .st-subj { display: none; } }

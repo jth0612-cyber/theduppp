@@ -4,13 +4,13 @@
 <div class="page-head"><h1>내 성적</h1></div>
 <div class="card">
   {% if scores %}
-  <div class="table-wrap"><table>
-    <tr><th>날짜</th><th>시험</th><th>과목</th><th class="num">내 점수</th><th class="num">반 평균</th></tr>
+  <div class="table-wrap"><table class="score-table">
+    <tr><th>날짜</th><th>시험</th><th class="st-subj">과목</th><th class="num">내 점수</th><th class="num">반 평균</th></tr>
     {% for r in scores %}
     <tr>
-      <td class="small">{{ r.exam_date }}</td>
+      <td class="small"><time datetime="{{ r.exam_date }}">{{ r.exam_date[5:]|replace("-", ".") if r.exam_date else "" }}</time></td>
       <td>{{ r.name }}</td>
-      <td class="muted">{{ r.subject }}</td>
+      <td class="muted st-subj">{{ r.subject }}</td>
       <td class="num"><b>{{ '%g'|format(r.score) }}</b> / {{ '%g'|format(r.max_score) }}</td>
       <td class="num">{{ r.class_avg }}</td>
     </tr>
