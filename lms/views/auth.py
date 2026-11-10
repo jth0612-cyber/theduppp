@@ -140,33 +140,35 @@ def signup():
         code = normalize_student_code(form["code"])
         sc = query("""SELECT sc.*, c.name AS class_name FROM student_codes sc JOIN classes c ON c.id = sc.class_id
                       WHERE sc.code = ? AND c.archived = 0""", (code,), one=True) if code else None
-        error = None
+        # 틀린 칸 바로 아래에 알려 준다 (위쪽 알림창 대신 인라인 에러)
+        error, field = None, None
         if sc is None:
-            error = "개인 코드가 올바르지 않아요. 선생님께 받은 코드를 다시 확인해 주세요."
+            error, field = "개인 코드가 올바르지 않아요. 선생님께 받은 코드를 다시 확인해 주세요.", "code"
         elif sc["student_id"]:
-            error = "이미 가입에 쓴 코드예요. 착오라면 선생님께 알려 주세요."
+            error, field = "이미 가입에 쓴 코드예요. 착오라면 선생님께 알려 주세요.", "code"
         elif not _NAME.match(form["name"]):
-            error = "이름은 한글 또는 영문 2~20자로 입력하세요."
+            error, field = "이름은 한글 또는 영문 2~20자로 입력하세요.", "name"
         elif not _STUDENT_NO.match(form["student_no"]):
-            error = "아이디는 영문·숫자·- 로 3~30자입니다."
-        elif password != request.form.get("confirm", ""):
-            error = "비밀번호가 서로 일치하지 않습니다."
+            error, field = "아이디는 영문·숫자·- 로 3~30자입니다.", "student_no"
         elif problem := password_problem(password):
-            error = problem
+            error, field = problem, "password"
+        elif password != request.form.get("confirm", ""):
+            error, field = "비밀번호가 서로 일치하지 않습니다.", "confirm"
         elif request.form.get("consent") != "1":
-            error = "개인정보 수집·이용에 동의해야 가입할 수 있어요."
+            error, field = "개인정보 수집·이용에 동의해야 가입할 수 있어요.", "consent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
-            error = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."
+            error, field = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요.", "student_no"
         elif (roster := query("SELECT * FROM students WHERE student_no = ?", (form["student_no"],), one=True)) and \
                 (roster["class_id"] != sc["class_id"] or not roster["active"]):
-            error = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."
+            error, field = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요.", "student_no"
         elif gid and query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True):
             error = "이 Google 계정은 이미 가입했어요. 로그인해 주세요."
         if error:
             if sc is None:
                 audit("signup_code_failed", f"code:{code[:4]}")
-            flash(error, "error")
-            return render_template("signup.html", form=form, gid=gid)
+            if field is None:
+                flash(error, "error")
+            return render_template("signup.html", form=form, gid=gid, errors={field: error} if field else {})
         # 코드가 맞으면 승인 없이 바로 계정을 만든다 (코드 = 본인 확인)
         from nickname import generate_nickname
         roster = query("SELECT * FROM students WHERE student_no = ? AND class_id = ?", (form["student_no"], sc["class_id"]), one=True)
@@ -188,4 +190,4 @@ def signup():
         g.user = user
         flash(f"가입했어요. {sc['class_name']}에 오신 걸 환영해요!", "ok")
         return redirect(_home_for(user))
-    return render_template("signup.html", form=form, gid=gid)
+    return render_template("signup.html", form=form, gid=gid, errors={})

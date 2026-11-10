@@ -1593,3 +1593,16 @@ body.tt-open { overflow: hidden; }
 /* 내 성적 표: 좁은 화면에서도 시험 이름·점수가 글자 중간에서 끊기지 않게 */
 .score-table td, .score-table th { white-space: nowrap; overflow-wrap: normal; }
 @media (max-width: 480px) { .score-table .st-subj { display: none; } }
+
+/* 회원가입: 칸 아래 안내·인라인 에러·비밀번호 강도 */
+.field-hint { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.signup-form input[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
+.signup-form input[aria-invalid="true"]:focus { outline-color: var(--danger); }
+.signup-form input[type="checkbox"][aria-invalid="true"] { outline: 2px solid var(--danger); outline-offset: 2px; }
+.pw-meter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.pw-meter i { height: 4px; border-radius: 4px; background: var(--edge); transition: background-color .2s ease; }
+.pw-meter[data-lvl="1"] i:nth-child(1) { background: var(--danger); }
+.pw-meter[data-lvl="2"] i:nth-child(-n+2) { background: #c98a14; }
+.pw-meter[data-lvl="3"] i { background: var(--ok); }
+.field-hint.pw-1 { color: var(--danger); } .field-hint.pw-2 { color: #8a5a00; } .field-hint.pw-3 { color: var(--ok); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .pw-meter i { transition: none; } }

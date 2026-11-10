@@ -774,7 +774,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             self.assertEqual([r["code"] for r in query("SELECT code FROM student_codes")], [codes[0]])
         # 조교는 코드를 볼 수 있지만 만들 수는 없다 (가입 화면 문구: 아이디)
-        self.assertIn("아이디 (영문", self.app.test_client().get("/signup").data.decode())
+        self.assertIn("영문·숫자 3~30자", self.app.test_client().get("/signup").data.decode())
 
     def test_signup_requires_google_when_enabled(self):
         cid = self.setup_class_with_students()

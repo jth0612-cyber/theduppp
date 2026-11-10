@@ -17,28 +17,40 @@
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
   {% endif %}
-  <form method="post" autocomplete="on">
+  {% set errors = errors or {} %}
+  {% macro err(name) %}<p class="field-err" id="err-{{ name }}" data-err="{{ name }}"{{ '' if errors.get(name) else ' hidden' }}>{{ errors.get(name, '') }}</p>{% endmacro %}
+  {% macro bad(name) %}{% if errors.get(name) %} aria-invalid="true"{% endif %} aria-describedby="{{ 'hint-' ~ name ~ ' ' if name in ('student_no', 'password') else '' }}err-{{ name }}"{% endmacro %}
+  <form method="post" autocomplete="on" class="signup-form" data-signup novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">
       <label for="code">개인 코드</label>
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
-             autocapitalize="characters" spellcheck="false" placeholder="예: K7QM2XPA9R">
+             autocapitalize="characters" spellcheck="false" placeholder="예: K7QM2XPA9R"{{ bad('code') }}>
+      {{ err('code') }}
     </div>
     <div class="field">
       <label for="name">이름</label>
-      <input type="text" id="name" name="name" value="{{ form.name }}" required maxlength="20" autocomplete="name">
+      <input type="text" id="name" name="name" value="{{ form.name }}" required maxlength="20" autocomplete="name"{{ bad('name') }}>
+      {{ err('name') }}
     </div>
     <div class="field">
-      <label for="student_no">아이디 (영문·숫자 3~30자, 로그인할 때 써요)</label>
-      <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username">
+      <label for="student_no">아이디</label>
+      <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
+             autocapitalize="off" spellcheck="false"{{ bad('student_no') }}>
+      <p class="field-hint" id="hint-student_no">영문·숫자 3~30자 · 로그인할 때 써요</p>
+      {{ err('student_no') }}
     </div>
     <div class="field">
-      <label for="password">비밀번호 (10자 이상, 영문·숫자·특수문자 중 2종류 이상)</label>
-      <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password">
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password"{{ bad('password') }}>
+      <div class="pw-meter" data-pw-meter hidden aria-hidden="true"><i></i><i></i><i></i></div>
+      <p class="field-hint" id="hint-password" data-pw-hint>10자 이상 · 영문·숫자·특수문자 중 2종류 이상</p>
+      {{ err('password') }}
     </div>
     <div class="field">
       <label for="confirm">비밀번호 확인</label>
-      <input type="password" id="confirm" name="confirm" required minlength="10" autocomplete="new-password">
+      <input type="password" id="confirm" name="confirm" required minlength="10" autocomplete="new-password"{{ bad('confirm') }}>
+      {{ err('confirm') }}
     </div>
     <div class="guide small">
       <b>개인정보 수집·이용 동의 (필수)</b>
@@ -48,10 +60,12 @@
         <li>보관 기간: 수강이 끝나면 선생님이 파기합니다</li>
         <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개됩니다. 이름과 아이디는 공개되지 않아요.</li>
       </ul>
-      <label class="consent"><input type="checkbox" name="consent" value="1" required> 위 내용에 동의합니다</label>
+      <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> 위 내용에 동의합니다</label>
+      {{ err('consent') }}
     </div>
     <button class="btn primary" type="submit">가입하기</button>
   </form>
+  <script src="{{ url_for('static', filename='signup.js') }}" defer></script>
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% endif %}
