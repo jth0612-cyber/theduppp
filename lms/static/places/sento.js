@@ -259,6 +259,38 @@ export default {
 
     // 칠판: 화롯가에 앉은 학생들이 쓰는 오늘의 한 줄 (분필 글씨)
     const boardCanvas = document.createElement("canvas"); boardCanvas.width = 768; boardCanvas.height = 480;
+    // 글씨를 maxW 안에서 띄어쓰기 기준으로 줄바꿈 (최대 max줄, 넘치면 마지막 줄 끝에 …)
+    function wrapText(x, text, maxW, max) {
+      const src = String(text || "").trim(), out = []; let cur = "", rest = "";
+      const words = src.split(/(\s+)/);
+      for (let wi = 0; wi < words.length; wi++) {
+        const w = words[wi];
+        if (x.measureText(cur + w).width <= maxW) { cur += w; continue; }
+        if (!w.trim()) continue;
+        if (cur.trim()) { out.push(cur.trim()); cur = ""; }
+        let piece = w;                                   // 한 단어가 한 줄보다 길면 글자 단위로 자른다
+        while (x.measureText(piece).width > maxW) { let k = piece.length; while (k > 1 && x.measureText(piece.slice(0, k)).width > maxW) k--; out.push(piece.slice(0, k)); piece = piece.slice(k); if (out.length >= max) break; }
+        cur = piece;
+        if (out.length >= max) { rest = cur + words.slice(wi + 1).join(""); break; }
+      }
+      if (out.length < max) { if (cur.trim()) out.push(cur.trim()); }
+      else if (cur.trim() || rest.trim()) rest = rest || cur;
+      if (out.length > max) out.length = max;
+      if (rest.trim() || (out.length === max && out.join(" ").length < src.replace(/\s+/g, " ").length)) {
+        let t = out[max - 1]; while (x.measureText(t + "…").width > maxW && t.length > 1) t = t.slice(0, -1); out[max - 1] = t + "…";
+      }
+      return out;
+    }
+    // 최근 글 3개는 꼭 보이게: 먼저 모두 한 줄, 남는 줄(spare)은 최근 글부터 두 줄로
+    function pickLines(x, list, maxW, spare) {
+      const last = (list || []).slice(-3);
+      const out = last.map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
+      for (let i = out.length - 1; i >= 0 && spare > 0; i--) {
+        const two = wrapText(x, out[i].l.body, maxW, 2);
+        if (two.length > 1) { out[i].body = two; spare--; }
+      }
+      return out;
+    }
     function drawBoard(lines) {
       const x = boardCanvas.getContext("2d");
       x.fillStyle = "#2f3b33"; x.fillRect(0, 0, 768, 480);
@@ -266,15 +298,22 @@ export default {
       x.fillStyle = "#e8efe6"; x.font = "600 44px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
       x.fillText("오늘의 한 줄", 384, 52);
       x.strokeStyle = "rgba(232,239,230,.35)"; x.lineWidth = 2; x.beginPath(); x.moveTo(250, 86); x.lineTo(518, 86); x.stroke();
-      x.textAlign = "left"; x.font = "400 30px 'Noto Sans KR', sans-serif";
-      if (!lines || !lines.length) { x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 260); }
-      else lines.slice(-5).forEach((l, i) => {
-        const y = 136 + i * 72;
-        x.fillStyle = "#f2d98a"; x.font = "600 24px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y - 14);
-        x.fillStyle = "#eef3ec"; x.font = "400 31px 'Noto Sans KR', sans-serif";
-        let s = l.body; while (x.measureText(s).width > 690 && s.length > 1) s = s.slice(0, -1);
-        x.fillText(s === l.body ? s : s + "…", 40, y + 20);
-      });
+      x.textAlign = "left";
+      if (!lines || !lines.length) { x.font = "400 36px 'Noto Sans KR', sans-serif"; x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 270); }
+      else {
+        // 큰 글씨, 최근 글 3개 (위에서 아래로 오래된 → 최근). 남는 두 줄은 최근 글부터
+        const NICK = 28, LH = 46, GAP = 14, TOP = 104, BOT = 466;
+        x.font = "500 40px 'Noto Sans KR', sans-serif";
+        const items = pickLines(x, lines, 690, 2);
+        const total = items.reduce((t, it) => t + NICK + 6 + it.body.length * LH, 0) + GAP * (items.length - 1);
+        let y = Math.max(TOP, BOT - total);
+        for (const { l, body } of items) {
+          x.fillStyle = "#f2d98a"; x.font = "600 28px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y + NICK / 2);
+          x.fillStyle = "#eef3ec"; x.font = "500 40px 'Noto Sans KR', sans-serif";
+          body.forEach((t, k) => x.fillText(t, 40, y + NICK + 6 + LH * k + LH / 2));
+          y += NICK + 6 + body.length * LH + GAP;
+        }
+      }
       if (boardTex) boardTex.needsUpdate = true;
     }
     function buildHut(H) {

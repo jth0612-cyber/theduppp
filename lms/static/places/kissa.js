@@ -101,6 +101,38 @@ export default {
     const SEATS = [], pickSeats = [], pickCafe = [];
     // 메모판 그림: 코르크 바탕에 냅킨 쪽지 5장 (최근 글이 아래)
     const memoCanvas = document.createElement("canvas"); memoCanvas.width = 768; memoCanvas.height = 488; let memoTex = null;
+    // 글씨를 maxW 안에서 띄어쓰기 기준으로 줄바꿈 (최대 max줄, 넘치면 마지막 줄 끝에 …)
+    function wrapText(x, text, maxW, max) {
+      const src = String(text || "").trim(), out = []; let cur = "", rest = "";
+      const words = src.split(/(\s+)/);
+      for (let wi = 0; wi < words.length; wi++) {
+        const w = words[wi];
+        if (x.measureText(cur + w).width <= maxW) { cur += w; continue; }
+        if (!w.trim()) continue;
+        if (cur.trim()) { out.push(cur.trim()); cur = ""; }
+        let piece = w;                                   // 한 단어가 한 줄보다 길면 글자 단위로 자른다
+        while (x.measureText(piece).width > maxW) { let k = piece.length; while (k > 1 && x.measureText(piece.slice(0, k)).width > maxW) k--; out.push(piece.slice(0, k)); piece = piece.slice(k); if (out.length >= max) break; }
+        cur = piece;
+        if (out.length >= max) { rest = cur + words.slice(wi + 1).join(""); break; }
+      }
+      if (out.length < max) { if (cur.trim()) out.push(cur.trim()); }
+      else if (cur.trim() || rest.trim()) rest = rest || cur;
+      if (out.length > max) out.length = max;
+      if (rest.trim() || (out.length === max && out.join(" ").length < src.replace(/\s+/g, " ").length)) {
+        let t = out[max - 1]; while (x.measureText(t + "…").width > maxW && t.length > 1) t = t.slice(0, -1); out[max - 1] = t + "…";
+      }
+      return out;
+    }
+    // 최근 글 3개는 꼭 보이게: 먼저 모두 한 줄, 남는 줄(spare)은 최근 글부터 두 줄로
+    function pickLines(x, list, maxW, spare) {
+      const last = (list || []).slice(-3);
+      const out = last.map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
+      for (let i = out.length - 1; i >= 0 && spare > 0; i--) {
+        const two = wrapText(x, out[i].l.body, maxW, 2);
+        if (two.length > 1) { out[i].body = two; spare--; }
+      }
+      return out;
+    }
     function drawMemo(lines) {
       const x = memoCanvas.getContext("2d");
       x.fillStyle = "#b58a5a"; x.fillRect(0, 0, 768, 488);
@@ -108,18 +140,26 @@ export default {
       x.fillStyle = "#fbf6ea"; x.fillRect(250, 18, 268, 54); x.fillStyle = "#3a2e28"; x.font = "600 30px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
       x.fillText("오늘의 냅킨 메모", 384, 46);
       x.textAlign = "left";
-      if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 28px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
-      else lines.slice(-5).forEach((l, i) => {
-        const y = 92 + i * 78, tilt = ((i % 2) ? 1 : -1) * 0.008;
-        x.save(); x.translate(40, y); x.rotate(tilt);
-        x.fillStyle = "rgba(40,24,10,.25)"; x.fillRect(4, 6, 688, 66);
-        x.fillStyle = "#fdfaf2"; x.fillRect(0, 0, 688, 66);
-        x.fillStyle = "#c0392b"; x.beginPath(); x.arc(18, 14, 7, 0, Math.PI * 2); x.fill();
-        x.fillStyle = "#8a5a3a"; x.font = "600 20px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 36, 20);
-        x.fillStyle = "#2e2620"; x.font = "400 27px 'Noto Sans KR', sans-serif";
-        let t = l.body; while (x.measureText(t).width > 630 && t.length > 1) t = t.slice(0, -1);
-        x.fillText(t === l.body ? t : t + "…", 36, 48); x.restore();
-      });
+      if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 34px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
+      else {
+        // 큰 글씨 냅킨 3장 (아래가 최근). 남는 두 줄은 최근 글부터
+        const LH = 46, GAP = 10, TOP = 86, BOT = 478;
+        x.font = "500 38px 'Noto Sans KR', sans-serif";
+        const items = pickLines(x, lines, 640, 2);
+        const total = items.reduce((t, it) => t + 44 + it.body.length * LH, 0) + GAP * (items.length - 1);
+        let y = Math.max(TOP, BOT - total), i = 0;
+        for (const { l, body } of items) {
+          const h = 44 + body.length * LH, tilt = ((i++ % 2) ? 1 : -1) * 0.008;
+          x.save(); x.translate(40, y); x.rotate(tilt);
+          x.fillStyle = "rgba(40,24,10,.25)"; x.fillRect(4, 6, 688, h - 6);
+          x.fillStyle = "#fdfaf2"; x.fillRect(0, 0, 688, h - 6);
+          x.fillStyle = "#c0392b"; x.beginPath(); x.arc(20, 22, 8, 0, Math.PI * 2); x.fill();
+          x.fillStyle = "#8a5a3a"; x.font = "600 26px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, 23);
+          x.fillStyle = "#2e2620"; x.font = "500 38px 'Noto Sans KR', sans-serif";
+          body.forEach((t, k) => x.fillText(t, 24, 40 + LH * k + LH / 2)); x.restore();
+          y += h + GAP;
+        }
+      }
       if (memoTex) memoTex.needsUpdate = true;
     }
     const cutaway = new THREE.Group(); scene.add(cutaway);     // 안에 들어가면 낮아지는 벽

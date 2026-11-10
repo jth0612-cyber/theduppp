@@ -297,25 +297,66 @@ export default {
     // 역 노트 판: 학생들이 남긴 최근 글 다섯 줄 (줄 공책 모양)
     const noteCanvas = document.createElement("canvas"); noteCanvas.width = 768; noteCanvas.height = 414;
     let noteTex = null;
+    // 글씨를 maxW 안에서 띄어쓰기 기준으로 줄바꿈 (최대 max줄, 넘치면 마지막 줄 끝에 …)
+    function wrapText(x, text, maxW, max) {
+      const src = String(text || "").trim(), out = []; let cur = "", rest = "";
+      const words = src.split(/(\s+)/);
+      for (let wi = 0; wi < words.length; wi++) {
+        const w = words[wi];
+        if (x.measureText(cur + w).width <= maxW) { cur += w; continue; }
+        if (!w.trim()) continue;
+        if (cur.trim()) { out.push(cur.trim()); cur = ""; }
+        let piece = w;                                   // 한 단어가 한 줄보다 길면 글자 단위로 자른다
+        while (x.measureText(piece).width > maxW) { let k = piece.length; while (k > 1 && x.measureText(piece.slice(0, k)).width > maxW) k--; out.push(piece.slice(0, k)); piece = piece.slice(k); if (out.length >= max) break; }
+        cur = piece;
+        if (out.length >= max) { rest = cur + words.slice(wi + 1).join(""); break; }
+      }
+      if (out.length < max) { if (cur.trim()) out.push(cur.trim()); }
+      else if (cur.trim() || rest.trim()) rest = rest || cur;
+      if (out.length > max) out.length = max;
+      if (rest.trim() || (out.length === max && out.join(" ").length < src.replace(/\s+/g, " ").length)) {
+        let t = out[max - 1]; while (x.measureText(t + "…").width > maxW && t.length > 1) t = t.slice(0, -1); out[max - 1] = t + "…";
+      }
+      return out;
+    }
+    // 최근 글 3개는 꼭 보이게: 먼저 모두 한 줄, 남는 줄(spare)은 최근 글부터 두 줄로
+    function pickLines(x, list, maxW, spare) {
+      const last = (list || []).slice(-3);
+      const out = last.map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
+      for (let i = out.length - 1; i >= 0 && spare > 0; i--) {
+        const two = wrapText(x, out[i].l.body, maxW, 2);
+        if (two.length > 1) { out[i].body = two; spare--; }
+      }
+      return out;
+    }
     function drawNotes(lines) {
       const x = noteCanvas.getContext("2d");
       x.fillStyle = "#f6f2e6"; x.fillRect(0, 0, 768, 414);
       x.fillStyle = "#1f8a5c"; x.fillRect(0, 0, 768, 64);
       x.fillStyle = "#fff"; x.font = "700 32px 'Noto Sans KR', sans-serif"; x.textBaseline = "middle"; x.fillText("역 노트", 28, 33);
       x.font = "500 22px 'Noto Serif KR', serif"; x.textAlign = "right"; x.fillText("汐見浜駅", 740, 34); x.textAlign = "left";
+      const ROW = 62, TOP = 72;     // 줄 공책 한 줄 높이 (큰 글씨)
       x.strokeStyle = "rgba(90,120,160,.28)"; x.lineWidth = 2;
-      for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(24, 134 + i * 68); x.lineTo(744, 134 + i * 68); x.stroke(); }
-      x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(150, 70); x.lineTo(150, 414); x.stroke();
-      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 26px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 170, 110); }
-      else lines.slice(-5).forEach((l, i) => {
-        const y = 108 + i * 68;
-        x.fillStyle = "#2c6852"; x.font = "600 20px 'Noto Sans KR', sans-serif";
-        let n = l.nick; while (x.measureText(n).width > 118 && n.length > 1) n = n.slice(0, -1);
-        x.fillText(n, 24, y);
-        x.fillStyle = "#2a2622"; x.font = "400 28px 'Noto Sans KR', sans-serif";
-        let t = l.body; while (x.measureText(t).width > 580 && t.length > 1) t = t.slice(0, -1);
-        x.fillText(t === l.body ? t : t + "…", 170, y);
-      });
+      for (let yy = TOP + ROW; yy < 414; yy += ROW) { x.beginPath(); x.moveTo(24, yy); x.lineTo(744, yy); x.stroke(); }
+      x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 70); x.lineTo(170, 414); x.stroke();
+      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 32px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW / 2); }
+      else {
+        // 최근 글 3개 (아래가 최근). 남는 줄은 최근 글부터 두 줄로
+        const rows = Math.floor((414 - TOP) / ROW);
+        x.font = "500 38px 'Noto Sans KR', sans-serif";
+        const picked = pickLines(x, lines, 550, rows - Math.min(3, lines.length)).map((it) => [it.l, it.body]);
+        const used = picked.reduce((t, [, b]) => t + b.length, 0);
+        let r = rows - used;
+        for (const [l, body] of picked) {
+          const y = TOP + r * ROW + ROW / 2;
+          x.fillStyle = "#2c6852"; x.font = "600 22px 'Noto Sans KR', sans-serif";
+          let n = l.nick; if (x.measureText(n).width > 140) { while (x.measureText(n + "…").width > 140 && n.length > 1) n = n.slice(0, -1); n += "…"; }
+          x.fillText(n, 24, y);
+          x.fillStyle = "#2a2622"; x.font = "500 38px 'Noto Sans KR', sans-serif";
+          body.forEach((t, k) => x.fillText(t, 188, y + k * ROW));
+          r += body.length;
+        }
+      }
       if (noteTex) noteTex.needsUpdate = true;
     }
 
