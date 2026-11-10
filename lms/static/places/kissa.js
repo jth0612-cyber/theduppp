@@ -140,12 +140,12 @@ export default {
       x.textBaseline = "middle"; x.textAlign = "left";
       if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 34px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
       else {
-        // 냅킨 3장 (아래가 최근), 판 가운데에. 긴 글은 두 줄
+        // 냅킨 3장 (아래가 최근), 판 위쪽부터. 긴 글은 두 줄
         const LH = 38, GAP = 14, TOP = 22, BOT = 470, BASE = 40;
         x.font = "500 30px 'Noto Sans KR', sans-serif";
         const items = pickLines(x, lines, 640, 3);
         const total = items.reduce((t, it) => t + BASE + it.body.length * LH, 0) + GAP * (items.length - 1);
-        let y = Math.max(TOP, TOP + (BOT - TOP - total) / 2), i = 0;
+        let y = Math.max(TOP, TOP + (BOT - TOP - total) * 0.2), i = 0;   // 가운데보다 조금 위에서 시작
         for (const { l, body } of items) {
           const h = BASE + body.length * LH, tilt = ((i++ % 2) ? 1 : -1) * 0.008;
           x.save(); x.translate(40, y); x.rotate(tilt);

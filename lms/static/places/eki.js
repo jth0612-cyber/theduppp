@@ -339,12 +339,12 @@ export default {
       x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 0); x.lineTo(170, 414); x.stroke();
       if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 28px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW * 3.5); }
       else {
-        // 최근 글 3개 (아래가 최근), 공책 가운데 줄에. 긴 글은 두 줄
+        // 최근 글 3개 (아래가 최근), 공책 둘째 줄부터. 긴 글은 두 줄
         const rows = Math.floor((414 - TOP) / ROW);
         x.font = "500 30px 'Noto Sans KR', sans-serif";
         const picked = pickLines(x, lines, 550, rows - Math.min(3, lines.length)).map((it) => [it.l, it.body]);
         const used = picked.reduce((t, [, b]) => t + b.length, 0);
-        let r = Math.floor((rows - used) / 2);
+        let r = Math.min(1, rows - used);   // 맨 윗줄 하나 비우고 시작
         for (const [l, body] of picked) {
           const y = TOP + r * ROW + ROW / 2;
           x.fillStyle = "#2c6852"; x.font = "600 19px 'Noto Sans KR', sans-serif";
