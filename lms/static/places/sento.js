@@ -281,15 +281,22 @@ export default {
       }
       return out;
     }
-    // 최근 글 3개는 꼭 보이게: 먼저 모두 한 줄, 남는 줄(spare)은 최근 글부터 두 줄로
-    function pickLines(x, list, maxW, spare) {
-      const last = (list || []).slice(-3);
-      const out = last.map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
-      for (let i = out.length - 1; i >= 0 && spare > 0; i--) {
-        const two = wrapText(x, out[i].l.body, maxW, 2);
-        if (two.length > 1) { out[i].body = two; spare--; }
+    // 최근 글을 최대 4개(못 들어가면 3개)까지: 먼저 모두 한 줄, 남는 자리는 최근 글부터 두 줄로
+    function pickLines(x, list, maxW, fits) {
+      const all = list || [];
+      for (const n of [4, 3]) {
+        if (n === 4 && all.length < 4) continue;
+        const out = all.slice(-n).map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
+        if (n === 4 && !fits(out)) continue;
+        for (let i = out.length - 1; i >= 0; i--) {
+          const two = wrapText(x, out[i].l.body, maxW, 2);
+          if (two.length < 2) continue;
+          const one = out[i].body; out[i].body = two;
+          if (!fits(out)) out[i].body = one;
+        }
+        return out;
       }
-      return out;
+      return [];
     }
     function drawBoard(lines) {
       const x = boardCanvas.getContext("2d");
@@ -298,11 +305,12 @@ export default {
       x.textBaseline = "middle"; x.textAlign = "left";
       if (!lines || !lines.length) { x.font = "400 36px 'Noto Sans KR', sans-serif"; x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 270); }
       else {
-        // 최근 글 3개 (위에서 아래로 오래된 → 최근), 판 위쪽부터. 긴 글은 두 줄
+        // 최근 글 최대 4개 (위에서 아래로 오래된 → 최근), 판 위쪽부터. 긴 글은 두 줄
         const NICK = 22, LH = 38, GAP = 18, TOP = 28, BOT = 452;
         x.font = "500 32px 'Noto Sans KR', sans-serif";
-        const items = pickLines(x, lines, 690, 3);
-        const total = items.reduce((t, it) => t + NICK + 5 + it.body.length * LH, 0) + GAP * (items.length - 1);
+        const height = (its) => its.reduce((t, it) => t + NICK + 5 + it.body.length * LH, 0) + GAP * (its.length - 1);
+        const items = pickLines(x, lines, 690, (its) => height(its) <= BOT - TOP);
+        const total = height(items);
         let y = Math.max(TOP, TOP + (BOT - TOP - total) * 0.2);   // 가운데보다 조금 위에서 시작
         for (const { l, body } of items) {
           x.fillStyle = "#f2d98a"; x.font = "600 22px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y + NICK / 2);

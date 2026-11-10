@@ -319,15 +319,22 @@ export default {
       }
       return out;
     }
-    // 최근 글 3개는 꼭 보이게: 먼저 모두 한 줄, 남는 줄(spare)은 최근 글부터 두 줄로
-    function pickLines(x, list, maxW, spare) {
-      const last = (list || []).slice(-3);
-      const out = last.map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
-      for (let i = out.length - 1; i >= 0 && spare > 0; i--) {
-        const two = wrapText(x, out[i].l.body, maxW, 2);
-        if (two.length > 1) { out[i].body = two; spare--; }
+    // 최근 글을 최대 4개(못 들어가면 3개)까지: 먼저 모두 한 줄, 남는 자리는 최근 글부터 두 줄로
+    function pickLines(x, list, maxW, fits) {
+      const all = list || [];
+      for (const n of [4, 3]) {
+        if (n === 4 && all.length < 4) continue;
+        const out = all.slice(-n).map((l) => ({ l, body: wrapText(x, l.body, maxW, 1) }));
+        if (n === 4 && !fits(out)) continue;
+        for (let i = out.length - 1; i >= 0; i--) {
+          const two = wrapText(x, out[i].l.body, maxW, 2);
+          if (two.length < 2) continue;
+          const one = out[i].body; out[i].body = two;
+          if (!fits(out)) out[i].body = one;
+        }
+        return out;
       }
-      return out;
+      return [];
     }
     function drawNotes(lines) {
       const x = noteCanvas.getContext("2d");
@@ -339,10 +346,10 @@ export default {
       x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 0); x.lineTo(170, 414); x.stroke();
       if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 28px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW * 3.5); }
       else {
-        // 최근 글 3개 (아래가 최근), 공책 둘째 줄부터. 긴 글은 두 줄
+        // 최근 글 최대 4개 (아래가 최근), 공책 둘째 줄부터. 긴 글은 두 줄
         const rows = Math.floor((414 - TOP) / ROW);
         x.font = "500 30px 'Noto Sans KR', sans-serif";
-        const picked = pickLines(x, lines, 550, rows - Math.min(3, lines.length)).map((it) => [it.l, it.body]);
+        const picked = pickLines(x, lines, 550, (its) => its.reduce((t, it) => t + it.body.length, 0) <= rows - 1).map((it) => [it.l, it.body]);
         const used = picked.reduce((t, [, b]) => t + b.length, 0);
         let r = Math.min(1, rows - used);   // 맨 윗줄 하나 비우고 시작
         for (const [l, body] of picked) {
