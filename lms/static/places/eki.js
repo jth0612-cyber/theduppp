@@ -332,27 +332,25 @@ export default {
     function drawNotes(lines) {
       const x = noteCanvas.getContext("2d");
       x.fillStyle = "#f6f2e6"; x.fillRect(0, 0, 768, 414);
-      x.fillStyle = "#1f8a5c"; x.fillRect(0, 0, 768, 64);
-      x.fillStyle = "#fff"; x.font = "700 32px 'Noto Sans KR', sans-serif"; x.textBaseline = "middle"; x.fillText("역 노트", 28, 33);
-      x.font = "500 22px 'Noto Serif KR', serif"; x.textAlign = "right"; x.fillText("汐見浜駅", 740, 34); x.textAlign = "left";
-      const ROW = 62, TOP = 72;     // 줄 공책 한 줄 높이 (큰 글씨)
+      x.textBaseline = "middle"; x.textAlign = "left";
+      const ROW = 50, TOP = 7;      // 줄 공책 한 줄 높이
       x.strokeStyle = "rgba(90,120,160,.28)"; x.lineWidth = 2;
       for (let yy = TOP + ROW; yy < 414; yy += ROW) { x.beginPath(); x.moveTo(24, yy); x.lineTo(744, yy); x.stroke(); }
-      x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 70); x.lineTo(170, 414); x.stroke();
-      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 32px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW / 2); }
+      x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 0); x.lineTo(170, 414); x.stroke();
+      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 28px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW * 3.5); }
       else {
-        // 최근 글 3개 (아래가 최근). 남는 줄은 최근 글부터 두 줄로
+        // 최근 글 3개 (아래가 최근), 공책 가운데 줄에. 긴 글은 두 줄
         const rows = Math.floor((414 - TOP) / ROW);
-        x.font = "500 38px 'Noto Sans KR', sans-serif";
+        x.font = "500 30px 'Noto Sans KR', sans-serif";
         const picked = pickLines(x, lines, 550, rows - Math.min(3, lines.length)).map((it) => [it.l, it.body]);
         const used = picked.reduce((t, [, b]) => t + b.length, 0);
-        let r = rows - used;
+        let r = Math.floor((rows - used) / 2);
         for (const [l, body] of picked) {
           const y = TOP + r * ROW + ROW / 2;
-          x.fillStyle = "#2c6852"; x.font = "600 22px 'Noto Sans KR', sans-serif";
+          x.fillStyle = "#2c6852"; x.font = "600 19px 'Noto Sans KR', sans-serif";
           let n = l.nick; if (x.measureText(n).width > 140) { while (x.measureText(n + "…").width > 140 && n.length > 1) n = n.slice(0, -1); n += "…"; }
           x.fillText(n, 24, y);
-          x.fillStyle = "#2a2622"; x.font = "500 38px 'Noto Sans KR', sans-serif";
+          x.fillStyle = "#2a2622"; x.font = "500 30px 'Noto Sans KR', sans-serif";
           body.forEach((t, k) => x.fillText(t, 188, y + k * ROW));
           r += body.length;
         }

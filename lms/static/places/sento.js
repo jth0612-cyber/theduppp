@@ -295,23 +295,20 @@ export default {
       const x = boardCanvas.getContext("2d");
       x.fillStyle = "#2f3b33"; x.fillRect(0, 0, 768, 480);
       for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`; x.fillRect(Math.random() * 768, Math.random() * 480, 2 + Math.random() * 30, 1 + Math.random() * 3); }
-      x.fillStyle = "#e8efe6"; x.font = "600 44px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
-      x.fillText("오늘의 한 줄", 384, 52);
-      x.strokeStyle = "rgba(232,239,230,.35)"; x.lineWidth = 2; x.beginPath(); x.moveTo(250, 86); x.lineTo(518, 86); x.stroke();
-      x.textAlign = "left";
+      x.textBaseline = "middle"; x.textAlign = "left";
       if (!lines || !lines.length) { x.font = "400 36px 'Noto Sans KR', sans-serif"; x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 270); }
       else {
-        // 큰 글씨, 최근 글 3개 (위에서 아래로 오래된 → 최근). 남는 두 줄은 최근 글부터
-        const NICK = 28, LH = 46, GAP = 14, TOP = 104, BOT = 466;
-        x.font = "500 40px 'Noto Sans KR', sans-serif";
-        const items = pickLines(x, lines, 690, 2);
-        const total = items.reduce((t, it) => t + NICK + 6 + it.body.length * LH, 0) + GAP * (items.length - 1);
-        let y = Math.max(TOP, BOT - total);
+        // 최근 글 3개 (위에서 아래로 오래된 → 최근), 판 가운데에. 긴 글은 두 줄
+        const NICK = 22, LH = 38, GAP = 18, TOP = 28, BOT = 452;
+        x.font = "500 32px 'Noto Sans KR', sans-serif";
+        const items = pickLines(x, lines, 690, 3);
+        const total = items.reduce((t, it) => t + NICK + 5 + it.body.length * LH, 0) + GAP * (items.length - 1);
+        let y = Math.max(TOP, TOP + (BOT - TOP - total) / 2);
         for (const { l, body } of items) {
-          x.fillStyle = "#f2d98a"; x.font = "600 28px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y + NICK / 2);
-          x.fillStyle = "#eef3ec"; x.font = "500 40px 'Noto Sans KR', sans-serif";
-          body.forEach((t, k) => x.fillText(t, 40, y + NICK + 6 + LH * k + LH / 2));
-          y += NICK + 6 + body.length * LH + GAP;
+          x.fillStyle = "#f2d98a"; x.font = "600 22px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, y + NICK / 2);
+          x.fillStyle = "#eef3ec"; x.font = "500 32px 'Noto Sans KR', sans-serif";
+          body.forEach((t, k) => x.fillText(t, 40, y + NICK + 5 + LH * k + LH / 2));
+          y += NICK + 5 + body.length * LH + GAP;
         }
       }
       if (boardTex) boardTex.needsUpdate = true;

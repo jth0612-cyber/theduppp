@@ -137,26 +137,24 @@ export default {
       const x = memoCanvas.getContext("2d");
       x.fillStyle = "#b58a5a"; x.fillRect(0, 0, 768, 488);
       for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? "90,60,30" : "230,200,150"},${Math.random() * 0.18})`; x.fillRect(Math.random() * 768, Math.random() * 488, 2 + Math.random() * 3, 2 + Math.random() * 3); }
-      x.fillStyle = "#fbf6ea"; x.fillRect(250, 18, 268, 54); x.fillStyle = "#3a2e28"; x.font = "600 30px 'Noto Sans KR', sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
-      x.fillText("오늘의 냅킨 메모", 384, 46);
-      x.textAlign = "left";
+      x.textBaseline = "middle"; x.textAlign = "left";
       if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 34px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
       else {
-        // 큰 글씨 냅킨 3장 (아래가 최근). 남는 두 줄은 최근 글부터
-        const LH = 46, GAP = 10, TOP = 86, BOT = 478;
-        x.font = "500 38px 'Noto Sans KR', sans-serif";
-        const items = pickLines(x, lines, 640, 2);
-        const total = items.reduce((t, it) => t + 44 + it.body.length * LH, 0) + GAP * (items.length - 1);
-        let y = Math.max(TOP, BOT - total), i = 0;
+        // 냅킨 3장 (아래가 최근), 판 가운데에. 긴 글은 두 줄
+        const LH = 38, GAP = 14, TOP = 22, BOT = 470, BASE = 40;
+        x.font = "500 30px 'Noto Sans KR', sans-serif";
+        const items = pickLines(x, lines, 640, 3);
+        const total = items.reduce((t, it) => t + BASE + it.body.length * LH, 0) + GAP * (items.length - 1);
+        let y = Math.max(TOP, TOP + (BOT - TOP - total) / 2), i = 0;
         for (const { l, body } of items) {
-          const h = 44 + body.length * LH, tilt = ((i++ % 2) ? 1 : -1) * 0.008;
+          const h = BASE + body.length * LH, tilt = ((i++ % 2) ? 1 : -1) * 0.008;
           x.save(); x.translate(40, y); x.rotate(tilt);
           x.fillStyle = "rgba(40,24,10,.25)"; x.fillRect(4, 6, 688, h - 6);
           x.fillStyle = "#fdfaf2"; x.fillRect(0, 0, 688, h - 6);
-          x.fillStyle = "#c0392b"; x.beginPath(); x.arc(20, 22, 8, 0, Math.PI * 2); x.fill();
-          x.fillStyle = "#8a5a3a"; x.font = "600 26px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 40, 23);
-          x.fillStyle = "#2e2620"; x.font = "500 38px 'Noto Sans KR', sans-serif";
-          body.forEach((t, k) => x.fillText(t, 24, 40 + LH * k + LH / 2)); x.restore();
+          x.fillStyle = "#c0392b"; x.beginPath(); x.arc(20, 20, 7, 0, Math.PI * 2); x.fill();
+          x.fillStyle = "#8a5a3a"; x.font = "600 21px 'Noto Sans KR', sans-serif"; x.fillText(l.nick, 38, 21);
+          x.fillStyle = "#2e2620"; x.font = "500 30px 'Noto Sans KR', sans-serif";
+          body.forEach((t, k) => x.fillText(t, 24, 36 + LH * k + LH / 2)); x.restore();
           y += h + GAP;
         }
       }
