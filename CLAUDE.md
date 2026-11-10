@@ -10,6 +10,7 @@
 
 ## 디자인 도구
 - 디자인 기준: `impeccable`, `design-taste-frontend`, `emil-design-eng` 스킬 (`.claude/skills/`)
+- 앱 화면 기준: `docs/app_design/README.md` — 앱을 만들 때 홈·기능별 화면은 `소개자료_사진/홈과_기능별/` 시안을 그대로 따른다.
 - 화면 확인: Playwright MCP (`.mcp.json`) — 만든 화면은 직접 열어 스크린샷으로 확인한다.
 
 ## 안전
