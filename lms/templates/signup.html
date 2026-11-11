@@ -13,7 +13,7 @@
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% else %}
-  <p class="muted small">선생님께 받은 <b>나만의 개인 코드</b>로 가입해요. 코드가 맞으면 바로 시작할 수 있어요. 코드는 한 번만 쓸 수 있으니 다른 사람에게 알려 주지 마세요.</p>
+  <p class="muted small">조교 선생님께 받은 <b>학생코드</b>(예: K7QM-3XPA)로 가입해요. 코드가 맞으면 바로 시작할 수 있어요. 코드는 한 번만 쓸 수 있으니 다른 사람에게 알려 주지 마세요.</p>
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
   {% endif %}
@@ -23,9 +23,9 @@
   <form method="post" autocomplete="on" class="signup-form" data-signup novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">
-      <label for="code">개인 코드</label>
+      <label for="code">학생코드</label>
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
-             autocapitalize="characters" spellcheck="false" placeholder="예: K7QM2XPA9R"{{ bad('code') }}>
+             autocapitalize="characters" spellcheck="false" placeholder="예: K7QM-3XPA"{{ bad('code') }}>
       {{ err('code') }}
     </div>
     <div class="field">

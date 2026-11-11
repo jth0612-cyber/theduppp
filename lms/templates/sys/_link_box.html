@@ -1,0 +1,12 @@
+{# 학생코드가 아직 연결되지 않은 학생: 조교 시스템 기록과 잇는 칸 #}
+{% from "_macros.html" import csrf %}
+<section class="sys-link card" aria-labelledby="sys-link-h">
+  <h2 id="sys-link-h">학생코드 연결</h2>
+  <p class="small muted">조교 선생님께 받은 학생코드(예: K7QM-3XPA)를 넣으면 시험 결과, 오답 분석, 과제, 출결이 여기에 보여요. 코드는 한 사람만 쓸 수 있어요.</p>
+  <form method="post" action="{{ url_for('link.s_link') }}" class="sys-link-form">
+    {{ csrf() }}
+    <label class="sr-only" for="sys-code">학생코드</label>
+    <input id="sys-code" name="code" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7QM-3XPA" required>
+    <button class="btn primary">연결하기</button>
+  </form>
+</section>

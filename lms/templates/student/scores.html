@@ -2,8 +2,36 @@
 {% block title %}내 성적 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head"><h1>내 성적</h1></div>
+{% if not code %}{% include "sys/_link_box.html" %}{% endif %}
+
+{% if sys_scores %}
+{% set by_season = sys_scores|groupby('season') %}
+{% for season, items in by_season|reverse %}
+<section class="card sys-scores" aria-label="{{ season or '시험' }} 성적">
+  <div class="sec-head"><h2>{{ season or '시험' }}</h2><span class="small muted">{{ items|length }}회</span></div>
+  <ul class="ss-list">
+    {% for r in items|reverse %}
+    <li class="ss-row">
+      <div class="ss-main">
+        <b>{{ r.name }}</b>
+        <span class="small muted">{{ r.day[5:]|replace('-', '.') }}{% if r.kind %} · {{ r.kind }}{% endif %}{% if r.wrong and r.wrong != '없음' %} · 틀린 문항 {{ r.wrong }}{% endif %}</span>
+      </div>
+      <div class="ss-num">
+        <span class="ss-score"><b>{{ fmt(r.score) }}</b>{% if r.full %}<small> / {{ fmt(r.full) }}</small>{% endif %}</span>
+        {% if r.avg is not none %}<span class="small muted">반 평균 {{ fmt(r.avg) }}{% if r.vs is not none %} · <span class="{{ 'ss-up' if r.vs > 0 else 'ss-down' if r.vs < 0 else '' }}">{{ '+' if r.vs > 0 }}{{ fmt(r.vs) }}</span>{% endif %}</span>{% endif %}
+      </div>
+      {% if r.pct is not none %}<span class="ss-bar" aria-hidden="true"><i class="pg-fill w-{{ ((r.pct // 10) * 10)|int }}"></i>{% if r.avg_pct is not none %}<em class="ss-avg w-{{ ((r.avg_pct // 10) * 10)|int }}"></em>{% endif %}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+<p class="small muted">반 평균은 같은 반 학생들의 평균이에요. 다른 학생의 점수와 등수는 보이지 않아요. 막대의 세로선이 반 평균이에요.</p>
+{% endif %}
+
+{% if scores %}
 <div class="card">
-  {% if scores %}
+  {% if sys_scores %}<h2 class="sec-title">웹에 입력된 성적</h2>{% endif %}
   <div class="table-wrap"><table class="score-table">
     <tr><th>날짜</th><th>시험</th><th class="st-subj">과목</th><th class="num">내 점수</th><th class="num">반 평균</th></tr>
     {% for r in scores %}
@@ -16,6 +44,6 @@
     </tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="muted">아직 성적이 없습니다.</p>{% endif %}
 </div>
+{% elif not sys_scores %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
 {% endblock %}

@@ -1,0 +1,34 @@
+{# 조교 시스템의 시험 오답 분석 (학생코드 기준). 오답 유형·분석은 시스템이 정한 그대로 보여 준다. #}
+{% from "_macros.html" import csrf %}
+<section id="sys" class="sys-wrong" aria-labelledby="sys-h">
+  <div class="sec-head"><h2 id="sys-h">시험 오답 분석</h2><span class="small muted">조교 선생님이 채점·분석한 결과</span></div>
+  {% if sys_types %}{% set total = sys_types|sum(attribute=1) %}
+  <div class="reason-bar" aria-label="오답 유형 모아 보기">{% for t, n in sys_types %}<span><b>{{ t }}</b> {{ n }}문항 · {{ (100 * n / total)|round|int }}%</span>{% endfor %}</div>
+  {% endif %}
+  {% for gr in sys_groups %}
+  <article class="panel sw-exam">
+    <div class="sec-head"><h3>{{ gr.exam }}</h3><span class="small muted">{{ gr.day[5:]|replace('-', '.') }} · 틀린 문항 {{ gr['items']|length }}개{% if gr.open is defined and not only_open %} · 다시 풀기 남음 {{ gr.open }}{% endif %}</span></div>
+    <ul class="sw-list">
+      {% for it in gr['items'] %}
+      <li class="sw-item{{ ' is-done' if it.redo == '맞힘' }}">
+        <div class="sw-head">
+          <span class="w-no">{{ it.no }}번</span>
+          {% if it.type %}<span class="badge type">{{ it.type }}{% if it.guess %} 추정{% endif %}</span>{% endif %}
+          <span class="small muted">{% if it.mine %}내 답 {{ it.mine }} → {% endif %}정답 {{ it.answer }}{% if it.rate is not none %} · 반 오답률 {{ sfmt(it.rate) }}%{% endif %}{% if it.unit %} · {{ it.unit }}{% endif %}</span>
+        </div>
+        {% if it.analysis %}<p class="sw-text">{{ it.analysis }}</p>{% endif %}
+        {% if it.confused or it.same is not none %}<p class="small muted">{% if it.confused %}헷갈린 보기 {{ it.confused }}{% endif %}{% if it.confused and it.same is not none %} · {% endif %}{% if it.same is not none %}같은 답을 고른 반 학생 {{ sfmt(it.same) }}%{% endif %}</p>{% endif %}
+        <form method="post" action="{{ url_for('link.s_redo') }}" class="sw-redo" aria-label="{{ it.no }}번 다시 풀기 결과">
+          {{ csrf() }}<input type="hidden" name="exam" value="{{ gr.exam }}"><input type="hidden" name="no" value="{{ it.no }}">
+          <span class="small">다시 풀어 보니</span>
+          <button class="chip-btn{{ ' is-on' if it.redo == '맞힘' }}" name="result" value="{{ '' if it.redo == '맞힘' else '맞힘' }}" aria-pressed="{{ 'true' if it.redo == '맞힘' else 'false' }}">맞힘</button>
+          <button class="chip-btn{{ ' is-on bad' if it.redo == '또 틀림' }}" name="result" value="{{ '' if it.redo == '또 틀림' else '또 틀림' }}" aria-pressed="{{ 'true' if it.redo == '또 틀림' else 'false' }}">또 틀림</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </article>
+  {% else %}
+  <p class="muted small">{{ '다시 풀기가 남은 문항이 없어요.' if only_open else '아직 받은 시험 오답 분석이 없어요.' }}</p>
+  {% endfor %}
+</section>

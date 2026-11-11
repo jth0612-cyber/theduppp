@@ -508,11 +508,39 @@ def close_db(_exc=None):
         db.close()
 
 
+# 조교 시스템(구글 시트)에서 받은 학생코드 기준 자료 (sysdata.py)
+SYS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS sys_rows (
+    id      INTEGER PRIMARY KEY,
+    tbl     TEXT NOT NULL,
+    code    TEXT NOT NULL,
+    data    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sys_rows_code ON sys_rows (code, tbl);
+CREATE TABLE IF NOT EXISTS sys_sync (
+    tbl       TEXT PRIMARY KEY,
+    n_rows    INTEGER NOT NULL,
+    synced_at TEXT NOT NULL,
+    source    TEXT NOT NULL
+);
+-- 학생이 웹에서 고른 '다시 풀기' 결과 (시트가 가져간다)
+CREATE TABLE IF NOT EXISTS sys_redo (
+    code      TEXT NOT NULL,
+    exam      TEXT NOT NULL,
+    item_no   INTEGER NOT NULL,
+    result    TEXT NOT NULL,
+    at        TEXT NOT NULL,
+    PRIMARY KEY (code, exam, item_no)
+);
+"""
+
+
 def init_db(path):
     from nickname import generate_nickname
 
     conn = sqlite3.connect(path)
     conn.executescript(SCHEMA)
+    conn.executescript(SYS_SCHEMA)
     # 기존 DB 이전: 새로 생긴 열 추가
     _add_column(conn, "users", "nickname", "TEXT")
     _add_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

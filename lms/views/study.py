@@ -113,8 +113,15 @@ def wrong_notes():
     groups = wrong_list(g.user["id"], only_open)
     reasons = query("""SELECT reason, COUNT(*) AS n FROM wrong_notes WHERE user_id = ? AND reason != ''
                        GROUP BY reason ORDER BY n DESC""", (g.user["id"],))
+    import sysdata
+    code = sysdata.code_of_student(g.user["student_id"])
+    sys_groups = sysdata.wrong_notes(code)
+    if only_open:
+        sys_groups = [dict(gr, items=[i for i in gr["items"] if i["redo"] != "맞힘"]) for gr in sys_groups]
+        sys_groups = [gr for gr in sys_groups if gr["items"]]
     return render_template("study/wrong.html", groups=groups, reasons=WRONG_REASONS, reason_counts=reasons,
-                           only_open=only_open, fmt=analysis._fmt)
+                           only_open=only_open, fmt=analysis._fmt, code=code, sys_groups=sys_groups,
+                           sys_types=sysdata.type_counts(sysdata.wrong_notes(code)), sfmt=sysdata.fmt)
 
 
 @bp.route("/s/wrong/<int:mid>/<int:no>", methods=["POST"])
@@ -346,7 +353,9 @@ def tasks():
                     WHERE a.class_id = ? ORDER BY t.id IS NOT NULL, COALESCE(a.due_on, '9999'), a.id DESC""",
                  (me["id"], me["class_id"]))
     rows = [dict(r, n=len(json.loads(r["answer_key"] or "[]"))) for r in rows]
-    return render_template("study/tasks.html", rows=rows, today=date.today().isoformat())
+    import sysdata
+    return render_template("study/tasks.html", rows=rows, today=date.today().isoformat(),
+                           sys_tasks=sysdata.tasks(sysdata.code_of_student(me["id"])), sfmt=sysdata.fmt)
 
 
 @bp.route("/s/tasks/<int:aid>", methods=["GET", "POST"])
@@ -554,8 +563,15 @@ def build_report(student_id):
                                        WHERE x.student_id = ? AND a2.class_id = ?) AS avg
                  FROM assignments WHERE class_id = ?""", (student_id, s["class_id"], student_id, s["class_id"], s["class_id"]), one=True)
     tasks = {"n": t["n"], "sub": t["sub"], "avg": t["avg"]}
+    import sysdata
+    code = sysdata.code_of_student(student_id)
+    sys_scores = sysdata.scores(code)
+    if sys_scores:                                   # 조교 시스템 성적이 있으면 그것으로 흐름을 그린다
+        chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["day"]} for r in sys_scores if r["pct"] is not None])
     return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
-            "tasks": tasks, "today": date.today().isoformat()}
+            "tasks": tasks, "today": date.today().isoformat(), "code": code, "sys_scores": sys_scores,
+            "units": sysdata.report(code), "learn": sysdata.learn_type(code), "study": sysdata.study_type(code),
+            "sys_types": sysdata.type_counts(sysdata.wrong_notes(code)), "sfmt": sysdata.fmt}
 
 
 @bp.route("/t/students/<int:sid>/report")

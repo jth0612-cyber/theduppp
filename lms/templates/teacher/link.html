@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}조교 시스템 연동 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>조교 시스템 연동</h1>
+  <p class="muted small">구글 시트 조교 시스템의 앱용 표(🌐앱_성적 등)를 받아, 학생코드가 연결된 학생에게 자기 기록만 보여 줍니다. 이름·연락처·학교 칸은 받아도 저장하지 않아요.</p></div></div>
+
+{% if new_token %}
+<section class="card sys-token" aria-labelledby="h-tok">
+  <h2 id="h-tok">새 열쇠</h2>
+  <p class="small">이 화면을 벗어나면 다시 볼 수 없어요. 시트의 <b>확장 프로그램 → Apps Script → 프로젝트 설정 → 스크립트 속성</b>에 이름 <code>WEB_SYNC_TOKEN</code>으로 붙여 넣으세요.</p>
+  <input class="mono" value="{{ new_token }}" readonly aria-label="연동 열쇠" data-select-all>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="sec-head"><h2>받은 표</h2><span class="small muted">학생코드 연결 {{ linked }}명 · 기록이 있는 코드 {{ with_data }}개</span></div>
+  <div class="table-wrap"><table class="ledger compact">
+    <thead><tr><th>표</th><th>내용</th><th class="num">줄</th><th>마지막 반영</th><th>방법</th></tr></thead>
+    <tbody>{% for t in tables %}<tr><td><b>{{ t.key }}</b></td><td class="small muted">{{ t.label }}</td>
+      <td class="num">{{ t.row.n_rows if t.row else '–' }}</td><td class="small">{{ t.row.synced_at if t.row else '아직 없음' }}</td><td class="small muted">{{ t.row.source if t.row else '' }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="small muted">학생이 웹에서 표시한 '다시 풀기' 결과 {{ redo_n }}건은 시트가 가져갈 수 있어요(아래 코드의 <code>pullRedoFromWeb</code>).</p>
+</section>
+
+<section class="card">
+  <h2>CSV로 직접 올리기</h2>
+  <p class="small muted">시트에서 표마다 <b>파일 → 다운로드 → CSV</b>로 받은 파일을 한꺼번에 고르세요. 파일 이름이나 머리글로 어떤 표인지 알아봅니다. 올린 표는 통째로 바뀌어요.</p>
+  <form method="post" action="{{ url_for('link.t_link_upload') }}" enctype="multipart/form-data" class="row">
+    {{ csrf() }}
+    <input type="file" name="files" accept=".csv,text/csv" multiple required aria-label="CSV 파일">
+    <button class="btn primary">반영하기</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="sec-head"><h2>자동 연동 (시트 → 웹)</h2><span class="small muted">{% if token_at %}열쇠 만든 때 {{ token_at }}{% else %}열쇠가 아직 없어요{% endif %}</span></div>
+  <ol class="small steps-list">
+    <li>아래 <b>열쇠 만들기</b>를 누르고 나온 값을 시트의 스크립트 속성 <code>WEB_SYNC_TOKEN</code>에 넣어요. (강사 계정만)</li>
+    <li>시트의 Apps Script에 아래 코드를 새 파일로 붙여 넣고, <code>pushToWeb</code>를 한 번 실행해 권한을 허용해요.</li>
+    <li>성적 반영이나 문자 생성 뒤에 <code>pushToWeb</code>가 돌게 하거나, 트리거로 1시간마다 돌게 해요.</li>
+  </ol>
+  {% if g.user.role == 'teacher' %}
+  <form method="post" action="{{ url_for('link.t_link_token') }}">{{ csrf() }}
+    <button class="btn" data-confirm="새 열쇠를 만들면 지금 시트에 넣어 둔 열쇠는 더 이상 쓸 수 없어요. 만들까요?">열쇠 만들기</button></form>
+  {% endif %}
+  <details class="mt"><summary>시트에 붙일 코드 (WebSync.gs)</summary>
+<pre class="code-block">// THedu 통합과학 lab 웹으로 앱용 표 보내기
+var WEB_URL = '{{ base }}';
+var APP_SHEETS = ['🌐앱_성적', '🌐앱_오답노트', '🌐앱_리포트', '🌐앱_과제', '🌐앱_출결', '🌐앱_공부유형', '🌐앱_학습유형'];
+
+function pushToWeb() {
+  var ss = SpreadsheetApp.getActive(), tables = {};
+  APP_SHEETS.forEach(function (name) {
+    var sh = ss.getSheetByName(name);
+    if (sh &amp;&amp; sh.getLastRow() &gt; 0) tables[name] = sh.getDataRange().getDisplayValues();
+  });
+  // 가입 코드용: 학생코드·반·상태만 (이름·연락처는 보내지 않는다)
+  var db = ss.getSheetByName('학생DB');
+  if (db) {
+    var v = db.getDataRange().getDisplayValues(), h = v[0];
+    var ic = h.indexOf('학생코드'), ib = h.indexOf('반'), is = h.indexOf('상태');
+    tables['코드'] = [['학생코드', '반', '상태']].concat(v.slice(1).filter(function (r) { return r[ic]; })
+      .map(function (r) { return [r[ic], r[ib], is &gt;= 0 ? r[is] : '']; }));
+  }
+  var res = UrlFetchApp.fetch(WEB_URL + '/api/sync', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + PropertiesService.getScriptProperties().getProperty('WEB_SYNC_TOKEN') },
+    payload: JSON.stringify({ tables: tables })
+  });
+  Logger.log(res.getResponseCode() + ' ' + res.getContentText());
+}
+
+// 학생이 웹에서 표시한 '다시 풀기' 결과를 '🌐웹_다시풀기' 시트로 가져온다
+function pullRedoFromWeb() {
+  var res = UrlFetchApp.fetch(WEB_URL + '/api/sync/redo', { muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + PropertiesService.getScriptProperties().getProperty('WEB_SYNC_TOKEN') } });
+  var rows = JSON.parse(res.getContentText()).rows || [];
+  var sh = SpreadsheetApp.getActive().getSheetByName('🌐웹_다시풀기') || SpreadsheetApp.getActive().insertSheet('🌐웹_다시풀기');
+  sh.clearContents(); if (rows.length) sh.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}</pre>
+  </details>
+</section>
+{% endblock %}

@@ -25,6 +25,8 @@
   'list': '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
   'close': '<path d="M6 6l12 12M18 6 6 18"/>',
   'torii': '<path d="M3 5c4 1 14 1 18 0M5 9h14M7 6v15M17 6v15"/>',
+  'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  'check': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/>',
 } %}
 
 {% macro icon(name) %}<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{{ ICONS[name]|safe }}</svg>{% endmacro %}
@@ -43,7 +45,8 @@
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
-    ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0)]),
+    ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
+    ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)]),
   ('계정', [
     ('teacher.signups', '가입 승인', 'signup', ep == 'teacher.signups', pending_signups or 0),
     ('teacher.staff', '조교 계정', 'shield', ep.startswith('teacher.staff'), 0),
@@ -60,7 +63,8 @@
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
-    ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0)])] -%}
+    ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
+    ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] -%}
 {%- else -%}
 {%- set groups = [
   (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
@@ -78,7 +82,8 @@
     ('books.analysis_home', '모의고사 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book', 0)]),
   ('기록', [
     ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
-    ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0)])] -%}
+    ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0),
+    ('link.s_attendance', '출결', 'check', ep == 'link.s_attendance', 0)])] -%}
 {%- endif -%}
 {{ caller(groups) }}
 {% endmacro %}

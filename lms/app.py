@@ -81,6 +81,10 @@ def create_app(test_config=None):
     app.register_blueprint(rooms_bp)
     app.register_blueprint(study_bp)
     app.register_blueprint(pwa_bp)
+    from views.link import api as link_api, bp as link_bp     # 조교 시스템(구글 시트) 연동
+    app.register_blueprint(link_bp)
+    app.register_blueprint(link_api)
+    csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다
     app.jinja_env.globals["google_enabled"] = google_enabled
     from security import role_caption, shown_name
     app.jinja_env.globals["shown_name"] = shown_name

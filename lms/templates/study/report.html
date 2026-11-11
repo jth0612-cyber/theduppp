@@ -25,10 +25,50 @@
       <polyline class="line" points="{{ chart.polyline }}"></polyline>
       {% for c in chart.coords %}<circle class="dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"></circle>{% endfor %}
     </svg>
+    {% if r.sys_scores %}
+    <table class="ledger compact"><thead><tr><th>시험</th><th>날짜</th><th class="num">점수</th><th class="num">반 평균</th><th class="num">평균 대비</th></tr></thead>
+      <tbody>{% for x in r.sys_scores %}<tr><td>{{ x.name }}</td><td class="nowrap">{{ x.day[2:]|replace('-', '.') }}</td><td class="num nowrap">{{ r.sfmt(x.score) }}{% if x.full %} / {{ r.sfmt(x.full) }}{% endif %}</td><td class="num">{{ r.sfmt(x.avg) }}</td><td class="num">{% if x.vs is not none %}{{ '+' if x.vs > 0 }}{{ r.sfmt(x.vs) }}{% endif %}</td></tr>{% endfor %}</tbody></table>
+    {% else %}
     <table class="ledger compact"><thead><tr><th>시험</th><th>날짜</th><th class="num">점수</th><th class="num">득점률</th><th class="num">반 평균</th></tr></thead>
       <tbody>{% for x in r.scores %}<tr><td>{{ x.name }}</td><td>{{ x.exam_date }}</td><td class="num">{{ fmt(x.score) }} / {{ fmt(x.max_score) }}</td><td class="num">{{ x.pct }}%</td><td class="num">{{ x.avg_pct }}%</td></tr>{% endfor %}</tbody></table>
+    {% endif %}
     {% else %}<p class="muted">기록된 시험 성적이 없습니다.</p>{% endif %}
   </section>
+
+  {% if r.units %}
+  <section class="rs-sec">
+    <h2>단원별 이해도</h2>
+    {% for season, units in r.units|dictsort|reverse %}
+    <p class="small muted rs-sub">{{ season }} · 그 단원 문항에서 맞힌 배점 비율</p>
+    <ul class="rs-bars">{% for u in units %}{% set p = (u.pct or 0)|round|int %}
+      <li><span>{{ u.unit }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}{{ ' is-low' if p < 60 }}"></span></span><b>{{ p }}%</b></li>{% endfor %}</ul>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if r.learn or r.study %}
+  <div class="rs-cols">
+    {% if r.learn %}
+    <section class="rs-sec">
+      <h2>학습 유형 <small class="muted">시험 오답 기록</small></h2>
+      <p class="rs-type">{{ r.learn.type }}{% if r.learn.trust %} <span class="badge gray">신뢰도 {{ r.learn.trust }}</span>{% endif %}</p>
+      {% if r.learn.basis %}<p class="small">{{ r.learn.basis }}</p>{% endif %}
+      {% if r.learn.coach %}<p class="rs-coach">{{ r.learn.coach }}</p>{% endif %}
+      {% if r.learn.weak %}<p class="small muted">보완할 단원: {{ r.learn.weak }}</p>{% endif %}
+    </section>
+    {% endif %}
+    {% if r.study %}
+    <section class="rs-sec">
+      <h2>공부 유형 <small class="muted">{{ r.study.day[5:]|replace('-', '.') }} 자가진단</small></h2>
+      <p class="rs-type">{{ r.study.main or '판정 보류' }}{% if r.study.sub %} <span class="small muted">보조 {{ r.study.sub }}</span>{% endif %}</p>
+      {% if r.study.desc %}<p class="small">{{ r.study.desc }}</p>{% endif %}
+      {% if r.study.practice %}<p class="rs-coach"><b>이번 주 실천</b> {{ r.study.practice }}</p>{% endif %}
+      {% if r.study.scores %}<ul class="rs-bars rs-bars-sm">{% for t, v in r.study.scores %}{% set p = ((v - 3) * 100 / 12)|round|int %}
+        <li><span>{{ t }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int if p > 0 else 0 }}"></span></span><b>{{ r.sfmt(v) }}</b></li>{% endfor %}</ul>{% endif %}
+    </section>
+    {% endif %}
+  </div>
+  {% endif %}
 
   <section class="rs-sec">
     <h2>교재 모의고사</h2>
@@ -41,7 +81,10 @@
   <div class="rs-cols">
     <section class="rs-sec">
       <h2>틀린 이유</h2>
-      {% if r.reasons %}{% set total = r.reasons|sum(attribute='n') %}
+      {% if r.sys_types %}{% set total = r.sys_types|sum(attribute=1) %}
+      <ul class="rs-bars">{% for t, n in r.sys_types %}{% set p = (100 * n / total)|round|int %}
+        <li><span>{{ t }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}"></span></span><b>{{ n }}</b></li>{% endfor %}</ul>
+      {% elif r.reasons %}{% set total = r.reasons|sum(attribute='n') %}
       <ul class="rs-bars">{% for x in r.reasons %}{% set p = (100 * x.n / total)|round|int %}
         <li><span>{{ x.reason }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}"></span></span><b>{{ x.n }}</b></li>{% endfor %}</ul>
       {% else %}<p class="muted small">오답 노트에 이유를 고른 문항이 없습니다.</p>{% endif %}

@@ -1,5 +1,16 @@
 {% extends "base.html" %}
-{% block title %}과제 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}과제 · 정태혁 통합과학 lab{% if sys_tasks %}
+<section class="panel" aria-labelledby="h-systask">
+  <div class="sec-head"><h2 id="h-systask">수업 과제 기록</h2><span class="small muted">조교 선생님이 확인한 결과</span></div>
+  <ul class="att-list">
+    {% for t in sys_tasks %}<li><time datetime="{{ t.day }}">{{ t.day[5:]|replace('-', '.') }}</time>
+      <span><b>{{ t.book }}</b>{% if t.range %} <span class="small muted">{{ t.range }}</span>{% endif %}</span>
+      <span class="att-tag att-{{ {'O': 1, '미흡': 2, 'X': 4}.get(t.submit, 0) }}">{{ {'O': '제출', 'X': '미제출', '미흡': '미흡'}.get(t.submit, t.submit or '확인 전') }}</span>
+      <span class="small muted">{% if t.right is not none and t.total %}{{ sfmt(t.right) }}/{{ sfmt(t.total) }}{% endif %}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}
 {% block content %}
 <header class="ed-head">
   <h1>과제</h1>
@@ -19,4 +30,15 @@
   <li class="quiet-box"><p>아직 나온 과제가 없어요.</p></li>
 {% endfor %}
 </ul>
+{% if sys_tasks %}
+<section class="panel" aria-labelledby="h-systask">
+  <div class="sec-head"><h2 id="h-systask">수업 과제 기록</h2><span class="small muted">조교 선생님이 확인한 결과</span></div>
+  <ul class="att-list">
+    {% for t in sys_tasks %}<li><time datetime="{{ t.day }}">{{ t.day[5:]|replace('-', '.') }}</time>
+      <span><b>{{ t.book }}</b>{% if t.range %} <span class="small muted">{{ t.range }}</span>{% endif %}</span>
+      <span class="att-tag att-{{ {'O': 1, '미흡': 2, 'X': 4}.get(t.submit, 0) }}">{{ {'O': '제출', 'X': '미제출', '미흡': '미흡'}.get(t.submit, t.submit or '확인 전') }}</span>
+      <span class="small muted">{% if t.right is not none and t.total %}{{ sfmt(t.right) }}/{{ sfmt(t.total) }}{% endif %}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

@@ -139,7 +139,9 @@ def scores():
                       (SELECT ROUND(AVG(score), 1) FROM scores WHERE exam_id = e.id) AS class_avg
                     FROM scores sc JOIN exams e ON e.id = sc.exam_id
                     WHERE sc.student_id = ? ORDER BY e.exam_date DESC, e.id DESC""", (me["id"],))
-    return render_template("student/scores.html", me=me, scores=rows)
+    import sysdata
+    code = sysdata.code_of_student(me["id"])
+    return render_template("student/scores.html", me=me, scores=rows, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt)
 
 
 # ---------- 질답 게시판 ----------
