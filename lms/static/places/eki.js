@@ -30,7 +30,7 @@ export default {
         const s = new THREE.Mesh(new THREE.CircleGeometry(rand(0.03, 0.07), 5), mat(srand() > 0.5 ? 0x6f6c69 : 0xa8a49e));
         s.rotation.x = -Math.PI / 2; s.position.set(rand(LOT.x0, LOT.x1), 0.015, rand(LOT.z0, LOT.z1)); scene.add(s);
       }
-      const grass = new THREE.Mesh(new THREE.PlaneGeometry(160, 60), mat(PAL.grass)); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.01, 30); scene.add(grass);
+      const grass = new THREE.Mesh(new THREE.PlaneGeometry(520, 220), mat(PAL.grass)); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.01, 110); scene.add(grass);   // 끝이 보이지 않게 넓게 (가장자리는 언덕·숲이 가린다)
       // 선로 너머: 풀 비탈이 바다 쪽으로 내려간다
       const slope = new THREE.Mesh(new THREE.PlaneGeometry(160, 26), mat(PAL.grass)); slope.rotation.x = -Math.PI / 2 - 0.12; slope.position.set(0, -1.4, -15.5); scene.add(slope);   // 선로 쪽이 높고 바다 쪽으로 내려간다
       const beach = new THREE.Mesh(new THREE.PlaneGeometry(160, 8), mat(TIME === "day" ? 0xd9ccb0 : 0x6a6260)); beach.rotation.x = -Math.PI / 2; beach.position.set(0, -2.95, -31); scene.add(beach);
@@ -273,7 +273,7 @@ export default {
       for (let i = 0; i < 3; i++) {
         const x = SHED.x - 1.1 + i * 1.1, z = SHED.z + 0.55, id = SEATS.length;
         const hit = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 0.5), mat(0x9a7a56)); hit.position.set(x, PLAT.h + 0.5, z); hit.userData.seat = id; scene.add(hit); pickSeats.push(hit);
-        SEATS.push({ x, z, yaw: Math.PI, y: PLAT.h + 0.3, lift: 0.12, kind: "shed", camYaw: Math.PI, camDist: 5.8, camPitch: 0.24 });   // 등 뒤가 벽이라 트인 앞쪽(선로 쪽)에서 본다
+        SEATS.push({ x, z, yaw: Math.PI, y: PLAT.h + 0.3, lift: 0.12, kind: "shed", fp: true, camPitch: 0.02, focusPitch: 0.02 });   // 대합실 의자: 벽에 가리지 않게 1인칭으로 바다를 본다
       }
     }
     // 승강장 벤치(바다를 바라본다) — 플라스틱 의자
@@ -368,7 +368,42 @@ export default {
     // ---------------------------------------------------------------- 큰 삼나무와 소나무, 전봇대와 전선, 표지판, 거울
     [[-20, 2, 1.35], [-25, -1, 1.15], [-21, 9, 1.1], [26, 16, 1.0]].forEach(([x, z, sc]) => trees.cedar(x, z, sc));
     for (let i = 0; i < 12; i++) { const x = rand(-60, 60); if (Math.abs(x) < 14) continue; const z = rand(-26, -10); trees.pine(x, z, rand(1.0, 1.5), { y: -0.2 - (-z - 3) * 0.12 }); }
-    for (let i = 0; i < 8; i++) trees.pine(rand(-40, 40), rand(20, 34), rand(1.1, 1.7));
+    for (let i = 0; i < 5; i++) trees.pine(rand(-40, 40), rand(17, 24), rand(1.1, 1.6));
+    // ---------------------------------------------------------------- 마을 뒤 경계: 돌담 위 높은 생울타리 → 빽빽한 숲 → 겹겹의 언덕
+    // (잔디가 네모나게 끝나 보이지 않게, 정원을 둘러싼 담장과 수목처럼 시선을 자연스럽게 막는다)
+    {
+      const far = (o) => { o.userData.noOcclude = true; return o; };
+      const hedgeC = TIME === "day" ? [0x4f8a40, 0x5b9848, 0x467c3a] : dusk ? [0x4a5e40, 0x556a48, 0x40523a] : [0x1f2e2a, 0x263830, 0x1b2823];
+      const stoneC = TIME === "day" ? 0xa9a59c : dusk ? 0x8f8880 : 0x4a4a56;
+      // 돌담 + 깎은 생울타리: 뒤쪽은 완만하게 휘고, 양옆으로 꺾여 내려온다 (구간마다 높이·두께가 조금씩 다르다)
+      const line = [];
+      for (let x = -56; x <= 56; x += 3.2) line.push([x, 27.5 + Math.sin(x * 0.07) * 1.6 + Math.cos(x * 0.19) * 0.5, 0]);
+      for (let z = 24; z >= 5; z -= 3.2) { line.push([-57.5 - (24 - z) * 0.06, z, Math.PI / 2]); line.push([57.5 + (24 - z) * 0.06, z, Math.PI / 2]); }
+      line.forEach(([x, z, ry], i) => {
+        const h = 2.3 + srand() * 1.0, t = 1.3 + srand() * 0.5;
+        const wall = far(box(3.3, 1.0, 0.5, stoneC, x, 0.5, z)); wall.rotation.y = ry;
+        const hd = far(box(3.4, h, t, hedgeC[i % 3], x, 1.0 + h / 2, z)); hd.rotation.y = ry + (srand() - 0.5) * 0.06;
+        hd.material = hd.material.clone(); hd.material.emissive = new THREE.Color(hedgeC[i % 3]).multiplyScalar(0.22);
+        const top = far(new THREE.Mesh(new THREE.SphereGeometry(1.5, 7, 5), mat(hedgeC[(i + 1) % 3]))); top.scale.set(1.15, 0.38 + srand() * 0.2, t * 0.52); top.position.set(x, 1.0 + h, z); top.rotation.y = ry; scene.add(top);
+        if (i % 2 === 0) trees.bush(x + (srand() - 0.5), z - (ry ? 0 : 1.0), 1.1 + srand() * 0.5, { y: 0 });
+      });
+      // 담장 안쪽 잔디밭: 정원수 몇 그루와 둥근 관목
+      [[-44, 20, 1.2], [-38, 24, 1.0], [40, 22, 1.25], [47, 15, 1.0], [-49, 9, 1.1], [8, 24.5, 1.0], [-10, 25, 1.15]].forEach(([x, z, sc]) => trees.broad(x, z, sc, {}));
+      for (let i = 0; i < 16; i++) { const x = rand(-52, 52), z = rand(18, 25.5); if (Math.abs(x) < 34 && z < 22) continue; trees.bush(x, z, rand(0.9, 1.5), {}); }
+      // 담장 뒤 숲 띠: 소나무·삼나무가 겹쳐 선다 (담장 위로 수관이 올라온다)
+      for (let i = 0; i < 46; i++) { const x = -70 + i * 3.1 + rand(-1.2, 1.2), z = rand(30.5, 38); (i % 3 === 0 ? trees.cedar(x, z, rand(1.0, 1.5)) : trees.pine(x, z, rand(1.25, 2.0))); }
+      for (let i = 0; i < 22; i++) { const sd = i % 2 ? 1 : -1, z = rand(2, 30), x = sd * rand(60.5, 68); (i % 4 === 0 ? trees.cedar(x, z, rand(1.0, 1.4)) : trees.pine(x, z, rand(1.2, 1.9))); }
+      // 멀리 겹겹의 언덕: 가까운 것은 짙은 초록, 먼 것은 안개에 묻힌 푸른빛
+      const hillC = TIME === "day" ? [0x6a9a54, 0x7fa878, 0x9db8a6] : dusk ? [0x5c6c50, 0x7a8470, 0x9a9e98] : [0x1e2c34, 0x26324a, 0x2f3a5c];
+      [[-78, 92, 50, 13, 0], [-6, 100, 62, 16, 0], [70, 94, 54, 14, 0], [-150, 70, 50, 15, 0], [146, 66, 48, 13, 0],
+       [-44, 140, 76, 24, 1], [50, 146, 86, 27, 1], [170, 120, 70, 24, 1], [-176, 124, 72, 25, 1],
+       [0, 200, 130, 38, 2], [-190, 185, 100, 34, 2], [200, 182, 100, 36, 2]].forEach(([x, z, r, h, k]) => {
+        const hm = mat(hillC[k]); hm.emissive = new THREE.Color(hillC[k]).multiplyScalar(TIME === "day" ? 0.32 : 0.2);     // 해를 등진 면도 너무 어둡지 않게
+        const m = far(new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), hm)); m.scale.set(r, h, r * 0.7); m.position.set(x, -0.5, z); scene.add(m);
+      });
+      // 언덕 기슭에 묻힌 지붕 몇 채 (마을이 뒤로 이어지는 느낌)
+      [[-26, 33.5, 0.2, false], [14, 34.5, -0.1, true], [38, 32.5, 0.15, false]].forEach(([x, z, r, two], i) => jpHouse(x, 0, z, r + Math.PI, 0.9, two, i + 7));
+    }
     // 역 앞 마을 집들
     [[22, 9, 0.3, true], [27, 3, -0.2, false], [-30, 14, 0.5, true], [18, 20, 0.1, true]].forEach(([x, z, r, two], i) => jpHouse(x, 0, z, r + Math.PI, 0.9, two, i + 3));
     // 마당 가로등

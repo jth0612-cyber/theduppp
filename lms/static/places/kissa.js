@@ -1,3 +1,4 @@
+import { buildEggs } from "./kissa_eggs.js";
 // 소도시 명상 · 골목 찻집. 마쓰야마 성 아래 비 오는 좁은 골목:
 // 검은 판자벽과 흰 회벽 집들, 골목을 따라 흐르는 돌 물길, 처마 끝 둥근 등, 골목 끝을 지나는 옛 노면전차.
 // 찻집 안은 나무 쟁반과 나무 컵, 창가 자리, 바 자리, 보라색 방석이 놓인 다다미방.
@@ -64,6 +65,8 @@ export default {
     [[-24, 5, 3.4], [-17.5, 6, 3.8], [-11, 5.5, 3.4], [-4.6, 5, 3.9], [1.6, 5.5, 3.3], [8, 5, 3.8], [14, 5, 3.4]].forEach(([z, w, h]) => machiya(-5, z, w, 4, h, 1));
     // 오른쪽 줄 (찻집 앞뒤)
     [[-22, 5.5, 4], [-15.5, 6, 3.6], [13.5, 4, 3.6]].forEach(([z, w, h]) => machiya(7.7, z, w, 9, h, -1));
+    // 건물 사이 틈의 숨은 것들 (이스터에그 여섯): kissa_eggs.js
+    const EGGS = buildEggs(K, { dark });
     // 비가 와서 몇 개만 진짜 불빛
     if (dark) [[-2.9, 2.4, -6], [3.1, 2.4, 8], [-2.9, 2.4, -18]].forEach(([x, y, z]) => { const pl = new THREE.PointLight(0xffb867, PAL.lamp, 9, 1.6); pl.position.set(x, y, z); scene.add(pl); });
 
@@ -316,7 +319,7 @@ export default {
       // 찻집 앞 화분
       [[CAFE.x0 + 0.6, 5.2], [CAFE.x0 + 1.6, 5.6], [CAFE.x0 + 0.9, 6.6]].forEach(([x, z], i) => { cyl(0.28, 0.22, 0.5, 10, 0x6a5a4a, x, 0.25, z); const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45 + i * 0.1, 0), mat(dark ? 0x2a3a2c : 0x4e6e44)); b.position.set(x, 0.85 + i * 0.1, z); scene.add(b); });
       // 자전거 (왼쪽 벽 아래)
-      const bike = new THREE.Group(); bike.position.set(-3.0 + 0.1, 0, 5); bike.rotation.y = Math.PI / 2; scene.add(bike);
+      const bike = new THREE.Group(); bike.position.set(-3.0 + 0.1, 0, 7.6);   // 틈(우산 도깨비 자리)을 가리지 않게 벽 앞으로 bike.rotation.y = Math.PI / 2; scene.add(bike);
       for (const dx of [-0.55, 0.55]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.03, 6, 20), mat(0x222222)); w.position.set(dx, 0.34, 0); bike.add(w); }
       const fr = box(1.1, 0.05, 0.05, 0x6a8aa0, 0, 0.6, 0, bike); fr.rotation.z = 0.1;
       box(0.05, 0.45, 0.05, 0x6a8aa0, -0.15, 0.55, 0, bike); box(0.25, 0.05, 0.1, 0x222222, -0.15, 0.8, 0, bike); box(0.05, 0.05, 0.5, 0x444444, 0.5, 0.9, 0, bike);
@@ -370,7 +373,7 @@ export default {
       cam: { pitch: 0.44, seated: 5.4, focus: 5.0, seatPitch: 0.22, focusPitch: 0.19 },   // 실내: 천장(3.4) 아래에 머물게 낮고 가깝게
       fog: { near: 14, far: 110, fnear: 4, ffar: 18 },
       fireflies: false,
-      picks: [...pickSeats, ...pickCafe, ...pickGround],
+      picks: [...pickSeats, ...pickCafe, ...EGGS.picks, ...pickGround],
       indoor: inCafe,
       planWalk(from, p) { return route(from.x, from.z, p.x, p.z); },
       planTo(from, x, z) { return route(from.x, from.z, x, z); },
@@ -400,6 +403,7 @@ export default {
         page: '<svg viewBox="0 0 24 24"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1zM12 6v14"/></svg>',
       },
       custom: {
+        egg(E, o) { EGGS.tap(E, o); },
         window(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(windowSeat); s === null ? E.whisper("창가 자리가 다 찼어요. 바 자리는 어때요?") : E.sit(s); },
         coffee(E) { E.me.gesture("sip", 3.6); E.share("coffee"); E.sfx("sip"); E.whisper(E.state === "free" ? "따뜻한 커피를 후- 불어 한 모금." : "커피 한 모금. 다시 한 줄만 더."); },
         page(E) { E.sfx("page"); E.share("page"); E.whisper("사락— 다음 장으로."); },
@@ -431,6 +435,7 @@ export default {
           const k = r.userData.t; r.scale.setScalar(0.6 + k * 1.8); r.material.opacity = 0.2 * (1 - k);
         });
         lanterns.forEach((l, i) => { l.position.y += Math.sin(t * 1.3 + i) * 0.0008; });
+        EGGS.update(dt, t, E);
         // 노면전차: 70초마다 골목 끝을 지나간다
         const c = (Date.now() / 1000) % TRAM_CYCLE, run = c < TRAM_RUN;
         tram.position.x = run ? -60 + (c / TRAM_RUN) * 120 : -80;

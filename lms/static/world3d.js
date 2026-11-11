@@ -779,6 +779,8 @@ function updateCamera(dt, snap) {
     let best = free;
     const sweep = state === "free" ? [0.5, -0.5, 0.9, -0.9] : [0.5, -0.5, 0.9, -0.9, 1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI];
     for (const yo of sweep) { const f = freeAt(cam.pitch + lift, _tmpDir, yo); if (f > best + 0.5) { best = f; yawOff = yo; if (f >= cam.dist * 0.85) break; } }
+    // 걸어 다닐 때도 꽉 막힌 곳(대합실 안처럼 등 뒤가 바로 벽)이면 더 넓게 돌아 트인 쪽에서 본다
+    if (state === "free" && best < cam.dist * 0.35) for (const yo of [1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI]) { const f = freeAt(cam.pitch + lift, _tmpDir, yo); if (f > best + 0.5) { best = f; yawOff = yo; if (f >= cam.dist * 0.7) break; } }
     free = best;
   }
   camYawOff = snap ? yawOff : camYawOff + (yawOff - camYawOff) * (1 - Math.exp(-dt * 2.2));
@@ -792,8 +794,15 @@ function updateCamera(dt, snap) {
   camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.5), cz);
   camera.lookAt(camTarget);
   // 카메라가 캐릭터에 너무 붙으면 내 캐릭터를 잠깐 숨긴다 (머리 속이 보이지 않게)
-  me.g.visible = !QS.has("shot") && d > 2.2;   // 벽 때문에 카메라가 바짝 붙으면 머리가 화면을 가리지 않게 숨긴다
-  if (me.tag) me.tag.material.opacity = Math.max(0, Math.min(1, (d - 2.2) / 1.2));   // 가까우면 내 이름표는 흐리게
+  const fp = state !== "free" && SEATS[mySeat] && SEATS[mySeat].fp;
+  me.g.visible = !QS.has("shot") && d > 2.2 && !fp;   // 벽 때문에 카메라가 바짝 붙으면 머리가 화면을 가리지 않게 숨긴다
+  if (me.tag) me.tag.material.opacity = fp ? 0 : Math.max(0, Math.min(1, (d - 2.2) / 1.2));   // 가까우면 내 이름표는 흐리게
+  if (fp) {
+    // 1인칭 자리(예: 역 대합실 의자): 앉은 눈높이에서 앞을 바라본다. 끌면 고개를 돌려 둘러본다.
+    const ey = me.g.position.y + 1.02, p1 = Math.max(-0.5, Math.min(0.6, cam.pitch));
+    camera.position.set(me.g.position.x - Math.sin(cam.yaw) * 0.3, ey, me.g.position.z - Math.cos(cam.yaw) * 0.3);
+    camera.lookAt(camera.position.x - Math.sin(cam.yaw) * Math.cos(p1), ey - Math.sin(p1), camera.position.z - Math.cos(cam.yaw) * Math.cos(p1));
+  }
   // 앉으면 아래에 버튼이 쌓인다: 카메라는 그대로 두고 그림만 위로 밀어 캐릭터가 버튼에 가리지 않게 한다
   const cw = stage.clientWidth, ch = stage.clientHeight;
   const wantShift = state === "sitting" ? (cw / ch < 0.8 ? 0.17 : 0.13) : state === "focus" && cw / ch < 0.8 ? 0.05 : 0;
@@ -926,7 +935,7 @@ function sitAt(id) {
   me.place(s.x, s.z); me.yaw = yaw; me.targetYaw = yaw; me.pose = "sit"; me.seat = id; mySeat = id; me.lastSeat = id;
   state = "sitting"; seatCam(false);
   // 실내 자리·보는 방향이 정해진 자리는 카메라를 돌리는 동안 벽에 가려지므로, 돌리지 않고 바로 자리 화면으로 넘어간다
-  if (s.camYaw !== undefined || (P.indoor && P.indoor(s.x, s.z))) camCut();
+  if (s.fp || s.camYaw !== undefined || (P.indoor && P.indoor(s.x, s.z))) camCut();
   audio.sfx((typeof P.sitSound === "function" ? P.sitSound(s) : P.sitSound) || "cushion");
   whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요. 시간을 고르고 집중을 시작해 보세요.");
   render(); sync(true);
@@ -942,7 +951,7 @@ function standUp(silent) {
 // 장소가 쓰는 공통 기능
 const pops = [];
 const E = {
-  THREE, scene, me, whisper: (...a) => whisper(...a), sfx: (n) => audio.sfx(n), sync: (n) => sync(n),
+  THREE, scene, me, whisper: (...a) => whisper(...a), sfx: (n) => audio.sfx(n), blip: (n, g) => audio.blip(n, g), sync: (n) => sync(n),
   get state() { return state; }, get others() { return others; },
   walk(points, onArrive) { if (state === "focus") return false; standUp(true); me.walkTo(points); me.onArrive = onArrive || null; sync(true); return true; },
   face(x, z) { me.targetYaw = Math.atan2(x - me.pos.x, z - me.pos.z); },
@@ -1146,7 +1155,7 @@ setInterval(tickTimer, 500);
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
 if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }),
-  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; }, sit: (i) => goSit(i), teleSit: (i) => { standUp(true); sitAt(i); }, occ: () => { const d = new THREE.Vector3(); const yw = cam.yaw, pt = cam.pitch; d.set(Math.sin(yw) * Math.cos(pt), Math.sin(pt), Math.cos(yw) * Math.cos(pt)); occRay.set(camTarget, d); occRay.far = cam.dist + 0.4; return occRay.intersectObjects(occluders, false).filter((x) => shown(x.object)).slice(0, 3).map((h) => [h.distance.toFixed(2), h.object.geometry.type, JSON.stringify(h.object.geometry.parameters || {}).slice(0, 90), h.object.getWorldPosition(new THREE.Vector3()).toArray().map((v) => +v.toFixed(1)).join(",")]); }, seatInfo: () => SEATS.map((q) => ({ kind: q.kind, x: q.x, z: q.z })), tp: (x, z) => { standUp(true); me.place(x, z); },
+  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; }, sit: (i) => goSit(i), teleSit: (i) => { standUp(true); sitAt(i); }, occ: () => { const d = new THREE.Vector3(); const yw = cam.yaw, pt = cam.pitch; d.set(Math.sin(yw) * Math.cos(pt), Math.sin(pt), Math.cos(yw) * Math.cos(pt)); occRay.set(camTarget, d); occRay.far = cam.dist + 0.4; return occRay.intersectObjects(occluders, false).filter((x) => shown(x.object)).slice(0, 3).map((h) => [h.distance.toFixed(2), h.object.geometry.type, JSON.stringify(h.object.geometry.parameters || {}).slice(0, 90), h.object.getWorldPosition(new THREE.Vector3()).toArray().map((v) => +v.toFixed(1)).join(",")]); }, seatInfo: () => SEATS.map((q) => ({ kind: q.kind, x: q.x, z: q.z })), tp: (x, z) => { standUp(true); me.place(x, z); }, view: (yaw, pitch, dist) => { cam.tYaw = cam.yaw = yaw; if (pitch !== undefined) cam.tPitch = cam.pitch = pitch; if (dist) cam.tDist = cam.dist = dist; }, tapAct: (id, egg) => act(id, { userData: { egg } }),
   pick: (cx, cy) => { const r = canvas.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); return ray.intersectObjects(P.picks, false).slice(0, 3).map((h) => [JSON.stringify(h.object.userData), h.distance.toFixed(2), h.object.geometry.type]); }, state: () => [state, mySeat], seats: () => SEATS.map((s) => s.kind),
   project: (i) => { const s = SEATS[i], v = new THREE.Vector3(s.x, (s.y || 0) + 0.25, s.z).project(camera), r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; } };
 const listEl = root.querySelector("[data-members]");
@@ -1318,10 +1327,22 @@ const audio = (() => {
     },
     duck(v) { if (master && ctx) master.gain.setTargetAtTime(v ? 0.6 : 0.9, ctx.currentTime, 1.2); },
     sfx(name) {
-      const x = Object.assign({ bowl: { f: "common/bowl", g: 0.75 }, cushion: { f: "common/steps", g: 0.25, rate: 0.7, lp: 900 }, hi: { f: "common/bowl", g: 0.22, rate: 2.4, lp: 3200 }, shutter: { f: "kissa/page", g: 0.6, rate: 1.6 } }, (P.sounds || {}).sfx || {})[name];
+      if (name === "hi") return this.blip([[880, 1320, 0.09], [1175, 1760, 0.12]]);     // 뾱-뽁
+      const x = Object.assign({ bowl: { f: "common/bowl", g: 0.75 }, cushion: { f: "common/steps", g: 0.25, rate: 0.7, lp: 900 }, shutter: { f: "kissa/page", g: 0.6, rate: 1.6 } }, (P.sounds || {}).sfx || {})[name];
       if (x) one(x.f, x.g, (x.rate || 1) * (x.jitter ? rand(0.97, 1.03) : 1), x.lp);
     },
     raw(f, g, rate, lp) { one(f, g, rate, lp); },
+    // 짧은 음 몇 개를 이어 낸다: [[시작 주파수, 끝 주파수, 길이(초)], ...]
+    blip(notes, gain = 0.07) {
+      if (!on || !ctx) return;
+      let t = ctx.currentTime + 0.01;
+      notes.forEach(([f0, f1, len]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + len);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0008, t + len);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + len + 0.02); t += len * 0.85;
+      });
+    },
   };
 })();
 
