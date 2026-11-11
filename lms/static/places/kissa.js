@@ -300,7 +300,7 @@ export default {
         const x = T.x + sd * 1.15, z = T.z + dz, id = SEATS.length;
         const cush = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.62), mat(0x4a2a6a, { flatShading: false })); cush.position.set(x, TATAMI.h + 0.08, z); cush.userData.seat = id; scene.add(cush); pickSeats.push(cush);
         const back = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 0.5), mat(0xe2c8a0)); back.position.set(x + sd * 0.34, TATAMI.h + 0.35, z); back.rotation.z = sd * 0.25; scene.add(back);
-        SEATS.push({ x, z, yaw, y: TATAMI.h + 0.02, lift: 0.12, kind: "tatami" });
+        SEATS.push({ x, z, yaw, y: TATAMI.h + 0.02, lift: 0.12, kind: "tatami", camYaw: -Math.PI / 2 + (sd > 0 ? 0.45 : 0) });   // 서쪽에서 본다: 동쪽 벽 메모판이 같이 보인다
       }));
       // 다다미방 뒷벽 메모판: 보라색 방석에 앉은 사람들이 쓰는 실시간 한 줄 (냅킨 메모를 핀으로 꽂은 코르크판)
       memoTex = new THREE.CanvasTexture(memoCanvas); memoTex.colorSpace = THREE.SRGBColorSpace; memoTex.anisotropy = 4; drawMemo([]);
@@ -367,7 +367,7 @@ export default {
     return {
       seats: SEATS, seatNoun: "자리", heightAt,
       spawn: { x: 0.8, z: 11, yaw: Math.PI },
-      cam: { pitch: 0.44, seatPitch: 0.5, focusPitch: 0.42 },
+      cam: { pitch: 0.44, seated: 5.4, focus: 5.0, seatPitch: 0.22, focusPitch: 0.19 },   // 실내: 천장(3.4) 아래에 머물게 낮고 가깝게
       fog: { near: 14, far: 110, fnear: 4, ffar: 18 },
       fireflies: false,
       picks: [...pickSeats, ...pickCafe, ...pickGround],

@@ -8,7 +8,7 @@
      data-beat="{{ url_for('rooms.beat', place=key) }}" data-done="{{ url_for('rooms.done', place=key) }}"
      data-flat="{{ url_for('rooms.room', place=key, flat=1) }}" data-audio="{{ url_for('static', filename='audio/') }}"
      data-three="{{ url_for('static', filename='vendor/three.module.min.js') }}"
-     data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}"
+     data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}" data-seat="{{ me.seat if me.seat is not none else '' }}"
      data-color="{{ my_color }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
     <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
@@ -23,13 +23,13 @@
       </div>
     </div>
 
+    <div class="w3-hud" data-timer hidden role="timer" aria-label="남은 집중 시간">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="w3-hud-bg" cx="18" cy="18" r="14"/><circle class="w3-hud-fg" data-ring cx="18" cy="18" r="14" transform="rotate(-90 18 18)"/></svg>
+      <b data-clock>40:00</b>
+    </div>
     <p class="w3-whisper" data-whisper aria-live="polite"></p>
 
     <div class="w3-bottom">
-      <div class="w3-timer" data-timer hidden>
-        <p class="w3-timer-time" data-clock>25:00</p>
-        <p class="w3-timer-state" data-state>집중 중</p>
-      </div>
       <div class="w3-plans" data-plans hidden role="radiogroup" aria-label="집중 시간">
         {% for m in plans %}<label class="w3-chip"><input type="radio" name="plan" value="{{ m }}" {{ 'checked' if m == (me.plan_min if me.plan_min in plans else plan_default) }}><span>{{ m }}분</span></label>{% endfor %}
       </div>
@@ -37,6 +37,10 @@
         <input type="text" name="body" maxlength="40" autocomplete="off" enterkeyhint="send" aria-label="판에 쓸 한 줄" placeholder="한 줄 쓰기">
         <button type="submit">쓰기</button>
       </form>{% endif %}
+      <button type="button" class="w3-cta" data-cta hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2.5 2M9.5 3h5M12 3v3"/></svg>
+        <b>집중 시작</b><span data-cta-min>40분</span>
+      </button>
       <nav class="w3-actions" data-actions aria-label="동작"></nav>
       <p class="w3-hint" data-hint>바닥을 누르면 걸어가요 · 끌어서 둘러보기</p>
     </div>

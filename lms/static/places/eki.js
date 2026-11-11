@@ -273,7 +273,7 @@ export default {
       for (let i = 0; i < 3; i++) {
         const x = SHED.x - 1.1 + i * 1.1, z = SHED.z + 0.55, id = SEATS.length;
         const hit = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 0.5), mat(0x9a7a56)); hit.position.set(x, PLAT.h + 0.5, z); hit.userData.seat = id; scene.add(hit); pickSeats.push(hit);
-        SEATS.push({ x, z, yaw: Math.PI, y: PLAT.h + 0.3, lift: 0.12, kind: "shed" });
+        SEATS.push({ x, z, yaw: Math.PI, y: PLAT.h + 0.3, lift: 0.12, kind: "shed", camYaw: Math.PI, camDist: 5.8, camPitch: 0.24 });   // 등 뒤가 벽이라 트인 앞쪽(선로 쪽)에서 본다
       }
     }
     // 승강장 벤치(바다를 바라본다) — 플라스틱 의자

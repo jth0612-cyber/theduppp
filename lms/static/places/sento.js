@@ -350,7 +350,7 @@ export default {
         const x = IR.x + dx, z = IR.z + dz, id = SEATS.length;
         const c = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.52, 0.1, 28), mat(felt[i], { flatShading: false }));
         c.position.set(x, H.floor + 0.05, z); c.userData.seat = id; scene.add(c); pickSeats.push(c);
-        SEATS.push({ x, z, yaw, y: H.floor, lift: 0.1, kind: "hearth", camPitch: 0.98, camDist: 4.6 });
+        SEATS.push({ x, z, yaw, y: H.floor, lift: 0.1, kind: "hearth", camYaw: 0, camPitch: 0.5, camDist: 5.8, focusPitch: 0.46, focusDist: 5.2 });
       });
       // 칠판(남기는 글)
       const board = box(2.5, 1.62, 0.06, 0x5a4232, H.x - 1.4, H.floor + 1.45, H.z - H.d / 2 + 0.2);

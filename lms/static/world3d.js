@@ -750,6 +750,7 @@ const cam = { yaw: P.spawn.camYaw || 0, pitch: CAM.pitch, dist: CAM.free, tYaw: 
 const camTarget = new THREE.Vector3();
 let camFree = CAM.free, camLift = 0, camYawOff = 0;
 const camDir = new THREE.Vector3(), _tmpDir = new THREE.Vector3();
+let viewShift = 0;
 function updateCamera(dt, snap) {
   // 부드럽게 따라가기: 손으로 돌릴 때는 빠르게, 저절로 돌아갈 때는 천천히 (지수 감쇠라 화면 빠르기와 상관없이 같은 느낌)
   const ky = snap ? 1 : 1 - Math.exp(-dt * (drag && drag.moved ? 14 : 4.5));
@@ -776,15 +777,16 @@ function updateCamera(dt, snap) {
   let yawOff = 0;
   if (free < cam.dist * 0.6 && !(drag && drag.moved)) {
     let best = free;
-    for (const yo of [0.5, -0.5, 0.9, -0.9]) { const f = freeAt(cam.pitch + lift, _tmpDir, yo); if (f > best + 0.5) { best = f; yawOff = yo; } }
+    const sweep = state === "free" ? [0.5, -0.5, 0.9, -0.9] : [0.5, -0.5, 0.9, -0.9, 1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI];
+    for (const yo of sweep) { const f = freeAt(cam.pitch + lift, _tmpDir, yo); if (f > best + 0.5) { best = f; yawOff = yo; if (f >= cam.dist * 0.85) break; } }
     free = best;
   }
   camYawOff = snap ? yawOff : camYawOff + (yawOff - camYawOff) * (1 - Math.exp(-dt * 2.2));
-  camLift += (lift - camLift) * (1 - Math.exp(-dt * (lift > camLift ? 10 : 2.5)));
+  camLift = snap ? lift : camLift + (lift - camLift) * (1 - Math.exp(-dt * (lift > camLift ? 10 : 2.5)));
   const pe = cam.pitch + camLift, ye = cam.yaw + camYawOff;
   if (Math.abs(camYawOff - yawOff) > 0.02 || Math.abs(camLift - lift) > 0.02) free = Math.min(free, freeAt(pe, _tmpDir, camYawOff));   // 도는 중에도 벽을 뚫지 않게
   camDir.set(Math.sin(ye) * Math.cos(pe), Math.sin(pe), Math.cos(ye) * Math.cos(pe));
-  camFree = free < camFree || snap ? free : camFree + (free - camFree) * (1 - Math.exp(-dt * 2.5));
+  camFree = free < camFree || snap ? free : camFree + (free - camFree) * (1 - Math.exp(-dt * 6));   // 벽에서 풀리면 빨리 제 거리로 (가까이 붙은 화면이 오래 남지 않게)
   const d = Math.min(cam.dist, camFree);
   const cx = camTarget.x + camDir.x * d, cz = camTarget.z + camDir.z * d, cy = camTarget.y + camDir.y * d;
   camera.position.set(cx, Math.max(cy, heightAt(cx, cz) + 0.5), cz);
@@ -792,11 +794,24 @@ function updateCamera(dt, snap) {
   // 카메라가 캐릭터에 너무 붙으면 내 캐릭터를 잠깐 숨긴다 (머리 속이 보이지 않게)
   me.g.visible = !QS.has("shot") && d > 2.2;   // 벽 때문에 카메라가 바짝 붙으면 머리가 화면을 가리지 않게 숨긴다
   if (me.tag) me.tag.material.opacity = Math.max(0, Math.min(1, (d - 2.2) / 1.2));   // 가까우면 내 이름표는 흐리게
+  // 앉으면 아래에 버튼이 쌓인다: 카메라는 그대로 두고 그림만 위로 밀어 캐릭터가 버튼에 가리지 않게 한다
+  const cw = stage.clientWidth, ch = stage.clientHeight;
+  const wantShift = state === "sitting" ? (cw / ch < 0.8 ? 0.17 : 0.13) : state === "focus" && cw / ch < 0.8 ? 0.05 : 0;
+  viewShift = snap ? wantShift : viewShift + (wantShift - viewShift) * (1 - Math.exp(-dt * 4));
+  if (viewShift > 0.002) camera.setViewOffset(cw, ch, 0, Math.round(ch * viewShift), cw, ch); else if (camera.view) camera.clearViewOffset();
   if (SHOT) { camera.position.set(...SHOT.p); camera.lookAt(...SHOT.t); if (camera.fov !== SHOT.fov) { camera.fov = SHOT.fov; camera.updateProjectionMatrix(); } }
 }
-function camBehind(dist, pitch) {
-  const want = me.yaw + Math.PI, d = Math.atan2(Math.sin(want - cam.tYaw), Math.cos(want - cam.tYaw));
+function camBehind(dist, pitch, yaw) {
+  const want = yaw !== undefined ? yaw : me.yaw + Math.PI, d = Math.atan2(Math.sin(want - cam.tYaw), Math.cos(want - cam.tYaw));
   cam.tYaw += d; if (dist) cam.tDist = dist; if (pitch) cam.tPitch = pitch;
+}
+function camCut() { cam.yaw = cam.tYaw; cam.pitch = cam.tPitch; cam.dist = cam.tDist; updateCamera(0, true); }
+// 앉은 자리에 맞는 카메라: 자리가 정한 방향·거리·각도가 있으면 그것을, 없으면 등 뒤에서 (집중 중에는 조금 더 가까이)
+function seatCam(focus) {
+  const s = SEATS[mySeat] || {};
+  const dist = focus ? (s.focusDist || (s.camDist ? s.camDist * 0.9 : CAM.focus)) : (s.camDist || CAM.seated);
+  const pitch = focus ? (s.focusPitch || (s.camPitch ? s.camPitch * 0.92 : CAM.focusPitch)) : (s.camPitch || CAM.seatPitch);
+  camBehind(dist, pitch, s.camYaw);
 }
 
 // ---------------------------------------------------------------- 입력: 누르기·끌기·확대
@@ -909,7 +924,9 @@ function goSit(id) {
 function sitAt(id) {
   const s = SEATS[id], yaw = s.yaw !== undefined ? s.yaw : Math.PI;
   me.place(s.x, s.z); me.yaw = yaw; me.targetYaw = yaw; me.pose = "sit"; me.seat = id; mySeat = id; me.lastSeat = id;
-  state = "sitting"; camBehind(s.camDist || CAM.seated, s.camPitch || CAM.seatPitch);
+  state = "sitting"; seatCam(false);
+  // 실내 자리·보는 방향이 정해진 자리는 카메라를 돌리는 동안 벽에 가려지므로, 돌리지 않고 바로 자리 화면으로 넘어간다
+  if (s.camYaw !== undefined || (P.indoor && P.indoor(s.x, s.z))) camCut();
   audio.sfx((typeof P.sitSound === "function" ? P.sitSound(s) : P.sitSound) || "cushion");
   whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요. 시간을 고르고 집중을 시작해 보세요.");
   render(); sync(true);
@@ -999,9 +1016,12 @@ function render() {
   let html = "";
   let ids = (P.actions[state] || []).slice();
   if (state !== "focus" && !ids.includes("hi")) ids.splice(Math.max(1, ids.length - (state === "sitting" ? 1 : 0)), 0, "hi");   // 누구에게나 하이!
-  html = ids.map((id, i) => btn(id, i === 0 && state !== "focus")).join("");
+  ids = ids.filter((id) => id !== "focus");                                  // 집중 시작은 따로 큰 버튼으로
+  if (state !== "focus") stopArmed = 0;
+  html = ids.map((id, i) => btn(id, i === 0 && state === "free")).join("");
   actionsEl.innerHTML = html;
   plansEl.hidden = state !== "sitting";
+  ctaEl.hidden = state !== "sitting"; ctaMin.textContent = chosenPlan() + "분";
   if (chatEl) {
     const can = !!(P.chat && P.chat.can(mySeat !== null ? SEATS[mySeat] : null, state));
     chatEl.hidden = !can; if (can && P.chat.placeholder) chatEl.querySelector("input").placeholder = P.chat.placeholder;
@@ -1010,9 +1030,13 @@ function render() {
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
   $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요` : `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요 · 스페이스는 ${LABEL[P.spaceAction || "gassho"]}`)
-    : state === "sitting" ? "시간을 고르고 '집중 시작'을 누르세요" : "화면을 닫아도 여기까지 기록돼요";
+    : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록돼요";
 }
 actionsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act); });
+const ctaEl = $("[data-cta]"), ctaMin = $("[data-cta-min]");
+ctaEl.addEventListener("click", () => act("focus"));
+plansEl.addEventListener("change", () => { ctaMin.textContent = chosenPlan() + "분"; });
+let stopArmed = 0;       // '그만하기'는 두 번 눌러야 끝난다 (잘못 눌러 집중이 끊기지 않게)
 function act(id, obj) {
   if (P.custom && P.custom[id]) return P.custom[id](E, obj);
   if (id === "sit") { const s = nearestFreeSeat(); return s === null ? whisper(`빈 ${josa(P.seatNoun, "이", "가")} 없어요.`) : goSit(s); }
@@ -1022,7 +1046,13 @@ function act(id, obj) {
   if (id === "hi") { me.gesture("wave", 2.2); me.say("하이!"); audio.sfx("hi"); E.share("hi"); return; }
   if (id === "breathe") return breathe();
   if (id === "focus") return startFocus();
-  if (id === "stop") return finishFocus(false);
+  if (id === "stop") {
+    if (Date.now() < stopArmed) { stopArmed = 0; return finishFocus(false); }
+    stopArmed = Date.now() + 4000;
+    const b = actionsEl.querySelector('[data-act="stop"]'), min = Math.floor((Date.now() - focusStart) / 60000);
+    if (b) { b.classList.add("is-armed"); b.querySelector("span").textContent = "한 번 더"; setTimeout(() => { if (Date.now() >= stopArmed && state === "focus") render(); }, 4100); }
+    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않아요. 끝내려면 한 번 더 누르세요." : `지금 끝내면 ${min}분이 기록돼요. 끝내려면 한 번 더 누르세요.`, 4000);
+  }
 }
 
 // ---------------------------------------------------------------- 사진 찍기: 지금 화면을 찍어 창으로 띄우고 저장·공유
@@ -1085,36 +1115,38 @@ function chosenPlan() { const c = plansEl.querySelector('input[name="plan"]:chec
 function startFocus() {
   if (state !== "sitting") return;
   planMin = chosenPlan(); state = "focus"; focusStart = Date.now(); me.focus = true;
-  me.setFocusLeft(planMin * 60, planMin);   // 친구들이 보는 것처럼 내 머리 위에도 남은 시간
-  camBehind(CAM.focus, CAM.focusPitch);
+  seatCam(true);
   audio.sfx("bowl"); audio.duck(true);
   whisper(P.focusText ? P.focusText(planMin) : planMin + "분, 지금부터 고요히.");
-  render(); post(root.dataset.beat, { action: "start", plan: planMin }).then(onBeat).catch(() => {}); sync(true);
+  render(); tickTimer(); post(root.dataset.beat, { action: "start", plan: planMin }).then(onBeat).catch(() => {}); sync(true);
 }
 let finishing = false;
 function finishFocus(complete) {
   if (state !== "focus" || finishing) return; finishing = true;
   const minutes = Math.floor((Date.now() - focusStart) / 60000);
   post(root.dataset.done, { minutes: complete ? planMin : minutes }).then((d) => {
-    state = "sitting"; me.focus = false; me.setFocusLeft(null); audio.duck(false); audio.sfx("bowl");
-    camBehind(CAM.seated, CAM.seatPitch); render();
+    state = "sitting"; me.focus = false; audio.duck(false); audio.sfx("bowl");
+    seatCam(false); render();
     const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분.` : `5분이 안 돼서 기록하지 않았어요. 오늘 ${d.today}분.`;
     whisper(complete ? "수고했어요. " + m : m, 5000); msgEl.textContent = m;
     sync(true);
-  }).catch(() => whisper("연결이 불안정해요. 잠시 뒤 다시 눌러 주세요.")).finally(() => { finishing = false; });
+  }).catch(() => { finishRetry = Date.now() + 5000; whisper(complete ? "연결이 불안정해요. 기록을 다시 보내는 중이에요." : "연결이 불안정해요. 잠시 뒤 다시 눌러 주세요."); }).finally(() => { finishing = false; });
 }
+let finishRetry = 0;
+const ringEl = $("[data-ring]"), RING = 2 * Math.PI * 14;
 function tickTimer() {
   if (state !== "focus") return;
-  const left = Math.max(0, planMin * 60 - Math.floor((Date.now() - focusStart) / 1000));
+  const total = planMin * 60, left = Math.max(0, total - Math.floor((Date.now() - focusStart) / 1000));
   clockEl.textContent = pad(Math.floor(left / 60)) + ":" + pad(left % 60);
-  if (left === 0) finishFocus(true);
+  ringEl.setAttribute("stroke-dasharray", `${(RING * (1 - left / total)).toFixed(1)} ${RING.toFixed(1)}`);
+  if (left === 0 && Date.now() > finishRetry) finishFocus(true);       // 연결이 끊겼으면 5초마다 다시 보낸다
 }
 setInterval(tickTimer, 500);
 
 // ---------------------------------------------------------------- 친구들 (서버와 주고받기)
 const others = new Map();
 if (QS.has("debug")) window.__w3 = { others, me: () => me, cam: () => ({ d: camera.position.distanceTo(camTarget), dist: cam.dist, pitch: cam.pitch + camLift }),
-  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; }, sit: (i) => goSit(i),
+  fakeFocus: (min) => { focusStart = Date.now() - min * 60000; }, sit: (i) => goSit(i), teleSit: (i) => { standUp(true); sitAt(i); }, occ: () => { const d = new THREE.Vector3(); const yw = cam.yaw, pt = cam.pitch; d.set(Math.sin(yw) * Math.cos(pt), Math.sin(pt), Math.cos(yw) * Math.cos(pt)); occRay.set(camTarget, d); occRay.far = cam.dist + 0.4; return occRay.intersectObjects(occluders, false).filter((x) => shown(x.object)).slice(0, 3).map((h) => [h.distance.toFixed(2), h.object.geometry.type, JSON.stringify(h.object.geometry.parameters || {}).slice(0, 90), h.object.getWorldPosition(new THREE.Vector3()).toArray().map((v) => +v.toFixed(1)).join(",")]); }, seatInfo: () => SEATS.map((q) => ({ kind: q.kind, x: q.x, z: q.z })), tp: (x, z) => { standUp(true); me.place(x, z); },
   pick: (cx, cy) => { const r = canvas.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); return ray.intersectObjects(P.picks, false).slice(0, 3).map((h) => [JSON.stringify(h.object.userData), h.distance.toFixed(2), h.object.geometry.type]); }, state: () => [state, mySeat], seats: () => SEATS.map((s) => s.kind),
   project: (i) => { const s = SEATS[i], v = new THREE.Vector3(s.x, (s.y || 0) + 0.25, s.z).project(camera), r = renderer.domElement.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; } };
 const listEl = root.querySelector("[data-members]");
@@ -1145,7 +1177,14 @@ function onBeat(d) {
   if (d.board && P.board) P.board(d.board);
   const seen = new Set();
   d.members.forEach((m) => {
-    if (m.me) { me.setKing(m.king); me.setCharm(m.charm); me.setFocusLeft(m.status === "focus" ? m.left : null, m.plan); return; } seen.add(m.id);
+    if (m.me) {
+      me.setKing(m.king); me.setCharm(m.charm);
+      if (state === "focus" && m.status === "focus" && m.plan) {          // 내 타이머는 서버가 잰 시간에 맞춘다
+        const start = Date.now() - (m.plan * 60 - m.left) * 1000;
+        if (Math.abs(start - focusStart) > 3000) focusStart = start;
+      }
+      return;
+    } seen.add(m.id);
     let o = others.get(m.id);
     if (!o) {
       o = new Avatar({ color: m.color, nick: m.nick, cap: m.cap }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
@@ -1293,9 +1332,10 @@ $("[data-enter-btn]").addEventListener("click", () => {
   whisper(P.welcome, 4200);
   render(); sync(true);
   if (root.dataset.status === "focus") {      // 집중 중에 나갔다 돌아온 경우: 빈 방석에 앉혀 이어간다
-    const s = nearestFreeSeat();
+    const was = parseInt(root.dataset.seat, 10);       // 앉아 있던 그 자리로 (누가 앉았으면 가까운 빈자리)
+    const s = SEATS[was] && !occupiedSeats().has(was) ? was : nearestFreeSeat();
     if (s !== null) { sitAt(s); state = "focus"; me.focus = true; planMin = parseInt(root.dataset.plan, 10) || 40;
-      focusStart = Date.now() - (parseInt(root.dataset.elapsed, 10) || 0) * 60000; camBehind(CAM.focus, CAM.focusPitch); render(); }
+      focusStart = Date.now() - (parseInt(root.dataset.elapsed, 10) || 0) * 60000; seatCam(true); render(); camCut(); }   // 멀리서 날아오지 않고 바로 자리 화면으로
   }
 });
 
