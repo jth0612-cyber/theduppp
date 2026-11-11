@@ -43,7 +43,6 @@
       <div class="book-meta">
         <p class="book-name">LINE UP</p>
         <p class="book-sub">개념서</p>
-        {% if buy and buy.lineup %}<a class="book-buy" href="{{ buy.lineup }}" target="_blank" rel="noopener noreferrer">구매하기<span class="sr-only"> LINE UP (새 창)</span> <span aria-hidden="true">↗</span></a>{% endif %}
       </div>
     </li>
     <li class="book-item">
@@ -56,7 +55,6 @@
       <div class="book-meta">
         <p class="book-name">FRAMING</p>
         <p class="book-sub">기출 분석집</p>
-        {% if buy and buy.framing %}<a class="book-buy" href="{{ buy.framing }}" target="_blank" rel="noopener noreferrer">구매하기<span class="sr-only"> FRAMING (새 창)</span> <span aria-hidden="true">↗</span></a>{% endif %}
       </div>
     </li>
     <li class="book-item">
@@ -69,7 +67,6 @@
       <div class="book-meta">
         <p class="book-name">Squeeze</p>
         <p class="book-sub">주간지 Season 1&amp;2</p>
-        {% if buy and buy.squeeze %}<a class="book-buy" href="{{ buy.squeeze }}" target="_blank" rel="noopener noreferrer">구매하기<span class="sr-only"> Squeeze (새 창)</span> <span aria-hidden="true">↗</span></a>{% endif %}
       </div>
     </li>
     <li class="book-item">
@@ -82,7 +79,6 @@
       <div class="book-meta">
         <p class="book-name">SWEEP</p>
         <p class="book-sub">주간지 Season 3</p>
-        {% if buy and buy.sweep %}<a class="book-buy" href="{{ buy.sweep }}" target="_blank" rel="noopener noreferrer">구매하기<span class="sr-only"> SWEEP (새 창)</span> <span aria-hidden="true">↗</span></a>{% endif %}
       </div>
     </li>
   </ul>
@@ -102,7 +98,10 @@
     <li><a href="{{ url_for('books.analysis_home') }}">
       <span class="g-body"><b>모의고사 분석</b></span>
       <span class="g-go" aria-hidden="true">→</span></a></li>
+    <li><a href="{{ url_for('books.shop') }}">
+      <span class="g-body"><b>교재 구매</b></span>
+      <span class="g-go" aria-hidden="true">→</span></a></li>
   </ul>
-  <p class="fine">세 곳 모두 로그인한 재원생에게만 열립니다.</p>
+  <p class="fine">네 곳 모두 로그인한 재원생에게만 열립니다.</p>
 </section>
 {% endblock %}

@@ -1698,10 +1698,14 @@ body.tt-open { overflow: hidden; }
 .nowrap { white-space: nowrap; }
 .rs-bars li { grid-template-columns: 80px 1fr auto; }
 .rs-bars li > b { white-space: nowrap; min-width: 2.4em; text-align: right; }
-/* 첫 화면 교재: 구매 링크 버튼 */
-.book-meta { align-items: center; }
-.book-meta .book-buy { flex: none; font-size: 13px; font-weight: 600; color: #fff; background: #1d1b18; border-radius: 999px; padding: 6px 14px; text-decoration: none; white-space: nowrap; transition: background-color .15s ease; }
-.book-meta .book-buy:hover { background: #2c6852; text-decoration: none; }
-.book-meta .book-buy:focus-visible { outline: 2px solid #2c6852; outline-offset: 2px; }
-.book-meta:has(.book-buy) .book-sub { margin-left: auto; }
 .row > .grow { flex: 1; min-width: 0; }
+/* 교재 구매 */
+.shop-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.shop-item { background: var(--surface); border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.shop-item img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; background: var(--raised); }
+.shop-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+.shop-meta div { display: grid; gap: 1px; min-width: 0; }
+.shop-meta b { font-size: 16px; font-weight: 700; }
+.shop-meta span { font-size: 13px; color: var(--muted); }
+.shop-meta .btn { flex: none; }
+.shop-wait { font-size: 13px; color: var(--muted); padding: 6px 12px; border: 1px dashed var(--edge); border-radius: 8px; }

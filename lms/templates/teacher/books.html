@@ -27,7 +27,7 @@
 
 <div class="card" id="shop">
   <h2>교재 구매 링크</h2>
-  <p class="muted small">로그인하지 않은 사람도 보는 첫 화면의 교재 표지 아래에 '구매하기' 버튼으로 나가요. 스마트스토어·서점 상품 주소를 붙여 넣으세요. 비워 두면 버튼이 숨겨져요.</p>
+  <p class="muted small">로그인한 학생에게 보이는 <a href="{{ url_for('books.shop') }}">교재 구매</a> 화면에 나가요. 첫 화면 안내의 '교재 구매'를 누르면 로그인 뒤 이 화면으로 와요. 스마트스토어·서점 상품 주소를 붙여 넣으세요. 비워 두면 '준비 중'으로 보여요.</p>
   <form method="post" action="{{ url_for('books.shop_save') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for key, name, sub in shop %}

@@ -138,15 +138,19 @@ class LinkTest(unittest.TestCase):
             self.assertEqual(json.loads(query("SELECT data FROM sys_rows WHERE tbl = '출결'", one=True)["data"])["출결"], "결석")
 
     def test_book_purchase_links(self):
-        self.assertNotIn("book-buy", self.app.test_client().get("/").data.decode())
         r = self.t.post("/t/books/shop", data={"lineup": "smartstore.naver.com/thedu/products/1", "framing": "javascript:alert(1)",
                                                "squeeze": "", "sweep": "https://example.com/sweep"}, follow_redirects=True)
         self.assertIn("FRAMING", r.data.decode())                  # 주소가 아닌 값은 거부
         home = self.app.test_client().get("/").data.decode()
-        self.assertIn('href="https://smartstore.naver.com/thedu/products/1"', home)
-        self.assertIn('href="https://example.com/sweep"', home)
-        self.assertNotIn("javascript:", home)
-        self.assertEqual(home.count('class="book-buy"'), 2)
+        self.assertIn("교재 구매", home)                            # 첫 화면 안내에는 입구만
+        self.assertNotIn("smartstore", home)
+        self.assertEqual(self.app.test_client().get("/s/books/buy").status_code, 302)   # 로그인 전에는 막힘
+        s = self.signup("K7QM-3XPA") if self.push(self.tables()) else None
+        page = s.get("/s/books/buy").data.decode()
+        self.assertIn('href="https://smartstore.naver.com/thedu/products/1"', page)
+        self.assertIn('href="https://example.com/sweep"', page)
+        self.assertNotIn("javascript:", page)
+        self.assertEqual(page.count("준비 중"), 2)
 
     def test_table_names(self):
         import sysdata

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}교재 구매 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<header class="ed-head">
+  <h1>교재 구매</h1>
+  <p class="ed-lede">수업에서 쓰는 교재예요. 구매하기를 누르면 판매 페이지가 새 창으로 열려요.</p>
+</header>
+<ul class="shop-list">
+  {% for b in books %}
+  <li class="shop-item">
+    <img src="{{ url_for('static', filename='img/books/' ~ b.key ~ '-cover-720.webp') }}" width="720" height="480" loading="lazy" alt="{{ b.alt }}">
+    <div class="shop-meta">
+      <div><b>{{ b.name }}</b><span>{{ b.sub }}</span></div>
+      {% if b.url %}<a class="btn primary" href="{{ b.url }}" target="_blank" rel="noopener noreferrer">구매하기<span class="sr-only"> {{ b.name }} (새 창)</span></a>
+      {% else %}<span class="shop-wait">준비 중</span>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+<p class="small muted">구매·배송·환불은 판매처에서 처리돼요. 수업 관련 문의는 질답 게시판 행정문의로 남겨 주세요.</p>
+{% endblock %}

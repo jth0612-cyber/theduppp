@@ -13,7 +13,7 @@ from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, 
 
 import analysis
 from db import execute, query
-from security import audit, staff_required, student_required, teacher_only, teacher_required
+from security import audit, member_required, staff_required, student_required, teacher_only, teacher_required
 
 bp = Blueprint("books", __name__)
 
@@ -191,6 +191,8 @@ def clear_entry(mid):
 # 첫 화면(로그인 전) 교재 표지마다 붙는 구매 링크. 열쇠: settings 'buy_<key>'
 SHOP_BOOKS = [("lineup", "LINE UP", "개념서"), ("framing", "FRAMING", "기출 분석집"),
               ("squeeze", "Squeeze", "주간지 Season 1&2"), ("sweep", "SWEEP", "주간지 Season 3")]
+SHOP_ALT = {"lineup": "LINE UP 통합과학 I과 II 두 권", "framing": "FRAMING 검은 표지와 흰 표지 두 권",
+            "squeeze": "Squeeze Season 1과 Season 2 주간지 두 권", "sweep": "SWEEP 주간지 앞표지와 보라색 뒤표지"}
 
 
 def shop_links():
@@ -227,8 +229,15 @@ def shop_save():
     if bad:
         flash("주소 모양이 아니라 저장하지 못했어요: " + ", ".join(bad), "error")
     else:
-        flash("구매 링크를 저장했어요. 첫 화면 표지 아래에 '구매하기'로 보여요.", "ok")
+        flash("구매 링크를 저장했어요. 학생 화면 '교재 구매'에 보여요.", "ok")
     return redirect(url_for("books.teacher_books") + "#shop")
+
+
+@bp.route("/s/books/buy")
+@member_required
+def shop():
+    links = shop_links()
+    return render_template("student/shop.html", books=[{"key": k, "name": n, "sub": sub, "url": links[k], "alt": SHOP_ALT[k]} for k, n, sub in SHOP_BOOKS])
 
 
 @bp.route("/t/books", methods=["GET", "POST"])
