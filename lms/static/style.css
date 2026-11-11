@@ -1698,3 +1698,10 @@ body.tt-open { overflow: hidden; }
 .nowrap { white-space: nowrap; }
 .rs-bars li { grid-template-columns: 80px 1fr auto; }
 .rs-bars li > b { white-space: nowrap; min-width: 2.4em; text-align: right; }
+/* 첫 화면 교재: 구매 링크 버튼 */
+.book-meta { align-items: center; }
+.book-meta .book-buy { flex: none; font-size: 13px; font-weight: 600; color: #fff; background: #1d1b18; border-radius: 999px; padding: 6px 14px; text-decoration: none; white-space: nowrap; transition: background-color .15s ease; }
+.book-meta .book-buy:hover { background: #2c6852; text-decoration: none; }
+.book-meta .book-buy:focus-visible { outline: 2px solid #2c6852; outline-offset: 2px; }
+.book-meta:has(.book-buy) .book-sub { margin-left: auto; }
+.row > .grow { flex: 1; min-width: 0; }

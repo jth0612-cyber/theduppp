@@ -25,6 +25,20 @@
   {% endif %}
 </div>
 
+<div class="card" id="shop">
+  <h2>교재 구매 링크</h2>
+  <p class="muted small">로그인하지 않은 사람도 보는 첫 화면의 교재 표지 아래에 '구매하기' 버튼으로 나가요. 스마트스토어·서점 상품 주소를 붙여 넣으세요. 비워 두면 버튼이 숨겨져요.</p>
+  <form method="post" action="{{ url_for('books.shop_save') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for key, name, sub in shop %}
+    <div class="field"><label for="buy-{{ key }}">{{ name }} <span class="small muted">{{ sub }}</span></label>
+      <div class="row"><input type="text" id="buy-{{ key }}" autocapitalize="off" spellcheck="false" name="{{ key }}" value="{{ links[key] }}" maxlength="500" inputmode="url" placeholder="https://" class="grow">
+      {% if links[key] %}<a class="btn small" href="{{ links[key] }}" target="_blank" rel="noopener noreferrer">열어 보기</a>{% endif %}</div></div>
+    {% endfor %}
+    {% if g.user.role == 'teacher' %}<button class="btn primary" type="submit">저장</button>{% else %}<p class="small muted">구매 링크는 강사 계정에서만 바꿀 수 있어요.</p>{% endif %}
+  </form>
+</div>
+
 <div class="card" id="new-book">
   <h2>교재 만들기</h2>
   <form method="post">

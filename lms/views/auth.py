@@ -47,7 +47,8 @@ def _home_for(user):
 @bp.route("/")
 def index():
     if g.user is None:
-        return render_template("home.html")  # 로그인 전 첫 화면: 공지·Q&A 바로가기 (들어가면 로그인 필요)
+        from views.books import shop_links
+        return render_template("home.html", buy=shop_links())  # 로그인 전 첫 화면: 교재(구매 링크)·공지·Q&A 바로가기
     return redirect(_home_for(g.user))
 
 

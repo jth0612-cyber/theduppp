@@ -5,6 +5,7 @@
 import csv
 import io
 import json
+import re
 from datetime import date, datetime, timedelta
 
 from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, render_template, request,
@@ -187,6 +188,49 @@ def clear_entry(mid):
 
 # ---------- 강사 ----------
 
+# 첫 화면(로그인 전) 교재 표지마다 붙는 구매 링크. 열쇠: settings 'buy_<key>'
+SHOP_BOOKS = [("lineup", "LINE UP", "개념서"), ("framing", "FRAMING", "기출 분석집"),
+              ("squeeze", "Squeeze", "주간지 Season 1&2"), ("sweep", "SWEEP", "주간지 Season 3")]
+
+
+def shop_links():
+    have = {r["key"][4:]: r["value"] for r in query("SELECT key, value FROM settings WHERE substr(key, 1, 4) = 'buy_'")}
+    return {k: have.get(k, "") for k, _, _ in SHOP_BOOKS}
+
+
+def _clean_url(raw):
+    """http(s) 주소만 받는다. 'smartstore.naver.com/...'처럼 앞을 빼먹으면 https:// 를 붙인다."""
+    from urllib.parse import urlparse
+    u = (raw or "").strip()[:500]
+    if not u:
+        return ""
+    if not re.match(r"^https?://", u, re.I):
+        u = "https://" + u
+    p = urlparse(u)
+    return u if p.scheme in ("http", "https") and "." in p.netloc and " " not in u else None
+
+
+@bp.route("/t/books/shop", methods=["POST"])
+@teacher_required
+def shop_save():
+    bad = []
+    for key, name, _ in SHOP_BOOKS:
+        url = _clean_url(request.form.get(key, ""))
+        if url is None:
+            bad.append(name)
+            continue
+        if url:
+            execute("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", ("buy_" + key, url))
+        else:
+            execute("DELETE FROM settings WHERE key = ?", ("buy_" + key,))
+    audit("shop_links")
+    if bad:
+        flash("주소 모양이 아니라 저장하지 못했어요: " + ", ".join(bad), "error")
+    else:
+        flash("구매 링크를 저장했어요. 첫 화면 표지 아래에 '구매하기'로 보여요.", "ok")
+    return redirect(url_for("books.teacher_books") + "#shop")
+
+
 @bp.route("/t/books", methods=["GET", "POST"])
 @staff_required
 def teacher_books():
@@ -210,7 +254,7 @@ def teacher_books():
     books = query("""SELECT b.*, (SELECT COUNT(*) FROM user_books ub WHERE ub.book_id = b.id) AS users,
                      (SELECT COUNT(*) FROM mocks m WHERE m.book_id = b.id) AS mocks
                      FROM books b ORDER BY b.created_at DESC""")
-    return render_template("teacher/books.html", books=books, today=_today())
+    return render_template("teacher/books.html", books=books, today=_today(), shop=SHOP_BOOKS, links=shop_links())
 
 
 def _book_or_404(bid):

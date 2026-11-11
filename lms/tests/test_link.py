@@ -137,6 +137,17 @@ class LinkTest(unittest.TestCase):
         with self.app.app_context():
             self.assertEqual(json.loads(query("SELECT data FROM sys_rows WHERE tbl = '출결'", one=True)["data"])["출결"], "결석")
 
+    def test_book_purchase_links(self):
+        self.assertNotIn("book-buy", self.app.test_client().get("/").data.decode())
+        r = self.t.post("/t/books/shop", data={"lineup": "smartstore.naver.com/thedu/products/1", "framing": "javascript:alert(1)",
+                                               "squeeze": "", "sweep": "https://example.com/sweep"}, follow_redirects=True)
+        self.assertIn("FRAMING", r.data.decode())                  # 주소가 아닌 값은 거부
+        home = self.app.test_client().get("/").data.decode()
+        self.assertIn('href="https://smartstore.naver.com/thedu/products/1"', home)
+        self.assertIn('href="https://example.com/sweep"', home)
+        self.assertNotIn("javascript:", home)
+        self.assertEqual(home.count('class="book-buy"'), 2)
+
     def test_table_names(self):
         import sysdata
         self.assertEqual(sysdata.table_key("🌐앱_성적"), "성적")
