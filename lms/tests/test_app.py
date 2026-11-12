@@ -468,7 +468,7 @@ class FeatureTest(AppTest):
         _, s1, _ = self._students()
         self.assertEqual(s1.post("/s/games/quiz/start", json={"topic": "없는단원"}).status_code, 400)
         for _ in range(3):
-            start = s1.post("/s/games/quiz/start", json={"topic": "life"}).get_json()
+            start = s1.post("/s/games/quiz/start", json={"topic": "15"}).get_json()
             self.assertNotIn("answer_index", str(start))
             with self.app.app_context():
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (start["round_id"],),
@@ -480,7 +480,7 @@ class FeatureTest(AppTest):
     def test_quiz_checks_each_question_right_away(self):
         import json as _json
         _, s1, s2 = self._students()
-        start = s1.post("/s/games/quiz/start", json={"topic": "life"}).get_json()
+        start = s1.post("/s/games/quiz/start", json={"topic": "15"}).get_json()
         rid = start["round_id"]
         with self.app.app_context():
             ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
@@ -507,13 +507,24 @@ class FeatureTest(AppTest):
         for _ in range(30):
             for it in quiz.chargaff_round():
                 texts += [it["question"], it["explanation"]] + it["choices"]
-        for items in quiz.BANK.values():
-            for q, ch, _, e in items:
-                texts += [q, e] + ch
+        import quiz_topics
+        def strings(x):
+            if isinstance(x, str):
+                yield x
+            elif isinstance(x, (list, tuple)):
+                for y in x:
+                    yield from strings(y)
+            elif isinstance(x, dict):
+                for k, y in x.items():
+                    if k != "code":
+                        yield from strings(y)
+        texts += list(strings(quiz_topics.TOPICS))
+        for c in quiz.TOPICS:
+            texts += list(strings(quiz.bank_quiz(c)))
         _, s1, _ = self._students()
         texts += [s1.get(u).data.decode() for u in ("/s/games/dna", "/s/games/dna?mode=rna", "/s/games/chargaff")]
         blob = " ".join(texts)
-        for bad in ("퓨린", "피리미딘", "수소 결합", "5'", "3'", "금속 결합"):
+        for bad in ("퓨린", "피리미딘", "수소 결합", "5'", "3'", "금속 결합", "종결 코돈", "산화수"):
             self.assertNotIn(bad, blob, bad)
 
     def test_rna_transcription_and_new_modes(self):
@@ -596,12 +607,12 @@ class FeatureTest(AppTest):
         for t in ("수능 영단어", "오늘의 20단어", "짝 맞추기", "스피드 O/X"):
             self.assertIn(t, hub)
         sci = s1.get("/s/games/sci").data.decode()
-        for t in ("통과 Quiz", "역학 시스템", "샤가프 법칙", "염기 짝 맞추기", "전사: DNA → RNA", "섞어 풀기", "O/X 스피드"):
+        for t in ("통과 Quiz", "운동과 충돌", "샤가프 법칙", "염기 짝 맞추기", "전사: DNA → RNA", "섞어 풀기", "O/X 스피드"):
             self.assertIn(t, sci)
         nav = s1.get("/s/games/sci").data.decode()
         self.assertIn(">수능 영단어<", nav)
         self.assertIn(">통과 Quiz<", nav)
-        self.assertIn('value="mechanics" selected', s1.get("/s/games/quiz?topic=mechanics").data.decode())
+        self.assertIn('value="15" selected', s1.get("/s/games/quiz?topic=15").data.decode())
 
     def test_behind_synology_https_proxy(self):
         """시놀로지 리버스 프록시(HTTPS) 뒤에서 CSRF·보안 쿠키·실제 IP 기록이 동작하는지."""
@@ -892,46 +903,52 @@ class FeatureTest(AppTest):
         self.assertIn(429, codes)
 
     def test_quiz_bank_has_enough_questions(self):
+        """TOPIC 01~34 모두 8문제 한 판이 나오고, 형식이 섞이며, ㄱㄴㄷ 정답이 진술과 맞는다."""
         import quiz
-        for key in quiz.TOPICS:
-            self.assertGreaterEqual(len(quiz.BANK[key]), 5, key)
-            items = quiz.bank_quiz(key)
-            self.assertEqual(len(items), 5)
-            for it in items:
-                if "choices" in it:
-                    self.assertEqual(len(set(it["choices"])), 4)
-            self.assertGreaterEqual(len({it["kind"] for it in items}), 2, key)   # 형식이 섞인다
-
-    def test_quiz_new_kinds(self):
-        """분류·순서·계산: 정답 검사, 잘못된 형식 거부, 문제 자료가 맞는지."""
-        import json as _json
-        import quiz
-        import quiz_kinds as qk
-        for key, sets in qk.SORT.items():
-            for prompt, bins, pool, exp in sets:
-                self.assertTrue(all(0 <= b < len(bins) for _, b in pool), prompt)
-                self.assertEqual({b for _, b in pool}, set(range(len(bins))), prompt)
-                self.assertEqual(len({x for x, _ in pool}), len(pool), prompt)
-        for _ in range(100):
-            for key in quiz.TOPICS:
-                for make in qk.specials(key) + ([qk.make_fill] if key in qk.FILL else []):
-                    it = make(key)
+        import quiz_topics as qt
+        self.assertEqual([t["code"] for t in qt.TOPICS], [f"{i:02d}" for i in range(1, 35)])
+        for t in qt.TOPICS:
+            self.assertGreaterEqual(len(t["tf"]), 7, t["code"])
+            self.assertTrue(any(s[1] for s in t["tf"]) and any(not s[1] for s in t["tf"]), t["code"])
+            for _, bins, pool, _ in t.get("sort", []):
+                self.assertEqual({b for _, b in pool}, set(range(len(bins))))
+                self.assertEqual(len({x for x, _ in pool}), len(pool))
+            for q, ch, ans, _ in t.get("mc", []):
+                self.assertEqual(len(set(ch)), len(ch)); self.assertTrue(0 <= ans < len(ch))
+        for _ in range(20):
+            for code in quiz.TOPICS:
+                items = quiz.bank_quiz(code)
+                self.assertEqual(len(items), 8)
+                self.assertGreaterEqual(len({it["kind"] for it in items}), 3, code)
+                for it in items:
+                    if "choices" in it:
+                        self.assertEqual(len(set(it["choices"])), len(it["choices"]))
+                    if it["kind"] == "pick":
+                        right = {"ㄱㄴㄷ"[i] for i, line in enumerate(it["lines"])
+                                 for s in qt.BY_CODE[code]["tf"] if s[0] == line and s[1]}
+                        self.assertEqual(set(it["choices"][it["answer_index"]].replace(", ", "")), right)
                     if it["kind"] == "order":
                         self.assertEqual(sorted(it["answer_list"]), list(range(len(it["items"]))))
-                        self.assertNotEqual(it["answer_list"], list(range(len(it["items"]))))
                     if it["kind"] == "sort":
                         self.assertEqual(set(it["answer_list"]), set(range(len(it["bins"]))))
-                    if it["kind"] == "fill":
-                        self.assertEqual(it["question"].count("___"), 1)
-            kinds = [it["kind"] for it in quiz.mixed_quiz()]
-            self.assertTrue({"mc", "sort", "order", "num", "fill"} <= set(kinds))
+        sp = quiz.speed_items()
+        self.assertEqual(len(sp), 40)
+        self.assertTrue(all(isinstance(x["ok"], bool) for x in sp))
+
+    def test_quiz_new_kinds(self):
+        """O/X·ㄱㄴㄷ·분류·순서·계산: 정답 검사, 잘못된 형식 거부, 범위별 섞어 풀기."""
+        import json as _json
         _, s1, _ = self._students()
-        for _ in range(4):
-            start = s1.post("/s/games/mixed/start", json={}).get_json()
-            self.assertNotIn("answer_list", str(start)); self.assertNotIn("answer_num", str(start))
+        page = s1.get("/s/games/sci").data.decode()
+        self.assertIn("TOPIC", page); self.assertIn("전자기 유도와 발전", page)
+        for part in ("1", "2", "all"):
+            start = s1.post("/s/games/mixed/start", json={"topic": part}).get_json()
+            self.assertNotIn("answer_list", str(start)); self.assertNotIn("answer_num", str(start)); self.assertNotIn("answer_index", str(start))
             rid = start["round_id"]
             with self.app.app_context():
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+            if part != "all":
+                self.assertTrue(all((int(a["topic"]) <= 19) == (part == "1") for a in ans))
             for i, a in enumerate(ans):
                 if a["kind"] in ("sort", "order"):
                     self.assertEqual(s1.post(f"/s/games/mixed/{rid}/check", json={"i": i, "pick": [99]}).status_code, 400)

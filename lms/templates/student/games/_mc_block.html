@@ -2,7 +2,7 @@
 <div class="card game" id="mc-game" data-game="{{ game }}" data-start="{{ url_for('games.' ~ game ~ '_start') }}">
   <div data-role="start">
     {% if topics %}
-    <div class="field"><label for="mc-topic">단원</label>
+    <div class="field"><label for="mc-topic">{{ topic_label or "단원" }}</label>
       <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
     {% endif %}
     {% if not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}

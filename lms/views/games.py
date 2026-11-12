@@ -72,8 +72,8 @@ def hub():
 @student_required
 def sci_hub():
     """통과 Quiz"""
-    return render_template("student/games/sci_hub.html", best=_best(),
-                           topics=[(k, v[0], v[1]) for k, v in quiz.TOPICS.items()])
+    parts = [(label, [(k, v[0]) for k, v in quiz.TOPICS.items() if v[2] == n]) for n, label in quiz.PARTS.items()]
+    return render_template("student/games/sci_hub.html", best=_best(), parts=parts)
 
 
 # ---------- 염기 짝 맞추기 ----------
@@ -118,7 +118,7 @@ def dna_submit(rid):
 
 # ---------- 객관식 공통 (샤가프 / 통합과학 퀴즈) ----------
 
-_PUBLIC_KEYS = ("question", "choices", "kind", "prompt", "sub", "tiles", "n", "hint", "tag", "items", "bins", "unit", "say")
+_PUBLIC_KEYS = ("question", "choices", "kind", "prompt", "sub", "tiles", "n", "hint", "tag", "items", "bins", "unit", "say", "lines")
 _TEXT_KINDS = ("spell", "num")
 _LIST_KINDS = ("sort", "order")
 
@@ -258,14 +258,17 @@ def chargaff_submit(rid):
 @student_required
 def mixed():
     return render_template("student/games/mc.html", game="mixed", title="섞어 풀기", parent="sci",
-                           intro="전 단원 10문제. 4지선다, 분류, 순서, 빈칸, 계산.", topics=None)
+                           intro="TOPIC 여러 개에서 10문제. O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산.",
+                           topics=[("all", "통합과학 1 + 2"), ("1", "통합과학 1 (TOPIC 01~19)"), ("2", "통합과학 2 (TOPIC 20~34)")],
+                           topic_label="범위", pick=request.args.get("part", "all"))
 
 
 @bp.route("/mixed/start", methods=["POST"])
 @student_required
 def mixed_start():
-    items = quiz.mixed_quiz()
-    rid = _new_round("mixed", _public(items), items)
+    part = {"1": 1, "2": 2}.get(str(_json_body().get("topic", "")))
+    items = quiz.mixed_quiz(part=part)
+    rid = _new_round("mixed", _public(items), items, topic=str(part or ""))
     return jsonify(round_id=rid, questions=_public(items))
 
 
@@ -285,7 +288,7 @@ def mixed_submit(rid):
 
 SPEED_SECONDS = 60
 SPEED = {"vocab_speed": ("영단어 스피드 O/X", "단어와 뜻이 맞으면 O, 틀리면 X. 제한 60초.", "vocab"),
-         "sci_speed": ("O/X 스피드", "문제와 답이 맞으면 O, 틀리면 X. 제한 60초.", "sci")}
+         "sci_speed": ("O/X 스피드", "개념 문장이 옳으면 O, 틀리면 X. 제한 60초.", "sci")}
 
 
 @bp.route("/speed/<kind>")
@@ -336,9 +339,11 @@ def speed_submit(kind, rid):
 @bp.route("/quiz", endpoint="quiz")
 @student_required
 def quiz_page():
-    return render_template("student/games/mc.html", game="quiz", title="단원 퀴즈", pick=request.args.get("topic", ""), parent="sci",
-                           intro="단원마다 5문제. 4지선다에 분류·순서·빈칸·계산이 섞여 나옵니다.",
-                           topics=[(k, v[0]) for k, v in quiz.TOPICS.items()])
+    pick = request.args.get("topic", "")
+    title = f"TOPIC {pick} {quiz.TOPICS[pick][0]}" if pick in quiz.TOPICS else "TOPIC 퀴즈"
+    return render_template("student/games/mc.html", game="quiz", title=title, pick=pick, parent="sci",
+                           intro="8문제. O/X, ㄱㄴㄷ 보기, 4지선다, 분류·순서·계산이 섞여 나옵니다.", topic_label="TOPIC",
+                           topics=[(k, f"TOPIC {k} {v[0]}") for k, v in quiz.TOPICS.items()])
 
 
 @bp.route("/quiz/start", methods=["POST"])

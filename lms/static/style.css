@@ -1866,3 +1866,20 @@ body.tt-open { overflow: hidden; }
 
 .mc-choices .is-spent { display: none; }
 @media (max-width: 560px) { .so-seg { padding: 7px 8px; } }
+
+/* ---------- 통과 Quiz: O/X 진술 · ㄱㄴㄷ 보기 · TOPIC 목록 ---------- */
+.kind-tf .mc-main, .kind-pick .mc-main { font-size: 18px; line-height: 1.55; }
+.mc-choices.kind-tf { flex-direction: row; }
+.mc-choices.kind-tf .mc-choice { flex: 1; text-align: center; font-size: 26px; font-weight: 800; padding: 14px 10px; }
+.pk-lines { list-style: none; margin: 6px 0 0; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 10px; display: grid; gap: 8px; background: var(--raised); }
+.pk-lines li { display: grid; grid-template-columns: 22px 1fr; gap: 4px; font-size: 15px; font-weight: 500; line-height: 1.5; }
+.pk-lines b { font-weight: 700; }
+.mc-choices.kind-pick { flex-direction: row; flex-wrap: wrap; }
+.mc-choices.kind-pick .mc-choice { flex: 1 1 calc(33% - 8px); min-width: 92px; text-align: center; }
+.mc-feedback p + p { margin-top: -6px; }
+.qz-tlist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
+.qz-tlist a { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid var(--edge); border-radius: 10px; color: var(--ink); background: var(--sheet); transition: border-color 150ms ease; }
+.qz-tlist a:hover { text-decoration: none; border-color: var(--ink); }
+.qz-no { font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qz-tlist b { font-size: 15px; font-weight: 600; }
+.qz-tlist em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent-ink); }

@@ -131,6 +131,11 @@
       }
       game.main = main;
       qEl.appendChild(main);
+      if (kind === "pick") {
+        var ul = el("ol", "pk-lines");
+        item.lines.forEach(function (t, n) { var li = el("li"); li.appendChild(el("b", "", "ㄱㄴㄷ".charAt(n) + ".")); li.appendChild(el("span", "", t)); ul.appendChild(li); });
+        qEl.appendChild(ul);
+      }
       if (item.sub) qEl.appendChild(el("span", "mc-sub", item.sub));
       var box = m("choices"), fb = m("feedback");
       box.textContent = ""; box.className = "mc-choices kind-" + kind; fb.textContent = ""; fb.className = "mc-feedback hidden";
@@ -146,8 +151,9 @@
       }
       var buttons = [];
       item.choices.forEach(function (c, idx) {
-        var label = kind === "ox" ? (idx === 0 ? "O  " : "X  ") + c : kind === "fill" ? c : (idx + 1) + ". " + c;
-        var b = el("button", "btn mc-choice" + (kind === "ox" ? (idx === 0 ? " ox-o" : " ox-x") : ""), label);
+        var label = kind === "ox" ? (idx === 0 ? "O  " : "X  ") + c : kind === "tf" ? c : kind === "fill" ? c :
+          kind === "pick" ? "①②③④⑤".charAt(idx) + " " + c : (idx + 1) + ". " + c;
+        var b = el("button", "btn mc-choice" + (kind === "ox" || kind === "tf" ? (idx === 0 ? " ox-o" : " ox-x") : ""), label);
         b.type = "button";
         if (kind === "rev") b.setAttribute("lang", "en");
         b.addEventListener("click", function () { check(idx, buttons); });
@@ -312,7 +318,7 @@
       fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong");
       fb.textContent = "";
       fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (note ? " · " + note : rightLabel ? " · 정답 " + rightLabel : "")));
-      if (res.explanation) fb.appendChild(el("p", "", res.explanation));
+      if (res.explanation) res.explanation.split(" / ").forEach(function (t) { fb.appendChild(el("p", "", t)); });
       var last = game.i + 1 >= game.questions.length;
       var next = el("button", "btn primary", last ? "결과 보기" : "다음 문제");
       next.type = "button";
@@ -354,7 +360,8 @@
             game.blank.textContent = item.choices[res.answer_index]; game.blank.classList.add(res.correct ? "is-right" : "is-wrong");
           }
           if (item.kind === "listen") { game.main.textContent = item.say; game.main.classList.remove("is-hidden-word"); }
-          showFeedback(res, item.kind === "ox" ? (res.answer_index === 0 ? "O" : "X") :
+          showFeedback(res, item.kind === "ox" || item.kind === "tf" ? (res.answer_index === 0 ? "O" : "X") :
+            item.kind === "pick" ? "①②③④⑤".charAt(res.answer_index) + " " + item.choices[res.answer_index] :
             item.kind === "fill" || item.kind === "listen" ? item.choices[res.answer_index] : (res.answer_index + 1) + "번");
         })
         .catch(function (e) {
@@ -376,7 +383,8 @@
           res.results.forEach(function (r, i) {
             var item = game.questions[i];
             var box = el("div", "review-item " + (r.correct ? "ok" : "wrong"));
-            var q = (item.kind === "listen" ? item.say : item.question) + (item.sub ? " → " + item.sub : "");
+            var q = (item.kind === "listen" ? item.say : item.question) + (item.sub ? " → " + item.sub : "") +
+              (item.lines ? "  " + item.lines.map(function (t, n) { return "ㄱㄴㄷ".charAt(n) + ". " + t; }).join("  ") : "");
             box.appendChild(el("b", ""));
             box.firstChild.textContent = (r.correct ? "맞음 · " : "틀림 · ") + (i + 1) + ". " + q;
             if (!r.correct) box.appendChild(el("div", "small", "내 답: " + r.mine));
@@ -437,7 +445,7 @@
           if (res.missed.length) rv.appendChild(el("p", "small muted", "틀린 문제"));
           res.missed.forEach(function (x) {
             var b = el("div", "review-item wrong");
-            b.appendChild(el("b", "", x.q + " → " + x.a + "  (" + (x.ok ? "O" : "X") + ")"));
+            b.appendChild(el("b", "", x.q + (x.a ? " → " + x.a : "") + "  (" + (x.ok ? "O" : "X") + ")"));
             b.appendChild(el("div", "small muted", x.exp));
             rv.appendChild(b);
           });
