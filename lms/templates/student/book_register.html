@@ -5,7 +5,6 @@
 {% if step == 3 %}
   <header class="ed-head">
     <h1>교재를 등록했어요</h1>
-    <p class="ed-lede">이 교재의 모의고사 분석을 지금부터 쓸 수 있습니다.</p>
   </header>
   <div class="tag-card" aria-label="등록한 교재">
     <span class="tag-hole" aria-hidden="true"></span>
@@ -20,18 +19,18 @@
     <a class="btn primary" href="{{ url_for('books.analysis_home', mock=first_mock.id) if first_mock else url_for('books.analysis_home') }}">모의고사 분석 열기</a>
     <a class="btn" href="{{ url_for('books.register_book') }}">코드 하나 더 입력</a>
   </div>
-  <p class="fine mt">학생 계정은 한 기기에서만 로그인됩니다. 다른 기기에서 로그인하면 이 기기는 자동으로 로그아웃돼요.</p>
+  <p class="fine mt">한 계정은 한 기기에서만 로그인됩니다.</p>
 {% else %}
   <header class="ed-head">
     <h1>교재 코드 입력</h1>
-    <p class="ed-lede">코드는 교재 표지 안쪽 첫 장에 인쇄된 12자리 영문·숫자입니다. 수업 시간에 나눠 준 배포 코드도 같은 칸에 넣으면 돼요.</p>
+    <p class="ed-lede">표지 안쪽 첫 장의 12자리. 수업 배포 코드도 여기에.</p>
   </header>
   <form method="post" class="code-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="code">코드 12자리</label>
     <input type="text" id="code" name="code" class="code-input" required maxlength="20" autocomplete="off"
            autocapitalize="characters" spellcheck="false" placeholder="ABCD EFGH JKMN" aria-describedby="code-help" data-code-input>
-    <p class="fine" id="code-help">띄어쓰기나 하이픈은 넣지 않아도 됩니다. 숫자 0·1과 영문 O·I·L은 쓰지 않는 코드예요. 인쇄가 흐려 읽기 어렵다면 질문 게시판의 행정문의로 사진을 보내 주세요.</p>
+    <p class="fine" id="code-help">띄어쓰기·하이픈 없이. 0·1·O·I·L은 쓰지 않습니다. 인쇄가 흐리면 행정문의로 사진.</p>
     <button class="btn primary" type="submit">등록</button>
   </form>
   <p class="mt"><a href="{{ url_for('books.analysis_home') }}">모의고사 분석으로</a></p>

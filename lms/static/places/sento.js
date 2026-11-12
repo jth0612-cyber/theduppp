@@ -469,8 +469,8 @@ export default {
         if (ha !== hb) { const H = HUTS[ha >= 0 ? ha : hb]; if (!H || Math.abs(nz - (H.z + 1.2)) > 1.1) return [x, z]; }
         return c;
       },
-      welcome: "눈 내리는 노천탕이에요. 탕에 몸을 담그거나 화롯가 방석에 앉아 보세요.",
-      sitText: (s) => s.kind === "water" ? "따뜻한 물에 몸을 담갔어요. 시간을 고르고 집중을 시작해 보세요." : "화롯가 방석에 앉았어요. 숯불 소리를 들으며 시작해 볼까요?",
+      welcome: "눈 내리는 노천탕. 탕이나 화롯가 방석에 앉으세요.",
+      sitText: (s) => s.kind === "water" ? "탕에 들어갔어요." : "화롯가 방석에 앉았어요.",
       sitSound: (s) => s.kind === "water" ? "soak" : "cushion",
       focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만.`,
       spaceAction: "splash",
@@ -482,7 +482,7 @@ export default {
         splash: '<svg viewBox="0 0 24 24"><path d="M12 4c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg>',
       },
       custom: {
-        soak(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 꽉 찼어요. 화롯가는 어때요?") : E.sit(s); },
+        soak(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 다 찼어요. 화롯가는 남아 있어요.") : E.sit(s); },
         hearth(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(hearthSeat); s === null ? E.whisper("화롯가 방석이 다 찼어요.") : E.sit(s); },
         splash(E) {
           if (!inPool(E.me.pos.x, E.me.pos.z) && E.me.seat === null) {

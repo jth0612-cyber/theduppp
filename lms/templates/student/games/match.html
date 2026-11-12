@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}짝 맞추기 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('games.hub') }}">수능 영단어</a> /</p>
+    <h1>짝 맞추기</h1>
+    <p class="muted small">오늘의 20단어를 5쌍씩 4판. 틀린 단어는 복습으로 갑니다.</p>
+  </div>
+</div>
+<div class="card game mt-game" id="match-game" data-start="{{ url_for('games.vocab_match_start') }}">
+  <div data-role="start">
+    {% if best %}<p class="small muted">최고 {{ best.top }}/20 · {{ best.plays }}판</p>{% endif %}
+    <button type="button" class="btn primary big" data-role="begin">시작</button>
+  </div>
+  <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>
+  <div class="hidden" data-role="play">
+    <div class="game-bar"><span data-role="progress"></span><span class="muted" data-role="clock">0.0초</span></div>
+    <div class="mt-board">
+      <div class="mt-col" data-role="left"></div>
+      <div class="mt-col" data-role="right"></div>
+    </div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
+{% endblock %}

@@ -2,7 +2,7 @@
 {% block title %}교재·모의고사 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>교재·모의고사</h1><p class="muted small">교재를 만들고 회차별 정답·배점과 인증 코드를 관리합니다. 학생은 코드를 등록해야 그 교재의 모의고사 분석을 열 수 있어요.</p></div>
+  <div><h1>교재·모의고사</h1><p class="muted small">회차별 정답·배점, 인증 코드</p></div>
 </div>
 
 <div class="card">
@@ -27,7 +27,7 @@
 
 <div class="card" id="shop">
   <h2>교재 구매 링크</h2>
-  <p class="muted small">로그인한 학생에게 보이는 <a href="{{ url_for('books.shop') }}">교재 구매</a> 화면에 나가요. 첫 화면 안내의 '교재 구매'를 누르면 로그인 뒤 이 화면으로 와요. 스마트스토어·서점 상품 주소를 붙여 넣으세요. 비워 두면 '준비 중'으로 보여요.</p>
+  <p class="muted small"><a href="{{ url_for('books.shop') }}">교재 구매</a> 화면의 링크. 비워 두면 '준비 중'.</p>
   <form method="post" action="{{ url_for('books.shop_save') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for key, name, sub in shop %}

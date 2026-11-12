@@ -55,7 +55,7 @@ function initRoom(room) {
     status = "focus"; startTs = Date.now();
     render(); sound.start(); sound.bell(0.35);
     beat({ action: "start", plan: plan });
-    msg.textContent = plan + "분 집중을 시작했어요. 화면을 닫아도 기록은 여기까지 남아요.";
+    msg.textContent = plan + "분 시작";
   }
 
   var finishing = false;

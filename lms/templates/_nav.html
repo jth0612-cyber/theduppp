@@ -24,6 +24,7 @@
   'shield': '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
   'list': '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
   'close': '<path d="M6 6l12 12M18 6 6 18"/>',
+  'abc': '<path d="M3 18 7 6l4 12M4.3 14h5.4"/><path d="M14 6v12h3.5a3 3 0 0 0 0-6H14m0 0h3a3 3 0 0 0 0-6h-3"/>',
   'torii': '<path d="M3 5c4 1 14 1 18 0M5 9h14M7 6v15M17 6v15"/>',
   'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   'check': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/>',
@@ -78,7 +79,8 @@
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
   ('공부', [
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('games.hub', '미니 Quiz', 'game', ep.startswith('games.'), 0),
+    ('games.hub', '수능 영단어', 'abc', ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed'), 0),
+    ('games.sci_hub', '통과 Quiz', 'game', ep.startswith('games.') and not (ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed')), 0),
     ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
     ('books.analysis_home', '모의고사 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book', 0)]),
   ('기록', [

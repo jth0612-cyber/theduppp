@@ -2,7 +2,7 @@
 <footer class="colophon">
   <p class="colo-name">정태혁 통합과학 lab</p>
   <div class="colo-body">
-    <p><b>문의</b> 수강·행정 관련은 {% if g.user and g.user.role == 'student' %}<a href="{{ url_for('student.questions', ask=1, qtype='행정문의') }}#ask">질문 게시판 행정문의</a>{% else %}로그인 후 질문 게시판의 행정문의{% endif %}로 남겨 주세요. 본인과 선생님만 읽습니다.</p>
+    <p><b>문의</b> 수강·행정 관련은 {% if g.user and g.user.role == 'student' %}<a href="{{ url_for('student.questions', ask=1, qtype='행정문의') }}#ask">질문 게시판 행정문의</a>{% else %}로그인 후 질문 게시판의 행정문의{% endif %}로 남겨 주세요.</p>
     {% if sc.kakao %}<p><a href="{{ sc.kakao }}" target="_blank" rel="noopener noreferrer">카카오톡 채널</a>로도 받습니다.</p>{% endif %}
     {% if sc.note %}<p>{{ sc.note }}</p>{% endif %}
   </div>

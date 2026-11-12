@@ -8,12 +8,11 @@
   <ol class="signup-steps small" aria-label="가입 순서">
     <li class="is-on"><b>1</b> Google 확인</li><li><b>2</b> 개인 코드·정보 입력</li><li><b>3</b> 바로 시작</li>
   </ol>
-  <p class="muted small">가입은 Google 계정으로 본인 확인을 먼저 해요. Google에서 <b>이메일 주소만</b> 받아 오고, 전화번호나 연락처는 받지 않아요.</p>
+  <p class="muted small">Google 계정으로 본인 확인. 받는 정보는 <b>이메일 주소</b>뿐입니다.</p>
   <a class="btn primary google-btn" href="{{ url_for('google.start', mode='signup') }}">Google 계정으로 시작하기</a>
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% elif not track %}
-  <p class="muted small">수강 형태를 먼저 골라 주세요.</p>
   <div class="track-pick" role="list">
     <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='단과') }}">
       <b>단과</b><span>통합과학 단과 수강생</span><em>받은 출결 카드 번호로 가입</em></a>
@@ -24,7 +23,7 @@
 </div>
 {% else %}
   <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디가 돼요.' if track == '단과' else '원하는 아이디로 가입해요.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
-  <p class="muted small">조교 선생님께 받은 <b>학생코드</b>(예: K7QM-3XPA)로 가입해요. 코드가 맞으면 바로 시작할 수 있어요. 코드는 한 번만 쓸 수 있으니 다른 사람에게 알려 주지 마세요.</p>
+  <p class="muted small">조교 선생님께 받은 <b>학생코드</b> (예: K7QM-3XPA). 한 번만 쓸 수 있습니다.</p>
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
   {% endif %}
@@ -51,7 +50,7 @@
       <label for="student_no">카드 번호 <span class="small muted">(아이디)</span></label>
       <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
              inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="예: 0012345678" data-card{{ bad('student_no') }}>
-      <p class="field-hint" id="hint-student_no">출결 카드에 적힌 번호예요. 로그인할 때도 이 번호를 써요.</p>
+      <p class="field-hint" id="hint-student_no">출결 카드 번호 = 로그인 아이디</p>
       {% else %}
       <label for="student_no">아이디</label>
       <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
@@ -78,7 +77,7 @@
         <li>수집 항목: 이름, 아이디, {% if gid %}Google 계정 이메일, {% endif %}학습 기록(성적·질문 등)</li>
         <li>이용 목적: 수업 학습 관리, 질문 답변</li>
         <li>보관 기간: 수강이 끝나면 선생님이 파기합니다</li>
-        <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개됩니다. 이름과 아이디는 공개되지 않아요.</li>
+        <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개됩니다.</li>
       </ul>
       <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> 위 내용에 동의합니다</label>
       {{ err('consent') }}

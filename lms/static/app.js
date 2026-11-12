@@ -246,9 +246,9 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       var file = inp.files && inp.files[0];
       if (!file) { clearPhoto(); return; }
       if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
-        clearPhoto(); return showErr("PNG나 JPG 사진만 올릴 수 있어요. 아이폰이라면 스크린샷으로 찍어 올리면 돼요.");
+        clearPhoto(); return showErr("PNG·JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
       }
-      if (file.size > MAX) { clearPhoto(); return showErr("사진이 20MB보다 커요. 스크린샷으로 찍어 올리면 돼요."); }
+      if (file.size > MAX) { clearPhoto(); return showErr("20MB 이하만 올릴 수 있습니다."); }
       showErr("");
       if (img.src) URL.revokeObjectURL(img.src);
       img.src = URL.createObjectURL(file); pv.querySelector("span").textContent = file.name; pv.hidden = false;
@@ -259,7 +259,7 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       save();
       if (qt && qt.value === "학습질문" && !(inp.files && inp.files.length)) {
         e.preventDefault(); e.stopImmediatePropagation();
-        showErr("학습질문은 문제 사진이 꼭 필요해요. 사진을 붙이고 다시 '질문 등록'을 눌러 주세요. 적은 내용은 그대로 있어요.");
+        showErr("학습질문은 문제 사진이 필요합니다. 쓴 내용은 그대로 있습니다.");
         wrap.scrollIntoView({ behavior: "smooth", block: "center" });
         inp.focus();
       }

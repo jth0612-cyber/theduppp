@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>질답 게시판</h1>
-    <p class="muted small">학습질문과 답변은 전체 학생에게 공개되고, 작성자는 닉네임 <b>{{ g.user.nickname }}</b>(으)로 표시돼요. 행정문의는 나와 선생님·조교만 볼 수 있어요.</p>
+    <p class="muted small">학습질문은 닉네임 <b>{{ g.user.nickname }}</b>(으)로 공개. 행정문의는 비공개.</p>
   </div>
 </div>
 
@@ -28,11 +28,11 @@
     <div class="guide small">
       <b>질문 작성 안내</b>
       <ul>
-        <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식으로 써 주세요. 예) 기출 1단원 42p 3번</li>
-        <li><b>학습질문</b>은 문제 사진(해설 질문이면 해설 사진도)을 꼭 첨부해 주세요.</li>
-        <li>어디까지 생각했고 어디서 막혔는지 적어 주면 더 정확한 답을 받을 수 있어요.</li>
+        <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식. 예) 기출 1단원 42p 3번</li>
+        <li><b>학습질문</b>은 문제 사진 필수 (해설 질문이면 해설 사진도).</li>
+        <li>어디서 막혔는지 적어 주세요.</li>
         <li>답변을 받은 뒤 <b>추가 질문은 2번까지</b> 할 수 있어요.</li>
-        <li>학습질문은 공개됩니다. 이름이나 연락처 같은 개인정보는 적지 마세요.</li>
+        <li>이름·연락처는 적지 마세요.</li>
       </ul>
     </div>
     <div class="field{{ ' has-err' if fe == 'body' }}"><label for="q-body">내용</label><textarea id="q-body" name="body" maxlength="5000" required>{{ draft.body if draft else '' }}</textarea></div>

@@ -1,14 +1,18 @@
 {% extends "base.html" %}
-{% block title %}염기 짝 맞추기 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }} · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('games.hub') }}">미니 Quiz</a> /</p>
-    <h1>염기 짝 맞추기</h1>
-    <p class="muted small">위 가닥과 상보적인 염기를 순서대로 눌러요. A–T, G–C. 두 가닥은 방향이 반대(5'↔3')예요. 키보드 A·T·G·C 도 돼요.</p>
+    <p class="small"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> /</p>
+    <h1>{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }}</h1>
+    <p class="muted small">{% if mode == 'rna' %}주형 가닥에서 전사될 RNA 염기를 차례로 누르세요. A→U, T→A, G→C, C→G. 키보드 A·U·G·C.{% else %}위 가닥과 짝이 되는 염기를 차례로 누르세요. A–T, G–C. 키보드 A·T·G·C.{% endif %}</p>
   </div>
+  <nav class="seg" aria-label="방식">
+    <a href="{{ url_for('games.dna') }}" class="{{ 'is-on' if mode == 'dna' }}">DNA 짝</a>
+    <a href="{{ url_for('games.dna', mode='rna') }}" class="{{ 'is-on' if mode == 'rna' }}">RNA 전사</a>
+  </nav>
 </div>
-<div class="card game" id="dna-game" data-start="{{ url_for('games.dna_start') }}" data-time-limit="{{ time_limit }}">
+<div class="card game" id="dna-game" data-start="{{ url_for('games.dna_start') }}" data-time-limit="{{ time_limit }}" data-mode="{{ mode }}">
   <div class="game-start" data-role="start">
     <p>난이도</p>
     <div class="row">
@@ -20,11 +24,13 @@
   <div class="hidden" data-role="play">
     <div class="game-bar"><span data-role="timer">0</span><span data-role="progress"></span></div>
     <div class="strand-wrap">
+      <p class="strand-label">{{ 'DNA 주형 가닥' if mode == 'rna' else 'DNA 가닥' }}</p>
       <div class="strand" data-role="template"></div>
+      <p class="strand-label">{{ 'RNA' if mode == 'rna' else '짝을 이루는 가닥' }}</p>
       <div class="strand" data-role="answer"></div>
     </div>
     <div class="base-pad">
-      {% for b in 'ATGC' %}<button type="button" class="base base-{{ b }}" data-base="{{ b }}">{{ b }}</button>{% endfor %}
+      {% for b in ('AUGC' if mode == 'rna' else 'ATGC') %}<button type="button" class="base base-{{ b }}" data-base="{{ b }}">{{ b }}</button>{% endfor %}
       <button type="button" class="base base-back" data-base="back" aria-label="지우기">⌫</button>
     </div>
   </div>

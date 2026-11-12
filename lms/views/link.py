@@ -120,7 +120,7 @@ def s_link():
     else:
         execute("UPDATE student_codes SET student_id = ?, used_at = datetime('now', 'localtime') WHERE id = ?", (sid, sc["id"]))
         audit("sys_link", f"student:{sid}")
-        flash("학생코드를 연결했어요. 이제 시험 결과와 오답 분석이 보여요.", "ok")
+        flash("학생코드를 연결했습니다.", "ok")
     return redirect(request.referrer or url_for("student.scores"))
 
 

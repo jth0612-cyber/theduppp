@@ -6,7 +6,7 @@
 <header class="ed-head ed-head-split">
   <div>
     <h1>{{ places[place][0] }}의 터줏대감</h1>
-    <p class="ed-lede">이 장소에서 집중한 시간이 많은 순서예요. 5분 이상 집중한 기록만 세요.</p>
+    <p class="ed-lede">집중 시간 순. 5분 미만은 빠집니다.</p>
   </div>
   <dl class="my-mins"><div><dt>내 순위 · {{ periods[period] }}</dt><dd>{% if my_rank.rank %}{{ my_rank.rank }}<small>위</small>{% else %}–{% endif %}</dd></div>
     <div><dt>내 시간</dt><dd class="dd-text">{{ my_rank.m|hm }}</dd></div></dl>

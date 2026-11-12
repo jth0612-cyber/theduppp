@@ -11,6 +11,29 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app  # noqa: E402
+
+
+def right_pick(a):
+    """문제 형식별 정답 (서버에 저장된 정답에서)."""
+    k = a.get("kind")
+    if k in ("spell", "num"):
+        return a["answer_text"].split(" ")[0] if k == "num" else a["answer_text"]
+    if k in ("sort", "order"):
+        return a["answer_list"]
+    return a["answer_index"]
+
+
+def wrong_pick(a):
+    k = a.get("kind")
+    if k == "spell":
+        return "zzzz"
+    if k == "num":
+        return str(a["answer_num"] + 1)
+    if k == "sort":
+        return [(b + 1) % len(a["bins"]) for b in a["answer_list"]]
+    if k == "order":
+        return list(reversed(a["answer_list"]))
+    return (a["answer_index"] + 1) % len(a["choices"])
 from db import execute, query  # noqa: E402
 from security import hash_password  # noqa: E402
 
@@ -451,7 +474,7 @@ class FeatureTest(AppTest):
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (start["round_id"],),
                                         one=True)["answer"])
             res = s1.post(f"/s/games/quiz/{start['round_id']}/submit",
-                          json={"answers": [a["answer_index"] for a in ans]}).get_json()
+                          json={"answers": [right_pick(a) for a in ans]}).get_json()
             self.assertEqual(res["score"], res["total"])
 
     def test_quiz_checks_each_question_right_away(self):
@@ -462,21 +485,64 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
         # 1번: 맞게 고르면 바로 정답·해설
-        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 0, "pick": ans[0]["answer_index"]}).get_json()
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 0, "pick": right_pick(ans[0])}).get_json()
         self.assertTrue(r["correct"]); self.assertEqual((r["score"], r["answered"]), (1, 1)); self.assertTrue(r["explanation"])
         # 2번: 틀리면 정답 번호를 알려 주고, 다시 보내도 처음 답이 그대로 (답 바꾸기 불가)
-        wrong = (ans[1]["answer_index"] + 1) % len(ans[1]["choices"])
-        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": wrong}).get_json()
-        self.assertFalse(r["correct"]); self.assertEqual(r["answer_index"], ans[1]["answer_index"])
-        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": ans[1]["answer_index"]}).get_json()
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": wrong_pick(ans[1])}).get_json()
+        self.assertFalse(r["correct"]); self.assertEqual(r["answer_index"], ans[1].get("answer_index"))
+        r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": right_pick(ans[1])}).get_json()
         self.assertFalse(r["correct"]); self.assertEqual(r["score"], 1)
         self.assertEqual(s2.post(f"/s/games/quiz/{rid}/check", json={"i": 2, "pick": 0}).status_code, 404)   # 남의 판
         self.assertEqual(s1.post(f"/s/games/quiz/{rid}/check", json={"i": 9, "pick": 0}).status_code, 400)
         for i in range(2, len(ans)):
-            s1.post(f"/s/games/quiz/{rid}/check", json={"i": i, "pick": ans[i]["answer_index"]})
+            s1.post(f"/s/games/quiz/{rid}/check", json={"i": i, "pick": right_pick(ans[i])})
         # 마지막 결과는 서버에 남은 답으로 (화면이 보낸 답을 믿지 않음)
-        res = s1.post(f"/s/games/quiz/{rid}/submit", json={"answers": [a["answer_index"] for a in ans]}).get_json()
+        res = s1.post(f"/s/games/quiz/{rid}/submit", json={"answers": [right_pick(a) for a in ans]}).get_json()
         self.assertEqual(res["score"], len(ans) - 1)
+
+    def test_quiz_content_in_curriculum(self):
+        """교과 밖 용어(퓨린·피리미딘·수소 결합·5'·3'·금속 결합)가 문제·해설·화면에 없어야 한다."""
+        import quiz
+        texts = []
+        for _ in range(30):
+            for it in quiz.chargaff_round():
+                texts += [it["question"], it["explanation"]] + it["choices"]
+        for items in quiz.BANK.values():
+            for q, ch, _, e in items:
+                texts += [q, e] + ch
+        _, s1, _ = self._students()
+        texts += [s1.get(u).data.decode() for u in ("/s/games/dna", "/s/games/dna?mode=rna", "/s/games/chargaff")]
+        blob = " ".join(texts)
+        for bad in ("퓨린", "피리미딘", "수소 결합", "5'", "3'", "금속 결합"):
+            self.assertNotIn(bad, blob, bad)
+
+    def test_rna_transcription_and_new_modes(self):
+        import json as _json
+        _, s1, _ = self._students()
+        st = s1.post("/s/games/dna/start", json={"level": 1, "mode": "rna"}).get_json()
+        with self.app.app_context():
+            ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (st["round_id"],), one=True)["answer"])
+        expect = "".join({"A": "U", "T": "A", "G": "C", "C": "G"}[b] for b in st["strand"])
+        self.assertEqual(ans, expect)
+        self.assertNotIn("T", ans)
+        self.assertEqual(s1.post(f"/s/games/dna/{st['round_id']}/submit", json={"answer": ans}).get_json()["correct"], len(ans))
+        # 섞어 풀기 10문제
+        mx = s1.post("/s/games/mixed/start", json={}).get_json()
+        self.assertEqual(len(mx["questions"]), 10)
+        self.assertTrue(all(q.get("tag") for q in mx["questions"]))
+        # 짝 맞추기: 처음 틀린 단어는 복습에 모인다
+        mt = s1.post("/s/games/vocab/match/start", json={}).get_json()
+        words = [p["w"] for st_ in mt["sets"] for p in st_]
+        self.assertEqual(len(words), 20)
+        res = s1.post(f"/s/games/vocab/match/{mt['round_id']}/submit", json={"wrong": words[:2] + ["가짜단어"], "seconds": 41.2}).get_json()
+        self.assertEqual((res["score"], res["total"]), (18, 20))
+        self.assertIn("2<small>단어</small>", s1.get("/s/games/").data.decode())
+        # 스피드 O/X: 서버가 다시 채점한다
+        for kind in ("sci_speed", "vocab_speed"):
+            sp = s1.post(f"/s/games/speed/{kind}/start", json={}).get_json()
+            picks = [it["ok"] for it in sp["items"][:7]] + [not sp["items"][7]["ok"]]
+            res = s1.post(f"/s/games/speed/{kind}/{sp['round_id']}/submit", json={"picks": picks}).get_json()
+            self.assertEqual((res["score"], res["tried"], len(res["missed"])), (7, 8, 1))
 
     def test_vocab_daily_20_and_review(self):
         import json as _json
@@ -497,8 +563,10 @@ class FeatureTest(AppTest):
         rid = start["round_id"]
         with self.app.app_context():
             ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+        right, wrong = right_pick, wrong_pick
+        self.assertEqual({a["kind"] for a in ans}, {"mc", "rev", "listen", "ox", "spell"})   # 형식이 섞여 나온다
         for i, a in enumerate(ans):                       # 앞의 3개만 틀리게
-            pick = a["answer_index"] if i >= 3 else (a["answer_index"] + 1) % 4
+            pick = right(a) if i >= 3 else wrong(a)
             r = s1.post(f"/s/games/vocab/{rid}/check", json={"i": i, "pick": pick}).get_json()
             self.assertEqual(r["correct"], i >= 3)
         res = s1.post(f"/s/games/vocab/{rid}/submit", json={}).get_json()
@@ -514,7 +582,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rv["round_id"],), one=True)["answer"])
         for i, a in enumerate(ans):
-            s1.post(f"/s/games/vocab/review/{rv['round_id']}/check", json={"i": i, "pick": a["answer_index"]})
+            s1.post(f"/s/games/vocab/review/{rv['round_id']}/check", json={"i": i, "pick": right(a)})
         s1.post(f"/s/games/vocab/review/{rv['round_id']}/submit", json={})
         self.assertEqual(s1.post("/s/games/vocab/review/start", json={}).status_code, 400)
         self.assertIn("0<small>단어</small>", s1.get("/s/games/").data.decode())
@@ -525,8 +593,14 @@ class FeatureTest(AppTest):
     def test_quiz_hub_shows_categories(self):
         _, s1, _ = self._students()
         hub = s1.get("/s/games/").data.decode()
-        for t in ("영단어", "오늘의 20단어", "통합과학", "역학 시스템", "샤가프 법칙", "염기 짝 맞추기"):
+        for t in ("수능 영단어", "오늘의 20단어", "짝 맞추기", "스피드 O/X"):
             self.assertIn(t, hub)
+        sci = s1.get("/s/games/sci").data.decode()
+        for t in ("통과 Quiz", "역학 시스템", "샤가프 법칙", "염기 짝 맞추기", "전사: DNA → RNA", "섞어 풀기", "O/X 스피드"):
+            self.assertIn(t, sci)
+        nav = s1.get("/s/games/sci").data.decode()
+        self.assertIn(">수능 영단어<", nav)
+        self.assertIn(">통과 Quiz<", nav)
         self.assertIn('value="mechanics" selected', s1.get("/s/games/quiz?topic=mechanics").data.decode())
 
     def test_behind_synology_https_proxy(self):
@@ -824,7 +898,58 @@ class FeatureTest(AppTest):
             items = quiz.bank_quiz(key)
             self.assertEqual(len(items), 5)
             for it in items:
-                self.assertEqual(len(set(it["choices"])), 4)
+                if "choices" in it:
+                    self.assertEqual(len(set(it["choices"])), 4)
+            self.assertGreaterEqual(len({it["kind"] for it in items}), 2, key)   # 형식이 섞인다
+
+    def test_quiz_new_kinds(self):
+        """분류·순서·계산: 정답 검사, 잘못된 형식 거부, 문제 자료가 맞는지."""
+        import json as _json
+        import quiz
+        import quiz_kinds as qk
+        for key, sets in qk.SORT.items():
+            for prompt, bins, pool, exp in sets:
+                self.assertTrue(all(0 <= b < len(bins) for _, b in pool), prompt)
+                self.assertEqual({b for _, b in pool}, set(range(len(bins))), prompt)
+                self.assertEqual(len({x for x, _ in pool}), len(pool), prompt)
+        for _ in range(100):
+            for key in quiz.TOPICS:
+                for make in qk.specials(key) + ([qk.make_fill] if key in qk.FILL else []):
+                    it = make(key)
+                    if it["kind"] == "order":
+                        self.assertEqual(sorted(it["answer_list"]), list(range(len(it["items"]))))
+                        self.assertNotEqual(it["answer_list"], list(range(len(it["items"]))))
+                    if it["kind"] == "sort":
+                        self.assertEqual(set(it["answer_list"]), set(range(len(it["bins"]))))
+                    if it["kind"] == "fill":
+                        self.assertEqual(it["question"].count("___"), 1)
+            kinds = [it["kind"] for it in quiz.mixed_quiz()]
+            self.assertTrue({"mc", "sort", "order", "num", "fill"} <= set(kinds))
+        _, s1, _ = self._students()
+        for _ in range(4):
+            start = s1.post("/s/games/mixed/start", json={}).get_json()
+            self.assertNotIn("answer_list", str(start)); self.assertNotIn("answer_num", str(start))
+            rid = start["round_id"]
+            with self.app.app_context():
+                ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+            for i, a in enumerate(ans):
+                if a["kind"] in ("sort", "order"):
+                    self.assertEqual(s1.post(f"/s/games/mixed/{rid}/check", json={"i": i, "pick": [99]}).status_code, 400)
+                if a["kind"] == "num":
+                    self.assertEqual(s1.post(f"/s/games/mixed/{rid}/check", json={"i": i, "pick": 3}).status_code, 400)
+                r = s1.post(f"/s/games/mixed/{rid}/check", json={"i": i, "pick": right_pick(a) if i % 2 else wrong_pick(a)}).get_json()
+                self.assertEqual(r["correct"], bool(i % 2), a)
+            res = s1.post(f"/s/games/mixed/{rid}/submit", json={}).get_json()
+            self.assertEqual(res["score"], 5)
+
+    def test_vocab_memory(self):
+        _, s1, _ = self._students()
+        self.assertIn("카드 뒤집기", s1.get("/s/games/").data.decode())
+        start = s1.post("/s/games/vocab/memory/start", json={}).get_json()
+        self.assertEqual(len(start["cards"]), 12)
+        res = s1.post(f"/s/games/vocab/memory/{start['round_id']}/submit", json={"tries": 9, "seconds": 30.5}).get_json()
+        self.assertEqual((res["pairs"], res["tries"]), (6, 9))
+        self.assertIn("최고 66%", s1.get("/s/games/").data.decode())
 
 
 # FeatureTest 는 AppTest 의 도우미만 쓰고, AppTest 의 테스트는 다시 돌리지 않는다

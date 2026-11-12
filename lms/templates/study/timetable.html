@@ -15,7 +15,7 @@
 
 {% if class_has %}
 <form method="post" action="{{ url_for('study.timetable_import') }}" class="tt-import">
-  {{ csrf() }}<span>선생님이 넣어 둔 반 시간표가 있어요.</span><button class="btn small">반 시간표로 시작하기</button>
+  {{ csrf() }}<span>반 시간표 있음</span><button class="btn small">반 시간표로 시작하기</button>
 </form>
 {% endif %}
 

@@ -735,7 +735,7 @@ const colors = root.dataset.colors.split(",");
 let myColor = root.dataset.color;
 const meName = root.dataset.meName || (document.querySelector(".m-who") || {}).textContent || "나", meCap = root.dataset.meCap || null;
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", cap: meCap, me: true });
-me.onStageUp = (n) => whisper(["5분째 집중 중. 발밑이 따뜻해졌어요.", "15분! 어깨 위로 불티가 오르기 시작해요.", "40분! 등 뒤로 열공 불꽃이 타올라요.", "80분! 푸른 불꽃까지 왔어요. 대단해요."][n - 1], 4200);
+me.onStageUp = (n) => whisper(["5분. 여기부터 기록됩니다.", "15분. 어깨 위로 불티.", "40분. 등 뒤로 열공 불꽃.", "80분. 푸른 불꽃이 붙었어요."][n - 1], 4200);
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
 // 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
 const QS = new URLSearchParams(location.search);
@@ -937,7 +937,7 @@ function sitAt(id) {
   // 실내 자리·보는 방향이 정해진 자리는 카메라를 돌리는 동안 벽에 가려지므로, 돌리지 않고 바로 자리 화면으로 넘어간다
   if (s.fp || s.camYaw !== undefined || (P.indoor && P.indoor(s.x, s.z))) camCut();
   audio.sfx((typeof P.sitSound === "function" ? P.sitSound(s) : P.sitSound) || "cushion");
-  whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요. 시간을 고르고 집중을 시작해 보세요.");
+  whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요.");
   render(); sync(true);
 }
 function standUp(silent) {
@@ -1050,7 +1050,7 @@ function act(id, obj) {
   if (P.custom && P.custom[id]) return P.custom[id](E, obj);
   if (id === "sit") { const s = nearestFreeSeat(); return s === null ? whisper(`빈 ${josa(P.seatNoun, "이", "가")} 없어요.`) : goSit(s); }
   if (id === "stand") return standUp();
-  if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모으고, 오늘 공부할 것 하나를 떠올려요."); sync(true); return; }
+  if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모았어요."); sync(true); return; }
   if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); E.share("bow"); return; }
   if (id === "hi") { me.gesture("wave", 2.2); me.say("하이!"); audio.sfx("hi"); E.share("hi"); return; }
   if (id === "breathe") return breathe();
@@ -1112,7 +1112,7 @@ async function breathe() {
   me.pose = "breathe"; sync(true);
   const steps = [["숨을 천천히 들이쉬어요", 4000], ["잠깐 멈추고", 2000], ["어깨 힘을 빼고 길게 내쉬어요", 6000]];
   for (let r = 0; r < 3 && breathing; r++) for (const [t, ms] of steps) { whisper(t, ms - 150); await new Promise((ok) => setTimeout(ok, ms)); }
-  whisper("좋아요. 다시 공부로 돌아가요.");
+  whisperEl.classList.remove("is-on");
   if (me.pose === "breathe") me.pose = me.seat !== null ? "sit" : "stand";
   breathing = false; sync(true);
 }
@@ -1137,7 +1137,7 @@ function finishFocus(complete) {
     state = "sitting"; me.focus = false; audio.duck(false); audio.sfx("bowl");
     seatCam(false); render();
     const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분.` : `5분이 안 돼서 기록하지 않았어요. 오늘 ${d.today}분.`;
-    whisper(complete ? "수고했어요. " + m : m, 5000); msgEl.textContent = m;
+    whisper(m, 5000); msgEl.textContent = m;
     sync(true);
   }).catch(() => { finishRetry = Date.now() + 5000; whisper(complete ? "연결이 불안정해요. 기록을 다시 보내는 중이에요." : "연결이 불안정해요. 잠시 뒤 다시 눌러 주세요."); }).finally(() => { finishing = false; });
 }

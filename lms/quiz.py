@@ -1,21 +1,26 @@
-"""미니게임 문제 생성.
+"""통과 Quiz 문제 생성. 범위: 2022 개정 통합과학 (퓨린·피리미딘, 수소 결합, 5'·3' 방향, 금속 결합은 다루지 않는다).
 
-- 염기 짝 맞추기 / 샤가프 법칙: 서버에서 무작위로 만든다 (정답이 계산으로 정해짐).
-- 통합과학 퀴즈: 내장 문제은행에서 단원별로 뽑고 선택지 순서를 섞는다.
+- 염기 짝 맞추기(DNA 상보 가닥 · DNA→RNA 전사) / 샤가프 법칙: 서버에서 무작위로 만든다 (정답이 계산으로 정해짐).
+- 통합과학 퀴즈: 4지선다 문제은행 + quiz_kinds(분류·순서·빈칸·계산)를 섞는다.
 """
 import random
 import secrets
+
+import quiz_kinds
 
 _rng = random.SystemRandom()
 
 # ---------- 염기 짝 맞추기 ----------
 
 PAIR = {"A": "T", "T": "A", "G": "C", "C": "G"}
+# 전사: DNA 주형 가닥 → RNA (T 대신 U)
+TRANSCRIBE = {"A": "U", "T": "A", "G": "C", "C": "G"}
 
 
-def dna_round(length):
+def dna_round(length, mode="dna"):
     strand = "".join(secrets.choice("ATGC") for _ in range(length))
-    return strand, "".join(PAIR[b] for b in strand)
+    table = TRANSCRIBE if mode == "rna" else PAIR
+    return strand, "".join(table[b] for b in strand)
 
 
 # ---------- 샤가프 법칙 ----------
@@ -66,15 +71,26 @@ def _chargaff_question(kind):
         partner = "T" if target == "A" else "C"
         exp = f"가닥 Ⅱ의 {target}는 가닥 Ⅰ의 {partner}와 짝을 이룹니다. 그래서 {partner}의 비율 {ans}%와 같습니다."
         return q, [f"{x}%" for x in choices], idx, exp
-    # ratio
-    q = "이중 가닥 DNA에서 (A+G)/(T+C) 값은?"
-    opts = ["0.5", "1", "2", "생물마다 다르다"]
-    exp = "A=T, G=C이므로 A+G=T+C입니다. 퓨린(A, G)과 피리미딘(T, C)의 양이 같아서 이 값은 항상 1입니다."
-    return q, opts, 1, exp
+    if kind == "rna":
+        a, t, g = _rng.randrange(10, 35), _rng.randrange(10, 35), _rng.randrange(10, 30)
+        c = 100 - a - t - g
+        target = _rng.choice(["U", "A", "G"])
+        ans = {"U": a, "A": t, "G": c}[target]
+        choices, idx = _choices(ans, 3, 0, 100)
+        q = (f"DNA 주형 가닥에서 A={a}%, T={t}%, G={g}%, C={c}%입니다. "
+             f"이 가닥으로부터 전사된 RNA에서 {target}의 비율은?")
+        partner = {"U": "A", "A": "T", "G": "C"}[target]
+        exp = f"RNA의 {target}는 주형 가닥의 {partner}와 짝을 이룹니다(RNA에는 T 대신 U). 그래서 {partner}의 비율 {ans}%와 같습니다."
+        return q, [f"{x}%" for x in choices], idx, exp
+    # pair: 이중 가닥 DNA에서 늘 성립하는 관계
+    q = "이중 가닥 DNA에서 항상 성립하는 관계는?"
+    opts = ["A의 양 = T의 양", "A의 양 = G의 양", "T의 양 = C의 양", "A+T의 양 = G+C의 양"]
+    exp = "A는 T와, G는 C와 짝을 이루므로 A와 T의 양이 같고 G와 C의 양이 같습니다. A+T와 G+C는 생물마다 달라요."
+    return q, opts, 0, exp
 
 
 def chargaff_round():
-    kinds = ["percent", "count", "gc", "strand", "ratio"]
+    kinds = ["percent", "count", "gc", "strand", _rng.choice(["rna", "pair"])]
     _rng.shuffle(kinds)
     return [dict(zip(("question", "choices", "answer_index", "explanation"), _chargaff_question(k)))
             for k in kinds]
@@ -135,9 +151,9 @@ BANK = {
         ("설탕물에 전기가 거의 통하지 않는 까닭은?",
          ["설탕이 공유 결합 물질이라 이온이 생기지 않아서", "물이 없어서", "설탕이 금속이라서", "온도가 낮아서"], 0,
          "설탕은 물에 녹아도 이온으로 나뉘지 않아요."),
-        ("염화 나트륨(NaCl)을 이루는 화학 결합은?", ["이온 결합", "공유 결합", "금속 결합", "수소 결합"], 0,
+        ("염화 나트륨(NaCl)을 이루는 화학 결합은?", ["이온 결합", "공유 결합", "이온 결합과 공유 결합", "결합하지 않는다"], 0,
          "금속 양이온 Na⁺과 비금속 음이온 Cl⁻이 정전기적 인력으로 결합해요."),
-        ("물(H₂O) 분자 안의 수소와 산소 사이 결합은?", ["이온 결합", "공유 결합", "금속 결합", "결합 없음"], 1,
+        ("물(H₂O) 분자 안의 수소와 산소 사이 결합은?", ["이온 결합", "공유 결합", "이온 결합과 공유 결합", "결합 없음"], 1,
          "비금속 원자끼리 전자쌍을 공유하는 공유 결합이에요."),
         ("이온 결합 물질의 성질로 옳은 것은?",
          ["고체 상태에서 전기가 잘 통한다", "수용액 상태에서 전기가 통한다", "녹는점이 매우 낮다", "물에 전혀 녹지 않는다"], 1,
@@ -248,7 +264,7 @@ BANK_EXTRA = {
         ("산소(O)의 원자가 전자 수는?", ["2", "4", "6", "8"], 2, "산소는 16족이라 원자가 전자가 6개예요."),
     ],
     "bonding": [
-        ("금속 원소와 비금속 원소가 만나 주로 이루는 결합은?", ["공유 결합", "이온 결합", "금속 결합", "수소 결합"], 1,
+        ("금속 원소와 비금속 원소가 만나 주로 이루는 결합은?", ["공유 결합", "이온 결합", "결합하지 않는다", "알 수 없다"], 1,
          "금속은 전자를 잃고 비금속은 전자를 얻어 이온 결합을 해요."),
         ("산소 분자(O₂)에서 두 원자 사이 공유 전자쌍 수는?", ["1개", "2개", "3개", "4개"], 1, "O=O 이중 결합으로 공유 전자쌍이 2개예요."),
         ("염화 마그네슘의 화학식은?", ["MgCl", "MgCl₂", "Mg₂Cl", "Mg₂Cl₃"], 1, "Mg²⁺ 하나와 Cl⁻ 두 개가 결합해요."),
@@ -317,13 +333,68 @@ BANK_EXTRA = {
 for _k, _v in BANK_EXTRA.items():
     BANK[_k] = BANK[_k] + _v
 
+def _mc_item(q, choices, ans, exp, tag=None):
+    order = list(range(4))
+    _rng.shuffle(order)
+    it = {"kind": "mc", "question": q, "choices": [choices[i] for i in order], "answer_index": order.index(ans),
+          "explanation": exp}
+    if tag:
+        it["tag"] = tag
+    return it
+
+
 def bank_quiz(topic_key, count=5):
-    items = list(BANK[topic_key])
-    _rng.shuffle(items)
+    """단원별 5문제: 4지선다에 분류·순서·계산·빈칸을 섞는다."""
+    makers = quiz_kinds.specials(topic_key)
+    _rng.shuffle(makers)
+    out = [make(topic_key) for make in makers[:2]]
+    if topic_key in quiz_kinds.FILL:
+        out.append(quiz_kinds.make_fill(topic_key))
+    bank = list(BANK[topic_key])
+    _rng.shuffle(bank)
+    out += [_mc_item(*t) for t in bank[:max(0, count - len(out))]]
+    _rng.shuffle(out)
+    return out[:count]
+
+
+# ---------- 섞어 풀기 · O/X 스피드 ----------
+
+MIX_PLAN = ["mc", "sort", "num", "fill", "order", "mc", "sort", "num", "fill", "mc"]
+
+
+def mixed_quiz(count=10):
+    """여러 단원에서 골고루 10문제, 형식도 섞는다."""
+    keys = list(TOPICS)
+    _rng.shuffle(keys)
+    plan = MIX_PLAN[:count]
+    _rng.shuffle(plan)
+    makers = {"sort": (quiz_kinds.SORT, quiz_kinds.make_sort), "order": (quiz_kinds.ORDER, quiz_kinds.make_order),
+              "num": (quiz_kinds.NUM, quiz_kinds.make_num), "fill": (quiz_kinds.FILL, quiz_kinds.make_fill)}
+    out, used = [], {}
+    for i, kind in enumerate(plan):
+        if kind == "mc":
+            k = keys[i % len(keys)]
+            out.append(_mc_item(*_rng.choice(BANK[k]), tag=TOPICS[k][0]))
+            continue
+        table, make = makers[kind]
+        cands = [k for k in keys if k in table and k not in used.get(kind, ())] or [k for k in keys if k in table]
+        k = cands[0]
+        used.setdefault(kind, set()).add(k)
+        keys.append(keys.pop(keys.index(k)))           # 다음엔 다른 단원이 먼저
+        it = make(k)
+        it["tag"] = TOPICS[k][0]
+        out.append(it)
+    return out
+
+
+def speed_items(n=40, topic=None):
+    """O/X 스피드: 문제와 보기 하나를 보여 주고 맞는 짝인지 고른다."""
+    keys = [topic] if topic in BANK else list(BANK)
     out = []
-    for q, choices, ans, exp in items[:count]:
-        order = list(range(4))
-        _rng.shuffle(order)
-        out.append({"question": q, "choices": [choices[i] for i in order],
-                    "answer_index": order.index(ans), "explanation": exp})
+    for _ in range(n):
+        k = _rng.choice(keys)
+        q, choices, ans, exp = _rng.choice(BANK[k])
+        right = _rng.random() < 0.5
+        shown = choices[ans] if right else _rng.choice([c for i, c in enumerate(choices) if i != ans])
+        out.append({"q": q, "a": shown, "ok": right, "exp": f"정답: {choices[ans]}. {exp}", "tag": TOPICS[k][0]})
     return out

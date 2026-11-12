@@ -50,10 +50,10 @@
         <h1>{{ info[0] }}</h1>
         <p>{{ info[1] }}</p>
         <button type="button" class="btn primary big" data-enter-btn>{{ enter_text }}</button>
-        <p class="fine">소리가 함께 나와요. 휴대폰 옆 볼륨 버튼으로 크기를 조절하세요.</p>
+        <p class="fine">소리 있음</p>
       </div>
     </div>
-    <noscript><p class="w3-fallback">이 화면은 자바스크립트가 필요해요. <a href="{{ url_for('rooms.room', place=key, flat=1) }}">그림 버전으로 보기</a></p></noscript>
+    <noscript><p class="w3-fallback">자바스크립트를 켜야 보입니다. <a href="{{ url_for('rooms.room', place=key, flat=1) }}">그림 버전으로 보기</a></p></noscript>
   </div>
 
   <div class="room-cols w3-below">
@@ -72,10 +72,10 @@
       <div class="w3-rank">
         <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
         {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id) }}{% endfor %}</ol>
-        {% else %}<p class="muted small">이번 주에는 아직 기록이 없어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
+        {% else %}<p class="muted small">이번 주 기록 없음</p>{% endif %}
         <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위 · {{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
       </div>
-      <p class="fine" data-msg>오늘 {{ today }}분 집중했어요. 5분 이상 집중하면 기록에 남아요.</p>
+      <p class="fine" data-msg>오늘 {{ today }}분</p>
     </section>
   </div>
 </div>

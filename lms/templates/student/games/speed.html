@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
+    <h1>{{ title }}</h1>
+    <p class="muted small">{{ intro }} 키보드 ← O, → X.</p>
+  </div>
+</div>
+<div class="card game sp-game" id="speed-game" data-start="{{ url_for('games.speed_start', kind=kind) }}" data-kind="{{ kind }}">
+  <div data-role="start" class="sp-start">
+    {% if best %}<p class="small muted">최고 {{ best.top }}개</p>{% endif %}
+    <button type="button" class="btn primary big" data-role="begin">시작</button>
+  </div>
+  <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>
+  <div class="hidden" data-role="play">
+    <div class="sp-bar"><span class="sp-time" data-role="time">60</span><span class="sp-score">맞힘 <b data-role="score">0</b></span><span class="sp-combo" data-role="combo"></span></div>
+    <div class="sp-track" aria-hidden="true"><i data-role="track"></i></div>
+    <div class="sp-card" data-role="card" aria-live="polite">
+      <p class="sp-tag" data-role="tag"></p>
+      <p class="sp-q" data-role="q"></p>
+      <p class="sp-a" data-role="a"></p>
+    </div>
+    <div class="sp-pad">
+      <button type="button" class="sp-btn sp-o" data-pick="o" aria-label="맞아요">O</button>
+      <button type="button" class="sp-btn sp-x" data-pick="x" aria-label="아니에요">X</button>
+    </div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <div data-role="review"></div>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
+{% endblock %}

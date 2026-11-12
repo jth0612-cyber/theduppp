@@ -78,7 +78,7 @@ def login():
             nxt = None
         return redirect(nxt or _home_for(user))
     if session.pop("kicked", None):
-        flash("다른 기기에서 같은 계정으로 로그인해서 이 기기의 로그인이 끝났어요. 학생 계정은 한 기기에서만 쓸 수 있어요.", "error")
+        flash("다른 기기에서 로그인해 이 기기는 로그아웃됐습니다.", "error")
     return render_template("login.html")
 
 

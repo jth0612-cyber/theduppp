@@ -73,11 +73,10 @@
 </div>
 
 <section class="panel" aria-labelledby="h-play">
-  <div class="sec-head"><h2 id="h-play">미니 Quiz</h2><a href="{{ url_for('games.hub') }}">전체 →</a></div>
+  <div class="sec-head"><h2 id="h-play">퀴즈</h2></div>
   <ul class="play-list">
-    <li><a href="{{ url_for('games.vocab_page') }}"><b>오늘의 20단어</b><span>수능 영단어 하루 20개 + 확인 퀴즈</span></a></li>
-    <li><a href="{{ url_for('games.quiz') }}"><b>통합과학 퀴즈</b><span>단원별 5문제, 바로 정답·해설</span></a></li>
-    <li><a href="{{ url_for('games.chargaff') }}"><b>샤가프 법칙</b><span>염기 비율 계산 연습</span></a></li>
+    <li><a href="{{ url_for('games.hub') }}"><b>수능 영단어</b><span>오늘의 20단어 · 짝 맞추기 · 스피드 O/X</span></a></li>
+    <li><a href="{{ url_for('games.sci_hub') }}"><b>통과 Quiz</b><span>단원별 · 섞어 풀기 · 샤가프 · 염기 짝</span></a></li>
   </ul>
 </section>
 {% endblock %}

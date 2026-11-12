@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('games.hub') }}">미니 Quiz</a> /</p>
+    <p class="small">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
     <h1>{{ title }}</h1>
     <p class="muted small">{{ intro }}</p>
   </div>

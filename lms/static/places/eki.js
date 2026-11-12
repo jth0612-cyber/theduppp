@@ -344,7 +344,7 @@ export default {
       x.strokeStyle = "rgba(90,120,160,.28)"; x.lineWidth = 2;
       for (let yy = TOP + ROW; yy < 414; yy += ROW) { x.beginPath(); x.moveTo(24, yy); x.lineTo(744, yy); x.stroke(); }
       x.strokeStyle = "rgba(200,80,80,.35)"; x.beginPath(); x.moveTo(170, 0); x.lineTo(170, 414); x.stroke();
-      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 28px 'Noto Sans KR', sans-serif"; x.fillText("기차를 기다리며 한 줄 남겨 보세요", 190, TOP + ROW * 3.5); }
+      if (!lines || !lines.length) { x.fillStyle = "#8a8276"; x.font = "400 28px 'Noto Sans KR', sans-serif"; x.fillText("한 줄 남기기", 190, TOP + ROW * 3.5); }
       else {
         // 최근 글 최대 4개 (아래가 최근), 공책 둘째 줄부터. 긴 글은 두 줄
         const rows = Math.floor((414 - TOP) / ROW);
@@ -593,8 +593,8 @@ export default {
       planSeat(from, id) { const s = SEATS[id]; return route(from.x, from.z, s.x, s.z - 0.65).concat([[s.x, s.z]]); },
       leaveSeat(s) { return [s.x, s.z - 0.65]; },
       step(x, z, nx, nz) { const a = region(x, z), b = region(nx, nz); if (!b || (a && !OK[a].includes(b))) return [x, z]; return [nx, nz]; },
-      welcome: "작은 바닷가 역이에요. 승강장 의자에 앉아 바다를 보며 집중해 보세요. 기차는 3분마다 지나가요.",
-      sitText: "자리에 앉았어요. 파도 소리를 들으며 시작해 볼까요?",
+      welcome: "작은 바닷가 역. 승강장 의자에 앉으세요. 기차는 3분마다 지나갑니다.",
+      sitText: "자리에 앉았어요.",
       focusText: (m) => `${m}분, 다음 기차가 몇 번 지나갈 때까지.`,
       spaceAction: "sea",
       actions: { free: ["sit", "sea", "wait", "breathe"], sitting: ["focus", "wait", "breathe", "stand"], focus: ["breathe", "stop"] },

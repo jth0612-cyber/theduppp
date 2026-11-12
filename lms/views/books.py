@@ -229,7 +229,7 @@ def shop_save():
     if bad:
         flash("주소 모양이 아니라 저장하지 못했어요: " + ", ".join(bad), "error")
     else:
-        flash("구매 링크를 저장했어요. 학생 화면 '교재 구매'에 보여요.", "ok")
+        flash("구매 링크를 저장했습니다.", "ok")
     return redirect(url_for("books.teacher_books") + "#shop")
 
 

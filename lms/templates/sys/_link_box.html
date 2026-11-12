@@ -2,7 +2,7 @@
 {% from "_macros.html" import csrf %}
 <section class="sys-link card" aria-labelledby="sys-link-h">
   <h2 id="sys-link-h">학생코드 연결</h2>
-  <p class="small muted">조교 선생님께 받은 학생코드(예: K7QM-3XPA)를 넣으면 시험 결과, 오답 분석, 과제, 출결이 여기에 보여요. 코드는 한 사람만 쓸 수 있어요.</p>
+  <p class="small muted">조교 선생님께 받은 학생코드 (예: K7QM-3XPA). 한 사람만 쓸 수 있습니다.</p>
   <form method="post" action="{{ url_for('link.s_link') }}" class="sys-link-form">
     {{ csrf() }}
     <label class="sr-only" for="sys-code">학생코드</label>

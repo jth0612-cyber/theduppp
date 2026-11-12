@@ -3,9 +3,9 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('games.hub') }}">미니 Quiz</a> /</p>
+    <p class="small"><a href="{{ url_for('games.hub') }}">수능 영단어</a> /</p>
     <h1>오늘의 20단어 <small class="muted">Day {{ day.day_no }}</small></h1>
-    <p class="muted small">카드를 누르면 뜻이 보여요. 다 봤으면 아래 확인 퀴즈를 풀어요. 틀린 단어는 복습에 모여요.</p>
+    <p class="muted small">카드를 누르면 뜻. 틀린 단어는 복습으로 갑니다.</p>
   </div>
   <button type="button" class="btn small" data-voca-toggle aria-pressed="false">뜻 모두 보기</button>
 </div>
@@ -14,7 +14,7 @@
   <li><button type="button" class="voca-card" aria-pressed="false"><b lang="en">{{ w }}</b><span>{{ m }}</span></button></li>
   {% endfor %}
 </ol>
-<h2 class="voca-quiz-h">확인 퀴즈 <small class="muted">20문제 · 한 문제씩 바로 채점</small></h2>
+<h2 class="voca-quiz-h" id="quiz">섞어 풀기 <small class="muted">20문제 · 뜻 · 단어 · 듣기 · O/X · 철자</small></h2>
 {% set begin_label = '퀴즈 시작' %}
 {% include "student/games/_mc_block.html" %}
 {% endblock %}
