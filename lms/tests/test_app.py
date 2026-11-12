@@ -721,7 +721,7 @@ class FeatureTest(AppTest):
         conn.close()
 
     def _signup(self, client, code, name="박지민", no="S100", pw="Signup!2026", consent="1"):
-        return client.post("/signup", data={"code": code, "name": name, "student_no": no,
+        return client.post("/signup", data={"track": "재종", "code": code, "name": name, "student_no": no,
                                             "password": pw, "confirm": pw, "consent": consent})
 
     def _codes(self, cid, n=3):
@@ -736,7 +736,7 @@ class FeatureTest(AppTest):
         self.assertEqual(len(codes[0]), 10)
         anon = self.app.test_client()
         # 틀린 코드, 동의 안 함 → 거부
-        self.assertIn("개인 코드가 올바르지", self._signup(anon, "WRONGCODE1").data.decode())
+        self.assertIn("학생코드가 올바르지", self._signup(anon, "WRONGCODE1").data.decode())
         self._signup(anon, codes[0], consent="")
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE role='student' AND username='S100'", one=True)["n"], 0)
@@ -774,7 +774,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             self.assertEqual([r["code"] for r in query("SELECT code FROM student_codes")], [codes[0]])
         # 조교는 코드를 볼 수 있지만 만들 수는 없다 (가입 화면 문구: 아이디)
-        self.assertIn("영문·숫자 3~30자", self.app.test_client().get("/signup").data.decode())
+        self.assertIn("영문·숫자 3~30자", self.app.test_client().get("/signup?track=재종").data.decode())
 
     def test_signup_requires_google_when_enabled(self):
         cid = self.setup_class_with_students()
@@ -792,7 +792,7 @@ class FeatureTest(AppTest):
             r = anon.get("/auth/google/start?mode=signup")
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
             self.assertTrue(anon.get(f"/auth/google/callback?state={state}&code=x").headers["Location"].endswith("/signup"))
-            self.assertIn("jimin@example.com", anon.get("/signup").data.decode())
+            self.assertIn("jimin@example.com", anon.get("/signup?track=재종").data.decode())
             self.assertEqual(self._signup(anon, code).status_code, 302)        # 바로 가입
             with self.app.app_context():
                 u = query("SELECT * FROM users WHERE username='S100'", one=True)

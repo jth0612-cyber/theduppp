@@ -133,16 +133,21 @@ def classes():
         except ValueError as e:
             flash(str(e), "error")
         else:
-            cid = execute("INSERT INTO classes (name, description, join_code) VALUES (?, ?, ?)",
-                          (name, desc, new_join_code(join_code_taken)))
+            track = request.form.get("track") if request.form.get("track") in ("단과", "재종") else "재종"
+            cid = execute("INSERT INTO classes (name, description, join_code, track) VALUES (?, ?, ?, ?)",
+                          (name, desc, new_join_code(join_code_taken), track))
             audit("class_create", f"class:{cid}")
             flash(f"'{name}' 반을 만들었습니다.", "ok")
             return redirect(url_for("teacher.class_detail", cid=cid))
     show_archived = request.args.get("archived") == "1"
+    track = request.args.get("track") if request.args.get("track") in ("단과", "재종") else ""
     rows = query("""SELECT c.*, COUNT(s.id) AS student_count FROM classes c
                     LEFT JOIN students s ON s.class_id = c.id AND s.active = 1
-                    WHERE c.archived = ? GROUP BY c.id ORDER BY c.name""", (int(show_archived),))
-    return render_template("teacher/classes.html", classes=rows, show_archived=show_archived)
+                    WHERE c.archived = ? AND (? = '' OR c.track = ?) GROUP BY c.id ORDER BY c.track, c.name""",
+                 (int(show_archived), track, track))
+    counts = {r["track"]: r["n"] for r in query("""SELECT c.track, COUNT(s.id) AS n FROM classes c JOIN students s ON s.class_id = c.id
+                                                    AND s.active = 1 WHERE c.archived = 0 GROUP BY c.track""")}
+    return render_template("teacher/classes.html", classes=rows, show_archived=show_archived, track=track, counts=counts)
 
 
 @bp.route("/classes/<int:cid>")
@@ -211,8 +216,9 @@ def class_edit(cid):
         flash(str(e), "error")
     else:
         archived = 1 if request.form.get("archived") == "1" else 0
-        execute("UPDATE classes SET name = ?, description = ?, archived = ? WHERE id = ?",
-                (name, desc, archived, cid))
+        track = request.form.get("track") if request.form.get("track") in ("단과", "재종") else None
+        execute("UPDATE classes SET name = ?, description = ?, archived = ?, track = COALESCE(?, track) WHERE id = ?",
+                (name, desc, archived, track, cid))
         audit("class_edit", f"class:{cid}")
         flash("반 정보를 저장했습니다.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="students"))
@@ -311,17 +317,21 @@ def student_import(cid):
 @staff_required
 def students():
     q = request.args.get("q", "").strip()
+    track = request.args.get("track") if request.args.get("track") in ("단과", "재종") else ""
     page = _page()
     where, args = "1 = 1", []
     if q:
         where = "(s.name LIKE ? OR s.student_no LIKE ?)"
         args = [f"%{q}%", f"%{q}%"]
-    total = query(f"SELECT COUNT(*) AS n FROM students s WHERE {where}", args, one=True)["n"]
-    rows = query(f"""SELECT s.id, s.name, s.student_no, s.target, s.active, c.name AS class_name
+    if track:
+        where += " AND c.track = ?"
+        args.append(track)
+    total = query(f"SELECT COUNT(*) AS n FROM students s JOIN classes c ON c.id = s.class_id WHERE {where}", args, one=True)["n"]
+    rows = query(f"""SELECT s.id, s.name, s.student_no, s.target, s.active, c.name AS class_name, c.track
                      FROM students s JOIN classes c ON c.id = s.class_id
                      WHERE {where} ORDER BY s.name LIMIT ? OFFSET ?""",
                  args + [PAGE_SIZE, (page - 1) * PAGE_SIZE])
-    return render_template("teacher/students.html", students=rows, q=q, page=page,
+    return render_template("teacher/students.html", students=rows, q=q, page=page, track=track,
                            pages=max(1, math.ceil(total / PAGE_SIZE)), total=total)
 
 

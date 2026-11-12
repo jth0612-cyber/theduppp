@@ -5,6 +5,7 @@
 <div class="page-head">
   <h1>학생 검색 <span class="muted small">{{ total }}명</span></h1>
   <form method="get" class="row">
+    <select name="track" aria-label="구분"><option value="">전체</option><option {{ 'selected' if track == '단과' }}>단과</option><option {{ 'selected' if track == '재종' }}>재종</option></select>
     <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디" autofocus>
     <button class="btn">검색</button>
   </form>
@@ -12,9 +13,10 @@
 <div class="card">
   {% if students %}
   <div class="table-wrap"><table>
-    <tr><th>이름</th><th>아이디</th><th>반</th><th>목표</th></tr>
+    <tr><th>구분</th><th>이름</th><th>아이디</th><th>반</th><th>목표</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">
+      <td><span class="badge {{ 'type' if s.track == '단과' else 'gray' }}">{{ s.track }}</span></td>
       <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>
       <td>{{ s.student_no }}</td>
       <td>{{ s.class_name }}</td>
@@ -22,7 +24,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  {{ pagination(page, pages, 'teacher.students', q=q) }}
+  {{ pagination(page, pages, 'teacher.students', q=q, track=track) }}
   {% else %}<p class="muted">학생이 없습니다.</p>{% endif %}
 </div>
 {% endblock %}

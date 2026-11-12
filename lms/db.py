@@ -541,6 +541,22 @@ def init_db(path):
     conn = sqlite3.connect(path)
     conn.executescript(SCHEMA)
     conn.executescript(SYS_SCHEMA)
+    # 단과/재종 구분: 반에 붙인다 (학생은 가입한 반을 따른다)
+    _add_column(conn, "classes", "track", "TEXT NOT NULL DEFAULT '재종'")
+    conn.executescript("""
+    -- RFID 카드 출결 (단과): 데스크 화면에서 카드를 대면 하루 한 번 기록
+    CREATE TABLE IF NOT EXISTS checkins (
+        id          INTEGER PRIMARY KEY,
+        student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+        day         TEXT NOT NULL,
+        at          TEXT NOT NULL,
+        status      TEXT NOT NULL,
+        by_user     INTEGER,
+        UNIQUE (student_id, day)
+    );
+    CREATE INDEX IF NOT EXISTS checkins_day ON checkins (day, class_id);
+    """)
     # 기존 DB 이전: 새로 생긴 열 추가
     _add_column(conn, "users", "nickname", "TEXT")
     _add_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")
@@ -647,6 +663,15 @@ def new_join_code(is_taken):
         code = "".join(secrets.choice(_JOIN_ALPHABET) for _ in range(8))
         if not is_taken(code):
             return code
+
+
+TRACKS = ("단과", "재종")
+
+
+def normalize_card(raw):
+    """RFID 카드 일련번호: 공백·하이픈·콜론을 빼고 대문자로. 숫자나 16진수 4~20자만 받는다 (아니면 빈 문자열)."""
+    s = "".join(ch for ch in (raw or "").upper() if ch.isalnum())
+    return s if 4 <= len(s) <= 20 and all(ch in "0123456789ABCDEF" for ch in s) else ""
 
 
 def normalize_student_code(raw):

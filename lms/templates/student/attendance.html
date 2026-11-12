@@ -2,7 +2,7 @@
 {% block title %}출결 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head"><h1>출결</h1></div>
-{% if not code %}{% include "sys/_link_box.html" %}
+{% if not code and not rows %}{% include "sys/_link_box.html" %}
 {% elif not rows %}<div class="card"><p class="muted">아직 출결 기록이 없어요.</p></div>
 {% else %}
 <div class="att-sum">{% for k in ['출석', '지각', '조퇴', '결석'] %}<div class="att-{{ loop.index }}"><b>{{ count.get(k, 0) }}</b><span>{{ k }}</span></div>{% endfor %}</div>

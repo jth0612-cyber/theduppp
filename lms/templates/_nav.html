@@ -46,6 +46,7 @@
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
+    ('checkin.screen', '카드 출결', 'check', ep == 'checkin.screen', 0),
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)]),
   ('계정', [
     ('teacher.signups', '가입 승인', 'signup', ep == 'teacher.signups', pending_signups or 0),
@@ -64,6 +65,7 @@
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
+    ('checkin.screen', '카드 출결', 'check', ep == 'checkin.screen', 0),
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] -%}
 {%- else -%}
 {%- set groups = [

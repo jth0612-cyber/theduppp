@@ -5,7 +5,7 @@ from datetime import datetime
 
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 
-from db import execute, nickname_taken, normalize_student_code, query
+from db import TRACKS, execute, nickname_taken, normalize_card, normalize_student_code, query
 from security import (audit, authenticate, hash_password, login_required, login_user,
                       password_problem, verify_password)
 
@@ -126,29 +126,40 @@ def signup():
         return redirect(_home_for(g.user))
     from google_auth import google_enabled, signup_identity
     form = {k: request.form.get(k, "").strip() for k in ("code", "name", "student_no")}
+    # 먼저 단과/재종을 고른다. 단과는 RFID 카드 번호가 아이디, 재종은 자유 아이디
+    track = request.values.get("track", "")
+    track = track if track in TRACKS else ""
+    if track == "단과":
+        form["student_no"] = normalize_card(form["student_no"]) or form["student_no"]
     need_google = google_enabled()
     gid = signup_identity() if need_google else None
     if need_google and gid is None:          # Google 계정 확인이 먼저
         if request.method == "POST":
             flash("먼저 Google 계정으로 본인 확인을 해 주세요.", "error")
-        return render_template("signup.html", form=form, step="google")
+        return render_template("signup.html", form=form, step="google", track=track)
     if request.method == "POST":
         if _ip_limited(request.remote_addr or "", "signup"):
             flash("가입 시도가 너무 많습니다. 1시간 뒤에 다시 시도하세요.", "error")
-            return render_template("signup.html", form=form), 429
+            return render_template("signup.html", form=form, track=track), 429
         password = request.form.get("password", "")
         code = normalize_student_code(form["code"])
-        sc = query("""SELECT sc.*, c.name AS class_name FROM student_codes sc JOIN classes c ON c.id = sc.class_id
+        sc = query("""SELECT sc.*, c.name AS class_name, c.track FROM student_codes sc JOIN classes c ON c.id = sc.class_id
                       WHERE sc.code = ? AND c.archived = 0""", (code,), one=True) if code else None
         # 틀린 칸 바로 아래에 알려 준다 (위쪽 알림창 대신 인라인 에러)
         error, field = None, None
-        if sc is None:
-            error, field = "개인 코드가 올바르지 않아요. 선생님께 받은 코드를 다시 확인해 주세요.", "code"
+        if not track:
+            error, field = "단과와 재종 중 하나를 골라 주세요.", "track"
+        elif sc is None:
+            error, field = "학생코드가 올바르지 않아요. 조교 선생님께 받은 코드를 다시 확인해 주세요.", "code"
         elif sc["student_id"]:
             error, field = "이미 가입에 쓴 코드예요. 착오라면 선생님께 알려 주세요.", "code"
+        elif sc["track"] != track:
+            error, field = f"이 학생코드는 {sc['track']} 반 코드예요. 위에서 {sc['track']}을 골라 주세요.", "code"
         elif not _NAME.match(form["name"]):
             error, field = "이름은 한글 또는 영문 2~20자로 입력하세요.", "name"
-        elif not _STUDENT_NO.match(form["student_no"]):
+        elif track == "단과" and not normalize_card(form["student_no"]):
+            error, field = "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자예요.", "student_no"
+        elif track == "재종" and not _STUDENT_NO.match(form["student_no"]):
             error, field = "아이디는 영문·숫자·- 로 3~30자입니다.", "student_no"
         elif problem := password_problem(password):
             error, field = problem, "password"
@@ -157,7 +168,8 @@ def signup():
         elif request.form.get("consent") != "1":
             error, field = "개인정보 수집·이용에 동의해야 가입할 수 있어요.", "consent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
-            error, field = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요.", "student_no"
+            error, field = ("이미 등록된 카드예요. 카드를 잘못 받았다면 조교 선생님께 알려 주세요." if track == "단과"
+                            else "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."), "student_no"
         elif (roster := query("SELECT * FROM students WHERE student_no = ?", (form["student_no"],), one=True)) and \
                 (roster["class_id"] != sc["class_id"] or not roster["active"]):
             error, field = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요.", "student_no"
@@ -168,7 +180,7 @@ def signup():
                 audit("signup_code_failed", f"code:{code[:4]}")
             if field is None:
                 flash(error, "error")
-            return render_template("signup.html", form=form, gid=gid, errors={field: error} if field else {})
+            return render_template("signup.html", form=form, gid=gid, errors={field: error} if field else {}, track=track)
         # 코드가 맞으면 승인 없이 바로 계정을 만든다 (코드 = 본인 확인)
         from nickname import generate_nickname
         roster = query("SELECT * FROM students WHERE student_no = ? AND class_id = ?", (form["student_no"], sc["class_id"]), one=True)
@@ -190,4 +202,4 @@ def signup():
         g.user = user
         flash(f"가입했어요. {sc['class_name']}에 오신 걸 환영해요!", "ok")
         return redirect(_home_for(user))
-    return render_template("signup.html", form=form, gid=gid, errors={})
+    return render_template("signup.html", form=form, gid=gid, errors={}, track=track)

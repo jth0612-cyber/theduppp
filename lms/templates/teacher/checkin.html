@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}카드 출결 · 정태혁 통합과학 lab{% endblock %}
+{% block body_class %}checkin-page{% endblock %}
+{% block content %}
+<div class="ck" data-checkin data-tap="{{ url_for('checkin.tap') }}" data-today="{{ url_for('checkin.today') }}">
+  <header class="ck-head">
+    <div><h1>카드 출결</h1><p class="small muted">{{ day }} · 단과 · 수업 시작 {{ late }}분 뒤부터 지각</p></div>
+    <button type="button" class="btn small" data-ck-full>전체 화면</button>
+  </header>
+
+  <form class="ck-input" data-ck-form autocomplete="off">
+    <label for="ck-card" class="sr-only">카드 번호</label>
+    <input id="ck-card" name="card" inputmode="none" autofocus spellcheck="false" placeholder="카드를 리더기에 대 주세요" data-ck-card>
+    <p class="small muted">입력 칸이 깜빡이지 않으면 화면을 한 번 누르세요. 카드 번호를 직접 치고 Enter를 눌러도 돼요.</p>
+  </form>
+
+  <section class="ck-result" data-ck-result aria-live="assertive" hidden>
+    <p class="ck-status" data-ck-status></p>
+    <p class="ck-name" data-ck-name></p>
+    <p class="ck-sub" data-ck-sub></p>
+  </section>
+
+  <section class="ck-list card">
+    <div class="sec-head"><h2>오늘 기록</h2><span class="small muted" data-ck-count></span></div>
+    <ul class="att-list att-3" data-ck-recent>
+      {% for r in recent %}<li><time>{{ r.at[:5] }}</time><span class="att-tag att-{{ 2 if r.status == '지각' else 1 }}">{{ r.status }}</span><span>{{ r.name }} <span class="small muted">{{ r.class_name }}</span></span></li>
+      {% else %}<li class="muted small" data-ck-empty>아직 기록이 없어요.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='checkin.js') }}" defer></script>
+{% endblock %}

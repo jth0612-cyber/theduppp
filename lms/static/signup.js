@@ -17,7 +17,9 @@
   const check = {
     code: (v) => (v.replace(/[\s-]/g, "").length < 6 ? "선생님께 받은 개인 코드를 입력해 주세요." : ""),
     name: (v) => (NAME.test(v.trim()) ? "" : "이름은 한글 또는 영문 2~20자로 입력하세요."),
-    student_no: (v) => (ID.test(v.trim()) ? "" : "아이디는 영문·숫자·- 로 3~30자입니다."),
+    student_no: (v) => ($("student_no").hasAttribute("data-card")
+      ? (/^[0-9A-Fa-f]{4,20}$/.test(v.replace(/[\s:-]/g, "")) ? "" : "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자예요.")
+      : (ID.test(v.trim()) ? "" : "아이디는 영문·숫자·- 로 3~30자입니다.")),
     password: (v) => (v.length < 10 ? "비밀번호는 10자 이상이어야 합니다." : kinds(v) < 2 ? "영문·숫자·특수문자 중 2종류 이상 섞어 주세요." : ""),
     confirm: (v) => (v && v === $("password").value ? "" : "비밀번호가 서로 일치하지 않습니다."),
     consent: () => ($("consent").checked ? "" : "개인정보 수집·이용에 동의해야 가입할 수 있어요."),

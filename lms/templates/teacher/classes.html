@@ -16,19 +16,28 @@
   <h2>새 반 만들기</h2>
   <form method="post" class="row">
     {{ csrf() }}
-    <div class="field"><label>반 이름</label><input type="text" name="name" maxlength="60" required placeholder="예: A반"></div>
+    <div class="field shrink"><label>구분</label><div class="seg-pick" role="radiogroup" aria-label="구분">
+      <label><input type="radio" name="track" value="단과" required><span>단과</span></label>
+      <label><input type="radio" name="track" value="재종"><span>재종</span></label></div></div>
+    <div class="field"><label>반 이름</label><input type="text" name="name" maxlength="60" required placeholder="예: 시대인재 대구 MDS 점심반"></div>
     <div class="field"><label>설명 (선택)</label><input type="text" name="description" maxlength="300" placeholder="예: 통합과학 화/목"></div>
     <div class="field shrink"><button class="btn primary">만들기</button></div>
   </form>
 </div>
 {% endif %}
 
+<nav class="seg" aria-label="구분">
+  <a href="{{ url_for('teacher.classes', archived=1 if show_archived else None) }}" class="{{ 'is-on' if not track }}">전체</a>
+  <a href="{{ url_for('teacher.classes', track='단과', archived=1 if show_archived else None) }}" class="{{ 'is-on' if track == '단과' }}">단과 <small>{{ counts.get('단과', 0) }}명</small></a>
+  <a href="{{ url_for('teacher.classes', track='재종', archived=1 if show_archived else None) }}" class="{{ 'is-on' if track == '재종' }}">재종 <small>{{ counts.get('재종', 0) }}명</small></a>
+</nav>
 <div class="card">
   {% if classes %}
   <div class="table-wrap"><table>
-    <tr><th>반</th><th>설명</th><th class="num">학생 수</th><th>만든 날</th></tr>
+    <tr><th>구분</th><th>반</th><th>설명</th><th class="num">학생 수</th><th>만든 날</th></tr>
     {% for c in classes %}
     <tr>
+      <td><span class="badge {{ 'type' if c.track == '단과' else 'gray' }}">{{ c.track }}</span></td>
       <td><a href="{{ url_for('teacher.class_detail', cid=c.id) }}">{{ c.name }}</a></td>
       <td class="muted">{{ c.description }}</td>
       <td class="num">{{ c.student_count }}</td>

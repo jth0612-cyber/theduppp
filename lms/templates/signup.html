@@ -12,7 +12,18 @@
   <a class="btn primary google-btn" href="{{ url_for('google.start', mode='signup') }}">Google 계정으로 시작하기</a>
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
+{% elif not track %}
+  <p class="muted small">수강 형태를 먼저 골라 주세요.</p>
+  <div class="track-pick" role="list">
+    <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='단과') }}">
+      <b>단과</b><span>통합과학 단과 수강생</span><em>받은 출결 카드 번호로 가입</em></a>
+    <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='재종') }}">
+      <b>재종</b><span>재수종합반 학생</span><em>원하는 아이디로 가입</em></a>
+  </div>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
+</div>
 {% else %}
+  <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디가 돼요.' if track == '단과' else '원하는 아이디로 가입해요.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
   <p class="muted small">조교 선생님께 받은 <b>학생코드</b>(예: K7QM-3XPA)로 가입해요. 코드가 맞으면 바로 시작할 수 있어요. 코드는 한 번만 쓸 수 있으니 다른 사람에게 알려 주지 마세요.</p>
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
@@ -22,6 +33,8 @@
   {% macro bad(name) %}{% if errors.get(name) %} aria-invalid="true"{% endif %} aria-describedby="{{ 'hint-' ~ name ~ ' ' if name in ('student_no', 'password') else '' }}err-{{ name }}"{% endmacro %}
   <form method="post" autocomplete="on" class="signup-form" data-signup novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="track" value="{{ track }}">
+    {{ err('track') }}
     <div class="field">
       <label for="code">학생코드</label>
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
@@ -34,10 +47,17 @@
       {{ err('name') }}
     </div>
     <div class="field">
+      {% if track == '단과' %}
+      <label for="student_no">카드 번호 <span class="small muted">(아이디)</span></label>
+      <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
+             inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="예: 0012345678" data-card{{ bad('student_no') }}>
+      <p class="field-hint" id="hint-student_no">출결 카드에 적힌 번호예요. 로그인할 때도 이 번호를 써요.</p>
+      {% else %}
       <label for="student_no">아이디</label>
       <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
              autocapitalize="off" spellcheck="false"{{ bad('student_no') }}>
       <p class="field-hint" id="hint-student_no">영문·숫자 3~30자 · 로그인할 때 써요</p>
+      {% endif %}
       {{ err('student_no') }}
     </div>
     <div class="field">
