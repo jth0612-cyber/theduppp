@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, abort, g, jsonify, render_template, request
 
 import quiz
+import sci_games
 import vocab
 from db import execute, query
 from security import student_required
@@ -71,9 +72,15 @@ def hub():
 @bp.route("/sci")
 @student_required
 def sci_hub():
-    """통과 Quiz"""
-    parts = [(label, [(k, v[0]) for k, v in quiz.TOPICS.items() if v[2] == n]) for n, label in quiz.PARTS.items()]
-    return render_template("student/games/sci_hub.html", best=_best(), parts=parts)
+    """통과 Quiz: TOPIC 01~34, TOPIC 아래에 딸린 게임."""
+    from flask import url_for
+    games = {"07": [], "10": [], "19": [], "23": [], "24": []}
+    for key, info in sci_games.GAMES.items():
+        games[info["topic"]].append((info["title"], url_for("games.play", game=key), "play_" + key + ":"))
+    games["10"] += [("샤가프 법칙", url_for("games.chargaff"), "chargaff:"), ("염기 짝 맞추기", url_for("games.dna"), "dna:dna")]
+    games["19"] += [("전사: DNA → RNA", url_for("games.dna", mode="rna"), "dna:rna")]
+    topics = [(k, v[0], games.get(k, [])) for k, v in quiz.TOPICS.items()]
+    return render_template("student/games/sci_hub.html", best=_best(), topics=topics)
 
 
 # ---------- 염기 짝 맞추기 ----------
@@ -258,17 +265,14 @@ def chargaff_submit(rid):
 @student_required
 def mixed():
     return render_template("student/games/mc.html", game="mixed", title="섞어 풀기", parent="sci",
-                           intro="TOPIC 여러 개에서 10문제. O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산.",
-                           topics=[("all", "통합과학 1 + 2"), ("1", "통합과학 1 (TOPIC 01~19)"), ("2", "통합과학 2 (TOPIC 20~34)")],
-                           topic_label="범위", pick=request.args.get("part", "all"))
+                           intro="TOPIC 01~34에서 10문제. O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산.", topics=None)
 
 
 @bp.route("/mixed/start", methods=["POST"])
 @student_required
 def mixed_start():
-    part = {"1": 1, "2": 2}.get(str(_json_body().get("topic", "")))
-    items = quiz.mixed_quiz(part=part)
-    rid = _new_round("mixed", _public(items), items, topic=str(part or ""))
+    items = quiz.mixed_quiz()
+    rid = _new_round("mixed", _public(items), items)
     return jsonify(round_id=rid, questions=_public(items))
 
 
@@ -498,3 +502,61 @@ def vocab_memory_submit(rid):
     secs = round(float(secs), 1) if isinstance(secs, (int, float)) and 0 < secs < 3600 else None
     _finish(rid, pairs, tries)
     return jsonify(pairs=pairs, tries=tries, seconds=secs, words=[(w, vocab.MEANING[w]) for w in json.loads(r["answer"])])
+
+
+# ---------- TOPIC 개념 게임: 중화 반응 · 산화 환원 · 전자 배치 (sci_games) ----------
+
+@bp.route("/play/<game>")
+@student_required
+def play(game):
+    info = sci_games.GAMES.get(game) or abort(404)
+    return render_template("student/games/play.html", game=game, info=info, parent="sci",
+                           topic_title=quiz.TOPICS[info["topic"]][0], stages=sci_games.STAGES,
+                           best=_best().get("play_" + game + ":"))
+
+
+@bp.route("/play/<game>/start", methods=["POST"])
+@student_required
+def play_start(game):
+    if game not in sci_games.GAMES:
+        abort(404)
+    pub, ans = sci_games.make_round(game)
+    rid = _new_round("play_" + game, pub, ans)
+    return jsonify(round_id=rid, stages=pub)
+
+
+@bp.route("/play/<game>/<int:rid>/check", methods=["POST"])
+@student_required
+def play_check(game, rid):
+    if game not in sci_games.GAMES:
+        abort(404)
+    r = _open_round(rid, "play_" + game)
+    pub, ans = json.loads(r["payload"]), json.loads(r["answer"])
+    body = _json_body()
+    i = body.get("i")
+    if not isinstance(i, int) or not 0 <= i < len(pub):
+        abort(400)
+    picks = json.loads(r["picks"] or "null") or [None] * len(pub)
+    if picks[i] is None:                                   # 한 판에 한 번만 채점
+        got = sci_games.check(game, pub[i], ans[i], body.get("pick"))
+        if got is None:
+            abort(400)
+        picks[i] = {"ok": got[0], "res": got[1]}
+        execute("UPDATE game_rounds SET picks = ? WHERE id = ?", (json.dumps(picks, ensure_ascii=False), rid))
+    score = sum(1 for p in picks if p and p["ok"])
+    return jsonify(correct=picks[i]["ok"], score=score, total=len(pub), **picks[i]["res"])
+
+
+@bp.route("/play/<game>/<int:rid>/submit", methods=["POST"])
+@student_required
+def play_submit(game, rid):
+    if game not in sci_games.GAMES:
+        abort(404)
+    r = _open_round(rid, "play_" + game)
+    picks = json.loads(r["picks"] or "null") or []
+    total = len(json.loads(r["answer"]))
+    score = sum(1 for p in picks if p and p["ok"])
+    _finish(rid, score, total)
+    best = query("SELECT MAX(score) AS m FROM game_rounds WHERE user_id = ? AND game = ? AND finished_at IS NOT NULL",
+                 (g.user["id"], "play_" + game), one=True)["m"]
+    return jsonify(score=score, total=total, best=best)

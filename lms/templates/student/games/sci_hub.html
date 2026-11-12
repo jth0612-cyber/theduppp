@@ -3,31 +3,27 @@
 {% block content %}
 <header class="ed-head">
   <h1>통과 Quiz</h1>
-  <p class="ed-lede">개념서 TOPIC 01~34 · O/X · ㄱㄴㄷ · 4지선다 · 분류 · 순서 · 계산</p>
+  <p class="ed-lede">TOPIC 01~34 · TOPIC마다 8문제</p>
 </header>
 
 <section class="qz-sec" aria-labelledby="h-play">
-  <div class="sec-head"><h2 id="h-play">빠르게</h2></div>
   <ul class="qz-modes">
-    {% set mx = best.get('mixed:') %}{% set sp = best.get('sci_speed:') %}{% set c = best.get('chargaff:') %}
-    {% set d = best.get('dna:dna') %}{% set r = best.get('dna:rna') %}
-    <li><a href="{{ url_for('games.mixed') }}"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>섞어 풀기</b><span>TOPIC 여러 개에서 10문제</span>{% if mx %}<em>최고 {{ mx.best }}점</em>{% endif %}</a></li>
+    {% set mx = best.get('mixed:') %}{% set sp = best.get('sci_speed:') %}
+    <li><a href="{{ url_for('games.mixed') }}"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>섞어 풀기</b><span>TOPIC 01~34에서 10문제</span>{% if mx %}<em>최고 {{ mx.best }}점</em>{% endif %}</a></li>
     <li><a href="{{ url_for('games.speed', kind='sci_speed') }}"><span class="qz-ico qi-speed" aria-hidden="true"></span><b>O/X 스피드</b><span>60초 동안 개념 O/X</span>{% if sp %}<em>최고 {{ sp.top }}개</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.chargaff') }}"><span class="qz-ico qi-calc" aria-hidden="true"></span><b>샤가프 법칙</b><span>염기 비율 계산 5문제</span>{% if c %}<em>최고 {{ c.best }}점</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.dna') }}"><span class="qz-ico qi-dna" aria-hidden="true"></span><b>염기 짝 맞추기</b><span>상보 가닥 A–T, G–C</span>{% if d %}<em>최고 {{ d.best }}점</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.dna', mode='rna') }}"><span class="qz-ico qi-rna" aria-hidden="true"></span><b>전사: DNA → RNA</b><span>주형 가닥 → RNA, A–U</span>{% if r %}<em>최고 {{ r.best }}점</em>{% endif %}</a></li>
   </ul>
 </section>
 
-{% for part_label, items in parts %}
-<section class="qz-sec" aria-labelledby="h-part{{ loop.index }}">
-  <div class="sec-head"><h2 id="h-part{{ loop.index }}">{{ part_label }}</h2><span>TOPIC마다 8문제</span></div>
+<section class="qz-sec" aria-labelledby="h-topics">
+  <div class="sec-head"><h2 id="h-topics">TOPIC</h2><span>게임이 있는 TOPIC은 아래에 함께</span></div>
   <ol class="qz-tlist">
-    {% for k, label in items %}
+    {% for k, label, games in topics %}
     {% set b = best.get('quiz:' ~ k) %}
-    <li><a href="{{ url_for('games.quiz', topic=k) }}"><span class="qz-no">{{ k }}</span><b>{{ label }}</b>{% if b %}<em>{{ b.best }}점</em>{% endif %}</a></li>
+    <li{% if games %} class="has-game"{% endif %}>
+      <a href="{{ url_for('games.quiz', topic=k) }}"><span class="qz-no">{{ k }}</span><b>{{ label }}</b>{% if b %}<em>{{ b.best }}점</em>{% endif %}</a>
+      {% if games %}<div class="qz-games">{% for title, href, key in games %}{% set gb = best.get(key) %}<a href="{{ href }}">{{ title }}{% if gb %} <em>{{ gb.best }}점</em>{% endif %}</a>{% endfor %}</div>{% endif %}
+    </li>
     {% endfor %}
   </ol>
 </section>
-{% endfor %}
 {% endblock %}

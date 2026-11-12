@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ info.title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="small"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> / <a href="{{ url_for('games.quiz', topic=info.topic) }}">TOPIC {{ info.topic }} {{ topic_title }}</a> /</p>
+    <h1>{{ info.title }}</h1>
+    <p class="muted small">{{ info.intro }} {{ stages }}판.</p>
+  </div>
+</div>
+<div class="card game pl-game" id="play-game" data-game="{{ game }}" data-start="{{ url_for('games.play_start', game=game) }}">
+  <div data-role="start">
+    {% if best %}<p class="small muted">최고 {{ best.top }}/{{ stages }} · {{ best.plays }}판</p>{% endif %}
+    <button type="button" class="btn primary big" data-role="begin">시작</button>
+  </div>
+  <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>
+  <div class="hidden" data-role="play">
+    <div class="game-bar"><span data-role="progress"></span><span class="muted" data-role="score"></span></div>
+    <div data-role="stage"></div>
+    <div class="mc-feedback hidden" data-role="feedback" aria-live="polite"></div>
+  </div>
+  <div class="hidden" data-role="result">
+    <h2 data-role="result-title"></h2>
+    <p data-role="result-detail" class="muted"></p>
+    <button type="button" class="btn primary" data-role="again">다시 하기</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='games.js') }}" defer></script>
+{% endblock %}

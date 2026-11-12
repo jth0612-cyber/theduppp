@@ -1878,8 +1878,45 @@ body.tt-open { overflow: hidden; }
 .mc-choices.kind-pick .mc-choice { flex: 1 1 calc(33% - 8px); min-width: 92px; text-align: center; }
 .mc-feedback p + p { margin-top: -6px; }
 .qz-tlist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
-.qz-tlist a { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid var(--edge); border-radius: 10px; color: var(--ink); background: var(--sheet); transition: border-color 150ms ease; }
-.qz-tlist a:hover { text-decoration: none; border-color: var(--ink); }
+.qz-tlist > li > a { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid var(--edge); border-radius: 10px; color: var(--ink); background: var(--sheet); transition: border-color 150ms ease; }
+.qz-tlist > li > a:hover { text-decoration: none; border-color: var(--ink); }
 .qz-no { font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .qz-tlist b { font-size: 15px; font-weight: 600; }
 .qz-tlist em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+
+/* ---------- TOPIC 목록의 게임 · 개념 게임 화면 ---------- */
+.qz-tlist li.has-game { display: grid; gap: 4px; }
+.qz-games { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 2px 4px 46px; }
+.qz-games a { display: inline-block; white-space: nowrap; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--edge); background: var(--raised); color: var(--ink); }
+.qz-games a:hover { text-decoration: none; border-color: var(--ink); }
+.qz-games em { font-style: normal; color: var(--accent-ink); }
+.pl-q { font-size: 16px; font-weight: 600; line-height: 1.55; margin: 4px 0 12px; }
+.pl-eq { font-size: 22px; font-weight: 700; text-align: center; padding: 16px 8px; margin: 4px 0 14px; border-radius: 10px; background: var(--raised); letter-spacing: .01em; }
+.pl-beakers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pl-beakers > div:only-child, .pl-beakers > .pl-beaker:only-child { grid-column: 1 / -1; }
+.pl-beaker { position: relative; min-height: 150px; border: 2px solid var(--ink); border-top: 0; border-radius: 0 0 16px 16px; padding: 10px 8px 30px; background: var(--surface); }
+.pl-beaker.tint-노랑 { background: #fbf1c4; } .pl-beaker.tint-초록 { background: #d9efd8; } .pl-beaker.tint-파랑 { background: #d6e5f7; }
+.pl-dots { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+.pl-ion { min-width: 30px; height: 26px; padding: 0 5px; border-radius: 13px; display: inline-grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
+.ion-h { background: #d64545; } .ion-cl { background: #3f9a5b; } .ion-na { background: #7b5cc4; } .ion-oh { background: #2f6fb3; } .ion-w { background: #8a9aa8; }
+.pl-label { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.pl-step { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.pl-ml { min-width: 64px; text-align: center; font-size: 18px; font-variant-numeric: tabular-nums; }
+.pl-step .btn.primary { margin-left: auto; }
+.pl-pick { display: grid; gap: 6px; margin-bottom: 12px; }
+.pl-pick-k { font-size: 13px; font-weight: 700; color: var(--muted); }
+.pl-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.pl-opts .so-seg { font-size: 16px; padding: 10px 16px; }
+.so-seg.is-answer { border-color: var(--ok); background: var(--ok-soft); color: var(--accent-ink); }
+.so-seg.is-bad { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+.pl-game .is-spent { display: none; }
+.pl-shellwrap { display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: center; }
+.pl-atom { position: relative; width: 200px; height: 200px; }
+.pl-nuc { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.pl-ring { position: absolute; left: 50%; top: 50%; translate: -50% -50%; border: 1.5px dashed var(--edge); border-radius: 50%; }
+.pl-ring.r0 { width: 72px; height: 72px; } .pl-ring.r1 { width: 112px; height: 112px; } .pl-ring.r2 { width: 152px; height: 152px; } .pl-ring.r3 { width: 192px; height: 192px; }
+.pl-e { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #2f6fb3; }
+.pl-shells { display: grid; gap: 6px; }
+.pl-srow { display: grid; grid-template-columns: 1fr 34px 28px 34px; align-items: center; gap: 6px; font-size: 14px; }
+.pl-srow b { text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .pl-shellwrap { grid-template-columns: 1fr; justify-items: center; } .pl-shells { width: 100%; } .pl-eq { font-size: 18px; } }

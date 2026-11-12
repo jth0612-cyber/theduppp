@@ -99,7 +99,6 @@ def chargaff_round():
 # ---------- TOPIC 퀴즈 (개념서 TOPIC 01~34) ----------
 
 TOPICS = {t["code"]: (t["title"], t["std"], t["part"]) for t in quiz_topics.TOPICS}
-PARTS = {1: "통합과학 1", 2: "통합과학 2"}
 _GA = "ㄱㄴㄷ"
 
 

@@ -940,15 +940,15 @@ class FeatureTest(AppTest):
         import json as _json
         _, s1, _ = self._students()
         page = s1.get("/s/games/sci").data.decode()
-        self.assertIn("TOPIC", page); self.assertIn("전자기 유도와 발전", page)
-        for part in ("1", "2", "all"):
-            start = s1.post("/s/games/mixed/start", json={"topic": part}).get_json()
+        self.assertIn("전자기 유도와 발전", page); self.assertNotIn("통합과학 1", page)
+        for t in ("중화 반응", "산화 환원", "전자 배치", "샤가프 법칙"):
+            self.assertIn(t, page)
+        for part in ("all", "all"):
+            start = s1.post("/s/games/mixed/start", json={}).get_json()
             self.assertNotIn("answer_list", str(start)); self.assertNotIn("answer_num", str(start)); self.assertNotIn("answer_index", str(start))
             rid = start["round_id"]
             with self.app.app_context():
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
-            if part != "all":
-                self.assertTrue(all((int(a["topic"]) <= 19) == (part == "1") for a in ans))
             for i, a in enumerate(ans):
                 if a["kind"] in ("sort", "order"):
                     self.assertEqual(s1.post(f"/s/games/mixed/{rid}/check", json={"i": i, "pick": [99]}).status_code, 400)
@@ -958,6 +958,39 @@ class FeatureTest(AppTest):
                 self.assertEqual(r["correct"], bool(i % 2), a)
             res = s1.post(f"/s/games/mixed/{rid}/submit", json={}).get_json()
             self.assertEqual(res["score"], 5)
+
+    def test_topic_games(self):
+        """중화 반응 · 산화 환원 · 전자 배치: 서버 채점, 한 번만 채점, 잘못된 입력 거부."""
+        import json as _json
+        import sci_games
+        self.assertEqual(sci_games.shells_of(17), [2, 8, 7]); self.assertEqual(sci_games.shells_of(20), [2, 8, 8, 2])
+        _, s1, s2 = self._students()
+        for game in ("neutral", "redox", "shell"):
+            self.assertEqual(s1.get(f"/s/games/play/{game}").status_code, 200)
+            st = s1.post(f"/s/games/play/{game}/start", json={}).get_json()
+            rid = st["round_id"]
+            self.assertNotIn("answer", str(st)); self.assertNotIn("ml\": ", str(st))
+            with self.app.app_context():
+                ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
+            right = {"neutral": lambda a: a["ml"], "redox": lambda a: {"ox": a["ox"], "red": a["red"]},
+                     "shell": lambda a: a["shells"]}[game]
+            wrong = {"neutral": lambda a: a["ml"] + 5, "redox": lambda a: {"ox": a["red"], "red": a["ox"]},
+                     "shell": lambda a: [1] + a["shells"][1:]}[game]
+            self.assertEqual(s1.post(f"/s/games/play/{game}/{rid}/check", json={"i": 0, "pick": "x"}).status_code, 400)
+            self.assertEqual(s2.post(f"/s/games/play/{game}/{rid}/check", json={"i": 0, "pick": right(ans[0])}).status_code, 404)
+            for i, a in enumerate(ans):
+                r = s1.post(f"/s/games/play/{game}/{rid}/check", json={"i": i, "pick": right(a) if i else wrong(a)}).get_json()
+                self.assertEqual(r["correct"], i > 0, (game, a))
+            again = s1.post(f"/s/games/play/{game}/{rid}/check", json={"i": 0, "pick": right(ans[0])}).get_json()
+            self.assertFalse(again["correct"])                       # 처음 답이 그대로
+            res = s1.post(f"/s/games/play/{game}/{rid}/submit", json={}).get_json()
+            self.assertEqual((res["score"], res["total"]), (len(ans) - 1, len(ans)))
+        r = s1.post("/s/games/play/neutral/start", json={}).get_json()
+        stg = r["stages"][0]
+        with self.app.app_context():
+            a = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (r["round_id"],), one=True)["answer"])[0]
+        self.assertEqual(a["ml"] // stg["unit"] * stg["oh"], stg["h"])      # 완전 중화: OH⁻ 수 = H⁺ 수
+        self.assertEqual(s1.get("/s/games/play/nope").status_code, 404)
 
     def test_vocab_memory(self):
         _, s1, _ = self._students()

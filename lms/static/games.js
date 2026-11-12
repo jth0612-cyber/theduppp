@@ -588,6 +588,175 @@
     mmq("again").addEventListener("click", function () { show(mm, "start"); });
   }
 
+  // ---------- TOPIC 개념 게임: 중화 반응 · 산화 환원 · 전자 배치 ----------
+  var pl = document.getElementById("play-game");
+  if (pl) {
+    var pq = function (r) { return pl.querySelector("[data-role=" + r + "]"); };
+    var kind = pl.dataset.game, pg = null;
+    var base = function () { return pl.dataset.start.replace(/\/start$/, "/" + pg.id); };
+
+    var feedback = function (res, extra) {
+      var fb = pq("feedback");
+      fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong"); fb.textContent = "";
+      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (extra ? " · " + extra : "")));
+      fb.appendChild(el("p", "", res.explanation));
+      var last = pg.i + 1 >= pg.stages.length;
+      var nx = el("button", "btn primary", last ? "결과 보기" : "다음"); nx.type = "button";
+      nx.addEventListener("click", function () { pg.i++; if (pg.i < pg.stages.length) stage(); else finish(); });
+      fb.appendChild(nx);
+      pq("score").textContent = "맞힘 " + res.score;
+      nx.focus({ preventScroll: true }); fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+    var send = function (pick) {
+      return post(base() + "/check", { i: pg.i, pick: pick });
+    };
+
+    // 이온 입자 그리기: [["H⁺", 3, "ion-h"], ...]
+    var beaker = function (label, parts, tint) {
+      var bx = el("div", "pl-beaker" + (tint ? " tint-" + tint : ""));
+      var dots = el("div", "pl-dots");
+      parts.forEach(function (p) { for (var n = 0; n < p[1]; n++) dots.appendChild(el("span", "pl-ion " + p[2], p[0])); });
+      bx.appendChild(dots); bx.appendChild(el("span", "pl-label", label));
+      return bx;
+    };
+
+    var stageNeutral = function (st, box) {
+      var ml = 0;
+      var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개. 몇 mL를 넣으면 완전히 중화될까요?");
+      var row = el("div", "pl-beakers");
+      var acid = beaker("염산 " + st.acid_ml + " mL", [["H⁺", st.h, "ion-h"], ["Cl⁻", st.h, "ion-cl"]]);
+      var baseHold = el("div");
+      var ctl = el("div", "pl-step");
+      var minus = el("button", "btn", "− 5 mL"), plus = el("button", "btn", "+ 5 mL"), val = el("b", "pl-ml", "0 mL");
+      var go = el("button", "btn primary", "섞기");
+      [minus, plus, go].forEach(function (b) { b.type = "button"; });
+      var draw = function () {
+        val.textContent = ml + " mL"; baseHold.textContent = "";
+        var n = ml / st.unit * st.oh;
+        baseHold.appendChild(beaker("NaOH " + ml + " mL", [["Na⁺", n, "ion-na"], ["OH⁻", n, "ion-oh"]]));
+        minus.disabled = ml <= 0; plus.disabled = ml >= st.max_ml;
+      };
+      minus.addEventListener("click", function () { ml = Math.max(0, ml - st.unit); draw(); });
+      plus.addEventListener("click", function () { ml = Math.min(st.max_ml, ml + st.unit); draw(); });
+      go.addEventListener("click", function () {
+        [minus, plus, go].forEach(function (b) { b.disabled = true; });
+        send(ml).then(function (res) {
+          row.textContent = "";
+          var L = res.left;
+          row.appendChild(beaker("섞은 뒤 · " + res.state + " · BTB " + res.color, [["H⁺", L["H⁺"], "ion-h"], ["OH⁻", L["OH⁻"], "ion-oh"],
+            ["Na⁺", L["Na⁺"], "ion-na"], ["Cl⁻", L["Cl⁻"], "ion-cl"], ["H₂O", res.water, "ion-w"]], res.color));
+          ctl.classList.add("is-spent");
+          feedback(res, "정답 " + res.answer + " mL");
+        }).catch(function (e) { [minus, plus, go].forEach(function (b) { b.disabled = false; }); alert(e.message); });
+      });
+      row.appendChild(acid); row.appendChild(baseHold);
+      ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus); ctl.appendChild(go);
+      box.appendChild(info); box.appendChild(row); box.appendChild(ctl);
+      draw();
+    };
+
+    var stageRedox = function (st, box) {
+      var pick = { ox: null, red: null };
+      box.appendChild(el("p", "pl-eq", st.eq));
+      var rows = {}, go = el("button", "btn primary", "확인"); go.type = "button"; go.disabled = true;
+      [["ox", "산화되는 물질"], ["red", "환원되는 물질"]].forEach(function (r) {
+        var line = el("div", "pl-pick"); line.appendChild(el("span", "pl-pick-k", r[1]));
+        var opts = el("div", "pl-opts");
+        st.opts.forEach(function (o, n) {
+          var b = el("button", "so-seg", o); b.type = "button";
+          b.addEventListener("click", function () {
+            pick[r[0]] = n;
+            opts.querySelectorAll(".so-seg").forEach(function (x, k) { x.classList.toggle("is-on", k === n); });
+            go.disabled = pick.ox === null || pick.red === null;
+          });
+          opts.appendChild(b);
+        });
+        line.appendChild(opts); rows[r[0]] = opts; box.appendChild(line);
+      });
+      box.appendChild(go);
+      go.addEventListener("click", function () {
+        go.disabled = true; box.querySelectorAll(".so-seg").forEach(function (b) { b.disabled = true; });
+        send(pick).then(function (res) {
+          ["ox", "red"].forEach(function (k) {
+            var segs = rows[k].querySelectorAll(".so-seg");
+            segs[res[k]].classList.add("is-answer");
+            if (pick[k] !== res[k]) segs[pick[k]].classList.add("is-bad");
+          });
+          go.classList.add("is-spent");
+          feedback(res, "산화 " + st.opts[res.ox] + " · 환원 " + st.opts[res.red]);
+        }).catch(function (e) { go.disabled = false; alert(e.message); });
+      });
+    };
+
+    var stageShell = function (st, box) {
+      var sh = [0, 0, 0, 0];
+      box.appendChild(el("p", "pl-q", st.name + " · 원자 번호 " + st.z + " · 전자 " + st.z + "개"));
+      var atom = el("div", "pl-atom"), ctl = el("div", "pl-shells"), left = el("p", "small muted");
+      var go = el("button", "btn primary", "확인"); go.type = "button";
+      var draw = function () {
+        atom.textContent = "";
+        atom.appendChild(el("span", "pl-nuc", "+" + st.z));
+        for (var k = 0; k < 4; k++) {
+          var ring = el("span", "pl-ring r" + k);
+          for (var e = 0; e < sh[k]; e++) {
+            var d = el("i", "pl-e"); var a = (e / Math.max(sh[k], 1)) * 2 * Math.PI - Math.PI / 2;
+            d.style.left = (50 + 50 * Math.cos(a)) + "%"; d.style.top = (50 + 50 * Math.sin(a)) + "%";
+            ring.appendChild(d);
+          }
+          atom.appendChild(ring);
+        }
+        var used = sh.reduce(function (a, b) { return a + b; }, 0);
+        left.textContent = "남은 전자 " + (st.z - used) + "개";
+        ctl.querySelectorAll("[data-k]").forEach(function (row) {
+          var k = +row.dataset.k;
+          row.querySelector("b").textContent = sh[k];
+          row.querySelector(".m").disabled = sh[k] <= 0;
+          row.querySelector(".p").disabled = used >= st.z || sh[k] >= 8;
+        });
+        go.disabled = used !== st.z;
+      };
+      ["첫째 껍질", "둘째 껍질", "셋째 껍질", "넷째 껍질"].forEach(function (t, k) {
+        var row = el("div", "pl-srow"); row.dataset.k = k;
+        var m = el("button", "btn small m", "−"), p = el("button", "btn small p", "+"); m.type = p.type = "button";
+        m.addEventListener("click", function () { sh[k]--; draw(); }); p.addEventListener("click", function () { sh[k]++; draw(); });
+        row.appendChild(el("span", "", t)); row.appendChild(m); row.appendChild(el("b", "", "0")); row.appendChild(p);
+        ctl.appendChild(row);
+      });
+      var wrap = el("div", "pl-shellwrap"); wrap.appendChild(atom); wrap.appendChild(ctl);
+      box.appendChild(wrap); box.appendChild(left); box.appendChild(go);
+      go.addEventListener("click", function () {
+        go.disabled = true; ctl.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
+        send(sh.slice()).then(function (res) { go.classList.add("is-spent"); feedback(res, "정답 " + res.shells.join(", ")); })
+          .catch(function (e) { draw(); alert(e.message); });
+      });
+      draw();
+    };
+
+    var stage = function () {
+      var st = pg.stages[pg.i], box = pq("stage");
+      pq("progress").textContent = (pg.i + 1) + " / " + pg.stages.length;
+      box.textContent = ""; pq("feedback").className = "mc-feedback hidden";
+      ({ neutral: stageNeutral, redox: stageRedox, shell: stageShell })[kind](st, box);
+    };
+    var finish = function () {
+      show(pl, "loading");
+      post(base() + "/submit", {}).then(function (res) {
+        pq("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점" : "");
+        pq("result-detail").textContent = res.best != null ? "최고 " + res.best + " / " + res.total : "";
+        show(pl, "result");
+      }).catch(function (e) { alert(e.message); show(pl, "start"); });
+    };
+    pq("begin").addEventListener("click", function () {
+      show(pl, "loading");
+      post(pl.dataset.start, {}).then(function (res) {
+        pg = { id: res.round_id, stages: res.stages, i: 0 };
+        pq("score").textContent = "";
+        show(pl, "play"); stage();
+      }).catch(function (e) { alert(e.message); show(pl, "start"); });
+    });
+    pq("again").addEventListener("click", function () { show(pl, "start"); });
+  }
+
   // ---------- 영단어 카드: 누르면 뜻, '뜻 모두 보기' ----------
   var voca = document.querySelector("[data-voca]");
   if (voca) {
