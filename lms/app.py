@@ -81,8 +81,6 @@ def create_app(test_config=None):
     app.register_blueprint(rooms_bp)
     app.register_blueprint(study_bp)
     app.register_blueprint(pwa_bp)
-    from views.checkin import bp as checkin_bp                # RFID 카드 출결 (단과)
-    app.register_blueprint(checkin_bp)
     from views.link import api as link_api, bp as link_bp     # 조교 시스템(구글 시트) 연동
     app.register_blueprint(link_bp)
     app.register_blueprint(link_api)

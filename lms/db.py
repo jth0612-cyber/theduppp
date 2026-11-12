@@ -543,20 +543,6 @@ def init_db(path):
     conn.executescript(SYS_SCHEMA)
     # 단과/재종 구분: 반에 붙인다 (학생은 가입한 반을 따른다)
     _add_column(conn, "classes", "track", "TEXT NOT NULL DEFAULT '재종'")
-    conn.executescript("""
-    -- RFID 카드 출결 (단과): 데스크 화면에서 카드를 대면 하루 한 번 기록
-    CREATE TABLE IF NOT EXISTS checkins (
-        id          INTEGER PRIMARY KEY,
-        student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-        class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-        day         TEXT NOT NULL,
-        at          TEXT NOT NULL,
-        status      TEXT NOT NULL,
-        by_user     INTEGER,
-        UNIQUE (student_id, day)
-    );
-    CREATE INDEX IF NOT EXISTS checkins_day ON checkins (day, class_id);
-    """)
     # 기존 DB 이전: 새로 생긴 열 추가
     _add_column(conn, "users", "nickname", "TEXT")
     _add_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

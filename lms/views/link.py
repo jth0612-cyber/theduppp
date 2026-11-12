@@ -147,11 +147,8 @@ def s_redo():
 @bp.route("/s/attendance")
 @student_required
 def s_attendance():
-    from views.checkin import my_checkins
     code = sysdata.code_of_student(g.user["student_id"])
-    mine = my_checkins(g.user["student_id"])
-    days = {r["day"] for r in mine}
-    rows = sorted(mine + [r for r in sysdata.attendance(code) if r["day"] not in days], key=lambda r: r["day"], reverse=True)
+    rows = sysdata.attendance(code)
     count = {}
     for r in rows:
         count[r["status"] or "미확인"] = count.get(r["status"] or "미확인", 0) + 1

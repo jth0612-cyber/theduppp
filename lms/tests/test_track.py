@@ -3,8 +3,6 @@ import os
 import sys
 import tempfile
 import unittest
-from datetime import datetime
-from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -83,38 +81,6 @@ class TrackTest(unittest.TestCase):
         jae = self.t.get("/t/classes?track=재종").data.decode()
         self.assertIn("재종 1반", jae)
         self.assertNotIn("단과 화목반", jae)
-
-    def _tap(self, card, at):
-        with mock.patch("views.checkin._now", return_value=at):
-            return self.t.post("/t/checkin/tap", json={"card": card}).get_json()
-
-    def test_checkin_flow(self):
-        self.signup("단과", "DANCODE01", "0012345678")
-        tue = datetime(2026, 11, 10, 14, 3)                                 # 화요일 14:03 → 출석
-        d = self._tap("0012345678", tue)
-        self.assertEqual((d["kind"], d["name"]), ("출석", "김민수"))
-        d = self._tap("00:12:34:56:78", tue.replace(minute=30))             # 같은 날 다시 → 이미 처리
-        self.assertEqual(d["kind"], "again")
-        d = self._tap("0012345678", datetime(2026, 11, 17, 14, 9))          # 다음 주 14:09 → 지각
-        self.assertEqual(d["kind"], "지각")
-        self.assertEqual(self._tap("9999999999", tue)["kind"], "unknown")
-        with self.app.app_context():
-            self.assertEqual(query("SELECT COUNT(*) AS n FROM checkins", one=True)["n"], 2)
-        s = self.app.test_client()
-        s.post("/login", data={"username": "0012345678", "password": "Signup!2026x"})
-        att = s.get("/s/attendance").data.decode()
-        self.assertIn("지각", att)
-        self.assertIn("14:09", att)
-
-    def test_jaejong_card_not_checked_in(self):
-        self.signup("재종", "JAECODE01", "0099887766")                       # 재종이 숫자 아이디를 써도 카드 출결로 잡히지 않는다
-        self.assertEqual(self._tap("0099887766", datetime(2026, 11, 10, 14, 0))["kind"], "unknown")
-
-    def test_checkin_needs_staff(self):
-        _, _ = self.signup("단과", "DANCODE01", "0012345678")
-        s = self.app.test_client()
-        s.post("/login", data={"username": "0012345678", "password": "Signup!2026x"})
-        self.assertNotEqual(s.post("/t/checkin/tap", json={"card": "0012345678"}).status_code, 200)
 
 
 if __name__ == "__main__":

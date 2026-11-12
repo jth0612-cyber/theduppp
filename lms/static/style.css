@@ -1718,25 +1718,6 @@ body.tt-open { overflow: hidden; }
 .track-box span { font-size: 14px; color: var(--muted); }
 .track-box em { margin-top: auto; padding-top: 14px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--accent-ink); }
 .track-now { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; font-size: 14px; }
-/* 카드 출결 화면 */
-.ck { display: grid; gap: 16px; max-width: 880px; margin: 0 auto; }
-.ck-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
-.ck-head h1 { margin: 0; }
-.ck-input input { width: 100%; height: 64px; font-size: 24px; text-align: center; letter-spacing: .08em; border-radius: 14px; border: 2px solid var(--accent); font-variant-numeric: tabular-nums; }
-.ck-input input::placeholder { letter-spacing: 0; font-size: 18px; }
-.ck-input p { margin: 6px 0 0; text-align: center; }
-.ck-result { border-radius: 18px; padding: 26px 20px; text-align: center; display: grid; gap: 4px; animation: ck-in .18s ease-out; }
-.ck-result[hidden] { display: none; }
-.ck-result p { margin: 0; }
-.ck-status { font-size: 20px; font-weight: 800; }
-.ck-name { font-size: clamp(40px, 8vw, 72px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
-.ck-sub { font-size: 16px; opacity: .85; font-variant-numeric: tabular-nums; }
-.ck-result.is-ok { background: var(--ok-soft); color: var(--ok); }
-.ck-result.is-late { background: var(--warn-soft); color: var(--warn); }
-.ck-result.is-again { background: var(--raised); color: var(--muted); }
-.ck-result.is-err { background: var(--danger-soft); color: var(--danger); }
-@keyframes ck-in { from { transform: scale(.97); opacity: .4; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .ck-result { animation: none; } }
 /* 반 만들기: 단과/재종 고르기 */
 .seg-pick { display: inline-flex; border: 1px solid var(--edge); border-radius: 8px; padding: 3px; gap: 2px; background: var(--sheet); }
 .seg-pick label { position: relative; margin: 0; }
