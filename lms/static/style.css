@@ -1893,13 +1893,6 @@ body.tt-open { overflow: hidden; }
 .pl-q { font-size: 16px; font-weight: 600; line-height: 1.55; margin: 4px 0 12px; }
 .pl-eq { font-size: 22px; font-weight: 700; text-align: center; padding: 16px 8px; margin: 4px 0 14px; border-radius: 10px; background: var(--raised); letter-spacing: .01em; }
 .pl-beakers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pl-beakers > div:only-child, .pl-beakers > .pl-beaker:only-child { grid-column: 1 / -1; }
-.pl-beaker { position: relative; min-height: 150px; border: 2px solid var(--ink); border-top: 0; border-radius: 0 0 16px 16px; padding: 10px 8px 30px; background: var(--surface); }
-.pl-beaker.tint-노랑 { background: #fbf1c4; } .pl-beaker.tint-초록 { background: #d9efd8; } .pl-beaker.tint-파랑 { background: #d6e5f7; }
-.pl-dots { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
-.pl-ion { min-width: 30px; height: 26px; padding: 0 5px; border-radius: 13px; display: inline-grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #fff; }
-.ion-h { background: #d64545; } .ion-cl { background: #3f9a5b; } .ion-na { background: #7b5cc4; } .ion-oh { background: #2f6fb3; } .ion-w { background: #8a9aa8; }
-.pl-label { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); }
 .pl-step { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .pl-ml { min-width: 64px; text-align: center; font-size: 18px; font-variant-numeric: tabular-nums; }
 .pl-step .btn.primary { margin-left: auto; }
@@ -1911,12 +1904,50 @@ body.tt-open { overflow: hidden; }
 .so-seg.is-bad { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
 .pl-game .is-spent { display: none; }
 .pl-shellwrap { display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: center; }
-.pl-atom { position: relative; width: 200px; height: 200px; }
-.pl-nuc { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
-.pl-ring { position: absolute; left: 50%; top: 50%; translate: -50% -50%; border: 1.5px dashed var(--edge); border-radius: 50%; }
-.pl-ring.r0 { width: 72px; height: 72px; } .pl-ring.r1 { width: 112px; height: 112px; } .pl-ring.r2 { width: 152px; height: 152px; } .pl-ring.r3 { width: 192px; height: 192px; }
-.pl-e { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #2f6fb3; }
 .pl-shells { display: grid; gap: 6px; }
 .pl-srow { display: grid; grid-template-columns: 1fr 34px 28px 34px; align-items: center; gap: 6px; font-size: 14px; }
 .pl-srow b { text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .pl-shellwrap { grid-template-columns: 1fr; justify-items: center; } .pl-shells { width: 100%; } .pl-eq { font-size: 18px; } }
+
+/* ---------- 개념 게임 그림 (SVG): 비커 · 이온 구슬 · 보어 모형 ---------- */
+.pl-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.pl-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pl-beakers { align-items: start; }
+.pl-beakers.is-mixed { grid-template-columns: minmax(0, 360px); justify-content: center; }
+.pl-fig { margin: 0; display: grid; gap: 6px; }
+.pl-cap { display: grid; gap: 4px; justify-items: center; text-align: center; }
+.pl-cap b { font-size: 13px; font-weight: 600; }
+.pl-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pl-key { display: inline-flex; align-items: center; gap: 4px; }
+.pl-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.k-g-h i { background: #d64545; } .k-g-cl i { background: #3f9a5b; } .k-g-na i { background: #7b5cc4; } .k-g-oh i { background: #2f6fb3; } .k-g-w i { background: #9aa9b7; }
+.pl-glass { fill: none; stroke: #7d8b99; stroke-width: 2.2; stroke-linejoin: round; }
+.pl-rim { stroke: #7d8b99; stroke-width: 2.6; stroke-linecap: round; }
+.pl-sheen { pointer-events: none; }
+.pl-tick { stroke: #9aa6b2; stroke-width: 1; }
+.pl-tick-t { font-size: 8.5px; fill: #8b97a3; font-variant-numeric: tabular-nums; }
+.pl-liq { fill: #e3eef6; transition: fill .9s ease; }
+.pl-liq-top { fill: #d3e3ef; transition: fill .9s ease; }
+.pl-liq.tint-노랑 { fill: #f6e27a; } .pl-liq-top.tint-노랑 { fill: #f0d65c; }
+.pl-liq.tint-초록 { fill: #9fd8a4; } .pl-liq-top.tint-초록 { fill: #86cc8c; }
+.pl-liq.tint-파랑 { fill: #8fbdf0; } .pl-liq-top.tint-파랑 { fill: #78ade9; }
+.pl-ball { stroke: rgba(0, 0, 0, .18); stroke-width: .8; }
+.pl-ion-t { fill: #fff; font-weight: 800; letter-spacing: -.02em; pointer-events: none; }
+.pl-pt { transform-box: fill-box; transform-origin: center; }
+.pl-pt.pt-in { animation: pl-in .45s cubic-bezier(.2, .7, .3, 1) both; }
+.pl-pt.pt-pop { animation: pl-pop .5s cubic-bezier(.2, .9, .3, 1.4) both; }
+@keyframes pl-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes pl-pop { 0% { opacity: 0; transform: scale(.2); } 100% { opacity: 1; transform: scale(1); } }
+.pl-base { transition: transform .6s cubic-bezier(.4, 0, .2, 1), opacity .6s ease; transform-origin: 20% 30%; }
+.pl-base.is-pour { transform: translate(-38%, -14%) rotate(-42deg); opacity: .25; }
+.pl-orbit { fill: none; stroke: #c3ccd5; stroke-width: 1.2; stroke-dasharray: 3 4; }
+.pl-orbit.is-on { stroke: #8795a3; stroke-dasharray: none; }
+.pl-orbit.is-val { stroke: var(--accent-ink, #2c6852); stroke-width: 2.2; }
+.pl-orbit-t { font-size: 9px; font-weight: 700; fill: #9aa6b2; }
+.pl-nuc-t { fill: #fff; font-size: 11px; font-weight: 800; }
+.pl-el { transform-box: fill-box; transform-origin: center; }
+.pl-el.e-new { animation: pl-pop .35s cubic-bezier(.2, .9, .3, 1.4) both; }
+.pl-atom { width: 220px; height: auto; position: static; }
+.pl-left { margin: 8px 0 0; }
+@media (prefers-reduced-motion: reduce) { .pl-pt.pt-in, .pl-pt.pt-pop, .pl-el.e-new { animation: none; } .pl-base, .pl-liq, .pl-liq-top { transition: none; } }
+@media (max-width: 560px) { .pl-atom { width: 240px; } }

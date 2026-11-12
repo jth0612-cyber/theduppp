@@ -104,9 +104,9 @@ def _shell_check(pub, ans, pick):
     if val == 8 or (pub["z"] == 2):
         ion = "바깥 껍질이 다 차 있어 이온이 되지 않아요 (18족)."
     elif val <= 3:
-        ion = f"원자가 전자 {val}개 → 전자를 {val}개 잃어 +{val} 양이온이 되기 쉬워요."
+        ion = f"전자를 {val}개 잃어 +{val} 양이온이 되기 쉬워요."
     else:
-        ion = f"원자가 전자 {val}개 → 전자를 {8 - val}개 얻어 −{8 - val} 음이온이 되기 쉬워요." if val >= 5 else f"원자가 전자 {val}개 → 주로 전자를 공유해요."
+        ion = f"전자를 {8 - val}개 얻어 −{8 - val} 음이온이 되기 쉬워요." if val >= 5 else "주로 전자를 공유해 결합해요."
     exp = f"{pub['name']}(전자 {pub['z']}개): " + ", ".join(map(str, right)) + f". {len(right)}주기, 원자가 전자 {val}개. " + ion
     return ok, {"shells": right, "explanation": exp}
 
