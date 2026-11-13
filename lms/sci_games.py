@@ -12,10 +12,11 @@ STAGES = 6
 
 # ---------------------------------------------------------------- 중화 반응
 def _neutral_stage():
-    oh_per = _rng.choice([1, 2, 3])                     # NaOH 수용액 5 mL 속 OH⁻ 수
-    k = _rng.randint(2, 6)                              # 완전 중화에 필요한 5 mL 묶음 수
+    # 입자 수를 개념서 모형처럼 적게 (비커 안 글자가 읽히도록)
+    oh_per = _rng.choice([1, 2])                        # NaOH 수용액 5 mL 속 OH⁻ 수
+    k = _rng.randint(2, 5)                              # 완전 중화에 필요한 5 mL 묶음 수
     acid_ml = _rng.choice([10, 20])
-    pub = {"acid_ml": acid_ml, "h": oh_per * k, "unit": 5, "oh": oh_per, "max_ml": 40}
+    pub = {"acid_ml": acid_ml, "h": oh_per * k, "unit": 5, "oh": oh_per, "max_ml": 30}
     return pub, {"ml": 5 * k}
 
 
@@ -65,21 +66,19 @@ REDOX = [
 
 
 def _redox_stage(used):
+    """한 판에 하나만 묻는다: 산화되는 물질 또는 환원되는 물질 (하나가 정해지면 나머지는 저절로 정해지므로)."""
     k = _rng.choice([i for i in range(len(REDOX)) if i not in used] or list(range(len(REDOX))))
     used.add(k)
     left, right, ox, red, exp = REDOX[k]
-    return ({"left": [list(x) for x in left], "right": [list(x) for x in right]},
-            {"ox": ox[0], "red": red[0], "ox_to": ox[1], "red_to": red[1], "ox_lab": ox[2], "red_lab": red[2], "exp": exp})
+    ask = _rng.choice(["ox", "red"])
+    return ({"left": [list(x) for x in left], "right": [list(x) for x in right], "ask": ask},
+            {"ask": ask, "ox": ox[0], "red": red[0], "ox_to": ox[1], "red_to": red[1], "ox_lab": ox[2], "red_lab": red[2], "exp": exp})
 
 
 def _redox_check(pub, ans, pick):
-    if not isinstance(pick, dict):
+    if not isinstance(pick, int) or not 0 <= pick < len(pub["left"]):
         return None
-    ox, red = pick.get("ox"), pick.get("red")
-    n = len(pub["left"])
-    if not (isinstance(ox, int) and isinstance(red, int) and 0 <= ox < n and 0 <= red < n):
-        return None
-    ok = ox == ans["ox"] and red == ans["red"]
+    ok = pick == ans[ans["ask"]]
     return ok, {k: ans[k] for k in ("ox", "red", "ox_to", "red_to", "ox_lab", "red_lab")} | {"explanation": ans["exp"]}
 
 
@@ -130,7 +129,7 @@ GAMES = {
                 "intro": "묽은 염산에 수산화 나트륨 수용액을 5 mL씩 넣어요. 완전히 중화되는 양을 맞히세요.",
                 "desc": "완전 중화되는 양 맞히기"},
     "redox": {"title": "산화 환원", "topic": "23", "ico": "e⁻",
-              "intro": "반응식에서 산화되는 물질과 환원되는 물질을 고르세요.", "desc": "산화·환원되는 물질 고르기"},
+              "intro": "반응식을 보고 산화되는 물질이나 환원되는 물질을 고르세요.", "desc": "산화·환원되는 물질 고르기"},
     "shell": {"title": "전자 배치", "topic": "07", "ico": "2·8",
               "intro": "원자 번호를 보고 안쪽 껍질부터 전자를 채우세요. 2, 8, 8 순서예요.", "desc": "껍질마다 전자 채우기"},
 }

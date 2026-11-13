@@ -543,7 +543,8 @@ class FeatureTest(AppTest):
         self.assertTrue(all(q.get("tag") for q in mx["questions"]))
         # 짝 맞추기: 처음 틀린 단어는 복습에 모인다
         mt = s1.post("/s/games/vocab/match/start", json={}).get_json()
-        words = [p["w"] for st_ in mt["sets"] for p in st_]
+        self.assertTrue(all(sum(1 for p in st_ if p.get("d")) == 1 for st_ in mt["sets"]))   # 판마다 짝 없는 뜻 하나
+        words = [p["w"] for st_ in mt["sets"] for p in st_ if not p.get("d")]
         self.assertEqual(len(words), 20)
         res = s1.post(f"/s/games/vocab/match/{mt['round_id']}/submit", json={"wrong": words[:2] + ["가짜단어"], "seconds": 41.2}).get_json()
         self.assertEqual((res["score"], res["total"]), (18, 20))
@@ -972,9 +973,9 @@ class FeatureTest(AppTest):
             self.assertNotIn("answer", str(st)); self.assertNotIn("ml\": ", str(st))
             with self.app.app_context():
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (rid,), one=True)["answer"])
-            right = {"neutral": lambda a: a["ml"], "redox": lambda a: {"ox": a["ox"], "red": a["red"]},
+            right = {"neutral": lambda a: a["ml"], "redox": lambda a: a[a["ask"]],
                      "shell": lambda a: a["shells"]}[game]
-            wrong = {"neutral": lambda a: a["ml"] + 5, "redox": lambda a: {"ox": a["red"], "red": a["ox"]},
+            wrong = {"neutral": lambda a: a["ml"] + 5, "redox": lambda a: a["red" if a["ask"] == "ox" else "ox"],
                      "shell": lambda a: [1] + a["shells"][1:]}[game]
             self.assertEqual(s1.post(f"/s/games/play/{game}/{rid}/check", json={"i": 0, "pick": "x"}).status_code, 400)
             self.assertEqual(s2.post(f"/s/games/play/{game}/{rid}/check", json={"i": 0, "pick": right(ans[0])}).status_code, 404)

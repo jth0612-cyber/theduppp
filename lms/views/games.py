@@ -453,7 +453,7 @@ def vocab_match():
 def vocab_match_start():
     _, words = vocab.today_set(g.user["id"])
     sets = vocab.match_sets(words)
-    rid = _new_round("vocab_match", [], [w for st in sets for w in st])
+    rid = _new_round("vocab_match", [], [w for st in sets for w in st if not w.get("d")])
     return jsonify(round_id=rid, sets=sets)
 
 

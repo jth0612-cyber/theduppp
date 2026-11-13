@@ -247,7 +247,14 @@
       var ok = el("button", "btn primary", "확인"); ok.type = "button";
       var chips = item.items.map(function (label, k) {
         var c = el("button", "or-chip", label); c.type = "button";
-        c.addEventListener("click", function () { if (seq.indexOf(k) < 0) { seq.push(k); draw(); } });
+        c.addEventListener("click", function () {
+          if (seq.indexOf(k) >= 0) return;
+          seq.push(k);
+          if (seq.length === item.items.length - 1) {          // 마지막 하나는 자리가 정해져 있으니 자동으로
+            for (var r = 0; r < item.items.length; r++) if (seq.indexOf(r) < 0) seq.push(r);
+          }
+          draw();
+        });
         pool.appendChild(c); return c;
       });
       var draw = function () {
@@ -482,14 +489,15 @@
     var st = null, clk = null;
     var shuffle = function (a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
     var drawSet = function () {
-      var set = st.sets[st.k], L = mq("left"), R = mq("right");
+      var all = st.sets[st.k], L = mq("left"), R = mq("right");
+      var set = all.filter(function (p) { return !p.d; });
       L.textContent = ""; R.textContent = ""; st.sel = null; st.left = set.length;
       mq("progress").textContent = (st.k + 1) + " / " + st.sets.length + "판";
       shuffle(set).forEach(function (p) {
         var b = el("button", "mt-item", p.w); b.type = "button"; b.dataset.w = p.w; b.setAttribute("lang", "en");
         b.addEventListener("click", function () { choose(b, "w"); }); L.appendChild(b);
       });
-      shuffle(set).forEach(function (p) {
+      shuffle(all).forEach(function (p) {
         var b = el("button", "mt-item", p.m); b.type = "button"; b.dataset.w = p.w;
         b.addEventListener("click", function () { choose(b, "m"); }); R.appendChild(b);
       });
@@ -559,8 +567,14 @@
       if (a.dataset.k === c.dataset.k && a.dataset.en !== c.dataset.en) {
         mg.found++;
         [a, c].forEach(function (x) { x.classList.add("is-match"); x.disabled = true; });
+        if (mg.found === mg.pairs - 1) {                       // 남은 두 장은 저절로 짝이므로 바로 맞춰 준다
+          mmq("board").querySelectorAll(".mm-card:not(.is-match)").forEach(function (x) {
+            x.classList.add("is-up", "is-match"); x.disabled = true; x.setAttribute("aria-pressed", "true");
+          });
+          mg.found = mg.pairs;
+        }
         mmq("progress").textContent = mg.found + " / " + mg.pairs + "쌍 · " + mg.tries + "번";
-        if (mg.found === mg.pairs) setTimeout(mmDone, 450);
+        if (mg.found === mg.pairs) setTimeout(mmDone, 650);
       } else {
         mg.lock = true;
         setTimeout(function () { [a, c].forEach(function (x) { x.classList.remove("is-up"); x.setAttribute("aria-pressed", "false"); }); mg.lock = false; }, 750);
@@ -624,6 +638,38 @@
       t.textContent = text; return t;
     };
     var hash = function (n) { var x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+    // 화학식: 아래·위 첨자 문자를 작은 글자로 따로 (SDIJ 사용 디렉션: 첨자는 Regular를 작게)
+    var SUB = "₀₁₂₃₄₅₆₇₈₉", SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻";
+    var plain = function (ch) {
+      var i = SUB.indexOf(ch); if (i >= 0) return ["sub", String(i)];
+      i = SUP.indexOf(ch); if (i >= 0) return ["sup", i < 10 ? String(i) : (ch === "⁺" ? "+" : "−")];
+      return [null, ch];
+    };
+    var chem = function (node, text) {                   // HTML
+      var run = "", flush = function () { if (run) { node.appendChild(document.createTextNode(run)); run = ""; } };
+      for (var i = 0; i < text.length; i++) {
+        var c = plain(text[i]);
+        if (!c[0]) { run += c[1]; continue; }
+        flush();
+        var e = document.createElement(c[0]); e.textContent = c[1];
+        while (i + 1 < text.length && plain(text[i + 1])[0] === c[0]) { i++; e.textContent += plain(text[i])[1]; }
+        node.appendChild(e);
+      }
+      flush(); return node;
+    };
+    var svgChem = function (t, text, size) {             // SVG <text> 안 tspan
+      for (var i = 0; i < text.length; i++) {
+        var c = plain(text[i]);
+        if (!c[0]) { var a = sv("tspan", {}, t); a.textContent = c[1]; continue; }
+        var str = c[1];
+        while (i + 1 < text.length && plain(text[i + 1])[0] === c[0]) { i++; str += plain(text[i])[1]; }
+        var sp = sv("tspan", { "font-size": (size * 0.62).toFixed(1), dy: c[0] === "sub" ? (size * 0.28).toFixed(1) : (-size * 0.38).toFixed(1) }, t);
+        sp.textContent = str;
+        var back = sv("tspan", { dy: c[0] === "sub" ? (-size * 0.28).toFixed(1) : (size * 0.38).toFixed(1), "font-size": size }, t);
+        back.textContent = "\u200b";
+      }
+      return t;
+    };
     // 개념서 TOPIC 24 이온 색
     var ION = { "H⁺": "#F4B6BE", "Cl⁻": "#BFE0B4", "Na⁺": "#D9C8E8", "OH⁻": "#A9C6EA", "H₂O": "#FFFFFF" };
     var BTB = { "노랑": "#F7E07A", "초록": "#A8D5A0", "파랑": "#9DBDE6" };
@@ -652,8 +698,9 @@
           var g = sv("g", { class: "pl-pt" + (opt.fade ? " pt-in" : "") }, svg);
           if (opt.fade) g.style.animationDelay = i * 10 + "ms";
           sv("circle", { cx: cx.toFixed(1), cy: cy.toFixed(1), r: r, fill: ION[it.t], class: "pl-ion" }, g);
-          var t = txt(g, cx.toFixed(1), (cy + 0.3).toFixed(1), it.t, "pl-ion-t");
-          t.setAttribute("font-size", (r * (it.t.length > 2 ? 0.66 : 0.78)).toFixed(1));
+          var fs = r * (it.t.length > 2 ? 0.74 : 0.86);
+          var t = sv("text", { x: cx.toFixed(1), y: (cy + fs * 0.12).toFixed(1), class: "pl-ion-t", "text-anchor": "middle", "dominant-baseline": "central", "font-size": fs.toFixed(1) }, g);
+          svgChem(t, it.t, fs);
         });
       }
       // 비커 선: 옆면·바닥, 위쪽 끝은 밖으로 살짝 벌어짐
@@ -671,7 +718,8 @@
       parts.forEach(function (p) {
         if (!p[1]) return;
         var c = el("span", "pl-key"); var dot = el("i"); dot.style.background = ION[p[0]];
-        c.appendChild(dot); c.appendChild(document.createTextNode(p[0] + " " + p[1])); lg.appendChild(c);
+        var nm = chem(el("span", "pl-key-t"), p[0]); nm.appendChild(document.createTextNode(" " + p[1]));   // 첨자가 흐름 안에서 올라가도록 감싼다
+        c.appendChild(dot); c.appendChild(nm); lg.appendChild(c);
       });
       cap.appendChild(lg); wrap.appendChild(cap);
       return wrap;
@@ -687,7 +735,7 @@
       var ml = 0;
       var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개. 몇 mL를 넣으면 완전히 중화될까요?");
       var row = el("div", "pl-beakers");
-      var acid = beaker("묽은 염산 " + st.acid_ml + " mL", [["H⁺", st.h], ["Cl⁻", st.h]], st.acid_ml);
+      var acid = beaker("묽은 염산 " + st.acid_ml + "\u00a0mL", [["H⁺", st.h], ["Cl⁻", st.h]], st.acid_ml);
       var plusSign = el("span", "pl-plus", "+");
       var baseHold = el("div", "pl-base");
       var after = el("div", "pl-after");
@@ -698,7 +746,7 @@
       var draw = function () {
         val.textContent = ml + " mL"; baseHold.textContent = "";
         var n = ml / st.unit * st.oh;
-        baseHold.appendChild(beaker("수산화 나트륨 수용액 " + ml + " mL", [["Na⁺", n], ["OH⁻", n]], ml));
+        baseHold.appendChild(beaker("수산화 나트륨 수용액 " + ml + "\u00a0mL", [["Na⁺", n], ["OH⁻", n]], ml));
         minus.disabled = ml <= 0; plus.disabled = ml >= st.max_ml; go.disabled = ml <= 0;
       };
       minus.addEventListener("click", function () { ml = Math.max(0, ml - st.unit); draw(); });
@@ -724,10 +772,9 @@
 
     // 산화 환원: 화학식 아래에 이름, 채점 뒤 산화(빨강)·환원(주황) 꺾인 화살표
     var stageRedox = function (st, box) {
-      var pick = { ox: null, red: null };
       var eq = el("div", "rx-eq"), cells = { left: [], right: [] };
       var add = function (side, item, last) {
-        var c = el("div", "rx-sp"); c.appendChild(el("b", "rx-f", item[0])); c.appendChild(el("span", "rx-n", item[1]));
+        var c = el("div", "rx-sp"); c.appendChild(chem(el("b", "rx-f"), item[0])); c.appendChild(el("span", "rx-n", item[1]));
         eq.appendChild(c); cells[side].push(c);
         if (!last) eq.appendChild(el("span", "rx-op", "+"));
       };
@@ -736,22 +783,23 @@
       st.right.forEach(function (it, i) { add("right", it, i === st.right.length - 1); });
       var fig = el("div", "rx-fig"); fig.appendChild(eq);
       box.appendChild(fig);
-      var rows = {}, go = el("button", "btn primary", "확인"); go.type = "button"; go.disabled = true;
-      [["ox", "산화되는 물질"], ["red", "환원되는 물질"]].forEach(function (r) {
-        var line = el("div", "pl-pick"); line.appendChild(el("span", "pl-pick-k", r[1]));
-        var opts = el("div", "pl-opts");
-        st.left.forEach(function (o, n) {
-          var b = el("button", "so-seg", o[1]); b.type = "button";
-          b.addEventListener("click", function () {
-            pick[r[0]] = n;
-            opts.querySelectorAll(".so-seg").forEach(function (x, k) { x.classList.toggle("is-on", k === n); });
-            go.disabled = pick.ox === null || pick.red === null;
-          });
-          opts.appendChild(b);
-        });
-        line.appendChild(opts); rows[r[0]] = opts; box.appendChild(line);
+      // 반응식은 한 줄로: 칸보다 길면 글자 크기를 줄여 맞춘다
+      var fit = function () {
+        eq.style.setProperty("--k", 1);
+        var room = fig.clientWidth - 12, need = eq.getBoundingClientRect().width;
+        if (need > room) eq.style.setProperty("--k", Math.max(0.55, room / need).toFixed(3));
+      };
+      fit();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+      var ask = st.ask === "red" ? "red" : "ox";
+      var line = el("div", "pl-pick"); line.appendChild(el("span", "pl-pick-k", ask === "ox" ? "산화되는 물질은?" : "환원되는 물질은?"));
+      var opts = el("div", "pl-opts");
+      st.left.forEach(function (o, n) {
+        var b2 = el("button", "so-seg", o[1]); b2.type = "button";
+        b2.addEventListener("click", function () { choose(n); });
+        opts.appendChild(b2);
       });
-      box.appendChild(go);
+      line.appendChild(opts); box.appendChild(line);
       var bracket = function (from, to, label, up, color) {   // 개념서 fig23_1 처럼 꺾인 선 + 화살촉
         var fr = fig.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
         var ax = a.left + a.width / 2 - fr.left, bx = b.left + b.width / 2 - fr.left;
@@ -767,21 +815,21 @@
         var bb = t.getBBox(); var bg = sv("rect", { x: bb.x - 4, y: bb.y - 1, width: bb.width + 8, height: bb.height + 2, fill: "#fff" });
         svg.insertBefore(bg, t);
       };
-      go.addEventListener("click", function () {
-        go.disabled = true; box.querySelectorAll(".so-seg").forEach(function (b) { b.disabled = true; });
-        send(pick).then(function (res) {
-          ["ox", "red"].forEach(function (k) {
-            var segs = rows[k].querySelectorAll(".so-seg");
-            segs[res[k]].classList.add("is-answer");
-            if (pick[k] !== res[k]) segs[pick[k]].classList.add("is-bad");
-          });
+      var done = false;
+      var choose = function (n) {                         // 누르면 바로 채점
+        if (done) return; done = true;
+        var segs = opts.querySelectorAll(".so-seg");
+        segs.forEach(function (x) { x.disabled = true; });
+        segs[n].classList.add("is-on");
+        send(n).then(function (res) {
+          segs[res[ask]].classList.add("is-answer");
+          if (n !== res[ask]) segs[n].classList.add("is-bad");
           fig.classList.add("is-open");
           bracket(cells.left[res.ox], cells.right[res.ox_to], res.ox_lab, true, "#D9604A");
           bracket(cells.left[res.red], cells.right[res.red_to], res.red_lab, false, "#E8963A");
-          go.classList.add("is-spent");
-          feedback(res, "산화 " + st.left[res.ox][1] + " · 환원 " + st.left[res.red][1]);
-        }).catch(function (e) { go.disabled = false; alert(e.message); });
-      });
+          feedback(res, (ask === "ox" ? "산화되는 물질 " : "환원되는 물질 ") + st.left[res[ask]][1]);
+        }).catch(function (e) { done = false; segs.forEach(function (x) { x.disabled = false; }); segs[n].classList.remove("is-on"); alert(e.message); });
+      };
     };
 
     // 전자 배치 모형 (개념서 TOPIC 07): 원자핵은 하늘색, 전자 껍질은 얇은 검은 원,

@@ -121,9 +121,16 @@ def quiz_items(words):
 
 
 def match_sets(words, size=5):
-    """짝 맞추기: 5쌍씩 묶음."""
+    """짝 맞추기: 5쌍씩 묶고, 뜻 칸에는 짝 없는 뜻을 하나 섞는다 (마지막 쌍이 저절로 정해지지 않게)."""
     ws = list(words); _rng.shuffle(ws)
-    return [[{"w": w, "m": MEANING[w]} for w in ws[i:i + size]] for i in range(0, len(ws), size) if len(ws[i:i + size]) >= 3]
+    sets = []
+    for i in range(0, len(ws), size):
+        part = ws[i:i + size]
+        if len(part) < 3:
+            continue
+        decoy = _rng.choice([x for x, _ in WORDS if x not in words and MEANING[x] not in {MEANING[w] for w in part}])
+        sets.append([{"w": w, "m": MEANING[w]} for w in part] + [{"w": "", "m": MEANING[decoy], "d": True}])
+    return sets
 
 
 def memory_cards(words, pairs=6):
