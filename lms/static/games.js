@@ -611,7 +611,7 @@
       return post(base() + "/check", { i: pg.i, pick: pick });
     };
 
-    // ---- SVG 도우미: 그림은 코드로 그려 개수가 항상 정확하다 ----
+    // ---- 그림: 개념서 그림체 (단색 면, 얇은 회색·검정 선, 그라데이션·그림자 없음) ----
     var NS = "http://www.w3.org/2000/svg";
     var sv = function (tag, attrs, parent) {
       var e = document.createElementNS(NS, tag);
@@ -619,101 +619,68 @@
       if (parent) parent.appendChild(e);
       return e;
     };
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    (function defs() {                                   // 구슬 그라데이션은 한 번만 만든다
-      if (document.getElementById("pl-defs")) return;
-      var d = sv("svg", { id: "pl-defs", width: 0, height: 0, "aria-hidden": "true", class: "pl-defs" });
-      var g = sv("defs", {}, d);
-      [["g-h", "#ff8a80", "#c62828"], ["g-cl", "#8be0a4", "#2e7d4f"], ["g-na", "#c4b2f2", "#5e3fb0"], ["g-oh", "#90c2f5", "#1f5fa8"],
-       ["g-o", "#f3f6f9", "#7f93a6"], ["g-hw", "#ffffff", "#c9d3dc"], ["g-e", "#8fc3ff", "#1d5fb8"], ["g-nuc", "#5b6470", "#15191e"]]
-        .forEach(function (c) {
-          var r = sv("radialGradient", { id: c[0], cx: "35%", cy: "30%", r: "70%" }, g);
-          sv("stop", { offset: "0%", "stop-color": c[1] }, r); sv("stop", { offset: "100%", "stop-color": c[2] }, r);
-        });
-      var gl = sv("linearGradient", { id: "g-glass", x1: "0", x2: "1", y1: "0", y2: "0" }, g);
-      sv("stop", { offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".55" }, gl);
-      sv("stop", { offset: "18%", "stop-color": "#ffffff", "stop-opacity": "0" }, gl);
-      sv("stop", { offset: "85%", "stop-color": "#ffffff", "stop-opacity": "0" }, gl);
-      sv("stop", { offset: "100%", "stop-color": "#ffffff", "stop-opacity": ".35" }, gl);
-      document.body.appendChild(d);
-    })();
+    var txt = function (parent, x, y, text, cls, anchor) {
+      var t = sv("text", { x: x, y: y, class: cls || "", "text-anchor": anchor || "middle", "dominant-baseline": "central" }, parent);
+      t.textContent = text; return t;
+    };
     var hash = function (n) { var x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
-    var ION = { "H⁺": "g-h", "Cl⁻": "g-cl", "Na⁺": "g-na", "OH⁻": "g-oh" };
+    // 개념서 TOPIC 24 이온 색
+    var ION = { "H⁺": "#F4B6BE", "Cl⁻": "#BFE0B4", "Na⁺": "#D9C8E8", "OH⁻": "#A9C6EA", "H₂O": "#FFFFFF" };
+    var BTB = { "노랑": "#F7E07A", "초록": "#A8D5A0", "파랑": "#9DBDE6" };
 
-    // 비커 하나: parts = [["H⁺", 3], ["Cl⁻", 3], ["H₂O", 2]], vol = mL (눈금 60 mL)
+    // 열린 비커: parts = [["H⁺", 3], ...], vol = mL
     var beakerSvg = function (parts, vol, opt) {
       opt = opt || {};
-      var W = opt.wide ? 260 : 190, H = 230, x0 = 18, x1 = W - 18, top = 22, bot = H - 12, cap = Math.max(20, Math.ceil(vol * 1.5 / 10) * 10);
+      var W = opt.wide ? 230 : 150, H = 150, x0 = 10, x1 = W - 10, top = 14, bot = H - 6;
+      var cap = Math.max(20, Math.ceil(vol * 1.5 / 10) * 10);
       var svg = sv("svg", { viewBox: "0 0 " + W + " " + H, class: "pl-svg", role: "img", "aria-label": opt.label || "" });
-      var body = "M" + x0 + " " + top + " L" + x0 + " " + (bot - 16) + " Q" + x0 + " " + bot + " " + (x0 + 16) + " " + bot +
-                 " L" + (x1 - 16) + " " + bot + " Q" + x1 + " " + bot + " " + x1 + " " + (bot - 16) + " L" + x1 + " " + top;
-      var level = bot - (Math.min(vol, cap) / cap) * (bot - top - 18);
-      if (vol > 0) {
-        var clip = "pl-clip" + Math.floor(Math.random() * 1e9);
-        var cp = sv("clipPath", { id: clip }, sv("defs", {}, svg));
-        sv("path", { d: body + " Z" }, cp);
-        var liq = sv("rect", { x: x0, y: level, width: x1 - x0, height: bot - level, class: "pl-liq", "clip-path": "url(#" + clip + ")" }, svg);
-        var men = sv("ellipse", { cx: (x0 + x1) / 2, cy: level, rx: (x1 - x0) / 2 - 1, ry: 4, class: "pl-liq-top" }, svg);
-        if (opt.tint) {
-          var t = opt.tint;
-          var apply = function () { liq.classList.add("tint-" + t); men.classList.add("tint-" + t); };
-          if (reduce) apply(); else setTimeout(apply, 60);
-        }
-      }
-      for (var m = cap > 40 ? 10 : 5; m <= cap; m += cap > 40 ? 10 : 5) {                // 눈금
-        var y = bot - (m / cap) * (bot - top - 18);
-        sv("line", { x1: x1 - 14, x2: x1 - 2, y1: y, y2: y, class: "pl-tick" }, svg);
-        var tx = sv("text", { x: x1 - 16, y: y + 3.5, class: "pl-tick-t", "text-anchor": "end" }, svg); tx.textContent = m;
-      }
-      // 입자 배치: 액체 안을 칸으로 나누고 칸마다 살짝 흔든다 (겹치지 않게)
+      var level = bot - (Math.min(vol, cap) / cap) * (bot - top - 6);
+      if (vol > 0) sv("rect", { x: x0, y: level, width: x1 - x0, height: bot - level, fill: opt.tint ? BTB[opt.tint] : "#EAF4FB" }, svg);
       var items = [];
       parts.forEach(function (p) { for (var n = 0; n < p[1]; n++) items.push(p[0]); });
-      items.forEach(function (it, i) { items[i] = { t: it, k: hash(i * 7 + items.length) }; });
-      items.sort(function (a, b) { return a.k - b.k; });
-      var ax = x0 + 10, ay = level + 10, aw = x1 - x0 - 34, ah = Math.max(10, bot - 10 - ay);
+      items = items.map(function (t, i) { return { t: t, k: hash(i * 7 + items.length) }; }).sort(function (a, b) { return a.k - b.k; });
+      var ax = x0 + 6, ay = level + 6, aw = x1 - x0 - 12, ah = Math.max(10, bot - 6 - ay);
       if (items.length && vol > 0) {
-        var cell = Math.min(28, Math.sqrt(aw * ah / items.length));
+        var cell = Math.min(30, Math.sqrt(aw * ah / items.length));
         var cols = Math.max(1, Math.floor(aw / cell)), rows = Math.ceil(items.length / cols);
-        while (rows * cell > ah && cell > 12) { cell -= 0.5; cols = Math.max(1, Math.floor(aw / cell)); rows = Math.ceil(items.length / cols); }
-        var r = Math.min(11, cell * 0.42);
-        var offX = ax + (aw - cols * cell) / 2, offY = bot - 10 - rows * cell;
+        while (rows * cell > ah && cell > 11) { cell -= 0.5; cols = Math.max(1, Math.floor(aw / cell)); rows = Math.ceil(items.length / cols); }
+        var r = Math.min(11.5, cell * 0.43);
+        var offX = ax + (aw - cols * cell) / 2, offY = bot - 6 - rows * cell;
         items.forEach(function (it, i) {
-          var cx = offX + (i % cols + 0.5) * cell + (hash(i + 3) - 0.5) * cell * 0.25;
-          var cy = offY + (Math.floor(i / cols) + 0.5) * cell + (hash(i + 11) - 0.5) * cell * 0.25;
-          var gr = sv("g", { transform: "translate(" + cx.toFixed(1) + " " + cy.toFixed(1) + ")" }, svg);
-          var inner = sv("g", { class: "pl-pt" + (opt.animate ? (it.t === "H₂O" ? " pt-pop" : " pt-in") : "") }, gr);
-          if (opt.animate && !reduce) inner.style.animationDelay = (it.t === "H₂O" ? 350 : 0) + i * 12 + "ms";
-          if (it.t === "H₂O") {
-            sv("circle", { cx: -r * 0.62, cy: r * 0.5, r: r * 0.5, fill: "url(#g-hw)", class: "pl-ball" }, inner);
-            sv("circle", { cx: r * 0.62, cy: r * 0.5, r: r * 0.5, fill: "url(#g-hw)", class: "pl-ball" }, inner);
-            sv("circle", { cx: 0, cy: -r * 0.12, r: r * 0.78, fill: "url(#g-o)", class: "pl-ball" }, inner);
-          } else {
-            sv("circle", { r: r, fill: "url(#" + ION[it.t] + ")", class: "pl-ball" }, inner);
-            var lb = sv("text", { y: r * 0.34, "text-anchor": "middle", class: "pl-ion-t" }, inner);
-            lb.setAttribute("font-size", (r * (it.t.length > 2 ? 0.78 : 0.9)).toFixed(1)); lb.textContent = it.t;
-          }
+          var cx = offX + (i % cols + 0.5) * cell + (hash(i + 3) - 0.5) * cell * 0.22;
+          var cy = offY + (Math.floor(i / cols) + 0.5) * cell + (hash(i + 11) - 0.5) * cell * 0.22;
+          var g = sv("g", { class: "pl-pt" + (opt.fade ? " pt-in" : "") }, svg);
+          if (opt.fade) g.style.animationDelay = i * 10 + "ms";
+          sv("circle", { cx: cx.toFixed(1), cy: cy.toFixed(1), r: r, fill: ION[it.t], class: "pl-ion" }, g);
+          var t = txt(g, cx.toFixed(1), (cy + 0.3).toFixed(1), it.t, "pl-ion-t");
+          t.setAttribute("font-size", (r * (it.t.length > 2 ? 0.66 : 0.78)).toFixed(1));
         });
       }
-      sv("path", { d: body, class: "pl-glass" }, svg);
-      sv("path", { d: body + " Z", fill: "url(#g-glass)", class: "pl-sheen" }, svg);
-      sv("line", { x1: x0 - 6, x2: x1 + 6, y1: top, y2: top, class: "pl-rim" }, svg);
+      // 비커 선: 옆면·바닥, 위쪽 끝은 밖으로 살짝 벌어짐
+      sv("path", { d: "M" + x0 + " " + top + " L" + x0 + " " + bot + " L" + x1 + " " + bot + " L" + x1 + " " + top, class: "pl-glass" }, svg);
+      sv("path", { d: "M" + (x0 - 5) + " " + (top - 4) + " L" + x0 + " " + top + " M" + x1 + " " + top + " L" + (x1 + 5) + " " + (top - 4), class: "pl-glass" }, svg);
       return svg;
     };
 
-    // 비커 + 범례 (개수를 글자로도 보여 준다)
     var beaker = function (label, parts, vol, opt) {
       var wrap = el("figure", "pl-fig");
       wrap.appendChild(beakerSvg(parts, vol, Object.assign({ label: label }, opt || {})));
       var cap = el("figcaption", "pl-cap");
-      cap.appendChild(el("b", "", label));
+      cap.appendChild(el("span", "pl-cap-t", label));
       var lg = el("span", "pl-legend");
       parts.forEach(function (p) {
         if (!p[1]) return;
-        var c = el("span", "pl-key k-" + (ION[p[0]] || "g-w")); c.appendChild(el("i")); c.appendChild(document.createTextNode(p[0] + " " + p[1]));
-        lg.appendChild(c);
+        var c = el("span", "pl-key"); var dot = el("i"); dot.style.background = ION[p[0]];
+        c.appendChild(dot); c.appendChild(document.createTextNode(p[0] + " " + p[1])); lg.appendChild(c);
       });
       cap.appendChild(lg); wrap.appendChild(cap);
       return wrap;
+    };
+    var arrowSvg = function (dir) {                      // 개념서의 분홍 화살표
+      var svg = sv("svg", { viewBox: dir === "down" ? "0 0 24 30" : "0 0 30 24", class: "pl-arrow pl-arrow-" + dir, "aria-hidden": "true" });
+      if (dir === "down") { sv("line", { x1: 12, y1: 2, x2: 12, y2: 20, class: "pl-arr-l" }, svg); sv("path", { d: "M6 18 L12 28 L18 18 Z", class: "pl-arr-h" }, svg); }
+      else { sv("line", { x1: 2, y1: 12, x2: 20, y2: 12, class: "pl-arr-l" }, svg); sv("path", { d: "M18 6 L28 12 L18 18 Z", class: "pl-arr-h" }, svg); }
+      return svg;
     };
 
     var stageNeutral = function (st, box) {
@@ -721,7 +688,9 @@
       var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개. 몇 mL를 넣으면 완전히 중화될까요?");
       var row = el("div", "pl-beakers");
       var acid = beaker("묽은 염산 " + st.acid_ml + " mL", [["H⁺", st.h], ["Cl⁻", st.h]], st.acid_ml);
+      var plusSign = el("span", "pl-plus", "+");
       var baseHold = el("div", "pl-base");
+      var after = el("div", "pl-after");
       var ctl = el("div", "pl-step");
       var minus = el("button", "btn", "− 5 mL"), plus = el("button", "btn", "+ 5 mL"), val = el("b", "pl-ml", "0 mL");
       var go = el("button", "btn primary", "섞기");
@@ -729,7 +698,7 @@
       var draw = function () {
         val.textContent = ml + " mL"; baseHold.textContent = "";
         var n = ml / st.unit * st.oh;
-        baseHold.appendChild(beaker("NaOH 수용액 " + ml + " mL", [["Na⁺", n], ["OH⁻", n]], ml));
+        baseHold.appendChild(beaker("수산화 나트륨 수용액 " + ml + " mL", [["Na⁺", n], ["OH⁻", n]], ml));
         minus.disabled = ml <= 0; plus.disabled = ml >= st.max_ml; go.disabled = ml <= 0;
       };
       minus.addEventListener("click", function () { ml = Math.max(0, ml - st.unit); draw(); });
@@ -737,33 +706,42 @@
       go.addEventListener("click", function () {
         [minus, plus, go].forEach(function (b) { b.disabled = true; });
         send(ml).then(function (res) {
-          baseHold.classList.add("is-pour");
-          setTimeout(function () {
-            row.textContent = ""; row.classList.add("is-mixed");
-            var L = res.left;
-            row.appendChild(beaker("섞은 용액 " + (st.acid_ml + ml) + " mL · " + res.state + " · BTB " + res.color + "색",
-              [["H⁺", L["H⁺"]], ["OH⁻", L["OH⁻"]], ["Na⁺", L["Na⁺"]], ["Cl⁻", L["Cl⁻"]], ["H₂O", res.water]],
-              st.acid_ml + ml, { wide: true, tint: res.color, animate: true }));
-            ctl.classList.add("is-spent");
-            feedback(res, "정답 " + res.answer + " mL");
-          }, reduce ? 0 : 650);
+          var L = res.left;
+          after.textContent = "";
+          after.appendChild(arrowSvg("down"));
+          after.appendChild(beaker("혼합 용액(" + res.state + ") · BTB " + { "노랑": "노란색", "초록": "녹색", "파랑": "푸른색" }[res.color],
+            [["H⁺", L["H⁺"]], ["OH⁻", L["OH⁻"]], ["Na⁺", L["Na⁺"]], ["Cl⁻", L["Cl⁻"]], ["H₂O", res.water]],
+            st.acid_ml + ml, { wide: true, tint: res.color, fade: true }));
+          ctl.classList.add("is-spent");
+          feedback(res, "정답 " + res.answer + " mL");
         }).catch(function (e) { [minus, plus, go].forEach(function (b) { b.disabled = false; }); alert(e.message); });
       });
-      row.appendChild(acid); row.appendChild(baseHold);
+      row.appendChild(acid); row.appendChild(plusSign); row.appendChild(baseHold);
       ctl.appendChild(minus); ctl.appendChild(val); ctl.appendChild(plus); ctl.appendChild(go);
-      box.appendChild(info); box.appendChild(row); box.appendChild(ctl);
+      box.appendChild(info); box.appendChild(row); box.appendChild(ctl); box.appendChild(after);
       draw();
     };
 
+    // 산화 환원: 화학식 아래에 이름, 채점 뒤 산화(빨강)·환원(주황) 꺾인 화살표
     var stageRedox = function (st, box) {
       var pick = { ox: null, red: null };
-      box.appendChild(el("p", "pl-eq", st.eq));
+      var eq = el("div", "rx-eq"), cells = { left: [], right: [] };
+      var add = function (side, item, last) {
+        var c = el("div", "rx-sp"); c.appendChild(el("b", "rx-f", item[0])); c.appendChild(el("span", "rx-n", item[1]));
+        eq.appendChild(c); cells[side].push(c);
+        if (!last) eq.appendChild(el("span", "rx-op", "+"));
+      };
+      st.left.forEach(function (it, i) { add("left", it, i === st.left.length - 1); });
+      eq.appendChild(el("span", "rx-op rx-to", "→"));
+      st.right.forEach(function (it, i) { add("right", it, i === st.right.length - 1); });
+      var fig = el("div", "rx-fig"); fig.appendChild(eq);
+      box.appendChild(fig);
       var rows = {}, go = el("button", "btn primary", "확인"); go.type = "button"; go.disabled = true;
       [["ox", "산화되는 물질"], ["red", "환원되는 물질"]].forEach(function (r) {
         var line = el("div", "pl-pick"); line.appendChild(el("span", "pl-pick-k", r[1]));
         var opts = el("div", "pl-opts");
-        st.opts.forEach(function (o, n) {
-          var b = el("button", "so-seg", o); b.type = "button";
+        st.left.forEach(function (o, n) {
+          var b = el("button", "so-seg", o[1]); b.type = "button";
           b.addEventListener("click", function () {
             pick[r[0]] = n;
             opts.querySelectorAll(".so-seg").forEach(function (x, k) { x.classList.toggle("is-on", k === n); });
@@ -774,6 +752,21 @@
         line.appendChild(opts); rows[r[0]] = opts; box.appendChild(line);
       });
       box.appendChild(go);
+      var bracket = function (from, to, label, up, color) {   // 개념서 fig23_1 처럼 꺾인 선 + 화살촉
+        var fr = fig.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+        var ax = a.left + a.width / 2 - fr.left, bx = b.left + b.width / 2 - fr.left;
+        var edge = up ? Math.min(a.top, b.top) - fr.top : Math.max(a.bottom, b.bottom) - fr.top;
+        var y = up ? edge - 22 : edge + 22, y0 = up ? a.top - fr.top - 3 : a.bottom - fr.top + 3, y1 = up ? b.top - fr.top - 3 : b.bottom - fr.top + 3;
+        var svg = fig.querySelector("svg.rx-over") || sv("svg", { class: "rx-over", "aria-hidden": "true" }, fig);
+        svg.setAttribute("viewBox", "0 0 " + fr.width + " " + fr.height);
+        sv("path", { d: "M" + ax + " " + y0 + " L" + ax + " " + y + " L" + bx + " " + y + " L" + bx + " " + y1, fill: "none", stroke: color, "stroke-width": 1.3 }, svg);
+        var h = up ? "M" + (bx - 4) + " " + (y1 - 7) + " L" + bx + " " + y1 + " L" + (bx + 4) + " " + (y1 - 7) + " Z"
+                   : "M" + (bx - 4) + " " + (y1 + 7) + " L" + bx + " " + y1 + " L" + (bx + 4) + " " + (y1 + 7) + " Z";
+        sv("path", { d: h, fill: color }, svg);
+        var t = txt(svg, (ax + bx) / 2, y, label, "rx-lab"); t.setAttribute("fill", color);
+        var bb = t.getBBox(); var bg = sv("rect", { x: bb.x - 4, y: bb.y - 1, width: bb.width + 8, height: bb.height + 2, fill: "#fff" });
+        svg.insertBefore(bg, t);
+      };
       go.addEventListener("click", function () {
         go.disabled = true; box.querySelectorAll(".so-seg").forEach(function (b) { b.disabled = true; });
         send(pick).then(function (res) {
@@ -782,50 +775,51 @@
             segs[res[k]].classList.add("is-answer");
             if (pick[k] !== res[k]) segs[pick[k]].classList.add("is-bad");
           });
+          fig.classList.add("is-open");
+          bracket(cells.left[res.ox], cells.right[res.ox_to], res.ox_lab, true, "#D9604A");
+          bracket(cells.left[res.red], cells.right[res.red_to], res.red_lab, false, "#E8963A");
           go.classList.add("is-spent");
-          feedback(res, "산화 " + st.opts[res.ox] + " · 환원 " + st.opts[res.red]);
+          feedback(res, "산화 " + st.left[res.ox][1] + " · 환원 " + st.left[res.red][1]);
         }).catch(function (e) { go.disabled = false; alert(e.message); });
       });
     };
 
-    // 보어 모형: 껍질 4개, 4방향에 하나씩 놓고 다섯째부터 짝을 지어 놓는다 (교과서 방식)
-    var RADII = [30, 50, 70, 90], SHELL = ["K", "L", "M", "N"];
-    var atomSvg = function (z, sh, prev, done) {
-      var svg = sv("svg", { viewBox: "-112 -112 224 224", class: "pl-svg pl-atom-svg", role: "img", "aria-label": "원자 모형" });
-      var outer = -1; sh.forEach(function (n, k) { if (n) outer = k; });
-      RADII.forEach(function (r, k) {
-        sv("circle", { r: r, class: "pl-orbit" + (sh[k] ? " is-on" : "") + (k === outer && done ? " is-val" : "") }, svg);
-        var t = sv("text", { x: (r * Math.cos(-Math.PI / 4) + 3).toFixed(1), y: (r * Math.sin(-Math.PI / 4) - 3).toFixed(1), class: "pl-orbit-t" }, svg);
-        t.textContent = SHELL[k];
-      });
-      sv("circle", { r: 19, fill: "url(#g-nuc)", class: "pl-ball" }, svg);
-      var nt = sv("text", { y: 4.5, "text-anchor": "middle", class: "pl-nuc-t" }, svg); nt.textContent = "+" + z;
-      sh.forEach(function (n, k) {
-        var r = RADII[k], base = [-90, 0, 90, 180], spread = 13 * 50 / r;
-        for (var e = 0; e < n; e++) {
-          var ang;
-          if (k === 0) ang = e === 0 ? -90 : 90;              // K 껍질: 위·아래
-          else {
-            var slot = e % 4, inPair = n > 4 + slot;          // 이 방향에 짝이 있으면 벌려 놓는다
-            ang = base[slot] + (inPair ? (e < 4 ? -spread / 2 : spread / 2) : 0);
-          }
-          var a2 = ang * Math.PI / 180;
-          var g = sv("g", { transform: "translate(" + (r * Math.cos(a2)).toFixed(2) + " " + (r * Math.sin(a2)).toFixed(2) + ")" }, svg);
-          sv("circle", { r: 5.6, fill: "url(#g-e)", class: "pl-ball pl-el" + (e >= (prev[k] || 0) && !reduce ? " e-new" : "") }, g);
+    // 전자 배치 모형 (개념서 TOPIC 07): 원자핵은 하늘색, 전자 껍질은 얇은 검은 원,
+    // 전자는 껍질 위에 같은 간격으로(2개면 좌우), 원자가 전자는 빨강, 빈 껍질은 회색 점선
+    var R0 = 15, DR = 14;
+    var atomSvg = function (z, sh, noble) {
+      var n = 0; sh.forEach(function (c, k) { if (c) n = k + 1; });
+      var size = R0 + DR * 4 + 6;
+      var svg = sv("svg", { viewBox: (-size) + " " + (-size) + " " + size * 2 + " " + size * 2, class: "pl-svg pl-atom-svg", role: "img", "aria-label": "전자 배치 모형" });
+      for (var k = 0; k < 4; k++) {
+        var r = R0 + DR * (k + 1);
+        sv("circle", { r: r, class: k < n ? "pl-shell" : "pl-shell is-empty" }, svg);
+      }
+      sv("circle", { r: R0, fill: "#BFD6EE" }, svg);
+      txt(svg, 0, 0.5, z + "+", "pl-nuc-t");
+      sh.forEach(function (c, k) {
+        var r = R0 + DR * (k + 1), outer = k === n - 1;
+        for (var j = 0; j < c; j++) {
+          var a = c === 2 ? Math.PI * j : (90 + 360 * j / c) * Math.PI / 180;
+          sv("circle", { cx: (r * Math.cos(a)).toFixed(2), cy: (-r * Math.sin(a)).toFixed(2), r: 3.3,
+                         fill: outer && !noble ? "#D9534F" : "#231F20" }, svg);
         }
       });
       return svg;
     };
 
     var stageShell = function (st, box) {
-      var sh = [0, 0, 0, 0], prev = [0, 0, 0, 0];
+      var sh = [0, 0, 0, 0];
       box.appendChild(el("p", "pl-q", st.name + " · 원자 번호 " + st.z + " · 전자 " + st.z + "개"));
       var atom = el("div", "pl-atom"), ctl = el("div", "pl-shells"), left = el("p", "small muted pl-left");
+      var legend = el("p", "pl-atom-key");
+      [["#D9534F", "원자가 전자"], ["#231F20", "그 밖의 전자"]].forEach(function (k) {
+        var s2 = el("span"); var d = el("i"); d.style.background = k[0]; s2.appendChild(d); s2.appendChild(document.createTextNode(k[1])); legend.appendChild(s2);
+      });
       var go = el("button", "btn primary", "확인"); go.type = "button";
-      var draw = function (done) {
+      var draw = function (done, noble) {
         atom.textContent = "";
-        atom.appendChild(atomSvg(st.z, sh, prev, done));
-        prev = sh.slice();
+        atom.appendChild(atomSvg(st.z, sh, noble));
         var used = sh.reduce(function (a, b) { return a + b; }, 0);
         left.textContent = "남은 전자 " + (st.z - used) + "개";
         ctl.querySelectorAll("[data-k]").forEach(function (row) {
@@ -836,7 +830,7 @@
         });
         go.disabled = done || used !== st.z;
       };
-      ["K 껍질", "L 껍질", "M 껍질", "N 껍질"].forEach(function (t, k) {
+      ["첫 번째 껍질", "두 번째 껍질", "세 번째 껍질", "네 번째 껍질"].forEach(function (t, k) {
         var row = el("div", "pl-srow"); row.dataset.k = k;
         var m = el("button", "btn small m", "−"), p = el("button", "btn small p", "+"); m.type = p.type = "button";
         m.setAttribute("aria-label", t + " 전자 빼기"); p.setAttribute("aria-label", t + " 전자 넣기");
@@ -844,15 +838,16 @@
         row.appendChild(el("span", "", t)); row.appendChild(m); row.appendChild(el("b", "", "0")); row.appendChild(p);
         ctl.appendChild(row);
       });
+      var fig = el("div", "pl-atom-fig"); fig.appendChild(atom); fig.appendChild(legend);
       var side = el("div"); side.appendChild(ctl); side.appendChild(left);
-      var wrap = el("div", "pl-shellwrap"); wrap.appendChild(atom); wrap.appendChild(side);
+      var wrap = el("div", "pl-shellwrap"); wrap.appendChild(fig); wrap.appendChild(side);
       box.appendChild(wrap); box.appendChild(go);
       go.addEventListener("click", function () {
         go.disabled = true; ctl.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
         send(sh.slice()).then(function (res) {
           go.classList.add("is-spent");
-          if (!res.correct) { sh = res.shells.concat([0, 0, 0, 0]).slice(0, 4); prev = [0, 0, 0, 0]; }   // 틀리면 정답 배치를 다시 그린다
-          draw(true);
+          sh = res.shells.concat([0, 0, 0, 0]).slice(0, 4);          // 정답 배치를 그린다
+          draw(true, res.shells[res.shells.length - 1] === 8);
           feedback(res, "정답 " + res.shells.join(", "));
         }).catch(function (e) { draw(); alert(e.message); });
       });

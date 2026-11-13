@@ -221,17 +221,17 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .strand-wrap { overflow-x: auto; padding-bottom: 6px; }
 .strand { display: flex; gap: 4px; margin-bottom: 6px; align-items: center; }
 .strand .end { width: 26px; color: var(--muted); font-size: 13px; text-align: center; flex: 0 0 auto; }
-.strand .cell { width: 34px; height: 40px; flex: 0 0 auto; border-radius: 6px; display: flex; align-items: center;
+.strand .cell { width: 34px; height: 40px; flex: 0 0 auto; border-radius: 2px; border: 1px solid transparent; display: flex; align-items: center;
   justify-content: center; font-weight: 700; background: var(--bg); color: var(--muted); }
 .strand .cell.cursor { outline: 2px solid var(--accent); }
 .strand .cell.ok { box-shadow: inset 0 -4px 0 var(--ok); }
 .strand .cell.wrong { box-shadow: inset 0 -4px 0 var(--danger); }
-.base-A { background: #e74c3c !important; color: #fff !important; }
-.base-T { background: #f1a33b !important; color: #fff !important; }
-.base-G { background: #27ae60 !important; color: #fff !important; }
-.base-C { background: #2f80ed !important; color: #fff !important; }
+.base-A { background: #F6C0A8 !important; color: #231F20 !important; border: 1px solid #808080 !important; }
+.base-T { background: #BFD9A6 !important; color: #231F20 !important; border: 1px solid #808080 !important; }
+.base-G { background: #B9D3EC !important; color: #231F20 !important; border: 1px solid #808080 !important; }
+.base-C { background: #D9C6E6 !important; color: #231F20 !important; border: 1px solid #808080 !important; }
 .base-pad { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-.base { width: 64px; height: 64px; border-radius: 12px; border: none; font-size: 24px; font-weight: 800;
+.base { width: 64px; height: 64px; border-radius: 4px; border: none; font-size: 24px; font-weight: 800;
   cursor: pointer; }
 .base-back { background: var(--bg); color: var(--text); }
 .mc-question { font-size: 17px; font-weight: 600; }
@@ -1793,7 +1793,7 @@ body.tt-open { overflow: hidden; }
 .mt-item.is-done { border-color: var(--ok); background: var(--ok-soft); color: var(--accent-ink); opacity: .55; cursor: default; }
 .mt-item.is-bad { border-color: var(--danger); background: var(--danger-soft); animation: sp-shake .3s ease; }
 /* RNA 염기 U, 가닥 이름 */
-.base-U { background: #7b5cc4 !important; color: #fff !important; }
+.base-U { background: #F3E3A0 !important; color: #231F20 !important; border: 1px solid #808080 !important; }
 .strand-label { margin: 8px 0 4px; font-size: 12px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .sp-card.is-no, .mt-item.is-bad { animation: none; } }
 @media (max-width: 560px) { .kind-mc .mc-main, .kind-ox .mc-main { font-size: 26px; } .sp-slot { width: 32px; height: 42px; font-size: 19px; } .sp-tile { width: 42px; height: 42px; } }
@@ -1909,45 +1909,45 @@ body.tt-open { overflow: hidden; }
 .pl-srow b { text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .pl-shellwrap { grid-template-columns: 1fr; justify-items: center; } .pl-shells { width: 100%; } .pl-eq { font-size: 18px; } }
 
-/* ---------- 개념 게임 그림 (SVG): 비커 · 이온 구슬 · 보어 모형 ---------- */
-.pl-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.pl-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.pl-beakers { align-items: start; }
-.pl-beakers.is-mixed { grid-template-columns: minmax(0, 360px); justify-content: center; }
-.pl-fig { margin: 0; display: grid; gap: 6px; }
-.pl-cap { display: grid; gap: 4px; justify-items: center; text-align: center; }
-.pl-cap b { font-size: 13px; font-weight: 600; }
-.pl-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* ---------- 개념 게임 그림: 개념서 그림체 (단색 면, 얇은 선, 그라데이션·그림자 없음) ---------- */
+.pl-svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
+.pl-beakers { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 6px; }
+.pl-plus { align-self: center; margin-top: -30px; font-size: 22px; font-weight: 400; color: #231F20; }
+.pl-fig { margin: 0; display: grid; gap: 4px; }
+.pl-cap { display: grid; gap: 3px; justify-items: center; text-align: center; }
+.pl-cap-t { font-size: 13px; color: #231F20; }
+.pl-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pl-key { display: inline-flex; align-items: center; gap: 4px; }
-.pl-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-.k-g-h i { background: #d64545; } .k-g-cl i { background: #3f9a5b; } .k-g-na i { background: #7b5cc4; } .k-g-oh i { background: #2f6fb3; } .k-g-w i { background: #9aa9b7; }
-.pl-glass { fill: none; stroke: #7d8b99; stroke-width: 2.2; stroke-linejoin: round; }
-.pl-rim { stroke: #7d8b99; stroke-width: 2.6; stroke-linecap: round; }
-.pl-sheen { pointer-events: none; }
-.pl-tick { stroke: #9aa6b2; stroke-width: 1; }
-.pl-tick-t { font-size: 8.5px; fill: #8b97a3; font-variant-numeric: tabular-nums; }
-.pl-liq { fill: #e3eef6; transition: fill .9s ease; }
-.pl-liq-top { fill: #d3e3ef; transition: fill .9s ease; }
-.pl-liq.tint-노랑 { fill: #f6e27a; } .pl-liq-top.tint-노랑 { fill: #f0d65c; }
-.pl-liq.tint-초록 { fill: #9fd8a4; } .pl-liq-top.tint-초록 { fill: #86cc8c; }
-.pl-liq.tint-파랑 { fill: #8fbdf0; } .pl-liq-top.tint-파랑 { fill: #78ade9; }
-.pl-ball { stroke: rgba(0, 0, 0, .18); stroke-width: .8; }
-.pl-ion-t { fill: #fff; font-weight: 800; letter-spacing: -.02em; pointer-events: none; }
-.pl-pt { transform-box: fill-box; transform-origin: center; }
-.pl-pt.pt-in { animation: pl-in .45s cubic-bezier(.2, .7, .3, 1) both; }
-.pl-pt.pt-pop { animation: pl-pop .5s cubic-bezier(.2, .9, .3, 1.4) both; }
-@keyframes pl-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
-@keyframes pl-pop { 0% { opacity: 0; transform: scale(.2); } 100% { opacity: 1; transform: scale(1); } }
-.pl-base { transition: transform .6s cubic-bezier(.4, 0, .2, 1), opacity .6s ease; transform-origin: 20% 30%; }
-.pl-base.is-pour { transform: translate(-38%, -14%) rotate(-42deg); opacity: .25; }
-.pl-orbit { fill: none; stroke: #c3ccd5; stroke-width: 1.2; stroke-dasharray: 3 4; }
-.pl-orbit.is-on { stroke: #8795a3; stroke-dasharray: none; }
-.pl-orbit.is-val { stroke: var(--accent-ink, #2c6852); stroke-width: 2.2; }
-.pl-orbit-t { font-size: 9px; font-weight: 700; fill: #9aa6b2; }
-.pl-nuc-t { fill: #fff; font-size: 11px; font-weight: 800; }
-.pl-el { transform-box: fill-box; transform-origin: center; }
-.pl-el.e-new { animation: pl-pop .35s cubic-bezier(.2, .9, .3, 1.4) both; }
-.pl-atom { width: 220px; height: auto; position: static; }
+.pl-key i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid #808080; }
+.pl-glass { fill: none; stroke: #231F20; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.pl-ion { stroke: #808080; stroke-width: .9; }
+.pl-ion-t { fill: #231F20; font-weight: 500; pointer-events: none; }
+.pl-pt.pt-in { animation: pl-fade .35s ease both; }
+@keyframes pl-fade { from { opacity: 0; } to { opacity: 1; } }
+.pl-after { display: grid; justify-items: center; gap: 4px; margin-top: 8px; }
+.pl-after .pl-fig { width: min(100%, 300px); }
+.pl-arrow { width: 22px; height: 28px; }
+.pl-arr-l { stroke: #E79AA3; stroke-width: 2.2; }
+.pl-arr-h { fill: #E79AA3; }
+.rx-fig { position: relative; padding: 46px 6px; margin: 4px 0 14px; border: 1px solid #DCDDDD; border-radius: 6px; background: #fff; }
+.rx-eq { display: flex; align-items: flex-start; justify-content: center; flex-wrap: wrap; gap: 4px 10px; }
+.rx-sp { display: grid; justify-items: center; gap: 2px; }
+.rx-f { font-family: "Times New Roman", "Noto Serif KR", serif; font-size: 22px; font-weight: 400; color: #2F4F7F; line-height: 1.2; }
+.rx-n { font-size: 12px; color: #231F20; }
+.rx-op { font-size: 20px; color: #231F20; line-height: 1.3; }
+.rx-to { padding: 0 4px; }
+.rx-over { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.rx-lab { font-size: 12px; font-weight: 500; }
+.so-seg.is-answer { border-color: var(--ok); background: var(--ok-soft); color: var(--accent-ink); }
+.so-seg.is-bad { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+.pl-shell { fill: none; stroke: #231F20; stroke-width: 1; }
+.pl-shell.is-empty { stroke: #B5B6B6; stroke-dasharray: 3 3; }
+.pl-nuc-t { fill: #231F20; font-size: 9px; font-weight: 500; }
+.pl-atom-fig { display: grid; justify-items: center; gap: 6px; }
+.pl-atom { width: 210px; }
+.pl-atom-key { display: flex; gap: 12px; margin: 0; font-size: 12px; color: var(--muted); }
+.pl-atom-key span { display: inline-flex; align-items: center; gap: 4px; }
+.pl-atom-key i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .pl-left { margin: 8px 0 0; }
-@media (prefers-reduced-motion: reduce) { .pl-pt.pt-in, .pl-pt.pt-pop, .pl-el.e-new { animation: none; } .pl-base, .pl-liq, .pl-liq-top { transition: none; } }
-@media (max-width: 560px) { .pl-atom { width: 240px; } }
+@media (prefers-reduced-motion: reduce) { .pl-pt.pt-in { animation: none; } }
+@media (max-width: 560px) { .pl-atom { width: 220px; } .rx-f { font-size: 19px; } }
