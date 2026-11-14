@@ -105,8 +105,9 @@ class RoomsTest(unittest.TestCase):
         self.assertFalse(a.post("/s/rooms/sento/write", data={"body": "안녕"}).get_json()["ok"])
         a.post("/s/rooms/sento/beat", data={"x": "1", "z": "1", "seat": "9"})         # 화롯가
         r = a.post("/s/rooms/sento/write", data={"body": "  오늘   2단원 끝!  "}).get_json()
-        self.assertTrue(r["ok"]); self.assertEqual(r["board"][-1]["body"], "오늘 2단원 끝!")
-        self.assertEqual(r["board"][-1]["nick"], "닉0")
+        self.assertTrue(r["ok"]); self.assertEqual(r["board"]["0"][-1]["body"], "오늘 2단원 끝!")   # 9번 방석 = 첫 오두막
+        self.assertEqual(r["board"]["0"][-1]["nick"], "닉0")
+        self.assertEqual(r["board"]["1"], []); self.assertEqual(r["board"]["2"], [])                # 다른 오두막 칠판은 따로
         self.assertFalse(a.post("/s/rooms/sento/write", data={"body": "또"}).get_json()["ok"])  # 너무 빨리
         with self.app.app_context():
             execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
@@ -115,7 +116,14 @@ class RoomsTest(unittest.TestCase):
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 1)
         # 같은 장소의 친구는 beat 로 칠판 글을 받는다
         board = b.post("/s/rooms/sento/beat", data={}).get_json()["board"]
-        self.assertEqual([x["body"] for x in board], ["오늘 2단원 끝!"])
+        self.assertEqual([x["body"] for x in board["0"]], ["오늘 2단원 끝!"])
+        with self.app.app_context():
+            execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
+        b.post("/s/rooms/sento/beat", data={"x": "1", "z": "1", "seat": "17"})       # 세 번째 오두막
+        r = b.post("/s/rooms/sento/write", data={"body": "셋째 칠판"}).get_json()
+        self.assertEqual([x["body"] for x in r["board"]["2"]], ["셋째 칠판"]); self.assertEqual(len(r["board"]["0"]), 1)
+        with self.app.app_context():
+            execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
         # 역 노트: 누구나 쓰고(하루 5줄), 욕설은 막힌다. 아래 남기는 글 칸과 같은 곳에 저장
         r = b.post("/s/rooms/eki/write", data={"body": "기차 오기 전에 한 단원"}).get_json()
         self.assertTrue(r["ok"]); self.assertEqual(r["board"][-1]["body"], "기차 오기 전에 한 단원")

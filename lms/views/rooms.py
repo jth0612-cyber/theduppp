@@ -38,7 +38,7 @@ PLAN_CHOICES = (15, 40, 80, 100)
 PLAN_DEFAULT = 40
 # 3D 장소 (나머지는 그림 버전)
 PLACES_3D = set(PLACES)
-ACTS = {"splash", "coffee", "page", "bow", "hi"}   # 친구 화면에도 보여 주는 동작
+ACTS = {"splash", "coffee", "page", "bow", "hi", "jump"}   # 친구 화면에도 보여 주는 동작
 POSES = {"stand", "walk", "sit", "gassho", "bow", "breathe"}
 AVATAR_COLORS = ["#e8805c", "#e6a23c", "#7cb87a", "#5fa3c9", "#9b86d1", "#d97aa0", "#8c7a6b", "#4f9e94"]
 
@@ -270,15 +270,33 @@ def done(place):
     return jsonify(ok=True, minutes=minutes, today=_my_today(uid))
 
 
+HEARTH_PER_HUT = 4
+
+
+def _board_of_seat(place, seat):
+    """노천탕은 화롯가 오두막마다 칠판이 따로: 방석 번호로 오두막을 찾는다."""
+    if place == "sento" and seat in SENTO_HEARTH:
+        return sorted(SENTO_HEARTH).index(seat) // HEARTH_PER_HUT
+    return 0
+
+
 def _board(place):
-    """장소 안 판에 띄울 최근 글 (오래된 것부터)."""
+    """장소 안 판에 띄울 최근 글 (오래된 것부터). 노천탕은 오두막별 {번호: 글 목록}."""
     b = BOARDS.get(place)
     if b is None:
         return None
+    if place == "sento":
+        huts = len(SENTO_HEARTH) // HEARTH_PER_HUT
+        return {str(i): _board_lines(place, i) for i in range(huts)}
+    return _board_lines(place, 0)
+
+
+def _board_lines(place, board_no):
+    b = BOARDS[place]
     if b["kind"] == "chat":
         rows = query("""SELECT c.id, c.body, u.nickname, u.role, u.display_name FROM room_chat c JOIN users u ON u.id = c.user_id
-                        WHERE c.place = ? AND date(c.created_at) = date('now', 'localtime')
-                        ORDER BY c.id DESC LIMIT ?""", (place, BOARD_LINES))
+                        WHERE c.place = ? AND c.board = ? AND date(c.created_at) = date('now', 'localtime')
+                        ORDER BY c.id DESC LIMIT ?""", (place, board_no, BOARD_LINES))
     else:
         rows = query("""SELECT n.id, n.body, u.nickname, u.role, u.display_name FROM room_notes n JOIN users u ON u.id = n.user_id
                         WHERE n.place = ? ORDER BY n.created_at DESC, n.id DESC LIMIT ?""", (place, BOARD_LINES))
@@ -314,7 +332,8 @@ def write(place):
         if query("""SELECT COUNT(*) AS n FROM room_chat WHERE user_id = ?
                     AND date(created_at) = date('now', 'localtime')""", (uid,), one=True)["n"] >= CHAT_DAY_MAX:
             return fail("오늘은 충분히 적었어요. 내일 또 만나요.")
-        execute("INSERT INTO room_chat (place, user_id, body) VALUES (?, ?, ?)", (place, uid, body))
+        execute("INSERT INTO room_chat (place, user_id, body, board) VALUES (?, ?, ?, ?)",
+                (place, uid, body, _board_of_seat(place, me["seat"])))
     else:
         if query("""SELECT COUNT(*) AS n FROM room_notes WHERE user_id = ?
                     AND created_at >= datetime('now', 'localtime', '-1 day')""", (uid,), one=True)["n"] >= 5:

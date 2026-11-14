@@ -149,7 +149,7 @@ export default {
     const doorOut = (H) => [H.x + H.door * (H.w / 2 + 0.6), H.z + 1.2];      // 문 밖 한 걸음
     const doorIn = (H) => [H.x + H.door * (H.w / 2 - 0.8), H.z + 1.2];       // 문 안 한 걸음
     const pickHut = [];
-    let boardTex;
+    const boardTexs = [], boardCanvases = [];      // 오두막마다 칠판 하나씩 (글도 따로)
     const hutRoofs = [], fires = [];
 
     // ---------------------------------------------------------------- 이로리 불: 장작, 숯불, 일렁이는 불꽃, 불티, 연기, 깜빡이는 빛
@@ -258,7 +258,7 @@ export default {
     }
 
     // 칠판: 화롯가에 앉은 학생들이 쓰는 오늘의 한 줄 (분필 글씨)
-    const boardCanvas = document.createElement("canvas"); boardCanvas.width = 768; boardCanvas.height = 480;
+    const newBoardCanvas = () => { const c = document.createElement("canvas"); c.width = 768; c.height = 480; return c; };
     // 글씨를 maxW 안에서 띄어쓰기 기준으로 줄바꿈 (최대 max줄, 넘치면 마지막 줄 끝에 …)
     function wrapText(x, text, maxW, max) {
       const src = String(text || "").trim(), out = []; let cur = "", rest = "";
@@ -298,7 +298,9 @@ export default {
       }
       return [];
     }
-    function drawBoard(lines) {
+    function drawBoard(lines, hi = 0) {
+      const boardCanvas = boardCanvases[hi]; if (!boardCanvas) return;
+      const boardTex = boardTexs[hi];
       const x = boardCanvas.getContext("2d");
       x.fillStyle = "#2f3b33"; x.fillRect(0, 0, 768, 480);
       for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`; x.fillRect(Math.random() * 768, Math.random() * 480, 2 + Math.random() * 30, 1 + Math.random() * 3); }
@@ -321,7 +323,7 @@ export default {
       }
       if (boardTex) boardTex.needsUpdate = true;
     }
-    function buildHut(H) {
+    function buildHut(H, hi) {
       const fl = box(H.w, H.floor, H.d, 0xe9e4da, H.x, H.floor / 2, H.z); pickHut.push(fl);
       box(H.w + 0.2, 0.12, H.d + 0.2, 0x5a4232, H.x, H.floor - 0.1, H.z);
       // 기둥
@@ -355,7 +357,9 @@ export default {
       // 칠판(남기는 글)
       const board = box(2.5, 1.62, 0.06, 0x5a4232, H.x - 1.4, H.floor + 1.45, H.z - H.d / 2 + 0.2);
       box(2.6, 0.08, 0.12, 0x8a6a4a, H.x - 1.4, H.floor + 0.62, H.z - H.d / 2 + 0.26);
-      if (!boardTex) { drawBoard([]); boardTex = new THREE.CanvasTexture(boardCanvas); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4; }
+      boardCanvases[hi] = newBoardCanvas(); drawBoard([], hi);
+      const boardTex = new THREE.CanvasTexture(boardCanvases[hi]); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4;
+      boardTexs[hi] = boardTex;
       const chalk = new THREE.Mesh(new THREE.PlaneGeometry(2.36, 1.48), new THREE.MeshBasicMaterial({ map: boardTex }));
       chalk.position.set(H.x - 1.4, H.floor + 1.45, H.z - H.d / 2 + 0.24); scene.add(chalk);
       board.userData.notes = true; chalk.userData.notes = true; pickHut.push(board, chalk);
@@ -363,7 +367,7 @@ export default {
       const noren = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshLambertMaterial({ map: textTexture("ゆ", { w: 256, h: 160, fg: "#f4efe4", bg: "#2b3a55", radius: 0, font: "500 96px 'Noto Serif KR', serif" }), side: THREE.DoubleSide }));
       noren.position.set(H.x + H.door * (H.w / 2 - 0.15), H.floor + 2.5, H.z + 1.2); noren.rotation.y = Math.PI / 2; hutRoof.add(noren);
         }
-    HUTS.forEach(buildHut);
+    HUTS.forEach((H, i) => buildHut(H, i));
 
     // ---------------------------------------------------------------- 디딤돌과 석등
     const path = [[-2, 6.5], [0.5, 4.2], [3.2, 2.6], [5.6, 1.2]];
@@ -474,7 +478,7 @@ export default {
       sitSound: (s) => s.kind === "water" ? "soak" : "cushion",
       focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만.`,
       spaceAction: "splash",
-      actions: { free: ["soak", "hearth", "splash", "breathe"], sitting: ["focus", "breathe", "splash", "stand"], focus: ["breathe", "stop"] },
+      actions: { free: ["soak", "hearth", "splash", "jump"], sitting: ["focus", "splash", "stand"], focus: ["stop"] },
       labels: { soak: "탕에 들어가기", hearth: "화롯가로", splash: "물 튕기기" },
       icons: {
         soak: '<svg viewBox="0 0 24 24"><path d="M3 15c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M3 19c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M8 11c0-2 2-2 2-4M13 11c0-2 2-2 2-4"/></svg>',
@@ -494,7 +498,8 @@ export default {
         },
       },
       remote: { splash: (E, av) => splash(E, av, false) },
-      board(lines) { drawBoard(lines); },
+      // 서버가 오두막별로 보낸다: { "0": [...], "1": [...], "2": [...] }
+      board(b) { if (Array.isArray(b)) drawBoard(b, 0); else for (let i = 0; i < HUTS.length; i++) drawBoard((b && b[i]) || [], i); },
       chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요.", hint: "화롯가 방석에 앉으면 칠판에 쓸 수 있어요." },
       sounds: {
         // 물소리는 고음을 깎은 부드러운 판으로 낮게, 물방울·대나무는 드물게 (귀가 따갑지 않게)

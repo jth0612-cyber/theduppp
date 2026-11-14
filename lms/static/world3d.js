@@ -449,6 +449,7 @@ function updatePuffs(dt) {
     if (p.life <= 0) p.s.visible = false;
   });
 }
+const JUMP_SECS = 0.55;
 class Avatar {
   constructor({ color, nick, cap = null, me = false }) {
     this.me = me; this.g = new THREE.Group(); this.upper = new THREE.Group(); this.g.add(this.upper);
@@ -487,6 +488,7 @@ class Avatar {
   place(x, z, yaw) { this.pos.set(x, heightAt(x, z), z); if (yaw !== undefined) this.yaw = yaw; this.path = []; }
   walkTo(points) { this.path = points.map(([x, z]) => new THREE.Vector3(x, 0, z)); if (this.pose !== "walk") this.pose = "walk"; }
   get moving() { return this.path.length > 0; }
+  jump() { if (!(this.jumpT > 0)) this.jumpT = JUMP_SECS; }
   update(dt) {
     this.t += dt;
     if (this.path.length) {
@@ -502,7 +504,9 @@ class Avatar {
     const sitting = (this.seat !== null && this.pose !== "walk") || this.pose === "sit";
     const seatInfo = this.seat !== null ? SEATS[this.seat] : null;
     const lift = sitting ? (seatInfo && seatInfo.lift !== undefined ? seatInfo.lift : 0.16) : 0;
-    this.g.position.set(this.pos.x, (sitting && seatInfo && seatInfo.y !== undefined ? seatInfo.y : ground) + lift, this.pos.z);
+    let hop = 0;                                          // 점프: 0.55초 동안 포물선으로 떴다가 내려온다
+    if (this.jumpT > 0) { this.jumpT = Math.max(0, this.jumpT - dt); const k = 1 - this.jumpT / JUMP_SECS; hop = Math.sin(k * Math.PI) * 0.75; }
+    this.g.position.set(this.pos.x, (sitting && seatInfo && seatInfo.y !== undefined ? seatInfo.y : ground) + lift + hop, this.pos.z);
     this.g.rotation.y = this.yaw;
     // 몸짓
     const walk = this.pose === "walk";
@@ -885,13 +889,13 @@ function tap(cx, cy) {
   sync(true);
 }
 
-// 키보드: 방향키·WASD 로 걷기, 스페이스로 합장
+// 키보드: 방향키·WASD 로 걷기, 스페이스로 점프
 const keys = new Set();
 window.addEventListener("keydown", (e) => {
   if (!entered || e.target.closest("input, textarea, select")) return;
   const k = e.key.toLowerCase();
   if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(k)) { keys.add(k); e.preventDefault(); }
-  if (k === " ") { e.preventDefault(); act(P.spaceAction || "gassho"); }
+  if (k === " ") { e.preventDefault(); if (!e.repeat) act("jump"); }
 });
 window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
 function keyMove(dt) {
@@ -989,6 +993,7 @@ const E = {
 function playAct(name, av, mine) {
   if (P.remote && P.remote[name]) return P.remote[name](E, av, mine);
   if (name === "bow") av.bow();
+  if (name === "jump") av.jump();
   if (name === "hi") { av.gesture("wave", 2.2); av.say("하이!"); if (!mine) audio.sfx("hi"); }
 }
 
@@ -998,6 +1003,7 @@ const ICON = {
   sit: '<svg viewBox="0 0 24 24"><path d="M4 17h16M6 17l1-4h10l1 4M9 13V9a3 3 0 0 1 6 0v4"/></svg>',
   focus: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 13V9M9 3h6"/></svg>',
   breathe: '<svg viewBox="0 0 24 24"><path d="M4 9c3-3 6 3 9 0s5-1 7 0M4 14c3-3 6 3 9 0s5-1 7 0"/></svg>',
+  jump: '<svg viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M6 20h12"/></svg>',
   gassho: '<svg viewBox="0 0 24 24"><path d="M12 3v9M12 3l-3 9v6l3 3 3-3v-6l-3-9"/></svg>',
   bow: '<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="2.5"/><path d="M9 10c3 0 6 2 7 5M6 21l3-8 7 2"/></svg>',
   moktak: '<svg viewBox="0 0 24 24"><ellipse cx="11" cy="14" rx="7" ry="5.5"/><path d="M8 14h6M15 4l5 5"/></svg>',
@@ -1019,7 +1025,7 @@ if (chatEl) chatEl.addEventListener("submit", (e) => {
   }).catch(() => whisper("연결이 불안정해요. 잠시 뒤 다시 눌러 주세요.")).finally(() => { b.disabled = false; });
 });
 Object.assign(ICON, P.icons || {});
-const LABEL = Object.assign({ hi: "하이!", sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
+const LABEL = Object.assign({ jump: "점프", hi: "하이!", sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
 function btn(id, primary) { return `<button type="button" class="w3-act${primary ? " is-primary" : ""}" data-act="${id}">${ICON[id] || ICON.dot}<span>${LABEL[id] || id}</span></button>`; }
 function render() {
   let html = "";
@@ -1038,7 +1044,7 @@ function render() {
   $("[data-timer]").hidden = state !== "focus";
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
-  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요` : `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요 · 스페이스는 ${LABEL[P.spaceAction || "gassho"]}`)
+  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요` : `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요 · 스페이스는 점프`)
     : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록돼요";
 }
 actionsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act); });
@@ -1053,7 +1059,10 @@ function act(id, obj) {
   if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모았어요."); sync(true); return; }
   if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); E.share("bow"); return; }
   if (id === "hi") { me.gesture("wave", 2.2); me.say("하이!"); audio.sfx("hi"); E.share("hi"); return; }
-  if (id === "breathe") return breathe();
+  if (id === "jump") {
+    if (state !== "free" || me.seat !== null) return;     // 앉아 있거나 집중 중에는 뛰지 않는다
+    me.jump(); E.share("jump"); return;
+  }
   if (id === "focus") return startFocus();
   if (id === "stop") {
     if (Date.now() < stopArmed) { stopArmed = 0; return finishFocus(false); }

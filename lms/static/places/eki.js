@@ -597,7 +597,7 @@ export default {
       sitText: "자리에 앉았어요.",
       focusText: (m) => `${m}분, 다음 기차가 몇 번 지나갈 때까지.`,
       spaceAction: "sea",
-      actions: { free: ["sit", "sea", "wait", "breathe"], sitting: ["focus", "wait", "breathe", "stand"], focus: ["breathe", "stop"] },
+      actions: { free: ["sit", "sea", "wait", "jump"], sitting: ["focus", "wait", "stand"], focus: ["stop"] },
       labels: { sea: "바다 보기", wait: "기차 언제?" },
       icons: {
         sea: '<svg viewBox="0 0 24 24"><path d="M3 15c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M3 19c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M7 10a5 5 0 0 1 10 0"/></svg>',

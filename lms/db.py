@@ -605,6 +605,7 @@ def init_db(path):
     _add_column(conn, "room_presence", "act", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "room_presence", "act_seq", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "users", "avatar_color", "TEXT")
+    _add_column(conn, "room_chat", "board", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "mocks", "review", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "review_by", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "review_at", "TEXT")
