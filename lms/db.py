@@ -114,6 +114,35 @@ CREATE TABLE IF NOT EXISTS casts (
     updated_at  TEXT
 );
 
+-- 복테·모의고사 1:1 첨삭: 학생이 회차마다 풀이 사진을 올리고 강사·조교가 답한다
+CREATE TABLE IF NOT EXISTS feedback_threads (
+    id          INTEGER PRIMARY KEY,
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status      TEXT NOT NULL DEFAULT 'wait' CHECK (status IN ('wait', 'done')),
+    staff_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    unread      INTEGER NOT NULL DEFAULT 0,   -- 학생이 아직 안 읽은 답변이 있으면 1
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (mock_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback_threads(status, updated_at);
+CREATE TABLE IF NOT EXISTS feedback_msgs (
+    id          INTEGER PRIMARY KEY,
+    thread_id   INTEGER NOT NULL REFERENCES feedback_threads(id) ON DELETE CASCADE,
+    author_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    body        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_msgs_thread ON feedback_msgs(thread_id);
+CREATE TABLE IF NOT EXISTS feedback_images (
+    id          INTEGER PRIMARY KEY,
+    msg_id      INTEGER NOT NULL REFERENCES feedback_msgs(id) ON DELETE CASCADE,
+    file_id     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    pos         INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_images_file ON feedback_images(file_id);
+
 CREATE TABLE IF NOT EXISTS question_images (
     id           INTEGER PRIMARY KEY,
     question_id  INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,

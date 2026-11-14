@@ -1032,6 +1032,7 @@ function render() {
   let ids = (P.actions[state] || []).slice();
   if (state !== "focus" && !ids.includes("hi")) ids.splice(Math.max(1, ids.length - (state === "sitting" ? 1 : 0)), 0, "hi");   // 누구에게나 하이!
   ids = ids.filter((id) => id !== "focus");                                  // 집중 시작은 따로 큰 버튼으로
+  if (state === "free" && !ids.includes("jump")) ids.push("jump");          // 휴대폰·아이패드용 점프 버튼 (키보드는 스페이스)
   if (state !== "focus") stopArmed = 0;
   html = ids.map((id, i) => btn(id, i === 0 && state === "free")).join("");
   actionsEl.innerHTML = html;

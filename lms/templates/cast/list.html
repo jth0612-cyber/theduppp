@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}TH캐스트 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}태혁쌤의 cast · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
-  <div><h1>TH캐스트</h1><p class="ed-lede">정태혁 선생님의 영상과 편지</p></div>
+  <div><h1>태혁쌤의 cast</h1></div>
   {% if g.user.role == 'teacher' %}<a class="btn primary" href="{{ url_for('cast.cast_new') }}">새 글</a>{% endif %}
 </header>
 <ul class="cast-list">

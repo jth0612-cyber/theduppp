@@ -114,8 +114,11 @@ def analysis_home():
     mocks = _accessible_mocks()
     if not mocks:
         return render_template("student/analysis.html", mocks=[], mock=None)
+    unread = query("SELECT mock_id FROM feedback_threads WHERE user_id = ? AND unread = 1 ORDER BY updated_at DESC LIMIT 1",
+                   (g.user["id"],), one=True)
+    default = unread["mock_id"] if unread and unread["mock_id"] in {m["id"] for m in mocks} else mocks[0]["id"]
     try:
-        mid = int(request.args.get("mock", mocks[0]["id"]))
+        mid = int(request.args.get("mock", default))
     except ValueError:
         mid = mocks[0]["id"]
     if mid not in {m["id"] for m in mocks}:
@@ -131,7 +134,9 @@ def analysis_home():
     mode = request.args.get("mode") or (entry["mode"] if entry else "answers")
     marks = entry["answers"] if entry and entry["mode"] == "answers" else ""
     marks = (marks + "0" * mock["n_items"])[:mock["n_items"]]
-    return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats,
+    from views.feedback import thread_for
+    fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
+    return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
                            my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mode=mode, mock_param=mid,
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"],
@@ -399,6 +404,8 @@ def toggle_mock(mid):
 @teacher_required
 def delete_mock(mid):
     m = _mock_or_404(mid)
+    from views.feedback import delete_mock_files
+    delete_mock_files(mid)
     execute("DELETE FROM mocks WHERE id = ?", (mid,))
     analysis.invalidate(mid)
     audit("mock_deleted", f"mock:{mid}")
@@ -413,8 +420,10 @@ def delete_book(bid):
     if request.form.get("confirm_title", "").strip() != book["title"]:
         flash("교재 이름을 정확히 입력해야 삭제됩니다.", "error")
         return redirect(url_for("books.teacher_book", bid=bid))
+    from views.feedback import delete_mock_files
     for m in query("SELECT id FROM mocks WHERE book_id = ?", (bid,)):
         analysis.invalidate(m["id"])
+        delete_mock_files(m["id"])
     execute("DELETE FROM books WHERE id = ?", (bid,))
     audit("book_deleted", f"book:{bid}")
     flash("교재와 회차, 코드, 가채점 기록을 모두 삭제했습니다.", "ok")

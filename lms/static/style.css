@@ -236,7 +236,8 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .base-back { background: var(--bg); color: var(--text); }
 .mc-question { font-size: 17px; font-weight: 600; }
 .mc-choices { display: flex; flex-direction: column; gap: 8px; }
-.mc-choice { text-align: left; white-space: normal; padding: 12px 14px; }
+.mc-choice { text-align: left; justify-content: flex-start; white-space: normal; padding: 12px 14px; line-height: 1.5; }
+.mc-choices.kind-ox .mc-choice, .mc-choices.kind-tf .mc-choice, .mc-choices.kind-pick .mc-choice, .mc-choices.kind-fill .mc-choice { justify-content: center; }
 .review-item { border-bottom: 1px solid var(--rule); padding: 8px 0; margin: 0; }
 .review-item.wrong b { color: var(--danger); }
 @media (max-width: 640px) {
@@ -286,7 +287,7 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .google-ok { padding: 10px 12px; border-radius: var(--radius); background: var(--ok-soft); color: var(--ink); margin: 10px 0 4px; overflow-wrap: anywhere; }
 .account-google { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--rule); display: grid; gap: 10px; justify-items: start; }
 
-/* ---------- 모의고사 분석: 회차 선택 ---------- */
+/* ---------- 복테&모의 분석: 회차 선택 ---------- */
 .pick { display: grid; gap: 4px; min-width: 0; }
 .pick label { font-size: 12px; color: var(--muted); margin: 0; font-weight: 400; }
 .pick-row { display: flex; gap: 8px; align-items: center; }
@@ -2004,4 +2005,29 @@ main.sheet > :nth-last-child(2) { margin-bottom: 48px; }
 .mock-review h2 span { font-size: 12.5px; font-weight: 400; color: var(--muted); margin-left: 6px; }
 .mock-review .pre { font-size: 15px; line-height: 1.75; }
 .review-form { margin-bottom: 16px; }
-.mc-choice.is-long { text-align: left; justify-content: flex-start; line-height: 1.5; }
+/* 학생 메뉴: 묶음은 접어 두고, 지금 보는 화면이 든 묶음만 펼친다 */
+.nav-fold > summary, .m-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.nav-fold > summary::-webkit-details-marker, .m-fold > summary::-webkit-details-marker { display: none; }
+.nav-fold > summary::after, .m-fold > summary::after { content: ""; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform 160ms ease; margin-right: 4px; }
+.nav-fold[open] > summary::after, .m-fold[open] > summary::after { transform: rotate(45deg); }
+.side .nav-fold > summary.nav-group { margin: 6px 0 2px; padding: 9px 10px; border-radius: 8px; font-size: 13px; color: var(--rail-muted); }
+.side .nav-fold > summary.nav-group:hover { background: var(--rail-2); color: var(--rail-ink); }
+.side .nav-fold:first-of-type > summary.nav-group { margin-top: 14px; }
+.m-fold > summary.m-group { padding: 6px 2px; }
+.m-fold:not([open]) > .m-grid { display: none; }
+/* 1:1 첨삭 */
+.fb-sec { margin: 34px 0 10px; }
+.fb-state { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 2px 9px; border-radius: 99px; vertical-align: middle; }
+.fb-state.is-wait { background: var(--danger-soft); color: var(--danger); }
+.fb-state.is-done { background: var(--ok-soft); color: var(--accent-ink); }
+h1 .fb-state { font-size: 13px; margin-left: 6px; }
+.fb-thread { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fb-msg { padding: 14px 16px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); }
+.fb-msg.is-staff { border-left: 3px solid var(--accent); }
+.fb-who { margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; font-size: 14px; }
+.fb-who time { font-size: 12.5px; color: var(--muted); }
+.fb-msg .pre { font-size: 15px; line-height: 1.7; }
+.fb-msg .q-photos { margin-top: 10px; }
+.fb-form { max-width: 680px; }
+.fb-facts { margin: 0 0 22px; max-width: 680px; }
+.side .nav .count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: #d9534f; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; }

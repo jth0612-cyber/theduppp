@@ -1,0 +1,24 @@
+{# 1:1 첨삭 대화와 입력칸. 필요: msgs, action, me_staff(강사·조교 화면이면 true), submit_label #}
+{% if msgs %}
+<ol class="fb-thread">
+  {% for m in msgs %}
+  <li class="fb-msg{{ ' is-staff' if m.staff else '' }}">
+    <p class="fb-who"><b>{{ m.who if (me_staff or m.staff) else '나' }}</b><time>{{ m.created_at[5:16] }}</time></p>
+    {% if m.body %}<div class="pre">{{ m.body }}</div>{% endif %}
+    {% if m.photos %}<div class="q-photos">{% for fid in m.photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ m.who }} 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+<form method="post" action="{{ action }}" enctype="multipart/form-data" class="fb-form" id="reply">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field"><label for="fb-body">{{ body_label }}</label>
+    <textarea id="fb-body" name="body" rows="4" maxlength="2000" placeholder="{{ placeholder }}"></textarea></div>
+  <div class="field photo-field" data-photo>
+    <label for="fb-image">사진 <span class="muted">(PNG·JPG, 3장까지, 한 장 20MB 이하)</span></label>
+    <input type="file" id="fb-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+    <p class="field-err" data-photo-err hidden></p>
+    <div class="photo-preview" data-photo-preview hidden><div class="photo-thumbs" data-photo-thumbs></div><span></span><button type="button" class="btn small" data-photo-clear>모두 빼기</button></div>
+  </div>
+  <button class="btn primary">{{ submit_label }}</button>
+</form>

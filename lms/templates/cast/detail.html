@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ c.title }} · TH캐스트{% endblock %}
+{% block title %}{{ c.title }} · 태혁쌤의 cast{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('cast.cast_list') }}">TH캐스트</a> /</p>
+<p class="small"><a href="{{ url_for('cast.cast_list') }}">태혁쌤의 cast</a> /</p>
 <header class="ed-head ed-head-split">
   <div><h1>{{ c.title }}</h1><p class="ed-lede">정태혁 선생님 · {{ c.created_at[:16] }}</p></div>
   {% if g.user.role == 'teacher' %}<a class="btn" href="{{ url_for('cast.cast_edit', cid=c.id) }}">고치기</a>{% endif %}

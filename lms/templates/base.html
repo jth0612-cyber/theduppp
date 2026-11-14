@@ -32,11 +32,14 @@
     </a>
     <nav class="nav">
       {% call(groups) nav.nav_groups(ep) %}
+      {% set fold = g.user.role == 'student' %}
       {% for title, items in groups %}
-        {% if title %}<p class="nav-group">{{ title }}</p>{% endif %}
+        {% if title and fold %}<details class="nav-fold"{{ ' open' if items|selectattr(3)|list }}><summary class="nav-group">{{ title }}</summary>
+        {% elif title %}<p class="nav-group">{{ title }}</p>{% endif %}
         {% for endpoint, label, ic, active, count in items %}
         <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active }}"{{ ' aria-current="page"'|safe if active }}>{{ nav.icon(ic) }}<span class="nav-label">{{ label }}</span>{% if count %}<span class="count">{{ count }}</span>{% endif %}</a>
         {% endfor %}
+        {% if title and fold %}</details>{% endif %}
       {% endfor %}
       {% endcall %}
     </nav>
@@ -75,13 +78,16 @@
       <button type="button" class="m-close" data-menu-close aria-label="메뉴 닫기">{{ nav.icon('close') }}</button>
     </div>
     {% call(groups) nav.nav_groups(ep) %}
+    {% set fold = g.user.role == 'student' %}
     {% for title, items in groups %}
-      {% if title %}<p class="m-group">{{ title }}</p>{% endif %}
+      {% if title and fold %}<details class="m-fold"{{ ' open' if items|selectattr(3)|list }}><summary class="m-group">{{ title }}</summary>
+      {% elif title %}<p class="m-group">{{ title }}</p>{% endif %}
       <div class="m-grid">
       {% for endpoint, label, ic, active, count in items %}
         <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active }}">{{ nav.icon(ic) }}<span>{{ label }}</span>{% if count %}<em>{{ count }}</em>{% endif %}</a>
       {% endfor %}
       </div>
+      {% if title and fold %}</details>{% endif %}
     {% endfor %}
     {% endcall %}
     <p class="m-group">설정</p>

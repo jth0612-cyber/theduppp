@@ -47,7 +47,7 @@ def _home_for(user):
 @bp.route("/")
 def index():
     if g.user is None:
-        return render_template("home.html")  # 로그인 전 첫 화면: 공지·Q&A·모의고사 분석·교재 구매 바로가기 (들어가면 로그인 필요)
+        return render_template("home.html")  # 로그인 전 첫 화면: 공지·Q&A·복테&모의 분석·교재 구매 바로가기 (들어가면 로그인 필요)
     return redirect(_home_for(g.user))
 
 

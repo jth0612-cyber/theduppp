@@ -1,4 +1,4 @@
-"""미니 Quiz · 영단어: 워드마스터 하이퍼 2000 (Day 01~50)을 하루 20개씩, 그 뒤로 수능 영단어. 오늘의 단어는 그날 처음 열 때 정해지고 하루 동안 그대로다.
+"""미니 Quiz · 영단어: 평가원 빈출 단어 (Day 01~50)을 하루 20개씩, 그 뒤로 수능 영단어. 오늘의 단어는 그날 처음 열 때 정해지고 하루 동안 그대로다.
 틀린 단어는 복습에 모이고, 복습에서 맞히면(맞힌 횟수 ≥ 틀린 횟수) 빠진다."""
 import difflib
 import json
@@ -13,7 +13,7 @@ DAILY = 20
 
 
 def _load():
-    """data/vocab_*.txt 를 이름 순서로 읽는다. vocab_a_wordmaster(책 순서 Day 01~50)가 먼저, 나머지는 뒤에 붙는다."""
+    """data/vocab_*.txt 를 이름 순서로 읽는다. vocab_a_core(Day 01~50 순서)가 먼저, 나머지는 뒤에 붙는다."""
     book, extra, seen = [], [], set()
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
     for fn in sorted(os.listdir(d)):

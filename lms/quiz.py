@@ -203,7 +203,7 @@ def _weighted(pool, n, history):
         h = (history or {}).get(x[0])
         if h is None:
             return 3.0
-        return 4.0 if h.get("wrong") else 0.6
+        return 4.0 if h.get("wrong") else 0.2
     pool = list(pool)
     out = []
     for _ in range(min(n, len(pool))):

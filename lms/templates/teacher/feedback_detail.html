@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t.student_name }} 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('feedback.t_list', status=t.status) }}">1:1 첨삭</a> /</p>
+<header class="ed-head ed-head-split">
+  <div>
+    <h1>{{ t.student_name or '—' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>
+    <p class="ed-lede">{{ t.class_name or '' }} · {{ t.book_title }} {{ t.round_no }}회{% if t.mock_title %} {{ t.mock_title }}{% endif %}</p>
+  </div>
+  {% if t.status == 'done' %}
+  <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="reopen"><button class="btn small">대기로 되돌리기</button></form>
+  {% endif %}
+</header>
+<dl class="report-lines fb-facts">
+  <div><dt>원점수</dt><dd>{% if entry and entry.score is not none %}{{ fmt(entry.score) }} / {{ fmt(t.full_score) }}{% elif entry %}채점 전{% else %}답안 없음{% endif %}</dd></div>
+  {% if wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in wrong %}{{ n }}번<small>({{ fmt(points[n - 1]) }}, 정답 {{ key[n - 1] }}, 고른 답 {{ entry.answers[n - 1] }})</small>{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>{% endif %}
+</dl>
+{% with msgs=msgs, action=url_for('feedback.t_detail', tid=t.id), me_staff=true, body_label='답변',
+        placeholder='', submit_label='답변 보내기' %}{% include "_feedback_thread.html" %}{% endwith %}
+{% endblock %}

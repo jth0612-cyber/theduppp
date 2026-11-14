@@ -352,7 +352,10 @@ def _can_access_file(file_id):
                     SELECT 1 FROM followups f JOIN questions q ON q.id = f.question_id
                     WHERE f.image_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)
 """,
-                 (file_id, sid, file_id, sid, file_id, sid, file_id, sid), one=True) is not None
+                 (file_id, sid, file_id, sid, file_id, sid, file_id, sid), one=True) is not None \
+        or query("""SELECT 1 FROM feedback_images i JOIN feedback_msgs m ON m.id = i.msg_id
+                    JOIN feedback_threads t ON t.id = m.thread_id WHERE i.file_id = ? AND t.user_id = ?""",
+                 (file_id, g.user["id"]), one=True) is not None
 
 
 @bp.route("/file/<int:fid>", endpoint="file")

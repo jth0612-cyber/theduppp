@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}모의고사 분석 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}복테&모의 분석 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if not mock %}
 <header class="ed-head">
-  <h1>모의고사 분석</h1>
+  <h1>복테&모의 분석</h1>
   <p class="ed-lede">교재 코드를 등록한 교재만 열립니다.</p>
 </header>
 <section class="quiet-box">
@@ -13,7 +13,7 @@
 {% else %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>모의고사 분석</h1>
+    <h1>복테&모의 분석</h1>
     <p class="ed-lede">{{ mock.book_title }} · {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점</p>
   </div>
   <form method="get" class="pick" data-autosubmit>
@@ -101,6 +101,13 @@
     </dl>
   </section>
 </div>
+
+<section class="fb-sec" id="feedback" aria-labelledby="h-fb">
+  <div class="sec-head"><h2 id="h-fb">1:1 첨삭</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>
+  {% with msgs=fb_msgs, action=url_for('feedback.ask', mid=mock.id), me_staff=false,
+          body_label=('이어서 묻기' if fb else '질문'), placeholder='몇 번 문항, 어디서 막혔는지',
+          submit_label=('보내기' if fb else '첨삭 요청') %}{% include "_feedback_thread.html" %}{% endwith %}
+</section>
 
 {% include "_analysis_stats.html" %}
 {% endif %}

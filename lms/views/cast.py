@@ -1,4 +1,4 @@
-"""TH캐스트: 정태혁 선생님만 글을 올리는 게시판 (영상·편지). 학생·조교는 읽기만.
+"""태혁쌤의 cast: 선생님만 글을 올리는 게시판 (영상·편지). 학생·조교는 읽기만.
 영상은 유튜브 주소를 넣으면 화면 안에서 바로 재생된다 (youtube-nocookie)."""
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 

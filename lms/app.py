@@ -86,6 +86,8 @@ def create_app(test_config=None):
     app.register_blueprint(link_api)
     from views.cast import bp as cast_bp
     app.register_blueprint(cast_bp)
+    from views.feedback import bp as feedback_bp
+    app.register_blueprint(feedback_bp)
     csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다
     app.jinja_env.globals["google_enabled"] = google_enabled
     from security import role_caption, shown_name

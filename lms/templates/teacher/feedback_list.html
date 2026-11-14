@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}1:1 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head"><h1>1:1 첨삭</h1></div>
+<nav class="tabs">
+  <a href="{{ url_for('feedback.t_list', status='wait') }}" class="{{ 'active' if status == 'wait' }}">답변 대기 {{ counts.get('wait', 0) }}</a>
+  <a href="{{ url_for('feedback.t_list', status='done') }}" class="{{ 'active' if status == 'done' }}">답변 완료 {{ counts.get('done', 0) }}</a>
+</nav>
+<div class="card">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <tr><th>학생</th><th>반</th><th>회차</th><th class="num">점수</th><th class="num">글</th><th class="num">{{ '요청' if status == 'wait' else '답변' }}</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td><a href="{{ url_for('feedback.t_detail', tid=r.id) }}">{{ r.student_name or '—' }}</a><br><span class="small muted">{{ r.student_no or '' }}</span></td>
+      <td class="muted">{{ r.class_name or '' }}</td>
+      <td>{{ r.book_title }} {{ r.round_no }}회{% if r.mock_title %} <span class="muted">{{ r.mock_title }}</span>{% endif %}</td>
+      <td class="num">{% if r.score is not none %}{{ fmt(r.score) }}<span class="muted">/{{ fmt(r.full_score) }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td class="num muted">{{ r.n_msgs }}</td>
+      <td class="small muted num">{{ r.updated_at[5:16] }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="muted">{{ '대기 중인 요청이 없습니다.' if status == 'wait' else '답한 첨삭이 없습니다.' }}</p>{% endif %}
+</div>
+{% endblock %}

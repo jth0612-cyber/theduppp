@@ -29,6 +29,7 @@
   'abc': '<path d="M3 18 7 6l4 12M4.3 14h5.4"/><path d="M14 6v12h3.5a3 3 0 0 0 0-6H14m0 0h3a3 3 0 0 0 0-6h-3"/>',
   'torii': '<path d="M3 5c4 1 14 1 18 0M5 9h14M7 6v15M17 6v15"/>',
   'link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  'pen': '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
   'check': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/>',
 } %}
 
@@ -43,7 +44,8 @@
     ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0),
-    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0)]),
+    ('feedback.t_list', '1:1 첨삭', 'pen', ep.startswith('feedback.'), feedback_wait or 0),
+    ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
@@ -58,10 +60,11 @@
 {%- set groups = [
   (None, [
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0),
+    ('feedback.t_list', '1:1 첨삭', 'pen', ep.startswith('feedback.'), feedback_wait or 0),
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
-    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0)]),
+    ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
@@ -69,22 +72,24 @@
     ('books.teacher_books', '교재·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock'), 0),
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] -%}
 {%- else -%}
+{%- set vocab_ep = ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed') -%}
 {%- set groups = [
-  (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
-  ('수업', [
+  (None, [
+    ('student.home', '홈', 'home', ep == 'student.home', 0),
     ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
-    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0),
+    ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0),
+    ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
+    ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
+    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book' or ep.startswith('feedback.'), feedback_new or 0)]),
+  ('수업', [
+    ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0),
     ('study.timetable', '시간표', 'timetable', ep == 'study.timetable', 0),
     ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),
-    ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
-    ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0),
-    ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)]),
+    ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0)]),
   ('공부', [
-    ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('games.hub', '수능 영단어', 'abc', ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed'), 0),
-    ('games.sci_hub', '통과 Quiz', 'game', ep.startswith('games.') and not (ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed')), 0),
-    ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
-    ('books.analysis_home', '모의고사 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book', 0)]),
+    ('games.hub', '수능 영단어', 'abc', vocab_ep, 0),
+    ('games.sci_hub', '통과 Quiz', 'game', ep.startswith('games.') and not vocab_ep, 0),
+    ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0)]),
   ('기록', [
     ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
     ('study.s_report', '내 리포트', 'report', ep == 'study.s_report', 0),

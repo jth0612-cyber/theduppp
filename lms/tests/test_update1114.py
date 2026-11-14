@@ -1,4 +1,4 @@
-"""11/14 수정 묶음: 질문 사진 3장, TH캐스트, 모의고사 총평, 영단어 이어 풀기, MDS 단과, 과제 삭제."""
+"""11/14 수정 묶음: 질문 사진 3장, 태혁쌤의 cast, 모의고사 총평, 1:1 첨삭, 영단어 이어 풀기, MDS 단과, 과제 삭제."""
 import io
 import json
 import os
@@ -90,7 +90,7 @@ class Update1114(unittest.TestCase):
         self.assertEqual((again["round_id"], again["done"], again["score"]), (rid, 3, 3))
         self.assertNotIn("hint", json.dumps(again["questions"]))
 
-    def test_wordmaster_list_and_confusable_choices(self):
+    def test_core_list_and_confusable_choices(self):
         import vocab
         self.assertEqual(vocab.ORDER[:3], ["abandon", "feature", "colleague"])          # 책 Day 01 순서
         self.assertEqual(vocab.ORDER[20], "commercial")                                 # Day 02 첫 단어
@@ -102,3 +102,53 @@ class Update1114(unittest.TestCase):
             self.assertEqual(len(set(q["choices"])), 4)
             others = vocab._others(w, 3)
             self.assertFalse(any(vocab._SENSE[x] & vocab._SENSE[w] for x in others))    # 정답이 둘이 되지 않게
+
+    def test_feedback_flow(self):
+        """복테&모의 분석 1:1 첨삭: 학생 요청 → 조교 답변 → 학생 알림·사진 권한."""
+        with self.app.app_context():
+            bid = execute("INSERT INTO books (title, expires_on) VALUES ('주간 복테', '2099-12-31')")
+            mid = execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, 1, 3, 6, ?, ?)",
+                          (bid, json.dumps([1, 2, 3]), json.dumps([2, 2, 2])))
+            uid = query("SELECT id FROM users WHERE username = 'minsu'", one=True)["id"]
+            execute("INSERT INTO user_books (user_id, book_id) VALUES (?, ?)", (uid, bid))
+            execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta1', ?, '박조교')", (hash_password(PW),))
+            execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', 'other', ?, NULL)", (hash_password("Other!2026xx"),))
+        page = self.s.get(f"/s/analysis?mock={mid}").data.decode()
+        self.assertIn("복테&모의 분석", page); self.assertIn("1:1 첨삭", page)
+        # 빈 요청은 거절
+        self.s.post(f"/s/analysis/{mid}/feedback", data={"body": ""})
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM feedback_threads", one=True))
+        r = self.s.post(f"/s/analysis/{mid}/feedback", data={"body": "2번 풀이 봐 주세요", "image": [(io.BytesIO(PNG), "a.png")]},
+                        content_type="multipart/form-data")
+        self.assertEqual(r.status_code, 302)
+        ta = self.app.test_client(); ta.post("/login", data={"username": "ta1", "password": PW})
+        lst = ta.get("/t/feedback").data.decode()
+        self.assertIn("김민수", lst); self.assertIn("주간 복테 1회", lst)
+        with self.app.app_context():
+            tid = query("SELECT id FROM feedback_threads", one=True)["id"]
+            fid = query("SELECT file_id FROM feedback_images", one=True)["file_id"]
+        self.assertIn("2번 풀이 봐 주세요", ta.get(f"/t/feedback/{tid}").data.decode())
+        ta.post(f"/t/feedback/{tid}", data={"body": "부호를 확인하세요", "image": [(io.BytesIO(PNG), "b.png")]}, content_type="multipart/form-data")
+        with self.app.app_context():
+            self.assertEqual(query("SELECT status FROM feedback_threads", one=True)["status"], "done")
+        home = self.s.get("/s/").data.decode()
+        self.assertIn('class="count">1<', home)                          # 메뉴에 새 답변 표시
+        page = self.s.get(f"/s/analysis?mock={mid}").data.decode()
+        self.assertIn("박조교 조교", page); self.assertIn("부호를 확인하세요", page)
+        self.assertNotIn('class="count">1<', self.s.get("/s/").data.decode())   # 읽으면 사라짐
+        self.assertEqual(self.s.get(f"/s/file/{fid}").status_code, 200)
+        other = self.app.test_client(); other.post("/login", data={"username": "other", "password": "Other!2026xx"})
+        self.assertNotEqual(other.get(f"/s/file/{fid}").status_code, 200)
+        # 이어서 물으면 다시 대기
+        self.s.post(f"/s/analysis/{mid}/feedback", data={"body": "3번도요"})
+        with self.app.app_context():
+            self.assertEqual(query("SELECT status FROM feedback_threads", one=True)["status"], "wait")
+        # 학생은 강사 화면 못 봄
+        self.assertNotEqual(self.s.get("/t/feedback").status_code, 200)
+
+    def test_student_menu_folds(self):
+        html = self.s.get("/s/notices").data.decode()
+        self.assertIn("복테&amp;모의 분석", html)
+        self.assertIn('<details class="nav-fold"', html)
+        self.assertIn("태혁쌤의 cast", html); self.assertNotIn("TH캐스트", html)
