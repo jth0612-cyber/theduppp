@@ -493,7 +493,7 @@ class FeatureTest(AppTest):
         r = s1.post(f"/s/games/quiz/{rid}/check", json={"i": 1, "pick": right_pick(ans[1])}).get_json()
         self.assertFalse(r["correct"]); self.assertEqual(r["score"], 1)
         self.assertEqual(s2.post(f"/s/games/quiz/{rid}/check", json={"i": 2, "pick": 0}).status_code, 404)   # 남의 판
-        self.assertEqual(s1.post(f"/s/games/quiz/{rid}/check", json={"i": 9, "pick": 0}).status_code, 400)
+        self.assertEqual(s1.post(f"/s/games/quiz/{rid}/check", json={"i": 99, "pick": 0}).status_code, 400)
         for i in range(2, len(ans)):
             s1.post(f"/s/games/quiz/{rid}/check", json={"i": i, "pick": right_pick(ans[i])})
         # 마지막 결과는 서버에 남은 답으로 (화면이 보낸 답을 믿지 않음)
@@ -919,7 +919,7 @@ class FeatureTest(AppTest):
         for _ in range(20):
             for code in quiz.TOPICS:
                 items = quiz.bank_quiz(code)
-                self.assertEqual(len(items), 8)
+                self.assertEqual(len(items), 10)
                 self.assertGreaterEqual(len({it["kind"] for it in items}), 3, code)
                 for it in items:
                     if "choices" in it:
@@ -935,6 +935,27 @@ class FeatureTest(AppTest):
         sp = quiz.speed_items()
         self.assertEqual(len(sp), 40)
         self.assertTrue(all(isinstance(x["ok"], bool) for x in sp))
+
+    def test_quiz_prefers_unseen_and_wrong(self):
+        """다시 풀면 처음 보는 진술이 먼저 나오고, 전에 틀린 진술은 다시 나올 확률이 높다."""
+        import json as _json
+        import quiz
+        _, s1, _ = self._students()
+        seen_right, seen_wrong = set(), set()
+        for _ in range(2):
+            st = s1.post("/s/games/quiz/start", json={"topic": "08"}).get_json()
+            with self.app.app_context():
+                ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (st["round_id"],), one=True)["answer"])
+            for i, a in enumerate(ans):
+                wrong = a["kind"] == "tf" and i % 2 == 0
+                s1.post(f"/s/games/quiz/{st['round_id']}/check", json={"i": i, "pick": wrong_pick(a) if wrong else right_pick(a)})
+                (seen_wrong if wrong else seen_right).update(quiz.statements_of(a))
+        st = s1.post("/s/games/quiz/start", json={"topic": "08"}).get_json()
+        with self.app.app_context():
+            ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (st["round_id"],), one=True)["answer"])
+        now = {x for a in ans for x in quiz.statements_of(a)}
+        self.assertLessEqual(len(now & (seen_right - seen_wrong)), 3)        # 맞힌 진술은 거의 다시 안 나온다
+        self.assertGreater(len(now - seen_right - seen_wrong), 5)            # 대부분 처음 보는 진술
 
     def test_quiz_new_kinds(self):
         """O/X·ㄱㄴㄷ·분류·순서·계산: 정답 검사, 잘못된 형식 거부, 범위별 섞어 풀기."""

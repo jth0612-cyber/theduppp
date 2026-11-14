@@ -98,6 +98,13 @@ def chargaff_round():
 
 # ---------- TOPIC 퀴즈 (개념서 TOPIC 01~34) ----------
 
+import quiz_more
+
+# 추가 진술 합치기 (같은 문장은 한 번만)
+for _t in quiz_topics.TOPICS:
+    _have = {x[0] for x in _t["tf"]}
+    _t["tf"] = list(_t["tf"]) + [x for x in quiz_more.MORE.get(_t["code"], []) if x[0] not in _have]
+
 TOPICS = {t["code"]: (t["title"], t["std"], t["part"]) for t in quiz_topics.TOPICS}
 _GA = "ㄱㄴㄷ"
 
@@ -175,36 +182,93 @@ def _special(code):
     return out
 
 
-def bank_quiz(code, count=8):
-    """TOPIC 한 판: O/X 3 · ㄱㄴㄷ 1 · 4지선다 · 분류/순서/계산을 섞어 8문제."""
-    t = quiz_topics.BY_CODE[code]
-    tf = list(t["tf"])
-    _rng.shuffle(tf)
+def make_best(code, stmts, want_true):
+    """4지선다 '옳은 것은?'(참 1 + 거짓 3) / '옳지 않은 것은?'(참 3 + 거짓 1). 보기는 진술 문장."""
+    order = list(range(4))
+    _rng.shuffle(order)
+    picked = [stmts[i] for i in order]
+    ans = next(i for i, x in enumerate(picked) if x[1] == want_true)
+    odd = picked[ans]
+    exp = odd[2] or ("옳은 설명이에요." if want_true else "옳지 않은 설명이에요.")
+    others = [f"{x[0]} → {x[2]}" for x in picked if x is not odd and x[2] and not x[1]] if want_true else []
+    if others:
+        exp += " / 나머지 중 틀린 것: " + " / ".join(others[:2])
+    return {"kind": "mc", "question": "옳은 것은?" if want_true else "옳지 않은 것은?", "choices": [x[0] for x in picked],
+            "answer_index": ans, "explanation": exp, "topic": code, "stmts": [x[0] for x in picked]}
+
+
+def _weighted(pool, n, history):
+    """진술을 고를 때: 처음 보는 것과 전에 틀린 것을 먼저 (같은 문제를 다시 볼 확률을 낮춘다)."""
+    def w(x):
+        h = (history or {}).get(x[0])
+        if h is None:
+            return 3.0
+        return 4.0 if h.get("wrong") else 0.6
+    pool = list(pool)
     out = []
-    if len(tf) >= 6:                                      # ㄱㄴㄷ 에 쓴 진술은 O/X 로 다시 내지 않는다
-        trio = tf[:3]
-        if not any(s[1] for s in trio):
-            trio[0] = next(s for s in tf if s[1])
+    for _ in range(min(n, len(pool))):
+        tot = sum(w(x) for x in pool)
+        r = _rng.random() * tot
+        for i, x in enumerate(pool):
+            r -= w(x)
+            if r <= 0:
+                out.append(pool.pop(i))
+                break
+        else:
+            out.append(pool.pop())
+    return out
+
+
+def bank_quiz(code, count=10, history=None):
+    """TOPIC 한 판 10문제: O/X 4 · ㄱㄴㄷ 1 · 옳은 것/옳지 않은 것 1 · 분류·순서·계산 · 4지선다.
+    history: {진술: {"wrong": bool}} — 처음 보는 진술과 전에 틀린 진술이 먼저 나온다."""
+    t = quiz_topics.BY_CODE[code]
+    trues = [x for x in t["tf"] if x[1]]
+    falses = [x for x in t["tf"] if not x[1]]
+    order = _weighted(t["tf"], len(t["tf"]), history)          # 이번 판에 쓸 진술 순서
+    used, out = set(), []
+
+    def take(cond, n):
+        got = [x for x in order if x[0] not in used and cond(x)][:n]
+        used.update(x[0] for x in got)
+        return got
+
+    # ㄱㄴㄷ 1문제 (옳은 진술이 하나는 있게)
+    trio = take(lambda x: True, 3)
+    if len(trio) == 3:
+        if not any(x[1] for x in trio):
+            extra = take(lambda x: x[1], 1)
+            if extra:
+                trio[0] = extra[0]
         out.append(make_pick(code, trio))
-        tf = [s for s in tf if s not in trio]
+    # 옳은 것은? / 옳지 않은 것은? 1문제
+    want = _rng.random() < 0.5
+    if len(trues) >= 3 and len(falses) >= 3:
+        one = take(lambda x: x[1] == want, 1)
+        three = take(lambda x: x[1] != want, 3)
+        if len(one) == 1 and len(three) == 3:
+            out.append(make_best(code, one + three, want))
+    # 분류·순서·계산 중 2개, 직접 만든 4지선다 1개
     specials = [f() for f in _special(code)]
     _rng.shuffle(specials)
-    out += specials[:3]
+    out += specials[:2]
     mcs = list(t.get("mc", []))
     _rng.shuffle(mcs)
-    out += [make_mc(code, m) for m in mcs[:2]]
-    out += [make_tf(code, s) for s in tf[:max(0, count - len(out))]]
-    if len(out) < count:                                  # 모자라면 남은 형식 → 계산 새로 → ㄱㄴㄷ에 쓴 진술 순으로 채운다
-        out += specials[3:3 + count - len(out)]
-    for _ in range(10):
-        if len(out) >= count or not t.get("num"):
-            break
-        out.append(make_num(code, t["num"]))
-    used = {it["question"] for it in out}
-    out += [make_tf(code, s) for s in t["tf"] if s[0] not in used][:max(0, count - len(out))]
+    out += [make_mc(code, m) for m in mcs[:1]]
+    # 나머지는 O/X
+    out += [make_tf(code, x) for x in take(lambda x: True, max(0, count - len(out)))]
     out = out[:count]
     _rng.shuffle(out)
     return out
+
+
+def statements_of(item):
+    """채점 기록용: 이 문제에 쓰인 진술 문장들."""
+    if item.get("kind") == "tf":
+        return [item["question"]]
+    if item.get("kind") == "pick":
+        return list(item.get("lines", []))
+    return list(item.get("stmts", []))
 
 
 def _codes(part=None):
@@ -215,7 +279,7 @@ def mixed_quiz(count=10, part=None):
     """여러 TOPIC에서 골고루, 형식도 섞어서."""
     codes = _codes(part)
     _rng.shuffle(codes)
-    plan = ["tf", "tf", "pick", "mc", "special", "special", "tf", "pick", "special", "mc"][:count]
+    plan = ["tf", "tf", "pick", "best", "special", "special", "tf", "pick", "special", "mc"][:count]
     _rng.shuffle(plan)
     out, k = [], 0
     for kind in plan:
@@ -232,6 +296,13 @@ def mixed_quiz(count=10, part=None):
                 it = make_pick(code, trio)
             elif kind == "mc" and t.get("mc"):
                 it = make_mc(code, _rng.choice(t["mc"]))
+            elif kind == "best":
+                want = _rng.random() < 0.5
+                ones = [x for x in t["tf"] if x[1] == want]
+                threes = [x for x in t["tf"] if x[1] != want]
+                if not ones or len(threes) < 3:
+                    continue
+                it = make_best(code, [_rng.choice(ones)] + _rng.sample(threes, 3), want)
             elif kind == "special" and _special(code):
                 it = _rng.choice(_special(code))()
             else:

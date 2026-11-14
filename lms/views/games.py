@@ -350,8 +350,23 @@ def quiz_page():
     pick = request.args.get("topic", "")
     title = f"TOPIC {pick} {quiz.TOPICS[pick][0]}" if pick in quiz.TOPICS else "TOPIC 퀴즈"
     return render_template("student/games/mc.html", game="quiz", title=title, pick=pick, parent="sci",
-                           intro="8문제. O/X, ㄱㄴㄷ 보기, 4지선다, 분류·순서·계산이 섞여 나옵니다.", topic_label="TOPIC",
+                           intro="10문제. 처음 보는 문제와 전에 틀린 문제가 먼저 나옵니다.", topic_label="TOPIC",
                            topics=[(k, f"TOPIC {k} {v[0]}") for k, v in quiz.TOPICS.items()])
+
+
+def _quiz_history(topic):
+    """이 학생이 이 TOPIC에서 본 진술과 마지막으로 틀렸는지 (최근 40판)."""
+    hist = {}
+    for r in query("""SELECT answer, picks FROM game_rounds WHERE user_id = ? AND game = 'quiz' AND topic = ?
+                      ORDER BY id DESC LIMIT 40""", (g.user["id"], topic)):
+        items, picks = json.loads(r["answer"]), json.loads(r["picks"] or "null") or []
+        for i, it in enumerate(items):
+            answered = i < len(picks) and picks[i] is not None
+            wrong = answered and not _is_right(it, picks[i])
+            for st in quiz.statements_of(it):
+                if st not in hist:                       # 가장 최근 기록만 쓴다
+                    hist[st] = {"wrong": wrong}
+    return hist
 
 
 @bp.route("/quiz/start", methods=["POST"])
@@ -360,7 +375,7 @@ def quiz_start():
     topic = str(_json_body().get("topic", ""))
     if topic not in quiz.TOPICS:
         abort(400)
-    items = quiz.bank_quiz(topic)
+    items = quiz.bank_quiz(topic, history=_quiz_history(topic))
     rid = _new_round("quiz", _public(items), items, topic=topic)
     return jsonify(round_id=rid, questions=_public(items))
 

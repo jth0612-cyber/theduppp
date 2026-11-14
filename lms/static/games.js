@@ -153,7 +153,7 @@
       item.choices.forEach(function (c, idx) {
         var label = kind === "ox" ? (idx === 0 ? "O  " : "X  ") + c : kind === "tf" ? c : kind === "fill" ? c :
           kind === "pick" ? "①②③④⑤".charAt(idx) + " " + c : (idx + 1) + ". " + c;
-        var b = el("button", "btn mc-choice" + (kind === "ox" || kind === "tf" ? (idx === 0 ? " ox-o" : " ox-x") : ""), label);
+        var b = el("button", "btn mc-choice" + (kind === "ox" || kind === "tf" ? (idx === 0 ? " ox-o" : " ox-x") : "") + (c.length > 16 ? " is-long" : ""), label);
         b.type = "button";
         if (kind === "rev") b.setAttribute("lang", "en");
         b.addEventListener("click", function () { check(idx, buttons); });
