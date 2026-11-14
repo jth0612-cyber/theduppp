@@ -29,6 +29,12 @@
     <a class="small" href="{{ url_for('books.register_book') }}">교재 코드 추가</a>
   </form>
 </header>
+{% if mock.review %}
+<section class="mock-review" aria-labelledby="h-review">
+  <h2 id="h-review">총평 <span>{{ mock.review_by }}{% if mock.review_at %} · {{ mock.review_at[5:10] }}{% endif %}</span></h2>
+  <div class="pre">{{ mock.review }}</div>
+</section>
+{% endif %}
 {% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
 
 <div class="sheet-grid">

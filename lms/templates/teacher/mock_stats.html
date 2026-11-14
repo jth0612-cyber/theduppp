@@ -6,6 +6,12 @@
   <div><h1>{{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
     <p class="muted small">{{ mock.n_items }}문항 · {{ fmt(mock.full_score) }}점 · 채점 {{ stats.n }}명 · {{ stats.computed_at }} 기준 (5분마다 갱신)</p></div>
 </div>
+<form method="post" action="{{ url_for('books.mock_review', mid=mock.id) }}" class="card review-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="mk-review">총평 <span class="muted">학생 분석 화면 맨 위에 보입니다{% if mock.review_at %} · {{ mock.review_by }} {{ mock.review_at[:16] }}{% endif %}</span></label>
+  <textarea id="mk-review" name="review" rows="5" maxlength="4000" placeholder="난이도, 킬러 문항, 다음 회차까지 볼 것">{{ mock.review }}</textarea>
+  <button class="btn primary small mt">총평 저장</button>
+</form>
 <p class="small muted">정답: <span class="answer-key">{% for k in key %}{{ k }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</span></p>
 {% include "_analysis_stats.html" %}
 {% endblock %}

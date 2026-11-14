@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ '글 고치기' if editing else '새 글' }} · TH캐스트{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('cast.cast_list') }}">TH캐스트</a> /</p>
+<h1>{{ '글 고치기' if editing else '새 글' }}</h1>
+<form method="post" class="card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field"><label for="c-title">제목</label><input type="text" id="c-title" name="title" maxlength="120" required value="{{ c.title if c else '' }}"></div>
+  <div class="field"><label for="c-video">유튜브 주소 <span class="muted">(선택)</span></label><input type="text" id="c-video" name="video_url" maxlength="500" placeholder="https://youtu.be/..." value="{{ c.video_url if c else '' }}"></div>
+  <div class="field"><label for="c-body">본문 <span class="muted">(편지·안내)</span></label><textarea id="c-body" name="body" rows="12" maxlength="8000">{{ c.body if c else '' }}</textarea></div>
+  <label class="consent"><input type="checkbox" name="pinned" value="1" {{ 'checked' if c and c.pinned }}> 목록 맨 위에 고정</label>
+  <div class="row mt"><button class="btn primary">{{ '저장' if editing else '올리기' }}</button></div>
+</form>
+{% if editing %}
+<form method="post" class="mt" data-confirm="이 글을 지울까요?">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
+  <button class="btn danger small">글 지우기</button>
+</form>
+{% endif %}
+{% endblock %}

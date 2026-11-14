@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, filesize, tag_badge, kind_badge %}
+{% from "_macros.html" import status_badge, tag_badge %}
 {% block content %}
 <header class="ed-head home-head">
   <div>
@@ -11,41 +11,7 @@
   </div>
 </header>
 
-
-<section class="glance" aria-label="오늘 한눈에">
-  <a class="gl" href="{{ url_for('study.timetable') }}">
-    <span class="gl-k">{{ dday.label if dday else '오늘 일정' }}</span>
-    <b>{% if dday %}{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}{% else %}{{ classes_today|length }}<small>개</small>{% endif %}</b>
-    <span class="gl-s">{% if classes_today %}오늘 {% for c in classes_today %}{{ c.starts }} {{ c.title }}{% if not loop.last %} · {% endif %}{% endfor %}{% else %}시간표에 오늘 일정을 넣어 보세요{% endif %}</span>
-  </a>
-  <a class="gl" href="{{ url_for('rooms.rooms') }}">
-    <span class="gl-k">오늘 집중</span>
-    <b>{{ focus_today }}<small>분</small></b>
-    <span class="gl-s">{% if focus_today %}소도시 명상에서 쌓은 시간{% else %}소도시 명상에서 타이머를 돌려 보세요{% endif %}</span>
-  </a>
-  <a class="gl" href="{{ url_for('study.tasks') }}">
-    <span class="gl-k">안 낸 과제</span>
-    <b>{{ tasks_due|length }}</b>
-    <span class="gl-s">{% if tasks_due %}{{ tasks_due[0].title }}{% if tasks_due[0].due_on %} · {{ tasks_due[0].due_on[5:] }} 마감{% endif %}{% else %}밀린 과제 없음{% endif %}</span>
-  </a>
-  <a class="gl" href="{{ url_for('study.wrong_notes', view='open') }}">
-    <span class="gl-k">복습할 오답</span>
-    <b>{{ open_wrong }}</b>
-    <span class="gl-s">{% if open_wrong %}다시 풀어서 맞히면 지워져요{% else %}남은 오답 없음{% endif %}</span>
-  </a>
-</section>
-
-<section class="today-bar" aria-label="이번 주 접속">
-  <p><b>{% if streak.total > 1 %}누적 {{ streak.total }}일째{% else %}오늘부터 시작{% endif %}</b><br>
-    <span class="small">{% if streak.streak > 1 %}{{ streak.streak }}일 연속으로 들어왔어요.{% else %}매일 들어오면 이번 주 칸이 채워져요.{% endif %}</span></p>
-  <div class="week">
-    {% for d in streak.week %}
-      <span class="day {{ 'done' if d.done }} {{ 'today' if d.today }}" title="{{ d.label }}">{{ d.label }}</span>
-    {% endfor %}
-  </div>
-</section>
-
-<div class="home-cols">
+<div class="home-cols home-core">
   <section class="panel" aria-labelledby="h-notice">
     <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체 보기 →</a></div>
     <ul class="mini-list">
@@ -54,16 +20,8 @@
       {% else %}<li class="empty">새 공지가 없습니다.</li>{% endfor %}
     </ul>
   </section>
-  <section class="panel" aria-labelledby="h-mat">
-    <div class="sec-head"><h2 id="h-mat">자료실</h2><a href="{{ url_for('student.materials') }}">전체 보기 →</a></div>
-    <ul class="mini-list">
-      {% for m in materials %}
-        <li>{{ kind_badge(m.original_name) }}<a href="{{ url_for('student.file', fid=m.file_id) }}">{{ m.title }}</a><span class="m">{{ filesize(m.size) }}</span></li>
-      {% else %}<li class="empty">올라온 자료가 없습니다.</li>{% endfor %}
-    </ul>
-  </section>
   <section class="panel" aria-labelledby="h-q">
-    <div class="sec-head"><h2 id="h-q">내 질문</h2><a href="{{ url_for('student.questions', view='mine') }}">전체 보기 →</a></div>
+    <div class="sec-head"><h2 id="h-q">질답 게시판</h2><a href="{{ url_for('student.questions') }}">전체 보기 →</a></div>
     <ul class="mini-list">
       {% for q in questions %}
         <li><a href="{{ url_for('student.question_detail', qid=q.id) }}">{{ q.title }}</a>{{ status_badge(q.status) }}</li>
@@ -72,11 +30,6 @@
   </section>
 </div>
 
-<section class="panel" aria-labelledby="h-play">
-  <div class="sec-head"><h2 id="h-play">퀴즈</h2></div>
-  <ul class="play-list">
-    <li><a href="{{ url_for('games.hub') }}"><b>수능 영단어</b><span>오늘의 20단어 · 짝 맞추기 · 스피드 O/X</span></a></li>
-    <li><a href="{{ url_for('games.sci_hub') }}"><b>통과 Quiz</b><span>단원별 · 섞어 풀기 · 샤가프 · 염기 짝</span></a></li>
-  </ul>
-</section>
+{% if cast %}<a class="home-shop home-cast" href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><b>TH캐스트</b><span>{{ cast.title }} · {{ cast.created_at[5:10] }}</span><span aria-hidden="true">→</span></a>{% endif %}
+<a class="home-shop" href="{{ url_for('books.shop') }}"><b>교재 구매</b><span>LINE UP · FRAMING · Squeeze · SWEEP</span><span aria-hidden="true">→</span></a>
 {% endblock %}

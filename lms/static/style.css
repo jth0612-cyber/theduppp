@@ -1069,7 +1069,7 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
 .p-field { display: flex; align-items: center; height: 46px; border: 1px solid var(--edge); border-radius: 12px; background: #fff; padding: 0 6px 0 14px; }
 .p-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .p-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 16px; padding: 0; height: 100%; }
-.p-field button { width: 34px; height: 34px; border-radius: 9px; border: 0; background: var(--ink); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; flex: none; }
+.p-field button { width: 34px; height: 34px; border-radius: 9px; border: 0; background: var(--ink); color: var(--sheet); font-size: 20px; line-height: 1; cursor: pointer; flex: none; }
 .p-chips { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
 .p-chips::-webkit-scrollbar { display: none; }
 .p-chips label { cursor: pointer; flex: none; position: relative; }
@@ -1723,7 +1723,7 @@ body.tt-open { overflow: hidden; }
 .seg-pick label { position: relative; margin: 0; }
 .seg-pick input { position: absolute; opacity: 0; }
 .seg-pick span { display: inline-block; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--muted); }
-.seg-pick input:checked + span { background: var(--ink); color: #fff; font-weight: 600; }
+.seg-pick input:checked + span { background: var(--ink); color: var(--sheet); font-weight: 600; }
 .seg-pick input:focus-visible + span { outline: 2px solid var(--accent); }
 
 /* ---- Quiz 개편: 모드 카드, 문제 형식(O/X·철자), 스피드 O/X, 짝 맞추기, RNA ---- */
@@ -1761,7 +1761,7 @@ body.tt-open { overflow: hidden; }
 .sp-slots.is-right .sp-slot { border-color: var(--ok); background: var(--ok-soft); color: var(--accent-ink); }
 .sp-slots.is-wrong .sp-slot { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
 .sp-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
-.sp-tile { width: 46px; height: 46px; border-radius: 10px; border: 0; background: var(--ink); color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; font-family: ui-monospace, Menlo, monospace; transition: transform .1s ease, opacity .15s ease; }
+.sp-tile { width: 46px; height: 46px; border-radius: 10px; border: 0; background: var(--ink); color: var(--sheet); font-size: 20px; font-weight: 700; cursor: pointer; font-family: ui-monospace, Menlo, monospace; transition: transform .1s ease, opacity .15s ease; }
 .sp-tile:active { transform: scale(.94); }
 .sp-tile:disabled { opacity: .18; cursor: default; }
 .sp-ctl { display: flex; gap: 8px; }
@@ -1960,3 +1960,47 @@ body.tt-open { overflow: hidden; }
 .rx-f sub, .rx-f sup, .pl-key sub, .pl-key sup { font-size: .62em; line-height: 0; }
 .rx-f sub, .pl-key sub { vertical-align: -.28em; }
 .rx-f sup, .pl-key sup { vertical-align: .55em; }
+
+/* ---------- 2026-11 수정 묶음: 검색창·선택 상자 여백, 문의는 늘 맨 아래, 게임 칸 같은 크기 ---------- */
+.find input { padding-left: 12px; }
+select { appearance: none; -webkit-appearance: none; padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23808080' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 12px 8px; }
+.pick select { padding-right: 34px; background-position: right 8px center; }
+main.sheet { display: flex; flex-direction: column; min-height: calc(100vh - 16px); }
+main.sheet > .colophon { margin-top: auto; padding-top: 16px; }
+main.sheet > .colophon { min-height: 0; }
+main.sheet > :nth-last-child(2) { margin-bottom: 48px; }
+.qz-modes { grid-auto-rows: 1fr; }
+.qz-modes li { display: flex; }
+.qz-modes a { flex: 1; align-content: center; }
+.home-core { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.home-shop { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin-top: 16px; padding: 16px 18px; border: 1px solid var(--edge); border-radius: 12px; color: var(--ink); background: var(--surface); }
+.home-shop:hover { text-decoration: none; border-color: var(--ink); }
+.home-shop b { font-size: 16px; } .home-shop span { color: var(--muted); font-size: 13px; }
+.backbar { display: flex; align-items: center; justify-content: space-between; margin: -6px 0 14px; }
+.back-link, .home-link { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--muted); padding: 6px 8px 6px 2px; border-radius: 8px; }
+.back-link svg { width: 18px; height: 18px; }
+.back-link:hover, .home-link:hover { color: var(--ink); text-decoration: none; }
+.photo-thumbs { display: flex; gap: 6px; }
+.photo-thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--edge); }
+.q-photos { display: grid; gap: 10px; }
+.mc-resume { margin: 0 0 10px; font-weight: 600; }
+.mc-resume-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.mc-feedback.is-auto .btn { opacity: .55; }
+.cast-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cast-list a { display: grid; grid-template-columns: 136px 1fr; gap: 14px; align-items: center; padding: 10px; border: 1px solid var(--edge); border-radius: 12px; color: var(--ink); background: var(--surface); }
+.cast-list a:hover { text-decoration: none; border-color: var(--ink); }
+.cast-thumb { width: 136px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; display: grid; place-items: center; background: var(--raised); color: var(--muted); font-size: 13px; }
+.cast-meta { display: grid; gap: 3px; min-width: 0; }
+.cast-meta b { font-size: 15.5px; } .cast-meta time { font-size: 12px; color: var(--muted); }
+.cast-sum { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cast-video { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 18px; }
+.cast-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.cast-body { font-size: 16px; line-height: 1.8; max-width: 680px; }
+@media (max-width: 560px) { .cast-list a { grid-template-columns: 104px 1fr; } .cast-thumb { width: 104px; } }
+.mock-review { margin: 0 0 22px; padding: 16px 18px; border: 1px solid var(--edge); border-left: 3px solid var(--ink); border-radius: 10px; background: var(--surface); }
+.mock-review h2 { margin: 0 0 8px; font-size: 16px; }
+.mock-review h2 span { font-size: 12.5px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.mock-review .pre { font-size: 15px; line-height: 1.75; }
+.review-form { margin-bottom: 16px; }

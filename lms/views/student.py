@@ -41,22 +41,9 @@ def _visible_videos(class_id):
 def home():
     me = _me()
     notices = query("SELECT * FROM notices WHERE class_id = ? ORDER BY created_at DESC LIMIT 5", (me["class_id"],))
-    materials = query("""SELECT m.*, f.original_name, f.size FROM materials m JOIN files f ON f.id = m.file_id
-                         WHERE m.class_id = ? ORDER BY m.created_at DESC LIMIT 5""", (me["class_id"],))
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 5", (me["id"],))
-    from views.study import dday_info, today_classes, wrong_list
-    open_wrong = sum(len(gr["rows"]) for gr in wrong_list(g.user["id"], only_open=True))
-    focus_today = query("""SELECT COALESCE(SUM(minutes), 0) AS m FROM focus_logs
-                           WHERE user_id = ? AND date(ended_at) = date('now', 'localtime')""",
-                        (g.user["id"],), one=True)["m"]
-    tasks_due = query("""SELECT a.id, a.title, a.due_on FROM assignments a
-                         LEFT JOIN task_answers s ON s.assignment_id = a.id AND s.student_id = ?
-                         WHERE a.class_id = ? AND s.id IS NULL AND a.answer_key != '[]' ORDER BY COALESCE(a.due_on, '9999') LIMIT 3""",
-                      (me["id"], me["class_id"]))
-    return render_template("student/home.html", me=me, notices=notices, materials=materials, questions=questions,
-                           streak=streak_info(g.user["id"]),
-                           dday=dday_info(), classes_today=today_classes(g.user["id"]), open_wrong=open_wrong,
-                           tasks_due=tasks_due, focus_today=focus_today)
+    cast = query("SELECT id, title, created_at FROM casts ORDER BY created_at DESC LIMIT 1", one=True)
+    return render_template("student/home.html", me=me, notices=notices, questions=questions, cast=cast)
 
 
 @bp.route("/notices")
@@ -171,6 +158,9 @@ def _week_best():
                      GROUP BY q.id HAVING views >= 2 ORDER BY views DESC, q.created_at DESC LIMIT {WEEK_BEST}""", (monday,))
 
 
+MAX_PHOTOS = 3
+
+
 def _upload_image(required):
     img = request.files.get("image")
     if not img or not img.filename:
@@ -178,6 +168,26 @@ def _upload_image(required):
             raise ValueError("학습질문은 문제(와 해설) 사진을 꼭 첨부해 주세요.")
         return None
     return save_upload(img, IMAGE_EXTS)
+
+
+def _upload_images(required):
+    """질문 사진 여러 장 (최대 3장). 저장한 파일 id 목록."""
+    imgs = [f for f in request.files.getlist("image") if f and f.filename]
+    if not imgs:
+        if required:
+            raise ValueError("학습질문은 문제(와 해설) 사진을 꼭 첨부해 주세요.")
+        return []
+    if len(imgs) > MAX_PHOTOS:
+        raise ValueError(f"사진은 {MAX_PHOTOS}장까지 올릴 수 있습니다.")
+    saved = []
+    try:
+        for f in imgs:
+            saved.append(save_upload(f, IMAGE_EXTS))
+    except ValueError:
+        for fid in saved:
+            delete_file(fid)
+        raise
+    return saved
 
 
 @bp.route("/questions", methods=["GET", "POST"])
@@ -200,12 +210,14 @@ def questions():
             form_err = ("body", "제목은 120자, 내용은 5000자 이내로 적어 주세요.")
         else:
             try:
-                image_id = _upload_image(required=qtype == "학습질문")
+                photos = _upload_images(required=qtype == "학습질문")
             except ValueError as e:
-                form_err = ("image", str(e) + " 적은 내용은 그대로 남아 있어요. 사진만 붙여서 다시 등록하면 돼요.")
+                form_err = ("image", str(e) + " 적은 내용은 그대로 남아 있어요.")
             else:
                 qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype) VALUES (?, ?, ?, ?, ?)",
-                              (me["id"], title, body, image_id, qtype))
+                              (me["id"], title, body, photos[0] if photos else None, qtype))
+                for pos, fid in enumerate(photos[1:], start=2):
+                    execute("INSERT INTO question_images (question_id, file_id, pos) VALUES (?, ?, ?)", (qid, fid, pos))
                 audit("question_create", f"question:{qid}")
                 flash("질문을 등록했습니다.", "ok")
                 return redirect(url_for("student.question_detail", qid=qid, posted=1))
@@ -313,9 +325,10 @@ def question_delete(qid):
               (qid, me["id"]), one=True)
     if q is None or query("SELECT 1 FROM answers WHERE question_id = ?", (qid,), one=True):
         abort(404)
+    extra = [r["file_id"] for r in query("SELECT file_id FROM question_images WHERE question_id = ?", (qid,))]
     execute("DELETE FROM questions WHERE id = ?", (qid,))
-    if q["image_id"]:
-        delete_file(q["image_id"])
+    for fid in ([q["image_id"]] if q["image_id"] else []) + extra:
+        delete_file(fid)
     flash("질문을 삭제했습니다.", "ok")
     return redirect(url_for("student.questions"))
 
@@ -333,11 +346,12 @@ def _can_access_file(file_id):
                     UNION
                     SELECT 1 FROM questions WHERE image_id = ? AND (qtype = '학습질문' OR student_id = ?)
                     UNION
+                    SELECT 1 FROM question_images i JOIN questions q ON q.id = i.question_id
+                    WHERE i.file_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)
+                    UNION
                     SELECT 1 FROM followups f JOIN questions q ON q.id = f.question_id
                     WHERE f.image_id = ? AND (q.qtype = '학습질문' OR q.student_id = ?)
-                    UNION
-                    SELECT 1 FROM assignments a JOIN task_answers t ON t.assignment_id = a.id
-                    WHERE a.solution_file_id = ? AND t.student_id = ?""",
+""",
                  (file_id, sid, file_id, sid, file_id, sid, file_id, sid), one=True) is not None
 
 

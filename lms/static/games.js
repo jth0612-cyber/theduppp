@@ -291,8 +291,8 @@
       var draw = function () {
         slots.textContent = "";
         for (var k = 0; k < item.n; k++) {
-          var ch = typed[k] ? typed[k].c : (k === 0 && !typed.length ? item.hint : "");
-          slots.appendChild(el("span", "sp-slot" + (typed[k] ? " is-on" : k === 0 && !typed.length ? " is-hint" : ""), ch || "\u00a0"));
+          var ch = typed[k] ? typed[k].c : "";
+          slots.appendChild(el("span", "sp-slot" + (typed[k] ? " is-on" : ""), ch || "\u00a0"));
         }
         tiles.querySelectorAll("button").forEach(function (b, k) { b.disabled = used.indexOf(k) >= 0 || typed.length >= item.n; });
         ok.disabled = typed.length !== item.n;
@@ -336,6 +336,11 @@
       });
       fb.appendChild(next);
       m("score").textContent = "맞힌 문제 " + res.score;
+      if (res.correct && /^vocab/.test(mc.dataset.game || "")) {        // 영단어: 맞히면 자동으로 다음 문제
+        var at = game.i;
+        fb.classList.add("is-auto");
+        setTimeout(function () { if (game && game.i === at && document.body.contains(next)) next.click(); }, 900);
+      }
       next.focus({ preventScroll: true });
       fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
     };
@@ -404,17 +409,22 @@
         .catch(function (e) { alert(e.message); show(mc, "start"); });
     };
 
-    m("begin").addEventListener("click", function () {
-      var topic = m("topic");
+    var startRound = function (body) {
       show(mc, "loading");
-      post(mc.dataset.start, topic ? { topic: topic.value } : {})
+      post(mc.dataset.start, body)
         .then(function (res) {
-          game = { id: res.round_id, questions: res.questions, answers: [], i: 0, score: 0, busy: false };
+          game = { id: res.round_id, questions: res.questions, answers: [], i: res.done || 0, score: res.score || 0, busy: false };
+          if (game.i >= game.questions.length) { submit(); return; }
           show(mc, "play");
           renderQuestion();
         })
         .catch(function (e) { alert(e.message); show(mc, "start"); });
+    };
+    m("begin").addEventListener("click", function () {
+      var topic = m("topic");
+      startRound(topic ? { topic: topic.value } : {});
     });
+    if (m("resume")) m("resume").addEventListener("click", function () { startRound({ resume: 1 }); });
     m("again").addEventListener("click", function () { show(mc, "start"); });
   }
 
@@ -537,69 +547,6 @@
       }).catch(function (e) { alert(e.message); show(mt, "start"); });
     });
     mq("again").addEventListener("click", function () { show(mt, "start"); });
-  }
-
-  // ---------- 카드 뒤집기: 단어 카드와 뜻 카드 짝 찾기 ----------
-  var mm = document.getElementById("memory-game");
-  if (mm) {
-    var mmq = function (r) { return mm.querySelector("[data-role=" + r + "]"); };
-    var mg = null, mclk = null;
-    var mmDone = function () {
-      clearInterval(mclk); var secs = (Date.now() - mg.t0) / 1000;
-      show(mm, "loading");
-      post(mm.dataset.start.replace(/\/start$/, "/" + mg.id + "/submit"), { tries: mg.tries, seconds: secs })
-        .then(function (res) {
-          mmq("result-title").textContent = res.tries + "번 만에 " + res.pairs + "쌍";
-          mmq("result-detail").textContent = secs.toFixed(1) + "초" + (res.tries === res.pairs ? " · 한 번도 안 틀림" : "");
-          var ul = mmq("words"); ul.textContent = "";
-          res.words.forEach(function (p) { var li = el("li"); var b = el("b", "", p[0]); b.setAttribute("lang", "en"); li.appendChild(b); li.appendChild(el("span", "", p[1])); ul.appendChild(li); });
-          show(mm, "result");
-        }).catch(function (e) { alert(e.message); show(mm, "start"); });
-    };
-    var flip = function (b) {
-      if (mg.lock || b.classList.contains("is-up")) return;
-      b.classList.add("is-up"); b.setAttribute("aria-pressed", "true");
-      mg.open.push(b);
-      if (mg.open.length < 2) return;
-      mg.tries++;
-      mmq("progress").textContent = mg.found + " / " + mg.pairs + "쌍 · " + mg.tries + "번";
-      var a = mg.open[0], c = mg.open[1]; mg.open = [];
-      if (a.dataset.k === c.dataset.k && a.dataset.en !== c.dataset.en) {
-        mg.found++;
-        [a, c].forEach(function (x) { x.classList.add("is-match"); x.disabled = true; });
-        if (mg.found === mg.pairs - 1) {                       // 남은 두 장은 저절로 짝이므로 바로 맞춰 준다
-          mmq("board").querySelectorAll(".mm-card:not(.is-match)").forEach(function (x) {
-            x.classList.add("is-up", "is-match"); x.disabled = true; x.setAttribute("aria-pressed", "true");
-          });
-          mg.found = mg.pairs;
-        }
-        mmq("progress").textContent = mg.found + " / " + mg.pairs + "쌍 · " + mg.tries + "번";
-        if (mg.found === mg.pairs) setTimeout(mmDone, 650);
-      } else {
-        mg.lock = true;
-        setTimeout(function () { [a, c].forEach(function (x) { x.classList.remove("is-up"); x.setAttribute("aria-pressed", "false"); }); mg.lock = false; }, 750);
-      }
-    };
-    mmq("begin").addEventListener("click", function () {
-      show(mm, "loading");
-      post(mm.dataset.start, {}).then(function (res) {
-        mg = { id: res.round_id, pairs: res.cards.length / 2, found: 0, tries: 0, open: [], lock: false, t0: Date.now() };
-        var bd = mmq("board"); bd.textContent = "";
-        res.cards.forEach(function (c, n) {
-          var b = el("button", "mm-card" + (c.en ? " is-en" : "")); b.type = "button";
-          b.dataset.k = c.k; b.dataset.en = c.en ? "1" : "0"; b.setAttribute("aria-pressed", "false");
-          b.setAttribute("aria-label", (n + 1) + "번 카드");
-          var face = el("span", "mm-face", c.t); if (c.en) face.setAttribute("lang", "en");
-          b.appendChild(el("span", "mm-back")); b.appendChild(face);
-          b.addEventListener("click", function () { flip(b); });
-          bd.appendChild(b);
-        });
-        mmq("progress").textContent = "0 / " + mg.pairs + "쌍";
-        show(mm, "play");
-        mclk = setInterval(function () { mmq("clock").textContent = ((Date.now() - mg.t0) / 1000).toFixed(1) + "초"; }, 100);
-      }).catch(function (e) { alert(e.message); show(mm, "start"); });
-    });
-    mmq("again").addEventListener("click", function () { show(mm, "start"); });
   }
 
   // ---------- TOPIC 개념 게임: 중화 반응 · 산화 환원 · 전자 배치 ----------

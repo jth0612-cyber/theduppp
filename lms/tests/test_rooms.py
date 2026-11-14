@@ -39,7 +39,6 @@ class RoomsTest(unittest.TestCase):
         r = a.post("/s/rooms/kissa/done", data={"minutes": "90"}).get_json()
         self.assertEqual((r["minutes"], r["today"]), (40, 40))
         self.assertNotIn("points", r)
-        self.assertIn("<b>40<small>분", a.get("/s/").data.decode())   # 홈 오늘 집중
         # 떠나면 목록에서 빠진다
         a.post("/s/rooms/kissa/beat", data={"action": "leave"})
         self.assertNotIn("닉0 (나)", b.get("/s/rooms/kissa").data.decode())

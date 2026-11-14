@@ -5,7 +5,10 @@
     <div class="field"><label for="mc-topic">{{ topic_label or "단원" }}</label>
       <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
     {% endif %}
-    {% if not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}
+    {% if resume %}
+    <p class="mc-resume">풀던 문제가 있습니다: {{ resume.done }} / {{ resume.total }} · 맞힘 {{ resume.score }}</p>
+    <div class="mc-resume-btns"><button type="button" class="btn primary" data-role="resume">이어서 풀기</button><button type="button" class="btn" data-role="begin">처음부터</button></div>
+    {% elif not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>
   <div class="hidden" data-role="play">

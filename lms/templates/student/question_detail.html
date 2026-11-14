@@ -17,8 +17,8 @@
 </div>
 <div class="card">
   <div class="pre">{{ q.body }}</div>
-  {% if q.image_id %}
-    <p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=q.image_id, inline=1) }}" alt="첨부 사진"></p>
+  {% set photos = question_photos(q) %}{% if photos %}
+    <div class="q-photos mt">{% for fid in photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="첨부 사진 {{ loop.index }}"></a>{% endfor %}</div>
   {% endif %}
 </div>
 

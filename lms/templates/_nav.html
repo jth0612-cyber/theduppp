@@ -1,6 +1,8 @@
 {# 메뉴 정의: 컴퓨터 왼쪽 메뉴, 휴대폰 아래 탭, 휴대폰 전체 메뉴가 모두 이 목록을 쓴다. #}
 {% set ICONS = {
   'home': '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  'back': '<path d="M15 5 8 12l7 7"/>',
+  'cast': '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="m10 8.5 4.5 2.5L10 13.5z"/><path d="M8 21h8"/>',
   'notice': '<path d="M3 10v4a1 1 0 0 0 1 1h2l6 4V5L6 9H4a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
   'calendar': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   'timetable': '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M9 9v12M15 9v12M3 15h18"/>',
@@ -40,9 +42,9 @@
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
-    ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0)]),
+    ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0),
+    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
-    ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task'), 0),
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
@@ -58,9 +60,9 @@
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0),
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
-    ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0)]),
+    ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
+    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
-    ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task'), 0),
     ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
@@ -71,8 +73,8 @@
   (None, [('student.home', '홈', 'home', ep == 'student.home', 0)]),
   ('수업', [
     ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
+    ('cast.cast_list', 'TH캐스트', 'cast', ep.startswith('cast.'), 0),
     ('study.timetable', '시간표', 'timetable', ep == 'study.timetable', 0),
-    ('study.tasks', '과제', 'task', ep == 'study.tasks', 0),
     ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),
     ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
     ('student.videos', '강의 영상', 'video', ep == 'student.videos', 0),
@@ -96,12 +98,12 @@
 {%- if g.user.role == 'teacher' -%}
 {%- set items = [('teacher.dashboard', '홈', 'dash', ep == 'teacher.dashboard'),
                  ('teacher.questions', '질문', 'chat', ep.startswith('teacher.question')),
-                 ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task')),
+                 ('teacher.students', '학생', 'search', ep.startswith('teacher.student')),
                  ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'))] -%}
 {%- elif g.user.role == 'assistant' -%}
 {%- set items = [('teacher.questions', '질문', 'chat', ep.startswith('teacher.question')),
                  ('teacher.dashboard', '홈', 'dash', ep == 'teacher.dashboard'),
-                 ('study.t_tasks', '과제', 'task', ep in ('study.t_tasks', 'study.t_task')),
+                 ('teacher.students', '학생', 'search', ep.startswith('teacher.student')),
                  ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'))] -%}
 {%- else -%}
 {%- set items = [('student.home', '홈', 'home', ep == 'student.home'),

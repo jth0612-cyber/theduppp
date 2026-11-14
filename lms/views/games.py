@@ -1,5 +1,5 @@
 """학생 Quiz 두 갈래.
-- 수능 영단어: 오늘의 20단어(카드 + 섞어 풀기: 뜻·단어·듣기·O/X·철자), 짝 맞추기, 카드 뒤집기, 스피드 O/X, 복습.
+- 수능 영단어: 오늘의 20단어(카드 + 섞어 풀기: 뜻·단어·듣기·O/X·철자), 짝 맞추기, 스피드 O/X, 복습.
 - 통과 Quiz: 단원별 5문제, 섞어 풀기 10문제(4지선다·분류·순서·빈칸·계산), O/X 스피드, 샤가프 법칙, 염기 짝 맞추기(DNA·RNA).
 문제와 정답은 서버에서 만들어 game_rounds 에 저장하고, 채점도 서버에서만 한다."""
 import json
@@ -39,7 +39,10 @@ def _open_round(rid, game):
         abort(404)
     if r["finished_at"] is not None:
         abort(409)
-    if datetime.fromisoformat(r["started_at"]) + ROUND_TTL < _now():
+    started = datetime.fromisoformat(r["started_at"])
+    if game == "vocab" and started.date() == _now().date():
+        return r                                   # 오늘의 20단어는 그날 안에는 이어서 풀 수 있다
+    if started + ROUND_TTL < _now():
         abort(410)
     return r
 
@@ -66,7 +69,8 @@ def _best():
 @student_required
 def hub():
     """수능 영단어"""
-    return render_template("student/games/vocab_hub.html", best=_best(), v=vocab.stats(g.user["id"]))
+    day, _ = vocab.today_set(g.user["id"])
+    return render_template("student/games/vocab_hub.html", best=_best(), v=vocab.stats(g.user["id"]), prog=_vocab_progress(day))
 
 
 @bp.route("/sci")
@@ -125,7 +129,7 @@ def dna_submit(rid):
 
 # ---------- 객관식 공통 (샤가프 / 통합과학 퀴즈) ----------
 
-_PUBLIC_KEYS = ("question", "choices", "kind", "prompt", "sub", "tiles", "n", "hint", "tag", "items", "bins", "unit", "say", "lines")
+_PUBLIC_KEYS = ("question", "choices", "kind", "prompt", "sub", "tiles", "n", "tag", "items", "bins", "unit", "say", "lines")
 _TEXT_KINDS = ("spell", "num")
 _LIST_KINDS = ("sort", "order")
 
@@ -382,16 +386,40 @@ def quiz_submit(rid):
 def vocab_page():
     day, words = vocab.today_set(g.user["id"])
     return render_template("student/games/vocab.html", day=day, words=[(w, vocab.MEANING[w]) for w in words],
-                           v=vocab.stats(g.user["id"]), game="vocab", parent="vocab")
+                           v=vocab.stats(g.user["id"]), game="vocab", parent="vocab", resume=_vocab_progress(day))
+
+
+def _vocab_open_round(day):
+    """오늘 풀다 만 섞어 풀기 판."""
+    return query("""SELECT * FROM game_rounds WHERE user_id = ? AND game = 'vocab' AND topic = ? AND finished_at IS NULL
+                    AND date(started_at) = date('now', 'localtime') ORDER BY id DESC LIMIT 1""", (g.user["id"], day["day"]), one=True)
+
+
+def _vocab_progress(day):
+    r = _vocab_open_round(day)
+    if r is None:
+        return None
+    items, picks = json.loads(r["answer"]), json.loads(r["picks"] or "null") or []
+    done = 0
+    while done < len(picks) and picks[done] is not None:
+        done += 1
+    if done == 0:
+        return None
+    score = sum(1 for k in range(done) if _is_right(items[k], picks[k]))
+    return {"round": r, "done": done, "total": len(items), "score": score}
 
 
 @bp.route("/vocab/start", methods=["POST"])
 @student_required
 def vocab_start():
     day, words = vocab.today_set(g.user["id"])
+    if _json_body().get("resume"):
+        p = _vocab_progress(day)
+        if p:
+            return jsonify(round_id=p["round"]["id"], questions=json.loads(p["round"]["payload"]), done=p["done"], score=p["score"])
     items = vocab.quiz_items(words)
     rid = _new_round("vocab", _public(items), items, topic=day["day"])
-    return jsonify(round_id=rid, questions=_public(items))
+    return jsonify(round_id=rid, questions=_public(items), done=0, score=0)
 
 
 @bp.route("/vocab/<int:rid>/check", methods=["POST"])
@@ -451,7 +479,7 @@ def vocab_match():
 @bp.route("/vocab/match/start", methods=["POST"])
 @student_required
 def vocab_match_start():
-    _, words = vocab.today_set(g.user["id"])
+    words = vocab.wide_pool(g.user["id"], 20)          # 오늘 단어 일부 + 복습·본 단어 + 앞으로 나올 단어
     sets = vocab.match_sets(words)
     rid = _new_round("vocab_match", [], [w for st in sets for w in st if not w.get("d")])
     return jsonify(round_id=rid, sets=sets)
@@ -470,38 +498,6 @@ def vocab_match_submit(rid):
     secs = round(float(secs), 1) if isinstance(secs, (int, float)) and 0 < secs < 3600 else None
     _finish(rid, len(words) - len(wrong), len(words))
     return jsonify(score=len(words) - len(wrong), total=len(words), seconds=secs, wrong=sorted(wrong))
-
-
-# ---------- 영단어 카드 뒤집기: 12장을 뒤집어 단어와 뜻 짝 찾기 ----------
-
-@bp.route("/vocab/memory")
-@student_required
-def vocab_memory():
-    return render_template("student/games/memory.html", best=_best().get("vocab_memory:"))
-
-
-@bp.route("/vocab/memory/start", methods=["POST"])
-@student_required
-def vocab_memory_start():
-    _, words = vocab.today_set(g.user["id"])
-    ws, cards = vocab.memory_cards(words)
-    rid = _new_round("vocab_memory", [], ws)
-    return jsonify(round_id=rid, cards=cards)
-
-
-@bp.route("/vocab/memory/<int:rid>/submit", methods=["POST"])
-@student_required
-def vocab_memory_submit(rid):
-    """점수 = 짝 수, 총점 = 뒤집은 횟수(두 장 한 번). 한 번도 안 틀리면 100%."""
-    r = _open_round(rid, "vocab_memory")
-    pairs = len(json.loads(r["answer"]))
-    body = _json_body()
-    tries = body.get("tries")
-    tries = tries if isinstance(tries, int) and pairs <= tries < 1000 else pairs * 4
-    secs = body.get("seconds")
-    secs = round(float(secs), 1) if isinstance(secs, (int, float)) and 0 < secs < 3600 else None
-    _finish(rid, pairs, tries)
-    return jsonify(pairs=pairs, tries=tries, seconds=secs, words=[(w, vocab.MEANING[w]) for w in json.loads(r["answer"])])
 
 
 # ---------- TOPIC 개념 게임: 중화 반응 · 산화 환원 · 전자 배치 (sci_games) ----------

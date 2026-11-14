@@ -103,6 +103,25 @@ CREATE TABLE IF NOT EXISTS questions (
 );
 CREATE INDEX IF NOT EXISTS idx_questions_status ON questions(status);
 
+CREATE TABLE IF NOT EXISTS casts (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL DEFAULT '',
+    video_url   TEXT NOT NULL DEFAULT '',
+    pinned      INTEGER NOT NULL DEFAULT 0,
+    author_id   INTEGER REFERENCES users(id),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS question_images (
+    id           INTEGER PRIMARY KEY,
+    question_id  INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    file_id      INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    pos          INTEGER NOT NULL DEFAULT 2
+);
+CREATE INDEX IF NOT EXISTS idx_question_images ON question_images(question_id);
+
 CREATE TABLE IF NOT EXISTS answers (
     id           INTEGER PRIMARY KEY,
     question_id  INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -586,6 +605,13 @@ def init_db(path):
     _add_column(conn, "room_presence", "act", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "room_presence", "act_seq", "INTEGER NOT NULL DEFAULT 0")
     _add_column(conn, "users", "avatar_color", "TEXT")
+    _add_column(conn, "mocks", "review", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "mocks", "review_by", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "mocks", "review_at", "TEXT")
+    # 대구 MDS 반은 단과 (한 번만 바꾼다: 이후 선생님이 바꾼 값은 그대로 둔다)
+    if conn.execute("SELECT 1 FROM settings WHERE key = 'mig_mds_dangwa'").fetchone() is None:
+        conn.execute("UPDATE classes SET track = '단과' WHERE name LIKE '%MDS%'")
+        conn.execute("INSERT INTO settings (key, value) VALUES ('mig_mds_dangwa', '1')")
     code_taken = lambda c: conn.execute("SELECT 1 FROM classes WHERE join_code = ?", (c,)).fetchone() is not None
     for (cid,) in conn.execute("SELECT id FROM classes WHERE join_code IS NULL").fetchall():
         conn.execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(code_taken), cid))
@@ -665,13 +691,17 @@ def normalize_student_code(raw):
     return "".join(ch for ch in (raw or "").upper() if ch.isalnum())
 
 
+STUDENT_CODE_PREFIX = "27"     # 학생코드 = 학년도 두 자리 + 숫자 4자리 (예: 271234)
+
+
 def new_student_code():
-    """사이트에서 만드는 학생 코드: 헷갈리는 글자(0·O·1·I·L) 없이 10자."""
+    """사이트에서 만드는 학생 코드: '27' + 무작위 숫자 4자리 (6자리)."""
     import secrets
-    while True:
-        code = "".join(secrets.choice(_JOIN_ALPHABET) for _ in range(10))
+    for _ in range(20000):
+        code = STUDENT_CODE_PREFIX + "".join(secrets.choice("0123456789") for _ in range(4))
         if query("SELECT 1 FROM student_codes WHERE code = ?", (code,), one=True) is None:
             return code
+    raise ValueError("올해 학생코드(27XXXX)를 모두 썼습니다.")
 
 
 def join_code_taken(code):

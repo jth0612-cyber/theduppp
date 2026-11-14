@@ -96,6 +96,10 @@
     <img class="m-affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">
   </div>
   <main class="sheet {% block main_class %}container{% endblock %}">
+    {% set home_ep = 'student.home' if g.user.role == 'student' else 'teacher.dashboard' %}
+    {% if ep != home_ep and not ep.startswith('rooms.room') %}
+    <nav class="backbar" aria-label="이동"><a class="back-link" href="{{ url_for(home_ep) }}" data-back>{{ nav.icon('back') }}<span>뒤로</span></a><a class="home-link" href="{{ url_for(home_ep) }}">홈</a></nav>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
     {% endwith %}

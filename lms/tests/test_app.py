@@ -270,7 +270,7 @@ class FeatureTest(AppTest):
         self.assertEqual(r.status_code, 400)
         self.assertIn('value="개념서 42p 3번"', page)
         self.assertIn("보기 ㄴ에서 막혔어요</textarea>", page)
-        self.assertIn("사진만 붙여서 다시 등록하면 돼요", page)
+        self.assertIn("적은 내용은 그대로 남아 있어요", page)
         self.assertIn('<option value="학습질문" selected', page)
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM questions", one=True)["n"], 0)
@@ -673,7 +673,7 @@ class FeatureTest(AppTest):
         self.assertIn('<span class="cap">조교</span> 김조교 답변', student_view)
         # 조교도 볼 수 있는 화면 (보기 위주로 열어 둠)
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
-                    "/t/timetable", "/t/tasks", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
+                    "/t/timetable", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
             self.assertEqual(ta.get(url).status_code, 200, url)
         # 계정·기록·삭제 같은 관리 일은 선생님만
         for url in ["/t/audit", "/t/staff", "/t/signups"]:
@@ -819,7 +819,7 @@ class FeatureTest(AppTest):
         cid = self.setup_class_with_students()
         codes = self._codes(cid)
         self.assertEqual(len(codes), 3)
-        self.assertEqual(len(codes[0]), 10)
+        self.assertEqual(len(codes[0]), 6); self.assertTrue(codes[0].startswith("27") and codes[0].isdigit())
         anon = self.app.test_client()
         # 틀린 코드, 동의 안 함 → 거부
         self.assertIn("학생코드가 올바르지", self._signup(anon, "WRONGCODE1").data.decode())
@@ -992,15 +992,6 @@ class FeatureTest(AppTest):
             a = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (r["round_id"],), one=True)["answer"])[0]
         self.assertEqual(a["ml"] // stg["unit"] * stg["oh"], stg["h"])      # 완전 중화: OH⁻ 수 = H⁺ 수
         self.assertEqual(s1.get("/s/games/play/nope").status_code, 404)
-
-    def test_vocab_memory(self):
-        _, s1, _ = self._students()
-        self.assertIn("카드 뒤집기", s1.get("/s/games/").data.decode())
-        start = s1.post("/s/games/vocab/memory/start", json={}).get_json()
-        self.assertEqual(len(start["cards"]), 12)
-        res = s1.post(f"/s/games/vocab/memory/{start['round_id']}/submit", json={"tries": 9, "seconds": 30.5}).get_json()
-        self.assertEqual((res["pairs"], res["tries"]), (6, 9))
-        self.assertIn("최고 66%", s1.get("/s/games/").data.decode())
 
 
 # FeatureTest 는 AppTest 의 도우미만 쓰고, AppTest 의 테스트는 다시 돌리지 않는다

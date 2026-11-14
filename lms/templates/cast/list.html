@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}TH캐스트 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<header class="ed-head ed-head-split">
+  <div><h1>TH캐스트</h1><p class="ed-lede">정태혁 선생님의 영상과 편지</p></div>
+  {% if g.user.role == 'teacher' %}<a class="btn primary" href="{{ url_for('cast.cast_new') }}">새 글</a>{% endif %}
+</header>
+<ul class="cast-list">
+  {% for c in rows %}{% set yt = c.video_url|youtube_id if c.video_url else None %}
+  <li><a href="{{ url_for('cast.cast_detail', cid=c.id) }}">
+    {% if yt %}<img class="cast-thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">{% else %}<span class="cast-thumb cast-letter" aria-hidden="true">편지</span>{% endif %}
+    <span class="cast-meta"><b>{% if c.pinned %}<span class="badge">고정</span> {% endif %}{{ c.title }}</b><time>{{ c.created_at[:10] }}</time>{% if c.body %}<span class="cast-sum">{{ c.body[:80] }}{{ '…' if c.body|length > 80 }}</span>{% endif %}</span>
+  </a></li>
+  {% else %}<li class="empty">아직 글이 없습니다.</li>{% endfor %}
+</ul>
+{% endblock %}

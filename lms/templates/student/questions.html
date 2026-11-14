@@ -37,10 +37,10 @@
     </div>
     <div class="field{{ ' has-err' if fe == 'body' }}"><label for="q-body">내용</label><textarea id="q-body" name="body" maxlength="5000" required>{{ draft.body if draft else '' }}</textarea></div>
     <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
-      <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 최대 20MB{{ ' · 학습질문은 필수' }})</span></label>
-      <input type="file" id="q-image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+      <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 3장까지, 한 장 20MB 이하 · 학습질문은 필수)</span></label>
+      <input type="file" id="q-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
       <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 적은 내용은 그대로 있어요.{% endif %}</p>
-      <div class="photo-preview" data-photo-preview hidden><img alt="첨부할 사진 미리보기"><span></span><button type="button" class="btn small" data-photo-clear>빼기</button></div>
+      <div class="photo-preview" data-photo-preview hidden><div class="photo-thumbs" data-photo-thumbs></div><span></span><button type="button" class="btn small" data-photo-clear>모두 빼기</button></div>
     </div>
     <button class="btn primary">질문 등록</button>
     <p class="small muted draft-note" data-draft-note hidden>쓰던 내용을 불러왔어요.</p>

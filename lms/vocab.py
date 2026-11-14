@@ -104,7 +104,7 @@ def _spell(w):                    # 뜻을 보고 글자 조각으로 철자 맞
     tiles = letters + decoys
     _rng.shuffle(tiles)
     return {"kind": "spell", "question": MEANING[w], "prompt": "글자를 순서대로 눌러 단어를 완성하세요", "tiles": tiles,
-            "n": len(letters), "hint": w[0], "answer_text": w.lower(), "explanation": f"{w} — {MEANING[w]}", "word": w}
+            "n": len(letters), "answer_text": w.lower(), "explanation": f"{w} — {MEANING[w]}", "word": w}
 
 
 def quiz_items(words):
@@ -133,21 +133,27 @@ def match_sets(words, size=5):
     return sets
 
 
-def memory_cards(words, pairs=6):
-    """카드 뒤집기: 단어 카드와 뜻 카드 6쌍(12장)을 섞는다."""
-    ws = _rng.sample(list(words), min(pairs, len(words)))
-    cards = [{"t": w, "k": i, "en": True} for i, w in enumerate(ws)] + [{"t": MEANING[w], "k": i, "en": False} for i, w in enumerate(ws)]
-    _rng.shuffle(cards)
-    return ws, cards
+def wide_pool(uid, n=60):
+    """게임용 단어 묶음: 오늘 단어 + 복습할 단어 + 이미 본 단어 + 앞으로 나올 단어를 섞는다
+    (게임마다, 판마다 단어가 달라지도록)."""
+    _, today = today_set(uid)
+    review = review_words(uid, limit=30)
+    seen = [r["word"] for r in query("SELECT word FROM vocab_marks WHERE user_id = ? ORDER BY last DESC LIMIT 300", (uid,))
+            if r["word"] in MEANING]
+    seen = _rng.sample(seen, min(len(seen), 20))
+    start = ORDER.index(today[-1]) + 1 if today and today[-1] in ORDER else 0
+    ahead = [ORDER[(start + i) % len(ORDER)] for i in range(80)]
+    ahead = _rng.sample(ahead, 20)
+    pool = list(dict.fromkeys(_rng.sample(today, min(10, len(today))) + review[:10] + seen + ahead))
+    _rng.shuffle(pool)
+    return pool[:n]
 
 
 def speed_items(uid, n=40):
-    """스피드 O/X: 오늘 단어와 지금까지 본 단어에서 섞어 낸다."""
-    seen = [r["word"] for r in query("SELECT word FROM vocab_marks WHERE user_id = ? ORDER BY last DESC LIMIT 200", (uid,)) if r["word"] in MEANING]
-    _, today = today_set(uid)
-    pool = list(dict.fromkeys(today + seen)) or [w for w, _ in WORDS[:60]]
+    """스피드 O/X: 넓은 단어 묶음에서."""
+    pool = wide_pool(uid, 60)
     out = []
-    for i in range(n):
+    for _ in range(n):
         w = _rng.choice(pool)
         right = _rng.random() < 0.5
         out.append({"word": w, "q": w, "a": MEANING[w] if right else MEANING[_others(w, 1)[0]], "ok": right, "exp": f"{w} — {MEANING[w]}"})

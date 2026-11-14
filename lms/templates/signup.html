@@ -23,7 +23,7 @@
 </div>
 {% else %}
   <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디가 돼요.' if track == '단과' else '원하는 아이디로 가입해요.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
-  <p class="muted small">조교 선생님께 받은 <b>학생코드</b> (예: K7QM-3XPA). 한 번만 쓸 수 있습니다.</p>
+  <p class="muted small">조교 선생님께 받은 <b>학생코드</b> (예: 271234). 한 번만 쓸 수 있습니다.</p>
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
   {% endif %}
@@ -37,7 +37,7 @@
     <div class="field">
       <label for="code">학생코드</label>
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
-             autocapitalize="characters" spellcheck="false" placeholder="예: K7QM-3XPA"{{ bad('code') }}>
+             autocapitalize="characters" spellcheck="false" placeholder="예: 271234" inputmode="numeric"{{ bad('code') }}>
       {{ err('code') }}
     </div>
     <div class="field">

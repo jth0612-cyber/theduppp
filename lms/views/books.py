@@ -421,6 +421,21 @@ def delete_book(bid):
     return redirect(url_for("books.teacher_books"))
 
 
+@bp.route("/t/mocks/<int:mid>/review", methods=["POST"])
+@staff_required
+def mock_review(mid):
+    """모의고사 총평: 강사·조교가 쓰고, 학생 분석 화면 맨 위에 보인다."""
+    _mock_or_404(mid)
+    text = request.form.get("review", "").strip()[:4000]
+    from flask import g as _g
+    who = (_g.user["display_name"] or _g.user["username"]) if _g.user["role"] == "assistant" else "정태혁 선생님"
+    execute("UPDATE mocks SET review = ?, review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?",
+            (text, who if text else "", mid))
+    audit("mock_review", f"mock:{mid}")
+    flash("총평을 저장했습니다." if text else "총평을 지웠습니다.", "ok")
+    return redirect(url_for("books.teacher_mock", mid=mid))
+
+
 @bp.route("/t/mocks/<int:mid>")
 @staff_required
 def teacher_mock(mid):

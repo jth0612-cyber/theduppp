@@ -46,7 +46,7 @@
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
       {{ csrf() }}<input type="hidden" name="action" value="paste">
       <div class="field"><label for="codes-paste">행정 시스템에서 뽑은 코드 붙여넣기</label>
-        <textarea id="codes-paste" name="codes" rows="5" placeholder="한 줄에 하나씩&#10;메모를 붙이려면: 코드, 메모 (예: K7QM2XPA9R, 3번)"></textarea></div>
+        <textarea id="codes-paste" name="codes" rows="5" placeholder="한 줄에 하나씩&#10;메모를 붙이려면: 코드, 메모 (예: 271234, 3번)"></textarea></div>
       <button class="btn primary">등록</button>
     </form>
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">

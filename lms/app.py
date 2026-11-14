@@ -84,6 +84,8 @@ def create_app(test_config=None):
     from views.link import api as link_api, bp as link_bp     # 조교 시스템(구글 시트) 연동
     app.register_blueprint(link_bp)
     app.register_blueprint(link_api)
+    from views.cast import bp as cast_bp
+    app.register_blueprint(cast_bp)
     csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다
     app.jinja_env.globals["google_enabled"] = google_enabled
     from security import role_caption, shown_name
@@ -96,6 +98,14 @@ def create_app(test_config=None):
         return {"kakao": url if url.startswith("https://") else "", "note": os.environ.get("CONTACT_NOTE", "").strip()}
     app.jinja_env.globals["site_contact"] = site_contact
 
+    def question_photos(q):
+        """질문 사진 (최대 3장): 첫 장은 questions.image_id, 나머지는 question_images."""
+        from db import query as _q
+        ids = [q["image_id"]] if q["image_id"] else []
+        ids += [r["file_id"] for r in _q("SELECT file_id FROM question_images WHERE question_id = ? ORDER BY pos", (q["id"],))]
+        return ids
+    app.jinja_env.globals["question_photos"] = question_photos
+
     from content import file_kind, host_of, video_source, youtube_id
     app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id, video_source=video_source)
 
@@ -104,7 +114,7 @@ def create_app(test_config=None):
         resp.headers["Content-Security-Policy"] = (
             # i.ytimg.com: 유튜브 강의 영상 썸네일
             "default-src 'self'; img-src 'self' data: blob: https://i.ytimg.com; style-src 'self'; script-src 'self'; "
-            "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+            "frame-src https://www.youtube-nocookie.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         )
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["X-Frame-Options"] = "DENY"

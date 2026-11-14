@@ -239,19 +239,28 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
 
     var wrap = f.querySelector("[data-photo]"); if (!wrap) return;
     var inp = wrap.querySelector("input[type=file]"), err = wrap.querySelector("[data-photo-err]"),
-        pv = wrap.querySelector("[data-photo-preview]"), img = pv.querySelector("img"), qt = f.querySelector("[data-qtype]");
+        pv = wrap.querySelector("[data-photo-preview]"), thumbs = pv.querySelector("[data-photo-thumbs]"), qt = f.querySelector("[data-qtype]");
+    var urls = [];
     function showErr(msg) { err.textContent = msg || ""; err.hidden = !msg; wrap.classList.toggle("has-err", !!msg); }
-    function clearPhoto() { inp.value = ""; pv.hidden = true; if (img.src) { URL.revokeObjectURL(img.src); img.removeAttribute("src"); } }
+    function clearPhoto() { inp.value = ""; pv.hidden = true; urls.forEach(function (u) { URL.revokeObjectURL(u); }); urls = []; thumbs.textContent = ""; }
     inp.addEventListener("change", function () {
-      var file = inp.files && inp.files[0];
-      if (!file) { clearPhoto(); return; }
-      if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
-        clearPhoto(); return showErr("PNG·JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
+      var files = Array.prototype.slice.call(inp.files || []);
+      if (!files.length) { clearPhoto(); return; }
+      if (files.length > 3) { clearPhoto(); return showErr("사진은 3장까지 올릴 수 있습니다."); }
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
+          clearPhoto(); return showErr("PNG·JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
+        }
+        if (file.size > MAX) { clearPhoto(); return showErr("한 장에 20MB 이하만 올릴 수 있습니다."); }
       }
-      if (file.size > MAX) { clearPhoto(); return showErr("20MB 이하만 올릴 수 있습니다."); }
       showErr("");
-      if (img.src) URL.revokeObjectURL(img.src);
-      img.src = URL.createObjectURL(file); pv.querySelector("span").textContent = file.name; pv.hidden = false;
+      urls.forEach(function (u) { URL.revokeObjectURL(u); }); urls = []; thumbs.textContent = "";
+      files.forEach(function (file) {
+        var u = URL.createObjectURL(file); urls.push(u);
+        var im = document.createElement("img"); im.src = u; im.alt = file.name; thumbs.appendChild(im);
+      });
+      pv.querySelector("span").textContent = files.length + "장"; pv.hidden = false;
     });
     pv.querySelector("[data-photo-clear]").addEventListener("click", function () { clearPhoto(); inp.focus(); });
     if (qt) qt.addEventListener("change", function () { if (qt.value !== "학습질문") showErr(""); });
@@ -277,3 +286,15 @@ document.querySelectorAll("textarea[data-answer-tpl]").forEach(function (t) {
     setTimeout(function () { t.setSelectionRange(pos, pos); }, 0);
   });
 });
+
+// 뒤로: 같은 사이트에서 왔으면 이전 화면, 아니면 홈
+(function () {
+  var b = document.querySelector("[data-back]");
+  if (!b) return;
+  b.addEventListener("click", function (e) {
+    var ref = document.referrer;
+    if (ref && ref.indexOf(location.origin + "/") === 0 && ref !== location.href && history.length > 1) {
+      e.preventDefault(); history.back();
+    }
+  });
+})();

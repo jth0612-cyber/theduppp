@@ -408,7 +408,9 @@ def student_delete(sid):
         SELECT image_id FROM questions WHERE student_id = ? AND image_id IS NOT NULL
         UNION
         SELECT f.image_id FROM followups f JOIN questions q ON q.id = f.question_id
-        WHERE q.student_id = ? AND f.image_id IS NOT NULL""", (sid, sid))]
+        WHERE q.student_id = ? AND f.image_id IS NOT NULL
+        UNION ALL
+        SELECT i.file_id FROM question_images i JOIN questions q ON q.id = i.question_id WHERE q.student_id = ?""", (sid, sid, sid))]
     execute("DELETE FROM students WHERE id = ?", (sid,))
     for file_id in file_ids:
         delete_file(file_id)
