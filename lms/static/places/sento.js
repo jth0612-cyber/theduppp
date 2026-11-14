@@ -478,7 +478,7 @@ export default {
       sitSound: (s) => s.kind === "water" ? "soak" : "cushion",
       focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만.`,
       spaceAction: "splash",
-      actions: { free: ["soak", "hearth", "splash", "jump"], sitting: ["focus", "splash", "stand"], focus: ["stop"] },
+      actions: { free: ["soak", "hearth", "splash"], sitting: ["focus", "splash", "stand"], focus: ["stop"] },
       labels: { soak: "탕에 들어가기", hearth: "화롯가로", splash: "물 튕기기" },
       icons: {
         soak: '<svg viewBox="0 0 24 24"><path d="M3 15c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M3 19c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M8 11c0-2 2-2 2-4M13 11c0-2 2-2 2-4"/></svg>',

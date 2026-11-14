@@ -395,7 +395,7 @@ export default {
       sitSound: "cushion",
       focusText: (m) => `${m}분, 비가 그칠 때까지는 여기서.`,
       spaceAction: "coffee",
-      actions: { free: ["sit", "window", "coffee", "jump"], sitting: ["focus", "coffee", "page", "stand"], focus: ["coffee", "page", "stop"] },
+      actions: { free: ["sit", "window", "coffee"], sitting: ["focus", "coffee", "page", "stand"], focus: ["coffee", "page", "stop"] },
       labels: { window: "창가 자리", coffee: "커피 한 모금", page: "책장 넘기기" },
       icons: {
         window: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16M7 7l1 2M15 14l1 2"/></svg>',
