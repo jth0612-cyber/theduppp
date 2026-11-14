@@ -1,0 +1,1001 @@
+# 워드마스터 하이퍼 2000 (Day 01~50, 하루 20개). 한 줄에: 단어<TAB>뜻. 순서 = 책 순서
+abandon	버리다, 그만두다, 단념하다
+feature	특징, 특집기사, 특징으로 하다, 특집으로 다루다
+colleague	동료
+further	그 이상의, 게다가, 촉진하다, 발전시키다
+relieve	덜다, 완화하다, 안심시키다
+specific	구체적인, 명확한, 특정한, 특유의
+constant	변함없는, 불변의, 상수, 끊임없이 계속되는
+instrument	기구, 도구, 악기
+range	범위, 다양성, (범위가) ~에 걸치다
+aspect	측면, 국면, 관점
+significant	중요한, 의미 있는
+prize	상, 소중한 것, 소중하게 여기다
+reflect	반영하다, 반사하다, 숙고하다, 반성하다
+obvious	분명한, 너무 뻔한
+identify	확인하다, 신원을 확인하다, 발견하다, 동일시하다
+rate	평가하다, 간주하다, 비율, 요금, 속도
+credit	신용, 명성, 믿다, 공로를 돌리다
+stuff	것, 일, 재료, 채워 넣다
+harry	괴롭히다, 거듭 공격하다
+subtle	미묘한, 포착하기 어려운, 교묘한, 예리한
+commercial	상업의, 광고방송
+convention	관습, 전통, 집회, 협약
+fright	두려움, 놀람
+promote	촉진하다, 홍보하다, 승진시키다
+archaic	구식의, 낡은, 고대의, 고풍의
+precise	정확한, 정밀한
+perspective	관점, 시각, 원근법, 투시도
+phenomenon	현상, 경이로운 사람(것)
+allocate	할당하다, 배치하다
+reserve	남겨두다, 예약하다, 비축, 보호구역, 말이 없음
+frustrate	좌절시키다, 실망시키다, 방해하다, 망치다
+objective	객관적인, 편견이 없는, 목적, 목표
+agent	대리인, 대리점, 직원, 요원, 중개인, 행위자, 동인(動因)
+manipulate	다루다, 처리하다, 조종하다, 조작하다
+financial	재정의, 금융의, 금전적인
+valid	유효한, 타당한, 근거가 확실한
+phrase	어구, 표현, 말씨, 표현하다, 말로 나타내다
+associate	관련시키다, 연상하다, 교제하다, 동료
+inevitable	피할 수 없는, 필연적인
+revise	고치다, 수정하다, 변경하다
+aggressive	공격적인, 적극적인
+virtual	사실상의, 가상의
+derive	끌어내다, 얻다, 유래하다, 나오다
+crucial	중대한, 결정적인
+eliminate	제거하다, 없애다
+interpret	해석하다, 이해하다, 번역하다
+procedure	절차, 순서, 처리
+engage	관여하다, 종사하다, 약속하다, 고용하다
+presence	있음, 존재, 출석
+acknowledge	인정하다, 받았음을 알리다, 감사의 뜻을 표하다
+dominant	지배적인, 우세한, 우성(優性)의
+enormous	거대한, 엄청난
+moderate	보통의, 온건한, 절제하다, 완화하다
+prompt	자극하다, 유발하다, 재촉하다, 신속한, 즉각적인
+desperate	필사적인, 절망적인
+transmit	보내다, 전송하다, 전달하다, 옮기다, 전염시키다
+distinctive	독특한, 특색있는
+metaphor	은유, 비유
+complicate	복잡하게 하다, 얽히게 하다
+genuine	진짜의, 진심의
+institution	(대학, 은행 등) 기관, 학회, 제도, 설립
+disastrous	재앙을 일으키는, 비참한, 불행한
+obstacle	장애(물), 방해
+verbal	말의, 언어의, 구두의
+analysis	분석, 분해
+emerge	나오다, 나타나다, 부상(浮上)하다, 생기다
+stroke	치기, 타격, 뇌졸중, 쓰다듬다
+discipline	규율, 징계하다, 학문분야, 훈련하다
+ancestor	선조, 조상
+clan	씨족, 일가, 집단
+resolve	해결하다, 결심하다, 결심
+restrict	제한하다, 한정하다
+sequence	연속, 순서
+vital	중요한, 필수적인, 생명의, 활기찬
+evolve	전개되다, 진화하다, 발달하다
+irritate	짜증나게 하다, 자극하다
+preference	선호, 우선권, 특혜
+tremendous	거대한, 엄청난, 굉장한, 굉장히 좋은
+fatigue	피로, 피로하게 하다
+retention	보유, 유지, 기억(력)
+static	정적인, 정지된, 정전기
+assumption	가정, 추청, 인수, 장악, 떠맡기
+commitment	헌신, 전념, 책임, 위임, 약속
+prospect	가망, 가능성, 전망, 예상
+reference	참고, 언급, 문의, 추천서, 관련
+qualify	자격을 주다, 자격을 얻다
+blossom	꽃, 꽃이 피다
+drain	배수하다, 고갈시키다, 소모시키다
+lessen	줄이다, 줄다
+respective	각각의
+soar	높이 치솟다, 비상(飛翔).
+equilibrium	평형, 균형, (마음의) 평정
+auditory	귀의, 청각의
+multiple	다수의, 배수(倍數)
+prominent	중요한, 유명한, 툭 튀어나온, 두드러진
+resistant	저항하는, 저항력이 있는, 잘 견디는
+evident	명백한, 분명한
+depress	우울하게 하다, 침체시키다
+intensify	강화하다, 강해지다
+compensation	보상(금)
+dismiss	쫓아내다, 해고하다, 묵살하다, 기각하다
+elaborate	정교한, 정교하게 만들다, 정성들인, 자세히 말하다
+psychological	심리적인, 정신적인
+scent	냄새, 향기, 냄새를 맡다
+tempt	유혹하다, 유도하다, 부추기다
+trace	자취, 흔적, 추적하다, 거슬러 올라가다
+treasure	보물, 소중히 하다, 높이 평가하다
+trigger	방아쇠, 계기, 유발하다
+profound	깊은, 심오한
+surgery	수술, 외과(의학)
+conceal	숨기다, 감추다
+literal	문자 그대로의, 있는 그대로의
+alert	경계하는, 기만한, 경보, 경보를 발하다
+refund	환불(금), 환불하다
+sophisticated	세련된, 교양 있는, 정교한, 복잡한
+currency	통화, 통용, 유통
+accommodate	적응시키다, 수용하다, 편의를 도모하다
+certificate	증명서, 자격증
+coordinate	조정하다, 조화시키다
+draft	초안, 선발, 징병, 통풍, 선발하다, 징병하다
+extension	확대, 연장, 증축, 내선
+extract	추출하다, 얻어내다, 뱔췌, 추출물
+fierce	사나운, 맹렬한, 격렬한
+steep	가파른, 엄청 비싼, 담그다
+nerve	신경, 신경과민, 용기, 뻔뻔스러움
+phase	단계, 국면, 모습, 양상, 단계적으로 하다
+identical	동일한, 똑같은, 일란성의
+stare	응시하다, 노려보다, 응시
+sedentary	주로 앉아서 하는, 정주하는, 몸을 많이 움직이지 않는
+regulate	규제하다, 조절하다
+supplement	보완, 보충, 보완하다, 보충하다
+suspend	매달다, 정학시키다, 중지하다, 보류하다
+depreciate	가치가 떨어지다, 평가 절하하다
+appliance	가전제품, 기구, 장치
+sublime	숭고한, 장엄한, 탁월한, 고상한
+deteriorate	악화되다, 악화시키다
+grasp	꽉 잡다, 꽉 잡기, 파악하다, 이해하다
+illegal	불법의
+ingredient	성분, 요소, 재료
+dedicate	바치다, 전념하다, 헌신하다
+urge	충동, 자극, 촉구하다, 재촉하다
+inherit	물려받다, 상속받다
+originate	생기다, 유래하다, 발명하다, 창시하다
+paralyze	마비시키다, 무력하게 만들다, 무효로 만들다
+recipient	수치인, 수령인, 그릇
+shrink	줄어들다, 움츠리다, 수축시키다
+transaction	거래, 매매, 처리(과정)
+expertise	전문적 지식(기술)
+successive	연속하는, 잇따르는
+inferior	열등한, 더 못한, 하위의
+facilitate	용이하게 하다, 촉진하다
+irrelevant	관계가 없는, 부적절한
+literary	문학의, 문학적인
+distort	비틀다, 왜곡하다
+optimal	최적의, 최선의
+rear	기르다, 양육하다, 뒤, 후방(배후)
+skeptical	회의적인, 의심 많은
+abstract	추상적인, 추출하다, 요약, 개요, 발췌
+empirical	경험에 의거한, 실증적인
+ethnic	인종의, 민족의
+allowance	허락, 승인, 참작, 고려, 용돈, 수당
+coverage	보도, 범위, 보상범위, 보급률
+incorporate	포함하다, 통합하다, 법인으로 만들다
+rationality	합리성, 이치에 맞음
+distract	주의를 딴 데로 돌리다, 산만하게 하다, 기분전환하다
+radical	근본적인, 급진적인
+infer	추론하다, 뜻하다
+reinforce	강화하다, 보강하다
+representative	대표, 대리인, 대표하는, 전형적인
+virtue	선(善), 미덕
+subordinate	하위의, 종속된, 부하, 종속시키다
+variation	변화, 차이, 변형
+withdraw	철회하다, 인출하다, 물러나다, 철수하다
+characterize	~의 특징이 되다, 특징짓다
+dilute	묽게 하다, 희석시키다, 약화시키다
+maintenance	유지, 정비, 지속, 생활비
+evoke	불러일으키다, 환기시키다
+exaggerate	과장하다
+infinite	무한한, 끝없는
+revelation	폭로, 드러냄, (신의) 계시
+magnify	확대하다, 과장하다
+nurture	키우다, 양육하다, 양육, 육성
+vague	모호한, 흐릿한
+strive	노력하다, 분투하다
+privilege	특권, 특권을 주다
+aesthetic	미적인, 미학적인, 미학, 미의식
+starvation	기아, 굶주림
+avalanche	눈사태, 산사태, 쇄도, 쇄도하다
+meditation	명상, 심사숙고
+forecast	예보하다, ~의 전조가 되다, 예측, 예보
+inappropriate	부적절한, 부적합한
+innate	타고난, 고유의, 본질적인
+intimate	친밀한, 사적인, 상세한, 암시하다, 넌지시 알리다
+kin	친족, 친척, 동류
+martial	싸움의, 전쟁의, 호전적인, 군대의
+niche	적합한 자리, (시장의) 틈새, 움푹 들어간 부분
+refuge	피난처, 도피처, 보호
+retrospect	회상, 회고, 추억
+savage	야만적인, 미개한, 야만인, 미개인
+antecedent	앞서는, 선행하는, 전례, 선행자, 조상
+visualize	마음속에 그리다, 상상하다
+constitute	구성하다, 제정하다, 설립하다
+ban	금지(령), 금지하다
+withstand	견뎌내다, 버티다, 저항하다
+vulnerability	취약성, 상처받기 쉬움
+declare	선언하다, 공표하다, 단언하다, (세관에) 신고하다
+affection	애정, 애착
+remedy	치료(약), 해결책, 구체책, 치료하다, 바로잡다
+immense	거대한, 막대한, 엄청난, 굉장한
+offspring	자식, 새끼, 소산
+incline	~하고 싶어지게 하다, 기울이다, 숙이다
+infrastructure	사회기반시설, 하부구조
+reluctant	꺼리는, 내키지 않는, 마지못해 하는
+innocent	순진한, 결백한
+instruct	가르치다, 교육하다, 명령하다, 지시하다
+infect	감염시키다, (병을) 옮기다
+possess	소유하다, 지니다, 갖추다
+refine	정제하다, 불순물을 제거하다, 세련되게 하다
+integrate	통합하다, 완전하게 하다, 차별을 없애다
+exploit	부당하게 이용하다, 착취하다, 이용(개발)하다, 영웅적 행위
+revenue	수입, 수익, 세입
+seize	붙잡다, 포착하다, 장악하다, 압류하다
+flatter	아첨하다, 우쭐거리게 하다, 돋보이게 하다
+stir	휘젓다, 움직이다, 선동하다, 자극하다
+substitute	대리(인), 대용품, 대신하다, 교체하다
+swell	부풀다, 팽창하다, 팽창, 증가
+simulate	~인체하다, 모의실험을 하다, 흉내 내다, 가장하다
+altitude	고도, 높이
+deprive	빼앗다, 박탈하다
+discharge	(짐, 승객을) 내리다, 풀어주다, 방출하다, 이행하다
+disguise	변장하다, 위장하다, 숨기다
+corrupt	부패한, 타락한, 부패시키다, 타락시키다
+patriot	애국자
+disregard	무시하다, 소홀히 하다, 무시, 경시
+domesticate	길들이다, 사육하다, 재배하다
+invariable	변함없는, 불변의, 불변의 것, 상수
+drastic	과감한, 철저한, 급격한, 극단적인
+devour	게걸스레 먹다, 탐독하다, 집어삼키다
+patronize	후원하다, 애용하다, 깔보는 듯한 태도로 대하다
+subsequent	그 다음의, 뒤이은
+substantial	상당한, 실질적인, 크고 튼튼한, 물질적인
+suburb	교외, 도시 근교
+ridiculous	웃기는, 터무니없는
+maneuver	신중하게 다루다, 조종하다, 조종, 전략적 행동
+portray	묘사하다, 표현하다
+thrive	번영하다, 번성하다, 잘 자라다
+sanction	인가, 승인, 인가하다, 제재, 처벌하다
+align	정렬시키다, 조정하다
+awe	두려움, 경외
+soothe	달래다, 진정시키다, 위로하다
+disparity	서로 다름, 불일치, 격차
+evaporate	증발하다, 사라지다
+indecision	우유부단, 결단력 없음
+realm	왕국, 국토, 영역, 범위
+furious	격노한, 몹시 화가 난, 맹렬한, 광란의
+humiliate	굴욕감을 주다, 창피를 주다
+affordable	(가격 등이) 알맞은
+physiology	생리학, 생리(기능)
+confer	수여하다, 주다, 상의하다, 의논하다
+curb	억제(구속)하다, 재갈, 고삐, (인도와 차도사이) 연석
+endurance	인내, 참을성, 지구력
+recess	휴식, 휴업, 휴교, 후미진 곳, 오지
+probe	철저히 조사하다, 캐다, 철저한 조사, 탐사
+vigorous	원기 왕성한, 활발한, 힘찬
+reciprocate	교환하다, 보답하다, 보복하다
+inspection	조사, 정밀검사, 사찰
+retrieve	되찾다, 회복하다, 만회하다
+solitary	고독한, 쓸쓸한, 단 하나의, 유일한
+spectacular	구경거리의, 장관의, 극적인
+weird	이상한, 기이한, 불가사의한
+weary	피곤한, 지친, 싫증이 난, 지긋지긋한
+superficial	표면의, 외부의, 피상적인, 얕은
+enthusiastic	열렬한, 열광적인
+generous	관대한, 후한, 풍부한, 비옥한
+convert	바꾸다, 전환하다
+collapse	무너지다, 붕괴하다, 붕괴, 폭락
+conform	일치하다, 일치시키다, 순응하다
+hierarchy	계층, 계급, 지배층
+insulate	절연(단열, 방음)하다, 고립시키다, 격리시키다
+forge	위조하다, 지어내다, 용광로, 단조하다, 만들어내다
+resort	의지하다, 호소하다, 의지, 휴양지, 자주 가다
+integral	필수적인, 일부로 포함된, 완전한
+interfere	방해하다, 간섭하다
+scope	범위, 영역, 크기
+ritualize	의례적으로 하다, 의식으로 행하다
+irrational	불합리한, 이성이 없는
+intermediate	중간의, 중간에 있는 것, 사이에 들어가다, 중재하다
+orient	동양, 향하게 하다, 적응시키다
+fossil	화석
+counterpart	대응관계에 있는 사람, 상대물
+proportion	비율, 비례, 조화, 몫, 할당, 부분
+royalty	왕족, 왕권, 사용료, 인세
+straightforward	직접적인, 솔직한, 간단한, 분명한
+attentive	주의 깊은, 세심한
+sincerity	성실, 진실, 정직
+scheme	계획, 안(案), 음모, 책략, 조직, 구성
+tender	부드러운, 연한, 상냥한
+undertake	(일, 책임을) 맡다, 떠맡다, 착수하다, 시작하다
+parallel	필적(일치)하다, 평행하다, 일치하는, 비슷한, 평행선
+intervention	사이에 끼어듦, 개입, 중재
+endeavor	노력, 시도, 노력하다, 애쓰다
+envision	마음속에 그리다, 상상하다
+expire	만료되다, 소멸하다, 죽다, (숨을) 내쉬다, 발산하다
+exclusive	배타적인, 배척하는, 독점하는
+illuminate	비추다, 밝히다, 계몽하다, 교화하다
+intrigue	흥미(호기심)를 불러일으키다, 음모, 음모를 꾸미다
+notorious	악명 높은, (나쁜 뜻으로) 널리 알려진
+outweigh	(가치, 중요성이) 보다 크다, 보다 무겁다
+overtake	따라잡다, 앞지르다, 갑자기 닥치다, 급습하다
+legitimate	합법의, 합리적인, 타당한
+prolific	다산의, 비옥한, 열매를 많이 맺는
+sensible	분별이 있는, 현명한
+rage	분노, 격노, 격렬함, 맹위, 분노하다, 맹위를 떨치다
+supervise	감독(관리, 지휘)하다
+undermine	약화시키다, 기초(토대)를 침식하다
+startle	깜짝 놀라게 하다, 깜짝 놀라다
+strain	긴장, 긴장시키다, 팽팽하게 하다, 상하게 하다, 노력하다
+setback	좌절, 실패, 방해, 역행
+pollinate	꽃가루받이하다, 수분하다
+surge	쇄도, 급상승, 쇄도하다, 치솟다
+vendor	행상인, 노점상, 판매자, 자동판매기
+utter	입 밖에 내다, 말하다, 완전한, 순전한, 철저한
+surpass	능가하다, 뛰어넘다
+deference	존경, 경의, 복종
+sediment	침전물, 앙금, 퇴적물
+acquisition	습득, 획득, 횡재
+adverse	반대의, 거스르는, 불리한
+affirmative	긍정적인, 확정적인, 적극적인
+barren	메마른, 불모의, 결실이 없는
+candid	솔직한, 숨김없는
+combustion	연소(발화), 산화
+communal	공동(공용, 공공)의, 공동체의
+disobedience	반항, 불복종, 위반
+conserve	보존하다, 보호하다, 유지하다
+console	위로하다, 콘솔
+contagion	전염, 감염, 감화, 영향
+dialect	방언, 사투리, 은어
+contempt	경멸, 멸시, 무시
+credibility	신뢰성, 진실성
+crude	자연그대로의, 가공하지 않은, 대충의, 조잡한, 교양 없는
+monetary	화폐의, 금융의
+dissent	반대, 반대하다, 의견을 달리하다
+diversify	다양(다각)화하다
+downplay	경시하다, 얕보다
+epic	서사시(의), 웅장한, 영웅적인
+equanimity	침착, 평정, 차분함
+fertility	비옥함, 다산, 생식력
+fluency	유창함, 달변
+formidable	무서운, 가공할, 어려운, 경이로운, 아주 뛰어난
+hostile	적대적인, 적개심을 가진
+humility	겸손, 스스로 낮춤
+multitude	군중, 대중, 다수, 수많음
+indispensable	필수적인, 없어서는 안 되는
+infest	들끓다, 창궐하다, 만연하다
+installment	할부금(연속물)의 1회분
+leakage	누설, 누수, 누출(물)
+naive	순진한
+liability	책임, 부채, 불리함, 하기 쉬움
+merger	합병, 융합
+mobility	움직이기 쉬움, 이동성, 사회적 유동성
+pester	괴롭히다, 성가시게 하다
+obscure	흐릿하게 하다, 숨기다 모호한, 잘 알려지지 않은
+deviate	벗어나다, 일탈하다
+spiral	나선(형), 소용돌이
+peripheral	주변의, 지엽적인, 중요하지 않은
+receptive	잘 받아들이는, 수용성의, 감수성이 있는
+petition	청원, 청원하다
+potent	강력한, 힘쎈, 영향력 있는, 효능이 있는
+pronounced	두드러진, 현저한, 분명한
+prophecy	예언
+oblivion	망각, 잊힘
+retreat	후퇴하다, 물러가다, 물러남, 피난(처)
+resume	다시 시작하다, 재개하다 되찾, 다, 회복하다
+restless	불안한, 휴식이 없는, 잠들지 못하는
+perish	죽다, 소멸하다, 사라지다
+rhetorical	미사여구의, 수사학의, 과장된
+stale	신선하지 않은, 진부한
+scenic	경치가 좋은
+simultaneous	동시에 일어나는[존재하는]
+spatial	공간의, 공간적인, 우주의
+utilitarian	실용적인, 실리의
+synthetic	합성의, 인조의, 진짜가 아닌
+texture	직물, 질감, 짜임새, 본질, 기질
+arbitrary	임의의, 자의적인, 독단적인
+tolerance	관용, 용인, 인내, 내성
+induce	설득하다, 꾀다, 유도하다, 유발하다
+unencumbered	장애물이 없는, 방해가 없는, 부채가 없는
+dimension	치수, 크기, 차원
+assemble	조립하다, 모으다, 모이다
+theft	도둑질, 절도
+awkward	어색한, 서투른, 다루기 힘든
+caution	경계, 주의, 조심, 경고하다
+vanish	사라지다, 없어지다
+explicit	명백한, 뚜렷한, 솔직한
+hinder	막다, 방해하다, 지연시키다
+implication	암시, 함축
+impose	부과하다, 지우다, 강요하다
+inhibit	억제하다, 금지하다, 막다
+initiate	시작하다, 일으키다, 가입시키다
+erroneous	잘못된, 틀린, 정도를 벗어난
+medicinal	약의, 약효가 있는, 치유력이 있는
+negotiate	협상하다, 교섭하다
+persist	고집하다, 주장하다, 지속하다, 존속하다
+scarcity	부족, 결핍, 기근, 희귀함
+profession	직업, 공언, 고백
+tease	놀리다, 집적거리다, 괴롭히다
+presumable	가정할 수 있는, 그럴듯한
+severe	가혹한, 심한, 맹렬한
+restraint	규제, 구속, 자제, 절제
+stiff	굳은, 단호한
+subsidize	보조금을 주다
+revenge	복수하다, 복수, 보복
+termination	종결, 결말, 끝, 종점
+violate	위반하다, 범하다, 어지럽히다, 방해하다
+wreck	난파선, 잔해, 만신창이, 난파시키다, 파괴하다
+adhere	들러붙다, 고수하다, 집착하다
+establishment	기관, 시설, 제도, 설립, 확립, 제정, 기득권층
+alleviate	완화시키다, 경감하다, 덜어주다
+abolish	폐지하다, 없애다
+circulate	돌다, 순환하다, 유포하다
+alternate	번갈아서 발생하다, 대체의, 번갈아가며 하는
+anchor	고정시키다, 닻을 내리다, 닻, 뉴스 프로 사회자
+collision	충돌, 대립
+celebrity	유명인사, 명성
+worship	숭배하다, 찬양하다, 존경하다, 숭배, 존경
+crave	갈망하다, 간청하다
+contemplate	응시하다, 명상하다, 심사숙고하다
+contract	수축하다, (병에) 걸리다, 계약하다, 계약서
+liberate	자유롭게 하다, 해방하다, 석방하다
+disperse	흩어지다, 분산시키다, 확산시키다
+embed	박다, 끼워 넣다
+entail	수반하다, 일으키다
+fatality	사망자(수), 치사율, 불의의 죽음, 운명, 숙명론
+fraud	사기, 가짜, 사기꾼
+hesitant	망설이는, 주저하는
+indefinite	불명확한, 불확정의, 막역한, 애매한
+inflame	불을 붙이다, 불태우다, 흥분시키다, 자극하다
+inflate	부풀리다, 팽창하다, 과장하다
+divulge	누설하다, 폭로하다
+internalize	내면화시키다, 흡수하다
+intrude	침범하다, 방해하다
+liken	비유하다, 비교하다
+contaminate	더럽히다, 오염시키다, 악영향을 주다
+momentary	순간적인, 찰나의
+dignity	위엄, 품위, 존엄성, 자존감
+pirate	표절하다, 저작권을 침해하다, 해적, 약탈하다
+preoccupy	완전히 마음을 빼앗다, 선점하다, 몰두하게 하다
+linger	오래 남아 있다, 꾸물거리다, 질질 끌다
+prevail	만연하다, 지배하다, 능가하다, 이기다
+proponent	제안자, 지지자
+refashion	고쳐서 만들다, 개조하다
+regain	되찾다, 회복하다, 복귀하다
+intertwine	뒤얽히다, 엮다, 엮이다
+shrub	관목, 키 작은 나무
+relocate	이동하다, 재배치시키다
+submerge	잠수하다, 물에 잠기게 하다
+advent	출현, 도래
+affluent	부유한, 풍족한
+agenda	과제, 의제, 비망록
+ally	결합하다, 동맹하다, 동맹자, 자기편, 동류[동종]
+anarchy	무정부 상태, 무질서, 혼란
+suppress	억압하다, 억제하다
+decent	괜찮은, 제대로 된, 예의 바른
+authenticate	인증하다, 진짜임을 밝히다
+asymmetry	부조화, 불균형, 비대칭
+apparatus	장치[기계], 기구[조직]
+barbarous	야만적인, 미개한, 잔인한, 난폭한
+concur	의견이 일치하다, 동의하다, 동시에 발생하다
+bland	부드러운, 온화한, 개성 없는, 자극성이 적은, 재미없는
+collaborative	공동 제작의, 합작의
+conviction	확신, 신념, 유죄판결
+charitable	자비로운, 너그러운, 관대한
+complimentary	칭찬하는, 무료의
+benevolent	인자한, 자애로운
+configuration	배열, 배치, 구성, 형태
+consensus	의견일치, 합의, 여론
+convergence	한 점으로 모임, 집중, 수렴, 융합
+brutality	잔인성, 야만성, 무자비함
+drawback	결점, 문제점
+render	(어떤 상태로) 만들다, 주다, 제시하다
+clumsy	어색한, 서투른
+arrogance	오만[거만, 교만], 건방짐
+defective	결함이 있는, 불완전한
+beneficiary	수혜자, 수령인
+farsighted	원시의, 선견지명의
+definitive	최종적인, 결정적인, 가장 확실한, 명확한
+degenerative	퇴보하는, 퇴행성의
+stipulate	규정하다, 명기하다, 조건으로 요구하다
+disproportionate	불균형의, 어울리지 않는
+dormant	잠자고 있는, 잠복하고 있는
+dreary	황량한, 음울한, 따분한, 지루한
+durable	내구성이 있는, 오래가는
+eligible	자격이 있는, 적격의, 선출할 만한
+elusive	잡히지 않는, 교묘히 피하는, 규정하기 어려운
+evade	피하다, 모면하다, 잘 빠져나가다
+exert	(힘을) 행사하다, 미치다, 분투하다, 애쓰다
+faculty	능력, 재능, 교직원 전체, 교수진
+famine	굶주림, 기근, 극심한 결핍
+demolition	파괴, 폭파, 타파
+formulate	체계화하다, 고안하다, 만들어내다
+fraction	부분, 파편, 소량, 분수
+frenzy	극도의 흥분, 열광, 광란
+discernible	인식할 수 있는
+dysfunctional	기능 장애가 있는, 문제가 있는
+friction	마찰, 알력, 불화, 충돌
+fulfilling	성취감을 주는, 만족스러운
+glimpse	흘끗 봄, 일견, 흘끗 보다
+grin	활짝 웃다, 씩 웃다
+heritage	유산, 전통
+immortal	죽지 않는, 불사의, 영원한
+impart	주다, 전하다, 알리다
+impulsive	충동적인, 즉흥적인
+distress	고통, 괴로움, 고통스럽게 하다, 괴롭히다
+incompetent	무능한, 무자격의, 쓸모없는
+indulge	제멋대로 하다, 탐닉하다, 충족시키다
+insanity	정신 이상, 광기, 미친 짓
+insecure	불안정한, 위험한, 확신하지 못하는, 자신이 없는
+insufficient	불충분한, 부족한, 능력 없는
+insurmountable	극복할 수 없는, 넘을 수 없는
+introspective	자기 성찰의, 자신을 돌이켜보는
+intuitive	직관적인, 직감적인
+inventive	창의적인, 독창적인
+irreplaceable	대신할 수 없는, 둘도 없는
+illiterate	문맹의, 무식한
+inventory	목록, 재고품
+meticulous	꼼꼼한, 세심한, 좀스러운
+legacy	유산, 유물
+leisurely	서두르지 않는, 느긋한, 한가한, 느긋하게
+mandatory	명령의, 의무적인, 필수적인
+maternity	어머니가 됨, 모성, 산부인과 병원
+merchandise	상품, 제품
+legible	읽기 쉬운, 명료한
+municipal	지방 자치의, 시립의
+needy	몹시 가난한, 빈곤한, 애정에 굶주린
+negligence	부주의, 태만, 소홀함
+notable	주목할 만한, 유명한
+imperceptible	(너무 작아) 감지할 수 없는
+offensive	불쾌한, 모욕적인, 공격적인, 화나게 하는, 적극적인
+onlooker	구경꾼, 방관자, 목격자
+oppress	억압하다, 괴롭히다
+orphanage	고아원, 고아임
+optical	눈의, 시각의, 광학상의, 빛의
+permanence	영원성, 불변, 내구성
+litter	쓰레기, 한배에서 난 새끼, 어질러 놓다
+morale	사기, 의욕
+paradox	역설, 모순, 궤변
+pessimism	비관, 비관주의, 염세주의
+pervasive	만연하는, 스며드는, 침투성의
+proficient	능숙한, 숙달된
+prosperous	번영하는, 성공한, 순조로운
+pursue	뒤쫓다, 추구하다
+reclaim	개간하다, 간척하다, 갱생시키다, 되찾다
+recruit	모집하다, 징집하다, 신입 사원, 신병
+redundant	남아도는, 중복의, 불필요한
+remnant	나머지, 남은 것, 자취
+reign	지배하다, 통치하다, 통치, 지배
+replicate	반복하다, 복제하다
+respiratory	호흡의, 호흡 기관의
+rigorous	엄격한, 엄밀한, 혹독한
+slender	날씬한, 가느다란, 호리호리한, 빈약한
+stereotype	고정관념, 정형화하다, 고정관념을 형성하다
+speculate	추측하다, 사색하다, 투기하다
+spontaneity	자발성, 자연스러움
+sneak	살금살금 들어오다, 훔치다, 슬쩍하다
+renowned	유명한, 명성 있는
+solidarity	연대, 결속, 단결
+tedious	지루한, 싫증나는
+stern	엄격한, 단호한, 가차 없는
+subscribe	서명하다, 구독하다, 가입하다, 기부하다
+subtract	빼다, 삭감하다, 공제하다
+suspicious	의심이 많은, 잘 믿지 않는, 수상한, 의심스러운
+susceptible	영향을 받기 쉬운, 민감한, 예민한, 여지가 있는, 허용하는
+temperament	기질, 성질, 체질
+temporal	시간의, 일시적인, 현세의, 세속적인
+testimony	증거, 증명, 증언
+transition	변천, 이행, 과도기
+underestimate	과소평가하다, 경시하다
+underpin	보강하다, 뒷받침하다, 지지하다
+unpaved	포장하지 않은, 돌을 깔지 않은
+urgency	긴급, 위급, 절박함
+vegetation	초목, 식물
+viable	생존 가능한, 실행 가능한, 실용적인
+verification	확인, 검증, 증명
+vie	다투다, 겨루다, 경쟁하다
+stride	울부짖다, 한탄하다, 울부짖음, 통곡, 비탄
+unimpeded	가로막는 것이 없는, 방해받지 않는
+adjacent	인접한, 붙어 있는, 근처의
+withhold	보류하다, 주지 않다, 억누르다, 억제하다
+ambiguous	모호한, 두 가지 뜻을 지닌
+approval	승인, 인가, 인정, 찬성, 칭찬
+assess	평가하다, 감정하다, 부과하다, 매기다
+assurance	확신, 자신, 보증, 확언
+complementary	상호 보완적인, 보충하는
+comprise	구성되다, 포함하다
+outdo	~을 능가하다, ~보다 뛰어나다
+conceive	상상하다, 마음에 품다, 임신하다
+confine	한정하다, 가두다
+decay	부패하다, 썩다, 쇠퇴하다, 부패, 쇠퇴
+differentiate	구별하다, 차별하다
+dispose	처리하다, 처분하다, 배치하다, 배열하다, 마음이 생기게 하다
+equivalent	동등한, 대등한, 동등한 것, 등가물
+erode	침식하다, 부식하다, 좀먹다, 야위게 하다
+greed	탐욕, 큰 욕심
+implementation	이행, 실행, 완성
+implicit	함축적인, 내포된, 은연중의
+prohibition	금지
+migratory	이동하는, 방랑성의
+missionary	선교사, 사절
+modesty	겸손, 겸허, 정숙, 단정함, 중용
+ornamental	장식의, 장식용의
+postpone	연기하다, 뒤로 미루다
+premise	전제, 앞서 한말, 구내, 건물, 가정하다, 전제하다
+quote	인용하다, 예로 들다
+rejoice	크게 기뻐하다
+intrinsic	본질적인, 내재하는, 고유한
+preservation	보존, 보호, 보관, 저장
+regime	정치 제도, 정권
+ripen	익다, 숙성하다, 원숙해지다
+compromise	타협하다, 위태롭게 하다, 타협, 화해, 절충
+loyal	충성스러운, 충직한, 성실한
+specify	상술하다, 명기하다, 구체적으로 말하다
+tame	길들이다, 복종시키다, 길들인, 온순한
+unattainable	도달할 수 없는, 달성할 수 없는
+undeserved	받을 자격이 없는, 부당한
+unparalleled	비할 데 없는, 견줄 데 없는, 유례없는
+abound	많이 있다, 풍부하다
+utilize	이용하다, 활용하다
+vain	자만심이 강한, 헛된, 효과 없는
+exemplify	예시하다, ~의 좋은 예가 되다
+accord	일치하다, 조화되다, 일치, 합의, 주다, 수여하다
+addictive	중독성의, 습관성의
+authorize	권한을 부여하다, 허가하다, 인정하다
+belittle	과소평가하다, 경시하다, 얕보다
+besiege	둘러싸다, 포위하다, 공격하다
+compatible	양립할 수 있는, 호환이 되는, 일치하는, 모순 없는
+chronic	만성적인, 습관적인, 장기간에 걸친
+clinical	임상적인, 임상 치료의, 분석적인, 냉정한
+covert	비밀의, 숨겨진, 은밀한
+cram	억지로 쑤셔 넣다, 벼락치기 공부를 하다
+unprecedented	전례가 없는
+degrade	(가치, 지위를) 떨어뜨리다, 타락하다
+designate	가리키다, 나타내다, 지명하다, 임명하다
+dictate	받아쓰게 하다, 구술하다, 명령하다, 명령, 규칙, 요구
+decode	암호를 풀다, 해독하다
+anatomy	해부, 분석, 해부학, 구조, 몸
+epidemic	유행(병), 전염병
+erupt	분출하다, 폭발하다
+figurative	비유적인, 상징적인
+flaw	흠, 결점, 약점
+fleeting	어느덧 지나가는, 순식간의, 덧없는
+fortify	강화하다, 굳히다
+immune	면역이 된, 면역의, 면제된, 영향을 받지 않는
+impair	해치다, 손상시키다
+incur	초래하다, 자초하다, 발생시키다
+inhabitant	거주자, 서식 동물
+inscribe	새기다, 파다, 쓰다
+invade	침입하다, 침투하다
+irrigate	물을 대다, 관개하다
+mourn	슬퍼하다, 애도하다
+oblige	의무적으로 시키다, 강요하다, 은혜를 베풀다
+prescribe	처방하다, 지시하다, 규정하다
+refute	반박하다, 잘못을 밝히다
+regressive	후퇴하는, 역 누진의
+resent	분개하다, 원한을 품다
+introvert	내향적인 사람
+dissolve	녹이다, 융해하다
+postulate	가정하다, 요구하다, 가정, 필요조건
+localize	국한시키다, 집중하다
+stabilize	안정시키다, 고정시키다
+stink	악취를 풍기다, 악취, 고약한 냄새
+stroll	산책하다, 한가로이 거닐기, 산책
+surplus	과잉, 잉여, 흑자
+tenant	세입자, 임차인
+thrust	세게 밀다, 밀치다, 찌름
+unanimous	만장일치의, 이의가 없는
+validate	입증하다, 실증하다, 승인하다
+tyrant	폭군, 독재자
+confirm	확인하다, 승인하다, 굳히다
+constrain	강요하다, 억제하다, 속박하다
+preliminary	예비의, 준비의, 서두, 사전준비
+stance	자세, 발의 위치, 입장, 태도
+velocity	속도, 빠름, 회전율
+nomadic	유목의, 방랑의
+deform	모양을 훼손하다, 변형시키다
+superstitious	미신의, 미신을 믿는
+conscientious	양심적인, 성실한, 세심한
+override	뒤엎다, 압도하다, 우선하다
+perspiration	땀, 발한, 노력
+precede	선행하다, 앞서다, 우선하다
+attribute	~의 탓으로 돌리다, 속성, 특성
+deliberate	의도적인, 계획적인, 숙고하다, 심의하다
+obstruct	막다, 방해하다
+flammable	가연성의, 불붙기 쉬운
+testify	증명하다, 증언하다
+lease	임대, 임대차 계약, 임대하다
+encompass	포함하다, 망라하다, 에워싸다, 둘러싸다
+proclaim	선언하다, 명시하다
+impoverish	가난하게 하다, 저하시키다
+aversion	혐오, 반감, 싫은 것
+cumulative	누적되는, 점점 쌓이는
+enforce	시행하다, 집행하다
+contradict	부정하다, 모순되다
+interrupt	중단하다, 가로막다
+augment	늘리다, 증가하다
+prestige	명성, 인기, 위신
+behold	주시하다, 바라보다
+applicable	적용할 수 있는, 적절한, 타당한
+proactive	앞서서 주도하는, 주도적인, 솔선하는, 진취적인
+compelling	하지 않을 수 없는, 강력한, 강제적인
+extravagant	낭비하는, 지나친, 터무니없는
+cognitive	인식의, 인지적인
+tact	감각, 재치, 요령
+expel	내쫓다, 제명하다
+truce	휴전, 정전, 중단
+reconcile	화해하다, 중재하다, 받아들이게 하다
+supreme	최고의, 최후의
+inexhaustible	고갈되지 않는, 지칠 줄 모르는
+summon	소환하다, 불러내다
+poise	침착, 평형, 몸가짐, 평형(태세)을 유지하다
+stifle	숨 막히게 하다, 억압하다
+deadlock	교착상태, 막다른 골목, 교착상태가 되다
+omission	생략, 빠뜨림, 태만
+tactic	전술, 작전, 병법, 술책
+aboriginal	토착의, 원주민의, 원래의
+indignant	분개한, 성난
+prioritize	우선시키다, 우선순위를 매기다
+desert	저버리다, 도망가다, 방치하다
+deceptive	속이는, 현혹시키는
+sojourn	체류하다, 묵다, 체류, 체재, 기숙
+brag	자랑하다, 뽐내다. 자랑, 허풍
+grievous	비통한, 슬픈, 심한, 가혹한
+impatience	조급함, 참을 수 없음
+snore	코를 골다, 코 골기
+hospitality	환대, 수용
+captive	포로의, 사로잡힌, 포로
+bureaucratize	관료화하다, 관료 체제로 만들다
+condense	농축하다, 요약하다, 간추리다
+elicit	이끌어 내다, 유도해내다
+nutritious	영양분이 많은
+quiver	떨리다, 진동, 떨림
+evacuate	비우다, 피난시키다
+electoral	선거의, 유권자의
+authoritarian	권위적인, 권위주의적인
+dreadful	굉장히 무서운, 몹시 싫은, 끔찍한
+disdain	경멸하다, 경멸, 무시
+sentiment	의견, 생각, 소감, 감정, 기분, 정서
+causal	인과 관계의, 원인이 되는
+seductive	유혹적인, 매력적인
+relish	맛, 풍미, 재미, 즐기다, 음미하다
+indigenous	토착의, 타고난, 고유한
+condemn	비난하다, 선고하다, 유죄판결을 내리다
+dictator	독재자, 지배자
+extinguish	(불을) 끄다, 소멸시키다
+criterion	표준, 척도, 규범
+throne	왕좌, 왕위
+convince	설득하다, 확신시키다
+freight	화물, 차에 싣는 짐
+imperative	긴급한, 중요한, 명령, 필요성
+resourceful	재주가 있는, 자원이 풍부한
+ingratitude	은혜를 모름, 배은망덕
+revolve	회전하다, 돌다
+shabby	초라한, 누추한, 비열한
+certify	증명하다, 보증하다
+assert	단언하다, 주장하다
+disillusion	환상을 깨뜨리다, 각성, 환멸
+comprehensive	포괄적인, 종합적인
+inhale	숨을 들이쉬다, 흡입하다
+segregate	분리하다, 차별하다
+excavate	파다, 발굴하다
+sewage	하수, 오물, 시궁창 물
+marital	결혼의, 부부의, 남편의
+tilt	기울다, 기울기, 경사
+deploy	배치하다, 전개하다, 활용하다
+intimidate	겁주다, 협박하다, 위협하다
+disjoin	떼어놓다, 분리시키다
+contend	다투다, 싸우다, 경쟁하다
+inverse	역의, 반대의, 거꾸로 된
+catalyst	촉매, 자극제, 계기
+altruistic	이타적인
+posture	자세, 태도
+intact	온전한, 손상되지 않은
+immerse	담그다, 가라앉히다, 몰두시키다
+traverse	가로지르다, 횡단하다
+pious	경건한, 신앙심이 깊은
+savor	맛보다, 음미하다, 맛, 풍미
+verse	운문, 시
+strangle	조르다, 질식시키다, 교살하다
+hostage	인질, 담보
+rash	발진, 뾰루지, 경솔한 성급한, 지각없는
+pledge	맹세하다, 서약하다, 맹세, 서약, 저당
+inconsistent	일관성 없는, 일치하지 않는, 모순된
+traitor	배신자, 반역자, 역적
+unfounded	근거 없는, 사실 무근의
+connotation	암시[함축], 함축적 의미
+marginalize	소외시키다, 주류에서 몰아내다
+legislature	입법부, 국회
+retort	반박하다, 되쏘아 붙이다, 말대꾸, 반박
+plead	간청하다, 변명하다
+grim	엄한, 험악한, 무자비한
+overwhelm	압도하다, 당황하게 하다
+frail	연약한, 깨지기 쉬운
+subside	가라앉다, 침몰하다
+perseverance	인내, 끈기, 불굴의 노력
+artisan	공예가, 장인[기능공]
+adhesive	점착성의, 끈끈한, 접착제
+acquaint	숙지시키다, 알게 하다
+renovate	새것으로 만들다, 수리하다, 혁신하다
+satiate	충분히 만족시키다, 물리게 하다
+proposition	진술, 주장, 명제, 제의, 일, 문제
+congest	붐비게 하다, 가득 채우다
+disprove	틀렸음을 입증하다, 반증하다, 반박하다
+neutralize	중립화하다, 중화하다
+segment	부분, 조각, 단편, 나누다, 분할하다
+masculine	남자의, 남성적인
+recurrent	되풀이되는, 재발하는
+ponder	깊이 생각하다, 숙고하다
+impenetrable	들어갈 수 없는, 이해할 수 없는
+pregnant	임신한
+serenity	고요함, 평온함, 침착
+hypothesize	가설을 세우다, 가정하다
+instill	주입하다, 스며들게 하다
+despise	경멸하다, 혐오하다, 깔보다
+eradicate	뿌리 뽑다, 근절하다
+venue	현장, 발생지, 장소
+scant	불충분한, 빈약한, 빠듯한, 부족한
+jury	배심원단, 심사원단
+compound	약화시키다, 절충하다, 혼합하다, 혼합의, 혼합물
+indiscriminate	무차별적인, 가리지 않는, 난잡한
+subdue	진압하다, 억누르다, 억제하다
+confide	신뢰하다, 털어놓다
+emphatic	강조하는, 단호한, 확실한
+incidence	발생, 발생률
+modification	변경, 조절
+polarize	양극화하다, 편향하다
+impartial	공정한, 치우치지 않은
+attune	조율하다, 맞추다
+ignorant	무식한, 교육받지 못한, 무례한, 모르는
+involuntary	자기도 모르게 하는, 마지못해 하는, 본의 아닌
+inflict	가하다, 괴롭히다
+pretense	겉치레, 가장, 부당한 주장
+perpetuate	영속시키다, 불멸하게 하다
+hygienic	위생적인, 건강에 좋은
+populate	거주하다, 살다, 차지하다
+ascend	오르다, 상승하다
+equity	공평함
+sarcastic	빈정대는, 비꼬는, 풍자적인
+shiver	떨다, 전율하다, 떨림, 전율
+devastate	황폐화시키다, 철저히 파괴하다
+casualty	사상자, 희생자
+refer	언급하다, 문의하다, 돌리다, 귀속시키다
+detract	손상시키다, (가치를) 떨어뜨리다, 비방하다
+temperate	온화한, 적당한, 절제된, 중용의
+punctuate	구두점을 찍다, 중단시키다
+senate	상원, 원로원
+stubborn	고집 센, 완고한
+mischievous	짓궂은, 개구쟁이의, 해를 끼치는, 악영향의
+absurdity	불합리, 모순, 어리석음
+entrench	참호를 파다, 단단히 자리 잡다, 확립하다
+snob	속물, 고상한 척하는 사람
+cohesive	응집성의, 결합력이 있는
+prudence	현명함, 분별, 신중
+demanding	힘든, 고된, 요구가 많은
+autonomous	자치의, 자율적인
+precept	지침, 가르침
+shudder	떨다, 진동하다, 몸서리치다, 떨림, 전율
+tenure	보유, 재직, 임차
+sanitation	공중위생, 위생 시설
+ingenious	독창적인, 영리한
+tread	밟다, 걷다, 밟기, 발걸음, 발바닥
+propagate	보급하다, 퍼뜨리다, 선전하다, 번식시키다, 증식시키다
+protagonist	주인공, 주역, 주창자
+itinerary	여행 스케줄, 여행 계획
+courteous	예의바른, 정중한
+divert	딴 데로 돌리다, 전환하다
+convict	유죄를 선고하다, 유죄 선고 받은 사람, 죄수
+disruption	분열, 혼란
+fluctuate	오르내리다, 동요하다
+slaughter	도살, 살육, 도살하다, 살육하다
+obsession	강박 관념, ~에 사로잡힘
+allure	유인하다, 유혹하다, 매력, 유혹
+dehydrate	건조시키다, 탈수 상태가 되다
+instigate	부추기다, 선동하다
+coward	겁쟁이, 비겁자
+vocation	직업, 천직, 소명
+compassionate	동정심이 많은, 인정 많은
+trivial	사소한, 하찮은, 평범한, 진부한
+rustic	시골뜨기, 촌놈, 시골의, 소박한
+exhort	강력히 권하다, 충고하다, 열심히 설득하다
+aviation	비행, 항공기
+anonymity	익명
+inflexible	구부릴 수 없는, 경직된
+versatile	다재다능한, 만능의
+conducive	도움이 되는, 기여하는
+sermon	설교, 훈계, 잔소리
+spoilage	손상, 파괴, 부패
+yearn	갈망하다, 동경하다
+triumphant	크게 승리한, 성공한, 의기양양한, 승리에 취한
+monk	수도자
+fragrance	향기, 향수
+monopoly	독점, 전매
+decompose	분해하다, 부패하다
+inaccessible	접근하기 어려운, 걷기 힘든
+prevention	예방, 저지, 방해
+mundane	지상의, 세속적인, 평범한, 재미없는
+hypocritical	위선의, 위선적인
+obese	비만인, 뚱뚱한
+compulsory	강제적인, 의무적인, 필수적인
+duplicate	복제하다, 복사하다, 똑같은 것, 사본, 복제품
+refrain	삼가다, 자제하다, 후렴구, 자주 반복되는 말
+detached	떨어져 있는, 분리된, 공평한, 객관적인, 초연한
+funeral	장례식
+cliche	상투적인 말, 틀에 박힌, 진부한
+repent	후회하다, 참회하다
+efficacy	효능, 효력
+layman	문외한, 비전문가, 평신도
+prolong	늘리다, 연장하다
+thwart	방해하다, 좌절시키다
+empathize	공감하다, 감정 이입하다
+plantation	열대 지방의 농장, 농원
+gnaw	갉아먹다, 침식하다, 괴롭히다
+temper	성질, 기질, 기분, 조절하다, 단련하다
+transcend	초월하다, 능가하다
+obstinate	완고한, 외고집의
+stingy	인색한, 쩨쩨한, 부족한
+lurk	숨다, 잠복하다
+elated	의기양양한, 우쭐대는, 마냥 신난
+sober	술 취하지 않은, 냉정한, 술을 깨다, 냉정해지다
+implore	애원하다, 간청하다
+conquest	정복, 승리, 획득
+irreversible	돌이킬 수 없는, 취소할 수 없는
+strand	가닥, 오도 가도 못하게 하다, 좌초시키다
+ample	풍부한, 넓은, 풍만한
+underlying	근본적인, 아래에 놓여 있는, 숨겨진
+analogous	유사한, 비슷한
+discrepancy	차이, 괴리, 불일치
+inadequate	불충분한, 부적당한
+justification	정당화, 명분, 변명
+slack	느슨한, 꾸물거리는, 느슨함, 늘어짐, 처짐
+conclusive	결정적인, 최종적인, 명확한
+dispense	분배하다, 베풀다, ~없이 지내다, 필요 없게 하다
+plunder	강탈하다, 횡령하다, 표절하다
+rebel	반란자, 반항자, 반란을 일으키다, 반항하다
+coincide	동시에 일어나다, 일치하다, 부합하다
+crumble	가루가 되다, 부서지다, 힘없이 무너지다
+deplete	고갈시키다, 비우다
+catastrophe	대참사, 재앙, 파국, 대단원
+torture	고문하다, 괴롭히다, 비틀다, 고문, 고뇌
+mutate	돌연변이하다, 변화하다, 변화시키다
+tangle	얽힘, 혼란, 엉키다, 얽히게 되다
+reunify	재통일하다, 재통합하다
+transparent	투명한, 명백한
+germinate	싹트다, 성장하다
+mortgage	저당, 대출, 융자, 저당 잡히다, 담보 대출하다
+inquisitive	호기심이 강한, 꼬치꼬치 캐묻는
+reproach	비난, 질책, 불명예, 비난하다, 꾸짖다
+obsolete	구식의, 더 이상 쓸모없는
+riot	폭동, 소요, 폭동을 일으키다
+nominal	명목상의, 이름뿐인
+betrayal	배신, 밀고, 배반
+publicize	널리 알리다, 광고하다, 선전하다
+sniff	코를 킁킁거리다, 냄새 맡다, 코를 킁킁거림
+splendid	화려한, 훌륭한, 멋진
+unorthodox	비정통적인, 인습적이지 않은
+detest	혐오하다, 몹시 싫어하다
+sway	흔들리다, 흔들다, 흔들림, 동요, 지배
+engross	몰두시키다, 빼앗다
+delusion	현혹, 망상, 착각
+transplant	이식하다, 이식, 이주
+improvise	즉석에서 짓다, 임시변통하다
+controversial	논란이 되는, 토론을 좋아하는
+predicate	단정하다, 근거를 두다, 입각하다
+overturn	뒤집다, 전복하다, 전복, 붕괴
+manifestation	명시, 표명, 출현, 발현
+consecutive	연속적인, 앞뒤가 맞는
+dispatch	급파하다, 신속히 처리하다, 급파, 신속한 처리
+bewitch	흘리다, 매료시키다, 넋을 빼앗다
+lateral	옆의, 측면의, 방계의
+contour	등고선, 윤곽(선)
+conceit	자부심, 자만심
+heredity	유전, 유전적 특징
+pungent	자극적인, 신랄한, 날카로운
+vicious	나쁜, 악랄한, 잔인한
+preach	설교하다, 전도하다
+punctuality	시간 엄수, 정확함
+provocative	자극적인, 화나게 하는
+discretion	사려분별, 신중함, 재량
+rehabilitation	갱생, 재활, 회복, 복직
+bewilder	당황하게 하다, 어리둥절하게 하다
+stagger	비틀거리다, 흔들리다, 깜짝 놀라게 하다
+ingest	섭취하다, 받아들이다
+predisposed	~하기 쉬운, 경향이 있는
+fabricate	만들다, 제작하다, 위조하다
+composed	침착한, 평온한
+offset	상쇄하다, 벌충하다, 상쇄, 벌충, 보충
+outlaw	불법화하다, 금지하다, 무법자, 상습범
+stout	뚱뚱한, 비만한, 튼튼한, 강한, 단호한, 용감한
+metabolism	신진대사, 대사 작용
+plausible	그럴듯한, 정말 같은
+stumble	발부리가 걸리다, 비틀거리다, 더듬다, 우연히 발견하다
+self-contained	자급자족인, 독립적인, 말수가 적은, 자제하는

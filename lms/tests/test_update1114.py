@@ -89,3 +89,16 @@ class Update1114(unittest.TestCase):
         again = self.s.post("/s/games/vocab/start", json={"resume": 1}).get_json()
         self.assertEqual((again["round_id"], again["done"], again["score"]), (rid, 3, 3))
         self.assertNotIn("hint", json.dumps(again["questions"]))
+
+    def test_wordmaster_list_and_confusable_choices(self):
+        import vocab
+        self.assertEqual(vocab.ORDER[:3], ["abandon", "feature", "colleague"])          # 책 Day 01 순서
+        self.assertEqual(vocab.ORDER[20], "commercial")                                 # Day 02 첫 단어
+        self.assertGreaterEqual(len(vocab.WORDS), 1600)
+        self.assertEqual(vocab._near("adapt")[0], "adopt")                              # 헷갈리는 단어가 보기로
+        self.assertIn("preserve", vocab._near("reserve")[:3])
+        for w in vocab.ORDER[:200]:
+            q = vocab._mc(w)
+            self.assertEqual(len(set(q["choices"])), 4)
+            others = vocab._others(w, 3)
+            self.assertFalse(any(vocab._SENSE[x] & vocab._SENSE[w] for x in others))    # 정답이 둘이 되지 않게

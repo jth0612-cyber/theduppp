@@ -1,8 +1,10 @@
-"""미니 Quiz · 영단어: 수능 영단어를 하루 20개씩. 오늘의 단어는 그날 처음 열 때 정해지고 하루 동안 그대로다.
+"""미니 Quiz · 영단어: 워드마스터 하이퍼 2000 (Day 01~50)을 하루 20개씩, 그 뒤로 수능 영단어. 오늘의 단어는 그날 처음 열 때 정해지고 하루 동안 그대로다.
 틀린 단어는 복습에 모이고, 복습에서 맞히면(맞힌 횟수 ≥ 틀린 횟수) 빠진다."""
+import difflib
 import json
 import os
 import random
+import re
 from datetime import date, datetime
 
 from db import execute, query
@@ -11,28 +13,33 @@ DAILY = 20
 
 
 def _load():
-    words, seen = [], set()
+    """data/vocab_*.txt 를 이름 순서로 읽는다. vocab_a_wordmaster(책 순서 Day 01~50)가 먼저, 나머지는 뒤에 붙는다."""
+    book, extra, seen = [], [], set()
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
     for fn in sorted(os.listdir(d)):
-        if not (fn.startswith("vocab_csat") and fn.endswith(".txt")):
+        if not (fn.startswith("vocab_") and fn.endswith(".txt")):
             continue
+        dest = book if fn.startswith("vocab_a_") else extra
         with open(os.path.join(d, fn), encoding="utf-8") as f:
             for line in f:
                 line = line.rstrip("\n")
                 if not line or line.startswith("#") or "\t" not in line:
                     continue
                 w, m = line.split("\t", 1)
+                w = w.strip()
                 if w not in seen:
                     seen.add(w)
-                    words.append((w.strip(), m.strip()))
-    return words
+                    dest.append((w, m.strip()))
+    return book, extra
 
 
-WORDS = _load()
+_BOOK, _EXTRA = _load()
+WORDS = _BOOK + _EXTRA
 MEANING = dict(WORDS)
-# 날마다 여러 알파벳이 섞이도록 순서를 한 번 섞어 둔다 (모든 학생이 같은 순서)
-ORDER = [w for w, _ in WORDS]
-random.Random(2028).shuffle(ORDER)
+# 순서: 책 Day 01~50 은 책 순서 그대로(하루 20개 = 책의 하루), 그 뒤 단어는 한 번 섞어 둔다
+_tail = [w for w, _ in _EXTRA]
+random.Random(2028).shuffle(_tail)
+ORDER = [w for w, _ in _BOOK] + _tail
 _rng = random.SystemRandom()
 
 
@@ -65,9 +72,75 @@ def stats(uid):
             "today": dict(today) if today else None}
 
 
+# ---------- 헷갈리는 보기 고르기 ----------
+def _senses(m):
+    return {x.strip() for x in re.split(r"[,;]", re.sub(r"\(.*?\)", "", m)) if x.strip()}
+
+
+def _pos(m):
+    """뜻의 끝말로 품사를 어림한다: v 동사 / a 형용사 / n 명사 (여러 개일 수 있다)."""
+    out = set()
+    for x in _senses(m):
+        if x.endswith("다"):
+            out.add("v")
+        elif x.endswith(("한", "의", "인", "는", "운", "된", "은", "적")):
+            out.add("a")
+        elif x.endswith(("게", "히", "이", "로")) and len(x) <= 5:
+            out.add("d")
+        else:
+            out.add("n")
+    return out
+
+
+_POS = {w: _pos(m) for w, m in WORDS}
+_SENSE = {w: _senses(m) for w, m in WORDS}
+_near_cache = {}
+
+
+def _near(w):
+    """w 와 헷갈리기 쉬운 단어 12개: 철자가 닮았고(같은 머리·꼬리, 비슷한 길이) 품사가 겹치는 것부터."""
+    if w in _near_cache:
+        return _near_cache[w]
+    lw = w.lower()
+    scored = []
+    for x in MEANING:
+        if x == w or _SENSE[x] & _SENSE[w]:                 # 뜻이 겹치면 정답이 둘이 되므로 뺀다
+            continue
+        lx = x.lower()
+        sc = difflib.SequenceMatcher(None, lw, lx).ratio()
+        if lx[:3] == lw[:3]:
+            sc += 0.25
+        elif lx[:2] == lw[:2]:
+            sc += 0.12
+        if lx[-3:] == lw[-3:]:
+            sc += 0.15
+        if _POS[x] & _POS[w]:
+            sc += 0.3                                       # 품사가 같아야 그럴듯하다
+        sc -= abs(len(lx) - len(lw)) * 0.02
+        scored.append((sc, x))
+    scored.sort(reverse=True)
+    _near_cache[w] = [x for _, x in scored[:12]]
+    return _near_cache[w]
+
+
 def _others(w, n):
-    pool = [x for x, _ in WORDS if x != w and MEANING[x] != MEANING[w]]
-    return _rng.sample(pool, n)
+    """오답 보기 n개: 철자가 닮고 품사가 같은 단어에서 고른다."""
+    near = _near(w)
+    if n == 1:
+        picks = [_rng.choice(near[:4])]
+    else:                                                   # 가장 헷갈리는 둘은 늘 넣고, 나머지는 판마다 바꾼다
+        picks = near[:2] + _rng.sample(near[2:9], max(0, n - 2))
+        _rng.shuffle(picks)
+    out = []
+    for x in picks:                                         # 보기끼리도 뜻이 겹치지 않게
+        if not any(_SENSE[x] & _SENSE[y] for y in out):
+            out.append(x)
+    for x in near:
+        if len(out) >= n:
+            break
+        if x not in out and not any(_SENSE[x] & _SENSE[y] for y in out):
+            out.append(x)
+    return out[:n]
 
 
 def _mc(w):                       # 단어 → 뜻 (4지)
