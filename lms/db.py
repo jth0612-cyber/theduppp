@@ -114,6 +114,14 @@ CREATE TABLE IF NOT EXISTS casts (
     updated_at  TEXT
 );
 
+-- 통과 Quiz 학습 진도 초기화: 이 시각 이후에 푼 기록만 진도에 센다
+CREATE TABLE IF NOT EXISTS quiz_resets (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    topic       TEXT NOT NULL,
+    reset_at    TEXT NOT NULL,
+    PRIMARY KEY (user_id, topic)
+);
+
 -- 복테·모의고사 1:1 첨삭: 학생이 회차마다 풀이 사진을 올리고 강사·조교가 답한다
 CREATE TABLE IF NOT EXISTS feedback_threads (
     id          INTEGER PRIMARY KEY,
@@ -591,6 +599,9 @@ def init_db(path):
     conn.executescript(SYS_SCHEMA)
     # 단과/재종 구분: 반에 붙인다 (학생은 가입한 반을 따른다)
     _add_column(conn, "classes", "track", "TEXT NOT NULL DEFAULT '재종'")
+    # 퀴즈·게임 실제 푼 시간: 답할 때마다 직전 답에서 지난 시간(최대 3분)을 더한다
+    _add_column(conn, "game_rounds", "last_at", "TEXT")
+    _add_column(conn, "game_rounds", "active_sec", "INTEGER NOT NULL DEFAULT 0")
     # 기존 DB 이전: 새로 생긴 열 추가
     _add_column(conn, "users", "nickname", "TEXT")
     _add_column(conn, "users", "display_name", "TEXT NOT NULL DEFAULT ''")

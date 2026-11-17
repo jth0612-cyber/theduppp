@@ -152,3 +152,34 @@ class Update1114(unittest.TestCase):
         self.assertIn("복테&amp;모의 분석", html)
         self.assertIn('<details class="nav-fold"', html)
         self.assertIn("태혁쌤의 cast", html); self.assertNotIn("TH캐스트", html)
+
+    def test_my_study(self):
+        """내 공부: 퀴즈 푼 시간·문제 수, 주간 순위, 일별 그래프, 진도와 초기화."""
+        r = self.s.post("/s/games/quiz/start", json={"topic": "13"}).get_json()
+        with self.app.app_context():
+            ans = json.loads(query("SELECT answer FROM game_rounds WHERE id = ?", (r["round_id"],), one=True)["answer"])
+            uid = query("SELECT id FROM users WHERE username = 'minsu'", one=True)["id"]
+            execute("UPDATE game_rounds SET started_at = datetime('now', 'localtime', '-50 seconds') WHERE id = ?", (r["round_id"],))
+            execute("INSERT INTO focus_logs (user_id, place, minutes) VALUES (?, 'sento', 40)", (uid,))
+        tf = [i for i, a in enumerate(ans) if a["kind"] == "tf"]
+        for i in tf:
+            self.s.post(f"/s/games/quiz/{r['round_id']}/check", json={"i": i, "pick": ans[i]["answer_index"]})
+        with self.app.app_context():
+            row = query("SELECT active_sec FROM game_rounds WHERE id = ?", (r["round_id"],), one=True)
+            self.assertGreaterEqual(row["active_sec"], 45)
+            import progress
+            s = progress.today_summary(uid)
+            self.assertEqual(s["solved"], len(tf)); self.assertGreaterEqual(s["minutes"], 40); self.assertEqual(s["streak"], 1)
+            t13 = next(t for t in progress.topic_progress(uid) if t["code"] == "13")
+            self.assertEqual(t13["done"], len(tf))
+            self.assertEqual(progress.weekly_ranking(uid)["me"]["rank"], 1)
+        page = self.s.get("/s/my").data.decode()
+        for word in ("주간 공부 순위", "일별 이용 시간", "학습 진도", "민수", "<svg class=\"day-chart\""):
+            self.assertIn(word, page)
+        self.s.post("/s/my/reset", data={"topic": "13"})
+        with self.app.app_context():
+            t13 = next(t for t in progress.topic_progress(uid) if t["code"] == "13")
+            self.assertEqual(t13["done"], 0)
+            self.assertGreaterEqual(progress.today_summary(uid)["minutes"], 40)     # 공부 시간은 그대로
+        self.assertEqual(self.s.post("/s/my/reset", data={"topic": "99"}).status_code, 400)
+        self.assertNotEqual(self.t.get("/s/my").status_code, 200)

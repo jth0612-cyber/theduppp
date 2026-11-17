@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}내 공부 · 정태혁 통합과학 lab{% endblock %}
+{% macro hm(m) %}{% if m >= 60 %}{{ m // 60 }}시간 {% endif %}{{ m % 60 }}분{% endmacro %}
+{% block content %}
+<header class="ed-head"><h1>내 공부</h1></header>
+
+<section class="my-card" aria-label="오늘 요약">
+  <div class="my-who"><b>{{ me.nickname or me.name }}</b><span>{{ me.class_name or '' }}{% if me.nickname and me.name %} · {{ me.name }}{% endif %}</span></div>
+  <dl class="my-stats">
+    <div><dt><span class="my-ico ico-time" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>오늘 공부 시간</dt>
+      <dd>{{ '%02d:%02d'|format(m.sum.minutes // 60, m.sum.minutes % 60) }}</dd></div>
+    <div><dt><span class="my-ico ico-solve" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V6a2 2 0 0 1 2-2h7l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="m9 13 2 2 4-4"/></svg></span>오늘 푼 문제</dt>
+      <dd>{{ m.sum.solved }}개</dd></div>
+    <div><dt><span class="my-ico ico-fire" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21c-3.5 0-6-2.4-6-5.6 0-3.3 2.6-5 3.6-8.4 2.2 1.4 2.6 3.6 2.4 5 1-.6 1.7-1.7 1.9-2.9 1.8 1.5 2.1 3.6 2.1 5.4 0 3.6-2.5 6.5-4 6.5z"/></svg></span>연속 학습</dt>
+      <dd>{{ m.sum.streak }}일</dd></div>
+  </dl>
+</section>
+
+<section class="my-sec" aria-labelledby="h-rank">
+  <div class="sec-head"><h2 id="h-rank">주간 공부 순위</h2><span>{{ m.rank.label }} · 소도시 명상 집중 + 퀴즈 푼 시간</span></div>
+  <ol class="my-rank">
+    {% for r in m.rank.top %}
+    <li class="{{ 'is-me' if r.me }}"><span class="medal medal-{{ r.rank }}">{{ r.rank }}</span><b>{{ r.name }}</b><span class="t">{{ hm(r.minutes) }}</span></li>
+    {% else %}<li class="empty">이번 주 기록이 아직 없습니다.</li>{% endfor %}
+    {% if m.rank.me and m.rank.me.rank > m.rank.top|length %}
+    <li class="is-me mine"><span class="medal">{{ m.rank.me.rank }}</span><b>{{ m.rank.me.name }}</b><span class="t">{{ hm(m.rank.me.minutes) }}</span></li>
+    {% elif not m.rank.me and m.rank.top %}
+    <li class="is-me mine"><span class="medal">–</span><b>나</b><span class="t">0분</span></li>
+    {% endif %}
+  </ol>
+</section>
+
+<section class="my-sec" aria-labelledby="h-day">
+  <div class="sec-head"><h2 id="h-day">일별 이용 시간</h2><span>최근 7일 · 분</span></div>
+  {% set c = m.chart %}
+  <svg class="day-chart" viewBox="0 0 {{ c.w }} {{ c.h }}" role="img" aria-label="최근 7일 공부 시간: {% for l in c.labels %}{{ l.t }} {{ l.m }}분{{ ', ' if not loop.last }}{% endfor %}">
+    {% for t in c.ticks %}<line class="dc-grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"></line><text class="dc-tick" x="{{ c.left - 6 }}" y="{{ t.y + 4 }}">{{ t.v }}</text>{% endfor %}
+    {% for b in c.bars %}<rect class="dc-{{ b.k }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}"></rect>{% endfor %}
+    {% if c.line|length > 1 %}<polyline class="dc-avg" points="{{ c.poly }}"></polyline>{% endif %}
+    {% for p in c.line %}<circle class="dc-avg-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="4"></circle>{% endfor %}
+    {% for l in c.labels %}<text class="dc-x" x="{{ l.x }}" y="{{ c.h - 8 }}">{{ l.t }}</text>{% endfor %}
+  </svg>
+  <ul class="dc-legend">
+    {% for k, label in m.kinds %}<li><i class="dc-key dc-{{ k }}"></i>{{ label }}</li>{% endfor %}
+    <li><i class="dc-key dc-line"></i>공부한 학생 평균</li>
+  </ul>
+</section>
+
+<section class="my-sec" id="progress" aria-labelledby="h-prog">
+  <div class="sec-head"><h2 id="h-prog">학습 진도</h2>
+    <form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="통과 Quiz 34개 TOPIC 진도를 모두 초기화할까요? 공부 시간 기록은 그대로 남습니다.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="all">
+      <button class="btn small">전체 초기화</button></form></div>
+  <p class="small muted">통과 Quiz: TOPIC 진술 중 마지막에 맞힌 비율 · 영단어: Day 01~50 1000단어 중 외운 비율</p>
+  <table class="prog">
+    <thead><tr><th>제목</th><th>진도율</th><th class="num">%</th><th><span class="sr">초기화</span></th></tr></thead>
+    <tbody>
+      <tr><td>수능 영단어</td><td><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if m.vocab.pct %}<rect class="pb-fg" width="{{ [m.vocab.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></td>
+        <td class="num">{{ m.vocab.pct }}%</td><td></td></tr>
+      {% for t in m.topics %}
+      <tr><td><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="muted">{{ t.code }}</span> {{ t.title }}</a></td>
+        <td><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></td>
+        <td class="num">{{ t.pct }}%</td>
+        <td class="num">{% if t.pct %}<form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="TOPIC {{ t.code }} 진도를 초기화할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="{{ t.code }}"><button class="btn small">초기화</button></form>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

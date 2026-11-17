@@ -47,7 +47,20 @@ def _open_round(rid, game):
     return r
 
 
+STEP_CAP = 180      # 답 사이 간격이 이보다 길면 쉬다 온 것으로 보고 3분만 센다
+
+
+def _touch(rid):
+    """공부 시간 기록: 직전 답(없으면 시작)부터 지금까지, 최대 3분."""
+    r = query("SELECT started_at, last_at FROM game_rounds WHERE id = ?", (rid,), one=True)
+    now = _now()
+    gap = (now - datetime.fromisoformat(r["last_at"] or r["started_at"])).total_seconds()
+    execute("UPDATE game_rounds SET last_at = ?, active_sec = active_sec + ? WHERE id = ?",
+            (now.isoformat(timespec="seconds"), int(max(0, min(gap, STEP_CAP))), rid))
+
+
 def _finish(rid, score, total):
+    _touch(rid)
     execute("UPDATE game_rounds SET score = ?, total = ?, finished_at = ? WHERE id = ?",
             (score, total, _now().isoformat(timespec="seconds"), rid))
 
@@ -212,6 +225,7 @@ def _check_mc(r):
     if picks[i] is None:
         picks[i] = pick
         execute("UPDATE game_rounds SET picks = ? WHERE id = ?", (json.dumps(picks, ensure_ascii=False), r["id"]))
+        _touch(r["id"])
     done = [p for p in picks if p is not None]
     score = sum(1 for k, p in enumerate(picks) if p is not None and _is_right(items[k], p))
     return jsonify(correct=_is_right(it, picks[i]), pick=picks[i], answer_index=it.get("answer_index"),
@@ -331,6 +345,7 @@ def speed_submit(kind, rid):
     picks = [p if isinstance(p, bool) else None for p in picks[:len(items)]]
     score = sum(1 for i, p in enumerate(picks) if p is not None and p == items[i]["ok"])
     tried = sum(1 for p in picks if p is not None)
+    _touch(rid)
     execute("UPDATE game_rounds SET score = ?, total = ?, finished_at = ? WHERE id = ?",
             (score, max(tried, 1), _now().isoformat(timespec="seconds"), rid))
     if kind == "vocab_speed":
@@ -356,9 +371,10 @@ def quiz_page():
 
 def _quiz_history(topic):
     """이 학생이 이 TOPIC에서 본 진술과 마지막으로 틀렸는지 (최근 40판)."""
+    import progress
     hist = {}
     for r in query("""SELECT answer, picks FROM game_rounds WHERE user_id = ? AND game = 'quiz' AND topic = ?
-                      ORDER BY id DESC LIMIT 40""", (g.user["id"], topic)):
+                      AND started_at > ? ORDER BY id DESC LIMIT 40""", (g.user["id"], topic, progress.reset_at(g.user["id"], topic))):
         items, picks = json.loads(r["answer"]), json.loads(r["picks"] or "null") or []
         for i, it in enumerate(items):
             answered = i < len(picks) and picks[i] is not None
@@ -554,6 +570,7 @@ def play_check(game, rid):
             abort(400)
         picks[i] = {"ok": got[0], "res": got[1]}
         execute("UPDATE game_rounds SET picks = ? WHERE id = ?", (json.dumps(picks, ensure_ascii=False), rid))
+        _touch(rid)
     score = sum(1 for p in picks if p and p["ok"])
     return jsonify(correct=picks[i]["ok"], score=score, total=len(pub), **picks[i]["res"])
 

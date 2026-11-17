@@ -386,3 +386,69 @@ def t_faq(qid):
     execute("UPDATE questions SET faq = ? WHERE id = ?", (0 if q["faq"] else 1, qid))
     flash("자주 묻는 질문에서 뺐습니다." if q["faq"] else "자주 묻는 질문으로 고정했습니다.", "ok")
     return redirect(url_for("teacher.question_detail", qid=qid))
+
+
+# =====================================================================
+# 9. 내 공부: 오늘 요약, 주간 공부 순위, 일별 이용 시간, 학습 진도
+# =====================================================================
+
+def _day_chart(days, avg):
+    """일별 이용 시간 막대(집중·통과 Quiz·영단어 쌓기) + 공부한 학생 평균 꺾은선. 단위 분."""
+    import progress
+    w, h, left, right, top, bottom = 420, 230, 34, 8, 12, 28
+    peak = max([d["total"] for d in days] + list(avg.values()) + [30])
+    step = 30 if peak <= 150 else 60 if peak <= 300 else 120
+    ymax = -(-peak // step) * step
+    pw, ph = w - left - right, h - top - bottom
+    slot = pw / len(days)
+    bw = min(34, slot * 0.5)
+    y = lambda v: top + ph * (1 - v / ymax)
+    bars, line = [], []
+    for i, d in enumerate(days):
+        cx = left + slot * (i + 0.5)
+        base = 0
+        for k, _ in progress.KINDS:
+            if d[k]:
+                bars.append({"k": k, "x": round(cx - bw / 2, 1), "y": round(y(base + d[k]), 1),
+                             "w": round(bw, 1), "h": round(y(base) - y(base + d[k]), 1)})
+                base += d[k]
+        if d["day"] in avg:
+            line.append({"x": round(cx, 1), "y": round(y(avg[d["day"]]), 1)})
+    return {"w": w, "h": h, "left": left, "right": w - right, "bottom": top + ph, "bars": bars, "line": line,
+            "poly": " ".join(f"{p['x']},{p['y']}" for p in line),
+            "ticks": [{"v": v, "y": round(y(v), 1)} for v in range(0, ymax + 1, step)],
+            "labels": [{"x": round(left + slot * (i + 0.5), 1), "t": f"{int(d['day'][5:7])}.{int(d['day'][8:])}",
+                        "m": d["total"]} for i, d in enumerate(days)]}
+
+
+def my_study(uid):
+    import progress
+    days = progress.daily(uid, 7)
+    return {"sum": progress.today_summary(uid), "rank": progress.weekly_ranking(uid),
+            "chart": _day_chart(days, progress.class_average(7)), "days": days, "kinds": progress.KINDS,
+            "topics": progress.topic_progress(uid), "vocab": progress.vocab_progress(uid)}
+
+
+@bp.route("/s/my")
+@student_required
+def s_my():
+    me = query("""SELECT u.nickname, s.name, c.name AS class_name FROM users u LEFT JOIN students s ON s.id = u.student_id
+                  LEFT JOIN classes c ON c.id = s.class_id WHERE u.id = ?""", (g.user["id"],), one=True)
+    return render_template("study/my.html", me=me, m=my_study(g.user["id"]))
+
+
+@bp.route("/s/my/reset", methods=["POST"])
+@student_required
+def s_my_reset():
+    import progress
+    import quiz
+    topic = request.form.get("topic", "")
+    if topic == "all":
+        progress.reset(g.user["id"], list(quiz.TOPICS))
+        flash("통과 Quiz 학습 진도를 모두 초기화했습니다.", "ok")
+    elif topic in quiz.TOPICS:
+        progress.reset(g.user["id"], [topic])
+        flash(f"TOPIC {topic} 진도를 초기화했습니다.", "ok")
+    else:
+        abort(400)
+    return redirect(url_for("study.s_my") + "#progress")
