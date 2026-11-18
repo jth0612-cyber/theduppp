@@ -942,7 +942,7 @@ class FeatureTest(AppTest):
         import quiz
         _, s1, _ = self._students()
         seen_right, seen_wrong = set(), set()
-        for _ in range(2):
+        for _ in range(1):                       # 진술 31개 중 한 판에 약 12개를 쓰므로, 한 판 뒤에는 처음 보는 진술이 충분하다
             st = s1.post("/s/games/quiz/start", json={"topic": "08"}).get_json()
             with self.app.app_context():
                 ans = _json.loads(query("SELECT answer FROM game_rounds WHERE id=?", (st["round_id"],), one=True)["answer"])

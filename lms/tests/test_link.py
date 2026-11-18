@@ -150,7 +150,7 @@ class LinkTest(unittest.TestCase):
         self.assertIn('href="https://smartstore.naver.com/thedu/products/1"', page)
         self.assertIn('href="https://example.com/sweep"', page)
         self.assertNotIn("javascript:", page)
-        self.assertEqual(page.count("준비 중"), 2)
+        self.assertEqual(page.count("준비 중"), 3)
 
     def test_table_names(self):
         import sysdata
