@@ -2121,3 +2121,11 @@ h1 .fb-state { font-size: 13px; margin-left: 6px; }
 .ta-note { margin-top: 10px; display: grid; gap: 6px; }
 .ta-note textarea { min-height: 54px; }
 .ta-note .btn { justify-self: start; }
+/* 시험 평가 (학생 화면) */
+.ev-facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 4px 0 12px; }
+.ev-facts div { display: flex; gap: 8px; align-items: baseline; }
+.ev-facts dt { font-size: 13px; color: var(--muted); }
+.ev-facts dd { margin: 0; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.ev-dots { display: inline-flex; gap: 3px; }
+.ev-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
+.ev-dots i.on { background: var(--ink); }

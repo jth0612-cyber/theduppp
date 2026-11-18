@@ -680,6 +680,11 @@ def init_db(path):
     _add_column(conn, "students", "sms_ok", "INTEGER NOT NULL DEFAULT 1")     # 학부모 문자 수신 동의
     _add_column(conn, "classes", "is_test", "INTEGER NOT NULL DEFAULT 0")     # 연습반 (실장 TEST반): 실제 회차·통계와 섞지 않는다
     _add_column(conn, "books", "is_practice", "INTEGER NOT NULL DEFAULT 0")   # 연습 회차 (연습반 학생만)
+    # 시험 평가 (강사·조교 동등): 난이도 1~5, 시간 여유, 킬러 문항, 해설 영상 + 기존 총평(review)
+    _add_column(conn, "mocks", "eval_level", "INTEGER")
+    _add_column(conn, "mocks", "eval_time", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "mocks", "eval_killer", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "mocks", "eval_video", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
     _add_column(conn, "exam_results", "ta_by", "INTEGER")
     _add_column(conn, "exam_results", "ta_at", "TEXT")

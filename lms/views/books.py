@@ -66,10 +66,13 @@ KINDS = ("복습 테스트", "모의고사")
 
 def _accessible_mocks():
     """학생이 볼 수 있는 회차: 강사가 올린 OMR 결과에 이 학생 답안이 있는 회차 (열려 있는 것만)."""
-    return query("""SELECT m.*, b.title AS book_title, b.subject, b.kind FROM mocks m
-                    JOIN books b ON b.id = m.book_id
-                    JOIN mock_entries e ON e.mock_id = m.id AND e.user_id = ?
-                    WHERE m.open = 1 ORDER BY b.kind, m.created_at DESC, m.round_no DESC""", (g.user["id"],))
+    return query("""SELECT m.*, b.title AS book_title, b.subject, b.kind,
+                           EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?) AS mine
+                    FROM mocks m JOIN books b ON b.id = m.book_id
+                    WHERE m.open = 1 AND b.is_practice = 0 AND (
+                          EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?)
+                          OR m.review != '' OR m.eval_level IS NOT NULL OR m.eval_video != '')
+                    ORDER BY b.kind, m.round_no DESC""", (g.user["id"], g.user["id"]))
 
 
 @bp.route("/s/books/register", methods=["GET", "POST"])
@@ -135,6 +138,12 @@ def analysis_home():
     mock = _mock_or_404(mid)
     key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
+    from content import youtube_id
+    ev = {"level": EVAL_LEVELS.get(mock["eval_level"]), "n": mock["eval_level"], "yt": youtube_id(mock["eval_video"]) if mock["eval_video"] else None}
+    if entry is None:                                          # 내 결과가 없는 회차: 시험 평가만
+        stats = _stats(mock) if mock["n_items"] else None
+        return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
+                               fmt=analysis._fmt)
     stats = _stats(mock)
     my_score = entry["score"]
     marks = ((entry["answers"] or "") + "0" * mock["n_items"])[:mock["n_items"]]
@@ -144,7 +153,7 @@ def analysis_home():
     rep = exams.student_report(mid, g.user["student_id"]) if g.user["student_id"] else None
     prof = exams.classify_profile(exams.history(g.user["student_id"])) if rep else None
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
-                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label,
+                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),
@@ -402,19 +411,34 @@ def delete_book(bid):
     return redirect(url_for("books.teacher_books"))
 
 
+EVAL_LEVELS = {1: "매우 쉬움", 2: "쉬움", 3: "보통", 4: "어려움", 5: "매우 어려움"}
+EVAL_TIMES = ("여유", "적당", "빠듯")
+
+
 @bp.route("/t/mocks/<int:mid>/review", methods=["POST"])
 @staff_required
 def mock_review(mid):
-    """모의고사 총평: 강사·조교가 쓰고, 학생 분석 화면 맨 위에 보인다."""
+    """시험 평가: 강사·조교 누구나 쓰고 고친다. 학생이 이 회차를 열면 맨 위에 보인다(내 결과가 없어도)."""
+    from content import youtube_id
     _mock_or_404(mid)
     text = request.form.get("review", "").strip()[:4000]
-    from flask import g as _g
-    who = (_g.user["display_name"] or _g.user["username"]) if _g.user["role"] == "assistant" else "정태혁 선생님"
-    execute("UPDATE mocks SET review = ?, review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?",
-            (text, who if text else "", mid))
+    level = request.form.get("level", type=int)
+    level = level if level in EVAL_LEVELS else None
+    tm = request.form.get("time", "")
+    tm = tm if tm in EVAL_TIMES else ""
+    killer = ", ".join(re.findall(r"\d{1,2}", request.form.get("killer", "")))[:80]
+    video = request.form.get("video", "").strip()[:500]
+    if video and not youtube_id(video):
+        flash("해설 영상은 유튜브 주소만 넣을 수 있습니다.", "error")
+        return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
+    filled = bool(text or level or tm or killer or video)
+    who = (g.user["display_name"] or g.user["username"]) if g.user["role"] == "assistant" else "정태혁 선생님"
+    execute("""UPDATE mocks SET review = ?, eval_level = ?, eval_time = ?, eval_killer = ?, eval_video = ?,
+               review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?""",
+            (text, level, tm, killer, video, who if filled else "", mid))
     audit("mock_review", f"mock:{mid}")
-    flash("총평을 저장했습니다." if text else "총평을 지웠습니다.", "ok")
-    return redirect(url_for("books.teacher_mock", mid=mid))
+    flash("시험 평가를 저장했습니다. 학생 화면에 바로 보입니다." if filled else "시험 평가를 지웠습니다.", "ok")
+    return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
 
 
 @bp.route("/t/mocks/<int:mid>")
@@ -428,6 +452,7 @@ def teacher_mock(mid):
                "WHERE u.mock_id = ? ORDER BY u.id DESC LIMIT 1", (mid,), one=True)
     up_rows = json.loads(up["rows"]) if up else []
     ctx = {"mock": mock, "m": m, "up": up, "up_rows": up_rows, "fmt": analysis._fmt, "pct1": exams.pct1,
+           "levels": EVAL_LEVELS, "times": EVAL_TIMES,
            "key_label": analysis.key_label, "min_n": exams.SET["min_n"]}
     if m["n_items"]:
         cs = exams.class_stats(mid)

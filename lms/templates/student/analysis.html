@@ -11,28 +11,37 @@
 <header class="ed-head ed-head-split">
   <div>
     <h1>복테&모의 분석</h1>
-    <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점</p>
+    <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %}{% if mock.n_items %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}</p>
   </div>
   <form method="get" class="pick" data-autosubmit>
     <label for="mock">다른 회차 보기</label>
     <div class="pick-row">
       <select id="mock" name="mock">
         {% for k in kinds %}{% set ms = mocks|selectattr('kind', 'equalto', k)|list %}{% if ms %}
-        <optgroup label="{{ k }}">{% for m in ms %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회</option>{% endfor %}</optgroup>
+        <optgroup label="{{ k }}">{% for m in ms %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else ' · 평가만' }}</option>{% endfor %}</optgroup>
         {% endif %}{% endfor %}
       </select>
       <button class="btn small js-hide" type="submit">이동</button>
     </div>
   </form>
 </header>
-{% if mock.review %}
-<section class="mock-review" aria-labelledby="h-review">
-  <h2 id="h-review">총평 <span>{{ mock.review_by }}{% if mock.review_at %} · {{ mock.review_at[5:10] }}{% endif %}</span></h2>
-  <div class="pre">{{ mock.review }}</div>
+{% if mock.review or ev.n or mock.eval_time or mock.eval_killer or ev.yt %}
+<section class="mock-review exam-eval" aria-labelledby="h-review">
+  <h2 id="h-review">시험 평가 <span>{{ mock.review_by }}{% if mock.review_at %} · {{ mock.review_at[5:10] }}{% endif %}</span></h2>
+  {% if ev.n or mock.eval_time or mock.eval_killer %}
+  <dl class="ev-facts">
+    {% if ev.n %}<div><dt>난이도</dt><dd><span class="ev-dots" aria-hidden="true">{% for i in range(1, 6) %}<i class="{{ 'on' if i <= ev.n }}"></i>{% endfor %}</span>{{ ev.level }}</dd></div>{% endif %}
+    {% if mock.eval_time %}<div><dt>시간</dt><dd>{{ mock.eval_time }}</dd></div>{% endif %}
+    {% if mock.eval_killer %}<div><dt>킬러 문항</dt><dd>{{ mock.eval_killer }}번</dd></div>{% endif %}
+  </dl>
+  {% endif %}
+  {% if mock.review %}<div class="pre">{{ mock.review }}</div>{% endif %}
+  {% if ev.yt %}<div class="cast-video mt"><iframe src="https://www.youtube-nocookie.com/embed/{{ ev.yt }}" title="{{ mock.book_title }} {{ mock.round_no }}회 해설 영상" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>{% endif %}
 </section>
 {% endif %}
 {% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
 
+{% if entry %}
 <div class="sheet-grid">
   <section class="omr is-view" aria-labelledby="h-omr">
     <div class="sec-head"><h2 id="h-omr">내 답안</h2><span>{{ entry.updated_at[5:16] }} 채점</span></div>
@@ -102,6 +111,9 @@
 </section>
 
 {% include "_analysis_stats.html" %}
+{% else %}
+<section class="quiet-box"><p>이 회차의 내 결과는 아직 올라오지 않았습니다.</p></section>
+{% endif %}
 {% endif %}
 <script src="{{ url_for('static', filename='analysis.js') }}" defer></script>
 {% endblock %}
