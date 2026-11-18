@@ -194,9 +194,10 @@ def clear_entry(mid):
 # ---------- 강사 ----------
 
 # 첫 화면(로그인 전) 교재 표지마다 붙는 구매 링크. 열쇠: settings 'buy_<key>'
-SHOP_BOOKS = [("lineup", "LINE UP", "개념서"), ("framing", "FRAMING", "기출 분석집"),
+SHOP_BOOKS = [("lineup", "LINE UP", "개념서"), ("framing", "FRAMING", "기출문제집"), ("logic", "LOGIC BUILD", "심층 분석서"),
               ("squeeze", "Squeeze", "주간지 Season 1&2"), ("sweep", "SWEEP", "주간지 Season 3")]
-SHOP_ALT = {"lineup": "LINE UP 통합과학 I과 II 두 권", "framing": "FRAMING 검은 표지와 흰 표지 두 권",
+SHOP_ALT = {"lineup": "LINE UP 통합과학 II(빨강)와 I 두 권", "framing": "FRAMING 흰 표지(통합과학 I-1), 회색 표지(I-2), 검은 표지(II) 세 권",
+            "logic": "LOGIC BUILD 앞표지와 뒤표지",
             "squeeze": "Squeeze Season 1과 Season 2 주간지 두 권", "sweep": "SWEEP 주간지 앞표지와 보라색 뒤표지"}
 
 
