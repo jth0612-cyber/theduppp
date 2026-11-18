@@ -198,7 +198,20 @@ class BooksTest(unittest.TestCase):
         ws = load_workbook(_io.BytesIO(form.data)).active
         self.assertEqual([c.value for c in ws[1]][:4], ["학생코드", "이름", "반", 1])
         self.assertEqual(ws.max_row, 13)
-        # 학생은 올릴 수 없다
+        self.assertEqual(load_workbook(_io.BytesIO(form.data)).sheetnames, ["OMR", "작성 예시"])
+        # 빈 양식 그대로(문항 칸이 빈 학생) 올리면 건너뛴다
+        r = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(form.data), "omr.xlsx")},
+                        content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn("학생 줄이 없습니다", r.data.decode())
+        # 조교도 올릴 수 있고, 학생은 올릴 수 없다
+        with self.app.app_context():
+            execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta', ?, '조교')",
+                    (hash_password(TEACHER_PW),))
+        ta = self.app.test_client(); ta.post("/login", data={"username": "ta", "password": TEACHER_PW})
+        csv = "학생코드,답안\nS005,%s\n" % KEY
+        r = ta.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(csv.encode()), "a.csv")},
+                    content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn("1명 결과를 반영했습니다", r.data.decode())
         self.assertNotEqual(s0.post(f"/t/mocks/{mid}/omr").status_code, 302)
 
     def test_omr_csv_name_and_answer_column(self):

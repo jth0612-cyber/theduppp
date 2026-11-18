@@ -3,6 +3,7 @@
 양식: 첫 줄(머리글)에 '학생코드', '이름', 그리고 문항 번호 1, 2, 3 … N.
   - 문항 칸에는 학생이 고른 번호(1~5). 비우거나 다른 값이면 무응답(오답 처리).
   - 문항 칸 대신 '답안' 칸 하나에 '13524 21435 …'처럼 이어 적어도 된다.
+  - 문항 칸이 모두 빈 줄(시험을 안 본 학생)은 건너뛴다.
   - 학생은 학생코드로 찾고, 코드가 없으면 이름(같은 이름이 둘 이상이면 '반' 칸까지)으로 찾는다.
 .xlsx 와 .csv(쉼표) 를 받는다. 머리글은 처음 10줄 안에 있으면 된다."""
 import csv
@@ -80,6 +81,8 @@ def read(raw, filename, n_items):
         else:
             digits = "".join(ch if ch in "12345" else "0" for ch in re.sub(r"[\s,./-]", "", get(c_ans)))
             ans = (digits + "0" * n_items)[:n_items]
+        if set(ans) == {"0"}:                                 # 문항 칸이 모두 빔 = 시험 안 봄
+            continue
         out.append({"row": ri, "code": code, "name": name, "cls": cls, "answers": ans})
     if not out:
         raise ValueError("학생 줄이 없습니다.")
@@ -106,6 +109,23 @@ def template(n_items, students):
     for i in range(4, n_items + 4):
         ws.column_dimensions[get_column_letter(i)].width = 4.5
     ws.freeze_panes = "D2"
+    # 둘째 시트: 작성 규칙과 예시 (올릴 때는 첫 시트만 읽는다)
+    ex = wb.create_sheet("작성 예시")
+    for line in (["작성 규칙"],
+                 ["1. 첫 시트(OMR)만 읽습니다. 첫 줄 머리글은 바꾸지 마세요."],
+                 ["2. 문항 칸에는 학생이 마킹한 번호 1~5만 적습니다. 빈칸·중복 마킹은 무응답(오답)으로 처리됩니다."],
+                 ["3. 학생은 학생코드로 찾습니다. 코드가 없으면 이름(동명이인은 반)으로 찾습니다."],
+                 ["4. 문항 칸이 모두 빈 줄(시험을 안 본 학생)은 건너뜁니다. 지우지 않아도 됩니다."],
+                 ["5. 같은 회차를 다시 올리면 그 학생 결과는 새 파일 내용으로 바뀝니다."],
+                 [],
+                 ["학생코드", "이름", "반"] + list(range(1, min(n_items, 10) + 1)),
+                 ["270001", "김민수", "A반"] + [1, 4, 3, 5, 2, 5, 3, 4, 1, 1][:min(n_items, 10)],
+                 ["270002", "이서연", "B반"] + [1, 4, None, 5, 2, 5, 3, 4, 2, 1][:min(n_items, 10)]):
+        ex.append(line)
+    ex["A1"].font = bold
+    for c in ex[8]:
+        c.font, c.fill = bold, fill
+    ex.column_dimensions["A"].width = 12
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()

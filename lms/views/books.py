@@ -454,7 +454,7 @@ def _match(row, by_code, by_name):
 
 
 @bp.route("/t/mocks/<int:mid>/omr", methods=["POST"])
-@teacher_required
+@staff_required
 def omr_upload(mid):
     """OMR 결과 엑셀을 올리면 학생마다 채점해 저장한다. 같은 학생은 새 파일 내용으로 바뀐다."""
     import omr
@@ -508,7 +508,7 @@ def omr_template(mid):
 
 
 @bp.route("/t/mocks/<int:mid>/entries/clear", methods=["POST"])
-@teacher_required
+@staff_required
 def omr_clear(mid):
     _mock_or_404(mid)
     execute("DELETE FROM mock_entries WHERE mock_id = ?", (mid,))
