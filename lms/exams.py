@@ -753,23 +753,44 @@ _GIVEN = ["민준", "서연", "도윤", "하은", "시우", "지유", "주원", 
 
 def seed_practice():
     """처음 한 번: 연습반 '실장 TEST반'과 가상 학생 50명, 연습 회차(복습 테스트·모의고사 각 1~10회)를 만든다.
-    가상 학생의 학부모 번호는 010-9999-00NN (수험번호 999900NN). 실제 회차에는 섞이지 않는다."""
+    가상 학생의 학부모 번호는 010-9999-00NN. 실제 회차에는 섞이지 않는다.
+    이미 있는 반·학생코드·회차는 건너뛴다. 여기서 오류가 나도 서버는 계속 켜진다."""
+    try:
+        _seed_practice()
+    except Exception:                                        # noqa: BLE001 - 연습 데이터 때문에 서버가 멈추면 안 된다
+        import logging
+        logging.getLogger(__name__).exception("연습반 만들기 실패 (서버는 계속 실행)")
+
+
+def _seed_practice():
     if query("SELECT 1 FROM settings WHERE key = 'seed_practice'", one=True):
         return
     from security import encrypt
     from db import new_join_code, join_code_taken
-    cid = execute("INSERT INTO classes (name, description, is_test, join_open, join_code) VALUES ('실장 TEST반', '조교 연습용 가상 반', 1, 0, ?)",
-                  (new_join_code(join_code_taken),))
+    c = query("SELECT id FROM classes WHERE name = '실장 TEST반' ORDER BY id LIMIT 1", one=True)
+    if c:
+        cid = c["id"]
+        execute("UPDATE classes SET is_test = 1, join_open = 0 WHERE id = ?", (cid,))
+    else:
+        cid = execute("INSERT INTO classes (name, description, is_test, join_open, join_code) VALUES ('실장 TEST반', '조교 연습용 가상 반', 1, 0, ?)",
+                      (new_join_code(join_code_taken),))
     for i in range(50):
+        code = f"TEST{i + 1:03d}"
+        if query("SELECT 1 FROM students WHERE student_no = ?", (code,), one=True):
+            continue
         name = _SURNAMES[i % len(_SURNAMES)] + _GIVEN[(i * 7) % len(_GIVEN)]
         execute("""INSERT INTO students (class_id, name, student_no, parent_phone_enc, memo_enc) VALUES (?, ?, ?, ?, ?)""",
-                (cid, name, f"TEST{i + 1:03d}", encrypt(f"010-9999-{i + 1:04d}"), encrypt("가상 학생 (연습용)")))
+                (cid, name, code, encrypt(f"010-9999-{i + 1:04d}"), encrypt("가상 학생 (연습용)")))
     for kind in ("복습 테스트", "모의고사"):
-        bid = execute("INSERT INTO books (title, subject, expires_on, kind, is_practice) VALUES (?, '통합과학', '2099-12-31', ?, 1)",
-                      (f"[연습] {kind}", kind))
+        title = f"[연습] {kind}"
+        b = query("SELECT id FROM books WHERE title = ?", (title,), one=True)
+        bid = b["id"] if b else execute("INSERT INTO books (title, subject, expires_on, kind, is_practice) VALUES (?, '통합과학', '2099-12-31', ?, 1)",
+                                        (title, kind))
+        execute("UPDATE books SET is_practice = 1 WHERE id = ?", (bid,))
         for n in range(1, 11):
-            execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, ?, 0, 0, '[]', '[]')", (bid, n))
-    execute("INSERT INTO settings (key, value) VALUES ('seed_practice', '1')")
+            if not query("SELECT 1 FROM mocks WHERE book_id = ? AND round_no = ?", (bid, n), one=True):
+                execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, ?, 0, 0, '[]', '[]')", (bid, n))
+    execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('seed_practice', '1')")
 
 
 def practice_workbook(mid):
