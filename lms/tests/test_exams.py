@@ -155,7 +155,7 @@ class Pure(unittest.TestCase):
 class Upload(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "ANALYSIS_TTL": 0,
+        self.app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "ANALYSIS_TTL": 0, "SEED_PRACTICE": True,
                                "DATABASE": os.path.join(self.tmp.name, "t.sqlite3"), "UPLOAD_DIR": os.path.join(self.tmp.name, "up")})
         os.makedirs(self.app.config["UPLOAD_DIR"], exist_ok=True)
         with self.app.app_context():
@@ -284,6 +284,33 @@ class Upload(unittest.TestCase):
         self.assertIn("오답 분석", page); self.assertIn("자료 해석", page); self.assertIn("반 선택 비율", page)
         # 학생은 문자·업로드 화면을 볼 수 없다
         self.assertNotEqual(s.get(f"/t/mocks/{self.mid}/sms").status_code, 200)
+
+    def test_practice_class_isolated(self):
+        """실장 TEST반: 가상 학생 50명, 연습 회차에서만 채점되고 실제 회차에는 섞이지 않는다."""
+        with self.app.app_context():
+            c = query("SELECT * FROM classes WHERE is_test = 1", one=True)
+            self.assertEqual(c["name"], "실장 TEST반")
+            self.assertEqual(query("SELECT COUNT(*) AS n FROM students WHERE class_id = ?", (c["id"],), one=True)["n"], 50)
+            pm = query("""SELECT m.id FROM mocks m JOIN books b ON b.id = m.book_id
+                          WHERE b.is_practice = 1 AND b.kind = '모의고사' AND m.round_no = 1""", one=True)["id"]
+        data = self.ta.get(f"/t/mocks/{pm}/practice.xlsx").data
+        html = self.ta.post(f"/t/mocks/{pm}/omr", data={"file": (io.BytesIO(data), "p.xlsx")},
+                            content_type="multipart/form-data", follow_redirects=True).data.decode()
+        self.assertIn("50명 반영", html)
+        self.assertIn("연습", html)
+        self.assertEqual(self.ta.get(f"/t/mocks/{self.mid}/practice.xlsx").status_code, 404)   # 실제 회차엔 없음
+        # 같은 파일을 실제 회차에 올리면 연습반 학생은 찾지 않는다
+        html = self.up(data)
+        self.assertNotIn("50명 반영", html)
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) AS n FROM exam_results WHERE mock_id = ?", (self.mid,), one=True)["n"], 0)
+            sid = query("SELECT student_id FROM exam_results WHERE mock_id = ? LIMIT 1", (pm,), one=True)["student_id"]
+        # 조교 피드백: 저장하면 문자 총평 자리에 들어가고, 모음 CSV 에는 학생코드만
+        self.ta.post(f"/t/mocks/{pm}/note/{sid}", data={"note": "보기 판단 근거를 한 줄로 적는 연습을 시작했습니다."})
+        page = self.ta.get(f"/t/mocks/{pm}/sms").data.decode()
+        self.assertIn("보기 판단 근거를 한 줄로 적는 연습을 시작했습니다.", page)
+        csv = self.ta.get("/t/feedback-notes.csv").data.decode("utf-8-sig")
+        self.assertIn("TEST0", csv); self.assertIn("보기 판단 근거", csv)
 
 
 if __name__ == "__main__":

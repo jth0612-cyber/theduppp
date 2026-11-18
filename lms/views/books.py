@@ -233,13 +233,13 @@ def teacher_books():
                      (SELECT COUNT(*) FROM mocks m WHERE m.book_id = b.id) AS mocks
                      FROM books b ORDER BY b.created_at DESC""")
     rounds = {}
-    for r in query("""SELECT m.id, m.round_no, m.n_items, m.exam_date, b.kind,
+    for r in query("""SELECT m.id, m.round_no, m.n_items, m.exam_date, b.kind, b.is_practice,
                              (SELECT COUNT(*) FROM exam_results x WHERE x.mock_id = m.id) AS n
                       FROM mocks m JOIN books b ON b.id = m.book_id
-                      WHERE b.title IN ('복습 테스트', '모의고사') AND b.title = b.kind ORDER BY m.round_no"""):
-        rounds.setdefault(r["kind"], []).append(r)
+                      WHERE (b.title = b.kind OR b.title = '[연습] ' || b.kind) ORDER BY m.round_no"""):
+        rounds.setdefault(r["kind"] if not r["is_practice"] else "[연습] " + r["kind"], []).append(r)
     return render_template("teacher/books.html", books=books, today=_today(), shop=SHOP_BOOKS, links=shop_links(),
-                           rounds=rounds, kinds=KINDS)
+                           rounds=rounds, kinds=KINDS + ("[연습] 복습 테스트", "[연습] 모의고사"))
 
 
 def _book_or_404(bid):
@@ -520,3 +520,54 @@ def mock_sms(mid):
                         headers={"Content-Disposition": f"attachment; filename=sms.csv; filename*=UTF-8''{quote('문자_' + exams.exam_title(m) + '.csv')}"})
     audit("sms_view", f"mock:{mid}")
     return render_template("teacher/mock_sms.html", m=m, rows=out, title=exams.exam_title(m))
+
+
+@bp.route("/t/mocks/<int:mid>/practice.xlsx")
+@staff_required
+def practice_file(mid):
+    """연습 회차 전용: 실장 TEST반 가상 학생 50명의 예시 OMR 엑셀."""
+    import exams
+    m = exams.load_mock(mid) or abort(404)
+    if not m["is_practice"]:
+        abort(404)
+    from urllib.parse import quote
+    return Response(exams.practice_workbook(mid), mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f"attachment; filename=practice.xlsx; filename*=UTF-8''{quote('연습_' + exams.exam_title(m) + '.xlsx')}"})
+
+
+@bp.route("/t/mocks/<int:mid>/note/<int:sid>", methods=["POST"])
+@staff_required
+def ta_note(mid, sid):
+    """조교가 직접 쓴 피드백: 학부모 문자의 총평 자리에 들어가고, 나중에 피드백 방향을 정리하는 자료로 모은다."""
+    text = request.form.get("note", "").strip()[:1500]
+    if not query("SELECT 1 FROM exam_results WHERE mock_id = ? AND student_id = ?", (mid, sid), one=True):
+        abort(404)
+    execute("UPDATE exam_results SET ta_note = ?, ta_by = ?, ta_at = datetime('now', 'localtime') WHERE mock_id = ? AND student_id = ?",
+            (text, g.user["id"], mid, sid))
+    audit("ta_note", f"mock:{mid} student:{sid}")
+    flash("피드백을 저장했습니다. 문자에 바로 들어갑니다." if text else "피드백을 지웠습니다.", "ok")
+    return redirect(url_for("books.mock_sms", mid=mid) + f"#s{sid}")
+
+
+@bp.route("/t/feedback-notes.csv")
+@staff_required
+def ta_notes_csv():
+    """조교 피드백 모음 (피드백 방향 정리용). 학생 이름·연락처는 넣지 않고 학생코드만 쓴다."""
+    import exams
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["시험", "종류", "날짜", "반", "학생코드", "점수", "만점", "반 평균", "틀린 문항", "오답 유형", "조교 피드백", "작성자", "작성일"])
+    for r in query("""SELECT r.*, s.student_no, c.name AS cls, x.display_name, x.role FROM exam_results r
+                      JOIN students s ON s.id = r.student_id JOIN classes c ON c.id = s.class_id
+                      LEFT JOIN users x ON x.id = r.ta_by WHERE r.ta_note != '' ORDER BY r.mock_id, c.name"""):
+        rep = exams.student_report(r["mock_id"], r["student_id"])
+        if not rep:
+            continue
+        types = ", ".join(f"{a['no']}번 {a['type']}" for a in rep["wrongs"] if a["type"])
+        w.writerow([exams.exam_title(rep["mock"]), rep["mock"]["kind"], rep["mock"]["exam_date"], r["cls"], r["student_no"],
+                    analysis._fmt(r["score"]), analysis._fmt(rep["mock"]["full_score"]), rep["st"]["avg"],
+                    ", ".join(map(str, rep["wrong"])), types, r["ta_note"],
+                    r["display_name"] or ("정태혁 선생님" if r["role"] == "teacher" else ""), r["ta_at"] or ""])
+    audit("ta_notes_csv", "")
+    return Response("\ufeff" + buf.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=feedback-notes.csv"})

@@ -678,6 +678,11 @@ def init_db(path):
     _add_column(conn, "mocks", "exam_date", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "students", "parent_phone_enc", "TEXT")                 # 학부모 연락처 (암호화). 수험번호 = 뒤 8자리
     _add_column(conn, "students", "sms_ok", "INTEGER NOT NULL DEFAULT 1")     # 학부모 문자 수신 동의
+    _add_column(conn, "classes", "is_test", "INTEGER NOT NULL DEFAULT 0")     # 연습반 (실장 TEST반): 실제 회차·통계와 섞지 않는다
+    _add_column(conn, "books", "is_practice", "INTEGER NOT NULL DEFAULT 0")   # 연습 회차 (연습반 학생만)
+    _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
+    _add_column(conn, "exam_results", "ta_by", "INTEGER")
+    _add_column(conn, "exam_results", "ta_at", "TEXT")
     # 복습 테스트·모의고사 1~50회를 미리 만들어 둔다 (문항 수 0 = 아직 결과 없음, 엑셀을 올리면 정해진다)
     if conn.execute("SELECT 1 FROM settings WHERE key = 'seed_exam_rounds'").fetchone() is None:
         for kind in ("복습 테스트", "모의고사"):

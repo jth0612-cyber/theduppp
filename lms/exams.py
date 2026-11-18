@@ -66,7 +66,7 @@ def exam_title(m):
 
 
 def load_mock(mid):
-    m = query("""SELECT m.*, b.title AS book_title, b.kind FROM mocks m JOIN books b ON b.id = m.book_id
+    m = query("""SELECT m.*, b.title AS book_title, b.kind, b.is_practice FROM mocks m JOIN books b ON b.id = m.book_id
                  WHERE m.id = ?""", (mid,), one=True)
     if m is None:
         return None
@@ -83,12 +83,13 @@ def _digits(v):
     return "0" + d if len(d) == 7 else d
 
 
-def student_index():
+def student_index(practice=False):
+    """practice: 연습 회차면 연습반 학생만, 실제 회차면 연습반 학생은 빼고 찾는다."""
     rows = query("""SELECT s.id, s.name, s.student_no, s.phone_enc, s.parent_phone_enc, s.sms_ok, c.name AS cls,
                            u.id AS uid, u.username
                     FROM students s JOIN classes c ON c.id = s.class_id
                     LEFT JOIN users u ON u.student_id = s.id AND u.role = 'student'
-                    WHERE s.active = 1""")
+                    WHERE s.active = 1 AND c.is_test = ?""", (1 if practice else 0,))
     out = []
     for r in rows:
         d = dict(r)
@@ -203,7 +204,7 @@ def apply_upload(mid, raw, filename, by_id):
     pts = [int(x) if float(x).is_integer() else x for x in pts]
     full = sum(pts)
     answers = omr.grade(p, key, n, mode)
-    idx = student_index()
+    idx = student_index(practice=bool(m["is_practice"]))
     seen, rows_out, ok = set(), [], 0
     now = datetime.now().isoformat(sep=" ", timespec="seconds")
     classes = set()
@@ -247,10 +248,11 @@ def apply_upload(mid, raw, filename, by_id):
         warn.append({"10": "1/0", "ox": "O/X", "x": "X 표시", "wrong": "틀린문항"}[mode] + " 형식이라 고른 번호가 없습니다. 오답 유형은 추정하지 않고, 선택 비율은 쓰지 않습니다.")
     if not any(info.get(i) for i in range(1, n + 1)):
         warn.append("문항정보가 비어 있어 오답 유형을 분류하지 않습니다. 문항정보 시트를 채워 다시 올리면 분석이 붙습니다.")
-    execute("""UPDATE mocks SET n_items = ?, full_score = ?, answer_key = ?, points = ?, items = ?,
-               exam_date = CASE WHEN exam_date = '' THEN ? ELSE exam_date END WHERE id = ?""",
-            (n, full, json.dumps(key, ensure_ascii=False), json.dumps(pts), json.dumps({str(k): v for k, v in info.items()}, ensure_ascii=False),
-             date.today().isoformat(), mid))
+    if ok or m["n_items"]:                                   # 아무도 못 넣은 파일로는 회차 설정을 바꾸지 않는다
+        execute("""UPDATE mocks SET n_items = ?, full_score = ?, answer_key = ?, points = ?, items = ?,
+                   exam_date = CASE WHEN exam_date = '' THEN ? ELSE exam_date END WHERE id = ?""",
+                (n, full, json.dumps(key, ensure_ascii=False), json.dumps(pts),
+                 json.dumps({str(k): v for k, v in info.items()}, ensure_ascii=False), date.today().isoformat(), mid))
     sync_entries(mid)
     try:
         from flask import g
@@ -740,4 +742,77 @@ def sms_for(mid, student_id, cs=None):
         extra = study_block(sysdata.study_type(sysdata.code_of_student(student_id)), rep, hist)
     if not extra and SET["learn_type"]:
         extra = learn_block(classify_profile(hist))
-    return compose_sms(rep, rep["r"]["name"], extra=extra)
+    return compose_sms(rep, rep["r"]["name"], overall=(rep["r"].get("ta_note") or "").strip(), extra=extra)
+
+
+# ---------------------------------------------------------------- 연습반 (실장 TEST반)
+_SURNAMES = "김이박최정강조윤장임한오서신권황안송류홍"
+_GIVEN = ["민준", "서연", "도윤", "하은", "시우", "지유", "주원", "서윤", "예준", "지민", "하준", "수아", "지호", "채원", "준서",
+          "다은", "건우", "예린", "현우", "소율", "우진", "지아", "선우", "윤서", "연우"]
+
+
+def seed_practice():
+    """처음 한 번: 연습반 '실장 TEST반'과 가상 학생 50명, 연습 회차(복습 테스트·모의고사 각 1~10회)를 만든다.
+    가상 학생의 학부모 번호는 010-9999-00NN (수험번호 999900NN). 실제 회차에는 섞이지 않는다."""
+    if query("SELECT 1 FROM settings WHERE key = 'seed_practice'", one=True):
+        return
+    from security import encrypt
+    from db import new_join_code, join_code_taken
+    cid = execute("INSERT INTO classes (name, description, is_test, join_open, join_code) VALUES ('실장 TEST반', '조교 연습용 가상 반', 1, 0, ?)",
+                  (new_join_code(join_code_taken),))
+    for i in range(50):
+        name = _SURNAMES[i % len(_SURNAMES)] + _GIVEN[(i * 7) % len(_GIVEN)]
+        execute("""INSERT INTO students (class_id, name, student_no, parent_phone_enc, memo_enc) VALUES (?, ?, ?, ?, ?)""",
+                (cid, name, f"TEST{i + 1:03d}", encrypt(f"010-9999-{i + 1:04d}"), encrypt("가상 학생 (연습용)")))
+    for kind in ("복습 테스트", "모의고사"):
+        bid = execute("INSERT INTO books (title, subject, expires_on, kind, is_practice) VALUES (?, '통합과학', '2099-12-31', ?, 1)",
+                      (f"[연습] {kind}", kind))
+        for n in range(1, 11):
+            execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, ?, 0, 0, '[]', '[]')", (bid, n))
+    execute("INSERT INTO settings (key, value) VALUES ('seed_practice', '1')")
+
+
+def practice_workbook(mid):
+    """연습 회차용 예시 엑셀: 실장 TEST반 50명의 가상 답안 + 정답·배점 줄 + 문항정보 (합답형·일반형 예시 포함)."""
+    import random
+    from openpyxl import Workbook
+    m = load_mock(mid)
+    n = m["n_items"] or (20 if m["kind"] == "복습 테스트" else 25)
+    rng = random.Random(mid)
+    key = [rng.randint(1, 5) for _ in range(n)]
+    hap = min(n, 7)                                  # 7번은 합답형 예시
+    key[hap - 1] = 5
+    pts = [2] * n if m["kind"] == "모의고사" else [1] * n
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "OMR"
+    ws.append(["이름", "수험번호", "반"] + list(range(1, n + 1)))
+    ws.append(["정답", "", ""] + key)
+    ws.append(["배점", "", ""] + pts)
+    for s in sorted(student_index(practice=True), key=lambda s: s["student_no"]):
+        skill = rng.uniform(0.45, 0.95)
+        row = []
+        for i, k in enumerate(key):
+            hard = 0.25 if i >= n * 2 // 3 else 0
+            if rng.random() < skill - hard:
+                row.append(k)
+            elif i == hap - 1:
+                row.append(rng.choice([3, 3, 4, 1]))
+            else:
+                row.append(rng.choice([c for c in range(1, 6) if c != k]) if rng.random() > 0.05 else None)
+        ws.append([s["name"], "9999" + s["parent8"][-4:], s["cls"]] + row)
+    info = wb.create_sheet("문항정보")
+    info.append(["문항번호", "정답", "배점", "단원", "핵심개념", "문항형식", "선지구성", "보기함정", "선지분석"])
+    units = ["물질의 규칙성", "화학 결합", "지권의 변화", "역학 시스템", "생명 시스템"]
+    for i in range(1, n + 1):
+        k = key[i - 1]
+        if i == hap:
+            info.append([i, k, pts[i - 1], "산과 염기", "중화 반응 그래프", "합답형", "①ㄱ ②ㄴ ③ㄱ,ㄷ ④ㄴ,ㄷ ⑤ㄱ,ㄴ,ㄷ",
+                         "ㄱ(O): 혼합 용액 속 이온 수를 섞기 전과 같다고 봄 [개념 부족] / ㄴ(O): 그래프 x축을 넣은 부피가 아니라 시간으로 읽음 [자료 해석] / ㄷ(O): 단위 환산을 빠뜨림 [계산 실수]", ""])
+        else:
+            w1, w2 = (k % 5) + 1, ((k + 1) % 5) + 1
+            info.append([i, k, pts[i - 1], units[i % len(units)], "", "일반", "", "",
+                         f"{w1}번: 개념의 정의를 반대로 기억함(개념 부족) / {w2}번: 문제의 조건 하나를 놓침(조건 독해)"])
+    buf = __import__("io").BytesIO()
+    wb.save(buf)
+    return buf.getvalue()

@@ -2,9 +2,10 @@
 {% block title %}{{ mock.book_title }} {{ mock.round_no }}회 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 복테·모의고사</a></p>
+{% if m.is_practice %}<p class="aside-note"><span>연습</span>실장 TEST반 전용 연습 회차입니다. 실제 학생 화면·통계에는 나가지 않습니다.</p>{% endif %}
 <div class="page-head">
-  <div><h1>{{ m.kind }} {{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
-    <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항 · {{ fmt(m.full_score) }}점 · 응시 {{ cs.all.n }}명 · 평균 {{ fmt(cs.all.avg) }}{% if m.exam_date %} · {{ m.exam_date }}{% endif %}{% else %}결과 없음 · 엑셀을 올리면 문항 수·정답·배점이 정해집니다{% endif %}</p></div>
+  <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
+    <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항 · {{ fmt(m.full_score) }}점 · 응시 {{ cs.all.n }}명{% if cs.all.avg is not none %} · 평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %} · {{ m.exam_date }}{% endif %}{% else %}결과 없음 · 엑셀을 올리면 문항 수·정답·배점이 정해집니다{% endif %}</p></div>
   {% if m.n_items %}<a class="btn primary" href="{{ url_for('books.mock_sms', mid=mock.id) }}">학부모 문자</a>{% endif %}
 </div>
 
@@ -20,6 +21,8 @@
     {% if not m.n_items %}<label class="small" for="tn">문항 수</label><input type="number" id="tn" name="n" min="1" max="60" value="{{ 20 if m.kind == '복습 테스트' else 25 }}" class="w-num">{% endif %}
     <button class="btn">빈 양식 받기</button><span class="small muted">재원생 명단 · 정답·배점 줄 · 문항정보 시트 포함</span>
   </form>
+  {% if m.is_practice %}<p class="mt"><a class="btn" href="{{ url_for('books.practice_file', mid=mock.id) }}">연습용 예시 엑셀 받기</a>
+    <span class="small muted">실장 TEST반 가상 학생 50명의 답안 · 정답 · 문항정보가 채워져 있습니다. 그대로 올려 보세요.</span></p>{% endif %}
   {% if up %}
   <div class="omr-log mt">
     <p class="small"><b>마지막 반영</b> {{ up.created_at[5:16] }} · {{ up.display_name or ('정태혁 선생님' if up.role == 'teacher' else up.username) }} · {{ up.filename }}</p>
@@ -36,7 +39,7 @@
   <h2 id="h-cls">반별 결과</h2>
   <div class="table-wrap"><table>
     <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>반 오답률 30% 이상 문항</th></tr></thead>
-    <tbody>{% for c, st in cs.cls|dictsort %}<tr><td>{{ c }}</td><td class="num">{{ st.n }}명</td><td class="num">{{ fmt(st.avg) }}</td>
+    <tbody>{% for c, st in cs.cls|dictsort %}<tr><td class="nowrap">{{ c }}</td><td class="num nowrap">{{ st.n }}명</td><td class="num nowrap">{{ fmt(st.avg) }}</td>
       <td class="small">{% if st.n >= min_n %}{% for w in st.wrong %}{% if w >= 30 %}{{ loop.index }}번({{ pct1(w) }}%) {% endif %}{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
 </section>

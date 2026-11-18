@@ -90,6 +90,10 @@ def create_app(test_config=None):
     app.register_blueprint(feedback_bp)
     csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다
     app.jinja_env.globals["google_enabled"] = google_enabled
+    if not app.config.get("TESTING") or app.config.get("SEED_PRACTICE"):
+        with app.app_context():                              # 연습반(실장 TEST반)·가상 학생 50명·연습 회차 (처음 한 번)
+            import exams
+            exams.seed_practice()
     from security import role_caption, shown_name
     app.jinja_env.globals["shown_name"] = shown_name
     app.jinja_env.globals["role_caption"] = role_caption
