@@ -262,7 +262,8 @@ def question_thread(qid):
     """선생님 답변과 학생 추가 질문을 시간순으로 합친 대화."""
     items = [dict(r, kind="answer") for r in
              query("""SELECT a.body, a.created_at, NULL AS image_id, u.role AS author_role,
-                             u.display_name AS author_name
+                             u.display_name AS author_name,
+                             a.id = (SELECT MIN(x.id) FROM answers x WHERE x.question_id = a.question_id) AS is_main
                       FROM answers a LEFT JOIN users u ON u.id = a.author_id
                       WHERE a.question_id = ?""", (qid,))]
     items += [dict(r, kind="followup") for r in

@@ -795,6 +795,41 @@ def _get_assistant(uid):
     return row
 
 
+def answer_counts(month):
+    """조교 월별 질문 답변 수 (월급 산정용). month 'YYYY-MM'.
+    질문마다 가장 먼저 달린 답변 = Main 답변, 그 질문의 나머지 답변(재질문에 대한 답 등) = 부가 답변.
+    답변이 달린 날짜의 달로 센다. {author_id: {"main": n, "extra": n}}"""
+    out = {}
+    for r in query("""SELECT a.author_id AS u,
+                             SUM(a.id = (SELECT MIN(x.id) FROM answers x WHERE x.question_id = a.question_id)) AS main,
+                             SUM(a.id != (SELECT MIN(x.id) FROM answers x WHERE x.question_id = a.question_id)) AS extra
+                      FROM answers a WHERE strftime('%Y-%m', a.created_at) = ? GROUP BY a.author_id""", (month,)):
+        out[r["u"]] = {"main": r["main"] or 0, "extra": r["extra"] or 0}
+    return out
+
+
+def _month_arg():
+    m = request.args.get("month", "")
+    return m if re.fullmatch(r"20\d\d-(0[1-9]|1[0-2])", m) else date.today().strftime("%Y-%m")
+
+
+@bp.route("/staff/answers.csv")
+@teacher_required
+def staff_answers_csv():
+    """조교 월별 답변 수 내려받기 (엑셀에서 열림)."""
+    month = _month_arg()
+    counts = answer_counts(month)
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "합계"])
+    for a in query("SELECT * FROM users WHERE role = 'assistant' ORDER BY display_name"):
+        c = counts.get(a["id"], {"main": 0, "extra": 0})
+        w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"]])
+    audit("staff_answers_csv", month)
+    return Response("\ufeff" + out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=answers-{month}.csv"})
+
+
 @bp.route("/staff", methods=["GET", "POST"])
 @teacher_required
 def staff():
@@ -816,9 +851,12 @@ def staff():
             audit("assistant_create", f"user:{uid}")
             return render_template("teacher/staff_password.html", username=username, display_name=display_name,
                                    temp=temp)
-    rows = query("""SELECT u.*, (SELECT COUNT(*) FROM answers WHERE author_id = u.id) AS answer_count
-                    FROM users u WHERE role = 'assistant' ORDER BY disabled, display_name""")
-    return render_template("teacher/staff.html", staff=rows)
+    month = _month_arg()
+    counts = answer_counts(month)
+    rows = [dict(r, main=counts.get(r["id"], {}).get("main", 0), extra=counts.get(r["id"], {}).get("extra", 0))
+            for r in query("""SELECT u.*, (SELECT COUNT(*) FROM answers WHERE author_id = u.id) AS answer_count
+                              FROM users u WHERE role = 'assistant' ORDER BY disabled, display_name""")]
+    return render_template("teacher/staff.html", staff=rows, month=month)
 
 
 @bp.route("/staff/<int:uid>/reset", methods=["POST"])

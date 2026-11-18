@@ -183,3 +183,31 @@ class Update1114(unittest.TestCase):
             self.assertGreaterEqual(progress.today_summary(uid)["minutes"], 40)     # 공부 시간은 그대로
         self.assertEqual(self.s.post("/s/my/reset", data={"topic": "99"}).status_code, 400)
         self.assertNotEqual(self.t.get("/s/my").status_code, 200)
+
+    def test_assistant_monthly_answer_counts(self):
+        """조교 월별 답변 수: 질문마다 첫 답변은 Main, 같은 질문의 이후 답변은 부가."""
+        with self.app.app_context():
+            execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta2', ?, '최조교')", (hash_password(PW),))
+        ta = self.app.test_client(); ta.post("/login", data={"username": "ta2", "password": PW})
+        for t in ("[기출-1] 질문1", "[기출-2] 질문2"):
+            self.s.post("/s/questions", data={"qtype": "학습질문", "title": t, "body": "내용", "image": [(io.BytesIO(PNG), "a.png")]},
+                        content_type="multipart/form-data")
+        with self.app.app_context():
+            q1, q2 = [r["id"] for r in query("SELECT id FROM questions ORDER BY id")]
+        ta.post(f"/t/questions/{q1}", data={"body": "답1"})                       # Main
+        self.s.post(f"/s/questions/{q1}/followup", data={"body": "재질문"})
+        ta.post(f"/t/questions/{q1}", data={"body": "답1-2"})                     # 부가
+        self.t.post(f"/t/questions/{q2}", data={"body": "선생님 답"})            # q2 의 Main 은 선생님
+        ta.post(f"/t/questions/{q2}", data={"body": "조교 보충"})                 # 부가
+        with self.app.app_context():
+            from views.teacher import answer_counts
+            from datetime import date
+            uid = query("SELECT id FROM users WHERE username = 'ta2'", one=True)["id"]
+            self.assertEqual(answer_counts(date.today().strftime("%Y-%m"))[uid], {"main": 1, "extra": 2})
+            self.assertEqual(answer_counts("2000-01"), {})
+        page = self.t.get("/t/staff").data.decode()
+        self.assertIn("월별 질문 답변 수", page); self.assertIn("최조교", page)
+        csv_ = self.t.get("/t/staff/answers.csv").data.decode("utf-8-sig")
+        self.assertIn("최조교,ta2,1,2,3", csv_)
+        self.assertIn(">Main<", self.t.get(f"/t/questions/{q1}").data.decode())
+        self.assertNotEqual(ta.get("/t/staff/answers.csv").status_code, 200)        # 조교는 못 봄
