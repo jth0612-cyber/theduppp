@@ -3,7 +3,7 @@
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
+  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }} · {{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
 </div>
 
 <div class="grid grid-2">
@@ -20,7 +20,7 @@
           <td class="num">{{ m.n }}명</td>
           <td class="num">
             <form method="post" action="{{ url_for('books.toggle_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small">{{ '닫기' if m.open else '열기' }}</button></form>
-            <form method="post" action="{{ url_for('books.delete_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="{{ m.round_no }}회와 학생들의 가채점 기록을 모두 지울까요?">삭제</button></form>
+            <form method="post" action="{{ url_for('books.delete_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="{{ m.round_no }}회와 학생 결과를 모두 지울까요?">삭제</button></form>
           </td>
         </tr>
       {% endfor %}
@@ -85,6 +85,7 @@
   <form method="post" action="{{ url_for('books.edit_book', bid=book.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row">
+      <div class="field"><label for="ekind">종류</label><select id="ekind" name="kind">{% for k in ('복습 테스트', '모의고사') %}<option {{ 'selected' if book.kind == k }}>{{ k }}</option>{% endfor %}</select></div>
       <div class="field wide"><label for="etitle">교재 이름</label><input type="text" id="etitle" name="title" maxlength="100" value="{{ book.title }}"></div>
       <div class="field"><label for="esubject">과목·표지 글자</label><input type="text" id="esubject" name="subject" maxlength="40" value="{{ book.subject }}"></div>
       <div class="field"><label for="eexp">이용 기간 (마지막 날)</label><input type="date" id="eexp" name="expires_on" value="{{ book.expires_on }}"></div>

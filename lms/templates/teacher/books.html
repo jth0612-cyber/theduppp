@@ -2,16 +2,17 @@
 {% block title %}교재·모의고사 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>교재·모의고사</h1><p class="muted small">회차별 정답·배점, 인증 코드</p></div>
+  <div><h1>교재·모의고사</h1><p class="muted small">복습 테스트·모의고사 회차별 정답·배점, OMR 결과 올리기</p></div>
 </div>
 
 <div class="card">
   {% if books %}
   <div class="table-wrap"><table>
-    <thead><tr><th>교재</th><th>이용 기간</th><th class="num">회차</th><th class="num">등록 학생</th></tr></thead>
+    <thead><tr><th>종류</th><th>교재</th><th>이용 기간</th><th class="num">회차</th><th class="num">등록 학생</th></tr></thead>
     <tbody>
     {% for b in books %}
       <tr class="{{ 'inactive' if b.expires_on < today }}">
+        <td class="muted">{{ b.kind }}</td>
         <td><a href="{{ url_for('books.teacher_book', bid=b.id) }}"><b>{{ b.title }}</b></a>{% if b.is_free %} <span class="small muted">배포본</span>{% endif %}{% if b.subject %} <span class="small muted">{{ b.subject }}</span>{% endif %}</td>
         <td>{{ b.expires_on }}까지</td>
         <td class="num">{{ b.mocks }}</td>
@@ -44,6 +45,7 @@
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row">
+      <div class="field"><label for="kind">종류</label><select id="kind" name="kind"><option>복습 테스트</option><option selected>모의고사</option></select></div>
       <div class="field wide"><label for="title">교재 이름</label><input type="text" id="title" name="title" required maxlength="100" placeholder="예: 2027 통합과학 파이널 모의고사"></div>
       <div class="field"><label for="subject">과목·표지 글자</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
       <div class="field"><label for="expires_on">이용 기간 (마지막 날)</label><input type="date" id="expires_on" name="expires_on" required></div>

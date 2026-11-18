@@ -74,12 +74,11 @@ class StudyTest(unittest.TestCase):
         self.t.post(f"/t/books/{bid}/mocks", data={"round_no": "1", "n_items": "25", "full_score": "50",
                                                    "answer_key": KEY25, "high_items": "21-25", "low_items": "1-5"})
         mid = self.q("SELECT id FROM mocks", one=True)["id"]
-        self.t.post(f"/t/books/{bid}/codes", data={"kind": "shared"})
-        code = self.q("SELECT code FROM book_codes", one=True)["code"]
         s = self.student(0)
-        s.post("/s/books/register", data={"code": code})
         ans = ("2" if KEY25[0] != "2" else "3") + KEY25[1:24] + ("2" if KEY25[24] != "2" else "3")
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": ans})
+        import io as _io                                                  # 강사가 OMR 결과(CSV)를 올린다
+        csv = "학생코드,답안\nS000,%s\n" % ans
+        self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(csv.encode()), "omr.csv")}, content_type="multipart/form-data")
         page = s.get("/s/wrong").data.decode()
         self.assertIn("1번", page)
         self.assertIn("25번", page)

@@ -12,6 +12,30 @@
   <textarea id="mk-review" name="review" rows="5" maxlength="4000" placeholder="난이도, 킬러 문항, 다음 회차까지 볼 것">{{ mock.review }}</textarea>
   <button class="btn primary small mt">총평 저장</button>
 </form>
+<section class="card" id="omr" aria-labelledby="h-omr">
+  <h2 id="h-omr">OMR 결과 올리기</h2>
+  <p class="small muted">엑셀 첫 줄: 학생코드 · 이름 · 반 · 1 ~ {{ mock.n_items }}. 칸마다 고른 번호(1~5), 빈칸은 무응답(오답). 같은 학생은 새로 올린 내용으로 바뀝니다.</p>
+  <div class="row mt">
+    <a class="btn" href="{{ url_for('books.omr_template', mid=mock.id) }}">빈 양식 받기 (재원생 명단 포함)</a>
+  </div>
+  {% if g.user.role == 'teacher' %}
+  <form method="post" action="{{ url_for('books.omr_upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="file" name="file" accept=".xlsx,.csv" required>
+    <button class="btn primary">올리기</button>
+  </form>
+  {% endif %}
+  {% if entries %}
+  <div class="table-wrap mt"><table>
+    <thead><tr><th>학생</th><th>반</th><th class="num">점수</th><th class="num">오답</th><th>답안</th></tr></thead>
+    <tbody>{% for e in entries %}<tr><td>{{ e.name or '—' }} <span class="small muted">{{ e.student_no or '' }}</span></td><td class="muted">{{ e.cls or '' }}</td>
+      <td class="num">{{ fmt(e.score) if e.score is not none else '—' }}</td><td class="num">{{ e.wrong }}</td>
+      <td class="answer-key small">{% for ch in e.answers %}{{ '·' if ch == '0' else ch }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if g.user.role == 'teacher' %}<form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 지울까요?">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 지우기</button></form>{% endif %}
+  {% else %}<p class="muted mt">아직 올린 결과가 없습니다.</p>{% endif %}
+</section>
 <p class="small muted">정답: <span class="answer-key">{% for k in key %}{{ k }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</span></p>
 {% include "_analysis_stats.html" %}
 {% endblock %}

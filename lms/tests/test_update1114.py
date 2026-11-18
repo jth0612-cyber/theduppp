@@ -110,7 +110,7 @@ class Update1114(unittest.TestCase):
             mid = execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, 1, 3, 6, ?, ?)",
                           (bid, json.dumps([1, 2, 3]), json.dumps([2, 2, 2])))
             uid = query("SELECT id FROM users WHERE username = 'minsu'", one=True)["id"]
-            execute("INSERT INTO user_books (user_id, book_id) VALUES (?, ?)", (uid, bid))
+            execute("INSERT INTO mock_entries (mock_id, user_id, mode, answers, score) VALUES (?, ?, 'answers', '123', 6)", (mid, uid))
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta1', ?, '박조교')", (hash_password(PW),))
             execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', 'other', ?, NULL)", (hash_password("Other!2026xx"),))
         page = self.s.get(f"/s/analysis?mock={mid}").data.decode()

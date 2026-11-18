@@ -124,6 +124,18 @@ class BooksTest(unittest.TestCase):
             mid = query("SELECT id FROM mocks WHERE book_id = ?", (bid,), one=True)["id"]
         return bid, mid
 
+    def upload(self, mid, rows, n=20, name="omr.xlsx", header=None):
+        """OMR 결과 엑셀을 강사 계정으로 올린다. rows: [(학생코드, 이름, 반, 답안 문자열)]"""
+        import io as _io
+        from openpyxl import Workbook
+        wb = Workbook(); ws = wb.active
+        ws.append(header or (["학생코드", "이름", "반"] + list(range(1, n + 1))))
+        for code, nm, cls, ans in rows:
+            ws.append([code, nm, cls] + [int(ch) if ch in "12345" else None for ch in ans])
+        buf = _io.BytesIO(); wb.save(buf); buf.seek(0)
+        return self.t.post(f"/t/mocks/{mid}/omr", data={"file": (buf, name)}, content_type="multipart/form-data",
+                           follow_redirects=True)
+
     def test_25_items_with_mixed_points(self):
         r = self.t.post("/t/books", data={"title": "통합과학 실전", "subject": "통합과학", "expires_on": "2099-12-31"})
         bid = int(r.headers["Location"].rsplit("/", 1)[-1])
@@ -134,17 +146,12 @@ class BooksTest(unittest.TestCase):
         with self.app.app_context():
             m = query("SELECT * FROM mocks WHERE book_id = ?", (bid,), one=True)
         self.assertEqual(sum(json.loads(m["points"])), 50)
-        self.t.post(f"/t/books/{bid}/codes", data={"kind": "shared"})
-        with self.app.app_context():
-            code = query("SELECT code FROM book_codes WHERE book_id = ?", (bid,), one=True)["code"]
-        s = self.student(0)
-        s.post("/s/books/register", data={"code": code})
         # 1번(1.5점)과 25번(2.5점)을 틀리면 46점
         ans = ("2" if key[0] != "2" else "3") + key[1:24] + ("2" if key[24] != "2" else "3")
-        s.post(f"/s/analysis/{m['id']}/submit", data={"mode": "answers", "quick": ans})
+        self.upload(m["id"], [("S000", "학생0", "A반", ans)], n=25)
         with self.app.app_context():
             self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (m["id"],), one=True)["score"], 46)
-        page = s.get(f"/s/analysis?mock={m['id']}").data.decode()
+        page = self.student(0).get(f"/s/analysis?mock={m['id']}").data.decode()
         self.assertIn("놓친 점수", page)
         self.assertIn("4점", page)
         self.assertIn("45–50", page)
@@ -154,29 +161,60 @@ class BooksTest(unittest.TestCase):
         with self.app.app_context():
             return query("SELECT code FROM book_codes WHERE book_id = ? AND max_uses IS NULL", (bid,), one=True)["code"]
 
-    def test_register_code_and_score_on_server(self):
+    def test_omr_upload_shows_to_students(self):
+        """강사가 OMR 엑셀을 올리면 그 학생 화면에 바로 채점 결과가 보인다. 학생은 답을 적을 수 없다."""
         bid, mid = self.make_book()
-        s = self.student(0)
-        # 등록 전에는 분석실에 회차가 없다
-        self.assertIn("아직 등록한 교재가 없어요", s.get("/s/analysis").data.decode())
-        self.assertEqual(s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": KEY}).status_code, 404)
-        code = self.shared_code(bid)
-        r = s.post("/s/books/register", data={"code": analysis.format_code(code).lower()})
-        self.assertIn("교재를 등록했어요", r.data.decode())
-        page = s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn("답안지", page)
-        self.assertNotIn(KEY, page)                                     # 정답은 화면에 나가지 않음
-        # 부분 입력은 채점하지 않음
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": "14352"})
-        with self.app.app_context():
-            e = query("SELECT * FROM mock_entries WHERE mock_id = ?", (mid,), one=True)
-            self.assertIsNone(e["score"])
-        # 마지막 두 문항(3점짜리)을 틀리면 44점
+        s0, s1 = self.student(0), self.student(1)
+        self.assertIn("아직 올라온 결과가 없습니다", s0.get("/s/analysis").data.decode())
+        self.assertEqual(s0.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": KEY}).status_code, 404)
+        # 마지막 두 문항(3점짜리) 오답 → 44점, 7번 무응답(2점) → 42점
         wrong = KEY[:18] + ("2" if KEY[18] != "2" else "3") + ("2" if KEY[19] != "2" else "3")
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": " ".join(wrong)})
+        blank = wrong[:6] + "0" + wrong[7:]
+        r = self.upload(mid, [("S000", "학생0", "A반", wrong), ("S001", "", "", blank), ("Z999", "없는학생", "", KEY)])
+        page = r.data.decode()
+        self.assertIn("2명 결과를 반영했습니다", page)
+        self.assertIn("Z999: 학생코드 없음", page)
         with self.app.app_context():
-            self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,), one=True)["score"], 44)
-        self.assertIn("44", s.get(f"/s/analysis?mock={mid}").data.decode())
+            sc = {r["username"]: r["score"] for r in query(
+                "SELECT u.username, e.score FROM mock_entries e JOIN users u ON u.id = e.user_id WHERE e.mock_id = ?", (mid,))}
+        self.assertEqual(sc, {"S000": 44, "S001": 42})
+        page = s0.get(f"/s/analysis?mock={mid}").data.decode()
+        self.assertIn("내 답안", page); self.assertIn("44", page)
+        self.assertNotIn('name="quick"', page); self.assertNotIn("<input type=\"radio\"", page)
+        self.assertIn("7번 2점, 내 답 무응답", s1.get(f"/s/analysis?mock={mid}").data.decode())
+        # 결과가 없는 학생에게는 회차가 보이지 않는다
+        self.assertEqual(self.student(2).get(f"/s/analysis?mock={mid}").status_code, 200)   # 결과 없는 학생: 빈 화면
+        self.assertNotIn("내 답안", self.student(2).get("/s/analysis").data.decode())
+        # 다시 올리면 새 내용으로 바뀐다
+        self.upload(mid, [("S000", "학생0", "A반", KEY)])
+        with self.app.app_context():
+            self.assertEqual(query("SELECT score FROM mock_entries e JOIN users u ON u.id = e.user_id WHERE u.username = 'S000'",
+                                   one=True)["score"], 50)
+        # 빈 양식은 재원생 명단이 채워져 나온다
+        form = self.t.get(f"/t/mocks/{mid}/omr-form.xlsx")
+        self.assertEqual(form.status_code, 200)
+        from openpyxl import load_workbook
+        import io as _io
+        ws = load_workbook(_io.BytesIO(form.data)).active
+        self.assertEqual([c.value for c in ws[1]][:4], ["학생코드", "이름", "반", 1])
+        self.assertEqual(ws.max_row, 13)
+        # 학생은 올릴 수 없다
+        self.assertNotEqual(s0.post(f"/t/mocks/{mid}/omr").status_code, 302)
+
+    def test_omr_csv_name_and_answer_column(self):
+        """CSV, 학생코드 없이 이름으로, '답안' 한 칸에 이어 적은 형식도 받는다."""
+        bid, mid = self.make_book()
+        import io as _io
+        csv = "이름,답안\n학생3,%s\n학생4,%s\n" % (" ".join(KEY[i:i + 5] for i in range(0, 20, 5)), KEY[:19])
+        r = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(csv.encode("utf-8-sig")), "a.csv")},
+                        content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn("2명 결과를 반영했습니다", r.data.decode())
+        with self.app.app_context():
+            sc = sorted(r["score"] for r in query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,)))
+        self.assertEqual(sc, [47, 50])                                  # 20번(3점) 무응답
+        bad = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(b"x"), "a.txt")},
+                          content_type="multipart/form-data", follow_redirects=True)
+        self.assertIn("엑셀(.xlsx) 또는 CSV", bad.data.decode())
 
     def test_single_use_code_and_expired_book(self):
         bid, _ = self.make_book()
@@ -198,51 +236,21 @@ class BooksTest(unittest.TestCase):
 
     def test_grade_cuts_and_item_stats_appear(self):
         bid, mid = self.make_book()
-        code = self.shared_code(bid)
+        rows = []
         for i in range(12):
-            s = self.student(i)
-            s.post("/s/books/register", data={"code": code})
             ans = list(KEY)
             for j in range(i % 6):                                      # 학생마다 0~5문항 틀림
                 ans[19 - j] = "5" if ans[19 - j] != "5" else "4"
-            s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": "".join(ans)})
-        page = s.get(f"/s/analysis?mock={mid}&q=20").data.decode()
+            rows.append((f"S{i:03d}", f"학생{i}", "A반", "".join(ans)))
+        self.upload(mid, rows)
+        page = self.student(11).get(f"/s/analysis?mock={mid}&q=20").data.decode()
         self.assertIn("표준점수", page)
         self.assertIn("문항 지도", page)
         self.assertIn("20번 선지별 응답", page)
         self.assertIn("등급", page)
         teacher = self.t.get(f"/t/mocks/{mid}").data.decode()
         self.assertIn("채점 12명", teacher)
-        # 다른 학생의 답안은 볼 수 없고, 남의 회차에 제출할 수 없다
         self.assertEqual(self.student(0).get("/t/books").status_code, 403)
-
-    def test_bubble_sheet_submission(self):
-        bid, mid = self.make_book()
-        s = self.student(0)
-        s.post("/s/books/register", data={"code": self.shared_code(bid)})
-        marks = {f"a{i + 1}": KEY[i] for i in range(20)}
-        marks.pop("a7")                                                  # 7번 비움 → 채점 안 함
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", **marks})
-        with self.app.app_context():
-            e = query("SELECT * FROM mock_entries WHERE mock_id = ?", (mid,), one=True)
-            self.assertEqual(e["answers"][6], "0")
-            self.assertIsNone(e["score"])
-        marks["a7"] = KEY[6]
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", **marks})
-        with self.app.app_context():
-            self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,), one=True)["score"], 50)
-        page = s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn('name="a7" value="{}" checked'.format(KEY[6]), page)
-
-    def test_score_only_mode(self):
-        bid, mid = self.make_book()
-        s = self.student(0)
-        s.post("/s/books/register", data={"code": self.shared_code(bid)})
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "score", "score": "60"})   # 만점 초과
-        s.post(f"/s/analysis/{mid}/submit", data={"mode": "score", "score": "41"})
-        with self.app.app_context():
-            e = query("SELECT * FROM mock_entries WHERE mock_id = ?", (mid,), one=True)
-            self.assertEqual((e["mode"], e["score"]), ("score", 41))
 
     def test_student_one_device(self):
         first = self.student(0)

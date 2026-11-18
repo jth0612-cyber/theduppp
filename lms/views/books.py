@@ -29,7 +29,7 @@ def _ttl():
 
 
 def _mock_or_404(mid):
-    m = query("SELECT m.*, b.title AS book_title, b.subject, b.expires_on, b.is_free, b.notice "
+    m = query("SELECT m.*, b.title AS book_title, b.subject, b.expires_on, b.is_free, b.notice, b.kind "
               "FROM mocks m JOIN books b ON b.id = m.book_id WHERE m.id = ?", (mid,), one=True)
     if m is None:
         abort(404)
@@ -61,12 +61,15 @@ def _selected_item(stats):
 
 # ---------- 학생 ----------
 
+KINDS = ("복습 테스트", "모의고사")
+
+
 def _accessible_mocks():
-    return query("""SELECT m.*, b.title AS book_title, b.subject FROM mocks m
+    """학생이 볼 수 있는 회차: 강사가 올린 OMR 결과에 이 학생 답안이 있는 회차 (열려 있는 것만)."""
+    return query("""SELECT m.*, b.title AS book_title, b.subject, b.kind FROM mocks m
                     JOIN books b ON b.id = m.book_id
-                    JOIN user_books ub ON ub.book_id = b.id AND ub.user_id = ?
-                    WHERE m.open = 1 AND b.expires_on >= ? ORDER BY b.title, m.round_no""",
-                 (g.user["id"], _today()))
+                    JOIN mock_entries e ON e.mock_id = m.id AND e.user_id = ?
+                    WHERE m.open = 1 ORDER BY b.kind, m.created_at DESC, m.round_no DESC""", (g.user["id"],))
 
 
 @bp.route("/s/books/register", methods=["GET", "POST"])
@@ -111,84 +114,35 @@ def register_book():
 @bp.route("/s/analysis")
 @student_required
 def analysis_home():
+    """복테&모의 분석: 강사가 올린 OMR 결과로 채점된 내 답안·성적표·통계·총평·1:1 첨삭. 학생이 답을 적는 칸은 없다."""
     mocks = _accessible_mocks()
     if not mocks:
-        return render_template("student/analysis.html", mocks=[], mock=None)
+        return render_template("student/analysis.html", mocks=[], mock=None, kinds=KINDS)
+    ids = {m["id"] for m in mocks}
     unread = query("SELECT mock_id FROM feedback_threads WHERE user_id = ? AND unread = 1 ORDER BY updated_at DESC LIMIT 1",
                    (g.user["id"],), one=True)
-    default = unread["mock_id"] if unread and unread["mock_id"] in {m["id"] for m in mocks} else mocks[0]["id"]
+    default = unread["mock_id"] if unread and unread["mock_id"] in ids else mocks[0]["id"]
     try:
         mid = int(request.args.get("mock", default))
     except ValueError:
-        mid = mocks[0]["id"]
-    if mid not in {m["id"] for m in mocks}:
-        abort(404)
-    mock = _mock_or_404(mid)
-    key = json.loads(mock["answer_key"])
-    points = json.loads(mock["points"])
-    entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
-    stats = _stats(mock)
-    my_score = entry["score"] if entry else None
-    my_wrong = set(analysis.wrong_items(entry["answers"], key)) if entry and entry["mode"] == "answers" \
-        and analysis.is_complete(entry["answers"], len(key)) else set()
-    mode = request.args.get("mode") or (entry["mode"] if entry else "answers")
-    marks = entry["answers"] if entry and entry["mode"] == "answers" else ""
-    marks = (marks + "0" * mock["n_items"])[:mock["n_items"]]
-    from views.feedback import thread_for
-    fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
-    return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
-                           my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
-                           my_wrong=my_wrong, selected=_selected_item(stats), mode=mode, mock_param=mid,
-                           my_bucket=analysis.bucket_label(my_score, mock["full_score"],
-                                                           step=analysis.score_step(points)), marks=marks,
-                           points=points, lost=sum(points[n - 1] for n in my_wrong),
-                           filled=analysis.filled_count(marks),
-                           min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt)
-
-
-@bp.route("/s/analysis/<int:mid>/submit", methods=["POST"])
-@student_required
-def submit_entry(mid):
-    if mid not in {m["id"] for m in _accessible_mocks()}:
+        mid = default
+    if mid not in ids:
         abort(404)
     mock = _mock_or_404(mid)
     key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
-    mode = request.form.get("mode")
-    now = datetime.now().isoformat(sep=" ", timespec="seconds")
-    if mode == "answers":
-        if request.form.get("quick", "").strip():
-            answers = analysis.parse_answers(request.form.get("quick"), mock["n_items"])
-        else:
-            answers = analysis.answers_from_marks(request.form, mock["n_items"])
-        score = analysis.score_answers(answers, key, points)
-    elif mode == "score":
-        answers = ""
-        try:
-            score = float(request.form.get("score", ""))
-        except ValueError:
-            score = None
-        if score is None or not 0 <= score <= mock["full_score"]:
-            flash(f"점수는 0~{analysis._fmt(mock['full_score'])} 사이로 입력하세요.", "error")
-            return redirect(url_for("books.analysis_home", mock=mid, mode="score"))
-    else:
-        abort(400)
-    execute("""INSERT INTO mock_entries (mock_id, user_id, mode, answers, score, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-               ON CONFLICT(mock_id, user_id) DO UPDATE SET mode = excluded.mode, answers = excluded.answers,
-               score = excluded.score, updated_at = excluded.updated_at""",
-            (mid, g.user["id"], mode, answers, score, now))
-    if score is None:
-        flash(f"{analysis.filled_count(answers)}문항을 적어 두었어요. {mock['n_items']}문항을 모두 고르면 채점합니다.", "ok")
-    else:
-        flash(f"채점을 마쳤어요. {analysis._fmt(score)}점 / {analysis._fmt(mock['full_score'])}점", "ok")
-    return redirect(url_for("books.analysis_home", mock=mid) + "#result")
-
-
-@bp.route("/s/analysis/<int:mid>/clear", methods=["POST"])
-@student_required
-def clear_entry(mid):
-    execute("DELETE FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]))
-    flash("입력한 답안을 지웠어요.", "ok")
-    return redirect(url_for("books.analysis_home", mock=mid))
+    entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
+    stats = _stats(mock)
+    my_score = entry["score"]
+    marks = ((entry["answers"] or "") + "0" * mock["n_items"])[:mock["n_items"]]
+    my_wrong = set(analysis.wrong_items(marks, key)) if entry["mode"] == "answers" else set()
+    from views.feedback import thread_for
+    fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
+    return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
+                           kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
+                           my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
+                           my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),
+                           marks=marks, points=points, lost=sum(points[n - 1] for n in my_wrong),
+                           min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt)
 
 
 # ---------- 강사 ----------
@@ -262,9 +216,10 @@ def teacher_books():
         if not title or not expires_on:
             flash("교재 이름과 이용 기간(마지막 날짜)을 입력하세요.", "error")
         else:
-            bid = execute("INSERT INTO books (title, subject, expires_on, is_free, notice) VALUES (?, ?, ?, ?, ?)",
+            kind = request.form.get("kind") if request.form.get("kind") in KINDS else "모의고사"
+            bid = execute("INSERT INTO books (title, subject, expires_on, is_free, notice, kind) VALUES (?, ?, ?, ?, ?, ?)",
                           (title[:100], request.form.get("subject", "").strip()[:40], expires_on,
-                           1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300]))
+                           1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], kind))
             audit("book_created", f"book:{bid}")
             return redirect(url_for("books.teacher_book", bid=bid))
     books = query("""SELECT b.*, (SELECT COUNT(*) FROM user_books ub WHERE ub.book_id = b.id) AS users,
@@ -305,9 +260,10 @@ def edit_book(bid):
     except ValueError:
         flash("이용 기간 날짜가 올바르지 않습니다.", "error")
         return redirect(url_for("books.teacher_book", bid=bid))
-    execute("UPDATE books SET title = ?, subject = ?, expires_on = ?, is_free = ?, notice = ? WHERE id = ?",
+    kind = request.form.get("kind") if request.form.get("kind") in KINDS else _book_or_404(bid)["kind"]
+    execute("UPDATE books SET title = ?, subject = ?, expires_on = ?, is_free = ?, notice = ?, kind = ? WHERE id = ?",
             (request.form.get("title", "").strip()[:100] or "제목 없음", request.form.get("subject", "").strip()[:40],
-             expires_on, 1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], bid))
+             expires_on, 1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], kind, bid))
     flash("교재 정보를 저장했습니다.", "ok")
     return redirect(url_for("books.teacher_book", bid=bid))
 
@@ -452,6 +408,111 @@ def mock_review(mid):
 def teacher_mock(mid):
     mock = _mock_or_404(mid)
     stats = _stats(mock)
-    return render_template("teacher/mock_stats.html", mock=mock, stats=stats, selected=_selected_item(stats),
+    key = json.loads(mock["answer_key"])
+    entries = [dict(r, wrong=len(analysis.wrong_items(r["answers"], key))) for r in query(
+        """SELECT e.*, s.name, s.student_no, c.name AS cls FROM mock_entries e JOIN users u ON u.id = e.user_id
+           LEFT JOIN students s ON s.id = u.student_id LEFT JOIN classes c ON c.id = s.class_id
+           WHERE e.mock_id = ? ORDER BY e.score DESC, s.name""", (mid,))]
+    return render_template("teacher/mock_stats.html", mock=mock, stats=stats, selected=_selected_item(stats), entries=entries,
                            my_wrong=set(), my_score=None, my_grade=None, my_bucket=None, mock_param=None, min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt,
                            key=json.loads(mock["answer_key"]))
+
+
+# ---------- OMR 결과 엑셀 올리기 (강사) ----------
+
+def _student_index():
+    """학생 찾기용: 학생코드·아이디 → user, 이름 → [user...]"""
+    rows = query("""SELECT u.id AS uid, u.username, s.student_no, s.name, c.name AS cls FROM students s
+                    JOIN classes c ON c.id = s.class_id LEFT JOIN users u ON u.student_id = s.id AND u.role = 'student'
+                    WHERE s.active = 1""")
+    by_code, by_name = {}, {}
+    for r in rows:
+        for k in (r["student_no"], r["username"]):
+            if k:
+                by_code[str(k).strip().upper()] = r
+        by_name.setdefault(r["name"], []).append(r)
+    return by_code, by_name
+
+
+def _match(row, by_code, by_name):
+    if row["code"]:
+        r = by_code.get(row["code"].upper())
+        if r is None:
+            return None, "학생코드 없음"
+    else:
+        cands = by_name.get(row["name"], [])
+        if row["cls"] and len(cands) > 1:
+            cands = [c for c in cands if row["cls"] in c["cls"]]
+        if not cands:
+            return None, "이름 없음"
+        if len(cands) > 1:
+            return None, "같은 이름이 여러 명 (학생코드나 반을 적어 주세요)"
+        r = cands[0]
+    if not r["uid"]:
+        return None, "아직 가입 전"
+    return r, None
+
+
+@bp.route("/t/mocks/<int:mid>/omr", methods=["POST"])
+@teacher_required
+def omr_upload(mid):
+    """OMR 결과 엑셀을 올리면 학생마다 채점해 저장한다. 같은 학생은 새 파일 내용으로 바뀐다."""
+    import omr
+    mock = _mock_or_404(mid)
+    key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
+    f = request.files.get("file")
+    if not f or not f.filename:
+        flash("엑셀 파일을 골라 주세요.", "error")
+        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+    try:
+        rows = omr.read(f.read(5 * 1024 * 1024 + 1)[:5 * 1024 * 1024], f.filename, mock["n_items"])
+    except Exception as e:                                   # 깨진 파일·형식 오류
+        flash(str(e) if isinstance(e, ValueError) else "파일을 읽지 못했습니다. 엑셀(.xlsx)로 다시 저장해 올려 주세요.", "error")
+        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+    by_code, by_name = _student_index()
+    now = datetime.now().isoformat(sep=" ", timespec="seconds")
+    done, missed, seen = 0, [], set()
+    for row in rows:
+        r, why = _match(row, by_code, by_name)
+        if r is None or r["uid"] in seen:
+            missed.append(f"{row['row']}줄 {row['code'] or row['name']}: {why or '같은 학생이 두 번'}")
+            continue
+        seen.add(r["uid"])
+        score = analysis.score_omr(row["answers"], key, points)
+        execute("""INSERT INTO mock_entries (mock_id, user_id, mode, answers, score, updated_at) VALUES (?, ?, 'answers', ?, ?, ?)
+                   ON CONFLICT(mock_id, user_id) DO UPDATE SET mode = 'answers', answers = excluded.answers,
+                   score = excluded.score, updated_at = excluded.updated_at""", (mid, r["uid"], row["answers"], score, now))
+        done += 1
+    analysis.invalidate(mid)
+    audit("omr_upload", f"mock:{mid} rows:{done}")
+    flash(f"{done}명 결과를 반영했습니다. 학생 화면에 바로 보입니다." if done else "반영된 학생이 없습니다.", "ok" if done else "error")
+    if missed:
+        flash(f"반영 못 한 줄 {len(missed)}개 — " + " / ".join(missed[:15]) + (" …" if len(missed) > 15 else ""), "error")
+    return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+
+
+@bp.route("/t/mocks/<int:mid>/omr-form.xlsx")
+@staff_required
+def omr_template(mid):
+    """빈 양식: 지금 재원 중인 학생의 학생코드·이름·반이 미리 채워져 있다."""
+    import omr
+    mock = _mock_or_404(mid)
+    students = [(r["student_no"], r["name"], r["cls"]) for r in query(
+        """SELECT s.student_no, s.name, c.name AS cls FROM students s JOIN classes c ON c.id = s.class_id
+           WHERE s.active = 1 ORDER BY c.name, s.name""")]
+    data = omr.template(mock["n_items"], students)
+    name = f"OMR_{mock['book_title']}_{mock['round_no']}회.xlsx"
+    from urllib.parse import quote
+    return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f"attachment; filename=omr.xlsx; filename*=UTF-8''{quote(name)}"})
+
+
+@bp.route("/t/mocks/<int:mid>/entries/clear", methods=["POST"])
+@teacher_required
+def omr_clear(mid):
+    _mock_or_404(mid)
+    execute("DELETE FROM mock_entries WHERE mock_id = ?", (mid,))
+    analysis.invalidate(mid)
+    audit("omr_clear", f"mock:{mid}")
+    flash("이 회차의 학생 결과를 모두 지웠습니다.", "ok")
+    return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")

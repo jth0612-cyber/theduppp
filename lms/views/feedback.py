@@ -152,7 +152,7 @@ def t_detail(tid):
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (t["mock_id"], t["user_id"]), one=True)
     key, points = json.loads(t["answer_key"]), json.loads(t["points"])
     wrong = []
-    if entry and entry["mode"] == "answers" and analysis.is_complete(entry["answers"], len(key)):
+    if entry and entry["mode"] == "answers" and entry["answers"]:
         wrong = sorted(analysis.wrong_items(entry["answers"], key))
     return render_template("teacher/feedback_detail.html", t=t, msgs=messages(tid), entry=entry, wrong=wrong,
                            points=points, key=key, fmt=analysis._fmt)

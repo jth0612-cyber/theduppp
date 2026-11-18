@@ -141,7 +141,13 @@ def score_answers(answers, key, points):
 
 
 def wrong_items(answers, key):
-    return [i + 1 for i, (a, k) in enumerate(zip(answers, key)) if a in "12345" and int(a) != k]
+    """틀린 문항 번호. OMR 결과에서 무응답('0')도 틀린 것으로 센다."""
+    return [i + 1 for i, (a, k) in enumerate(zip(answers or "", key)) if a != str(k)]
+
+
+def score_omr(answers, key, points):
+    """OMR 결과 채점: 맞힌 문항 배점의 합 (무응답은 0점)."""
+    return sum(p for a, k, p in zip(answers, key, points) if a == str(k))
 
 
 def _fmt(x):
@@ -228,7 +234,8 @@ def item_stats(answer_rows, key):
     for i, k in enumerate(key):
         picks = [0] * CHOICES
         for a in answer_rows:
-            picks[int(a[i]) - 1] += 1
+            if a[i] in "12345":
+                picks[int(a[i]) - 1] += 1
         wrong = n - picks[k - 1]
         items.append({"no": i + 1, "wrong_pct": round(100 * wrong / n) if n else 0,
                       "choices": [round(100 * p / n) if n else 0 for p in picks]})
@@ -243,7 +250,7 @@ def compute(entries, key, full_score, step=1):
     """entries: [{'answers': str, 'score': float|None}] (같은 회차의 모든 제출)."""
     complete = [e for e in entries if e["score"] is not None]
     scores = [float(e["score"]) for e in complete]
-    answer_rows = [e["answers"] for e in complete if e["answers"] and is_complete(e["answers"], len(key))]
+    answer_rows = [e["answers"] for e in complete if e["answers"] and len(e["answers"]) == len(key)]
     return {
         "n": len(scores),
         "n_answers": len(answer_rows),

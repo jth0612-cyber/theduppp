@@ -601,6 +601,7 @@ def init_db(path):
     _add_column(conn, "classes", "track", "TEXT NOT NULL DEFAULT '재종'")
     # 퀴즈·게임 실제 푼 시간: 답할 때마다 직전 답에서 지난 시간(최대 3분)을 더한다
     _add_column(conn, "game_rounds", "last_at", "TEXT")
+    _add_column(conn, "books", "kind", "TEXT NOT NULL DEFAULT '모의고사'")   # 모의고사 / 복습 테스트
     _add_column(conn, "game_rounds", "active_sec", "INTEGER NOT NULL DEFAULT 0")
     # 기존 DB 이전: 새로 생긴 열 추가
     _add_column(conn, "users", "nickname", "TEXT")
