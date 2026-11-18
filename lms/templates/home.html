@@ -71,6 +71,18 @@
     </li>
     <li class="book-item">
       <figure class="book-photo">
+        <img src="{{ url_for('static', filename='img/books/note-cover-720.webp') }}"
+             srcset="{{ url_for('static', filename='img/books/note-cover-720.webp') }} 720w, {{ url_for('static', filename='img/books/note-cover.webp') }} 1230w"
+             sizes="(max-width: 560px) 100vw, 45vw" width="1230" height="820" loading="lazy"
+             alt="필기노트 TOPIC 07, 09, 01 쪽 세 권이 바닥에 비스듬히 겹쳐 놓여 있다">
+      </figure>
+      <div class="book-meta">
+        <p class="book-name">필기노트</p>
+        <p class="book-sub">TOPIC별</p>
+      </div>
+    </li>
+    <li class="book-item">
+      <figure class="book-photo">
         <img src="{{ url_for('static', filename='img/books/squeeze-cover-720.webp') }}"
              srcset="{{ url_for('static', filename='img/books/squeeze-cover-720.webp') }} 720w, {{ url_for('static', filename='img/books/squeeze-cover.webp') }} 1230w"
              sizes="(max-width: 560px) 100vw, 45vw" width="1230" height="820" loading="lazy"
