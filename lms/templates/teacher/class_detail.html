@@ -88,6 +88,7 @@
       <div class="row">
         <div class="field"><label>목표 (선택)</label><input type="text" name="target" maxlength="60" placeholder="예: 목표 대학·학과"></div>
         <div class="field"><label>연락처 (선택, 암호화 저장)</label><input type="text" name="phone" maxlength="30"></div>
+        <div class="field"><label>학부모 연락처 (OMR 수험번호, 암호화 저장)</label><input type="text" name="parent_phone" maxlength="30" inputmode="tel"></div>
       </div>
       <div class="field"><label>메모 (선택, 암호화 저장)</label><textarea name="memo" maxlength="1000"></textarea></div>
       <button class="btn primary">등록</button>
@@ -97,7 +98,7 @@
     <summary>CSV로 일괄 등록 / 계정 발급</summary>
     <form method="post" action="{{ url_for('teacher.student_import', cid=cls.id) }}" enctype="multipart/form-data">
       {{ csrf() }}
-      <p class="small muted">첫 줄: <code>이름,아이디,연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 됩니다.</p>
+      <p class="small muted">첫 줄: <code>이름,아이디,연락처,학부모연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 됩니다.</p>
       <div class="row">
         <div class="field"><input type="file" name="csv" accept=".csv" required></div>
         <div class="field shrink"><button class="btn primary">가져오기</button></div>

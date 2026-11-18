@@ -2,8 +2,17 @@
 {% block title %}교재·모의고사 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>교재·모의고사</h1><p class="muted small">복습 테스트·모의고사 회차별 정답·배점, OMR 결과 올리기</p></div>
+  <div><h1>복테·모의고사</h1><p class="muted small">회차를 눌러 채점기 엑셀을 올리면 학생 화면과 학부모 문자에 바로 반영됩니다.</p></div>
 </div>
+{% for k in kinds %}{% if rounds.get(k) %}
+<section class="card round-grid-card" aria-labelledby="h-{{ loop.index }}">
+  <h2 id="h-{{ loop.index }}">{{ k }} <span class="small muted">1~{{ rounds[k]|length }}회 · 결과 있음 {{ rounds[k]|selectattr('n')|list|length }}회</span></h2>
+  <ol class="round-grid">
+    {% for r in rounds[k] %}<li><a href="{{ url_for('books.teacher_mock', mid=r.id) }}" class="{{ 'has' if r.n }}"><b>{{ r.round_no }}</b><span>{% if r.n %}{{ r.n }}명{% else %}–{% endif %}</span></a></li>{% endfor %}
+  </ol>
+</section>
+{% endif %}{% endfor %}
+<h2 class="mt">교재 <span class="small muted">교재 코드·구매 링크</span></h2>
 
 <div class="card">
   {% if books %}

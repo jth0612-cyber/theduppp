@@ -140,14 +140,40 @@ def score_answers(answers, key, points):
     return sum(p for a, k, p in zip(answers, key, points) if int(a) == k)
 
 
+def key_set(k):
+    """정답 한 칸 → 맞는 번호 집합. 3 / "2,4"·"2/4"(복수 정답) / "*"·"전원"(전원 정답, 빈 집합 대신 None)."""
+    if isinstance(k, int):
+        return {str(k)}
+    s = str(k).strip()
+    if s in ("*", "전원"):
+        return None
+    circled = {"①": "1", "②": "2", "③": "3", "④": "4", "⑤": "5"}
+    return {circled.get(ch, ch) for ch in s if circled.get(ch, ch) in "12345"}
+
+
+def is_right(a, k):
+    """답안 한 칸: '1'~'5' 고른 번호, 'R' 맞음(고른 번호 기록 없음), '0' 틀림(무응답·두 개 마킹·기록 없음)."""
+    if a == "R":
+        return True
+    ks = key_set(k)
+    if ks is None:
+        return True
+    return a in ks
+
+
 def wrong_items(answers, key):
-    """틀린 문항 번호. OMR 결과에서 무응답('0')도 틀린 것으로 센다."""
-    return [i + 1 for i, (a, k) in enumerate(zip(answers or "", key)) if a != str(k)]
+    """틀린 문항 번호. 무응답('0')도 틀린 것으로 센다."""
+    return [i + 1 for i, (a, k) in enumerate(zip(answers or "", key)) if not is_right(a, k)]
 
 
 def score_omr(answers, key, points):
-    """OMR 결과 채점: 맞힌 문항 배점의 합 (무응답은 0점)."""
-    return sum(p for a, k, p in zip(answers, key, points) if a == str(k))
+    """점수 = 맞힌 문항 배점의 합 (= 만점 − 틀린 문항 배점 합)."""
+    return sum(p for a, k, p in zip(answers, key, points) if is_right(a, k))
+
+
+def key_label(k):
+    ks = key_set(k)
+    return "전원 정답" if ks is None else ",".join(sorted(ks))
 
 
 def _fmt(x):
@@ -233,10 +259,12 @@ def item_stats(answer_rows, key):
     items = []
     for i, k in enumerate(key):
         picks = [0] * CHOICES
+        wrong = 0
         for a in answer_rows:
             if a[i] in "12345":
                 picks[int(a[i]) - 1] += 1
-        wrong = n - picks[k - 1]
+            if not is_right(a[i], k):
+                wrong += 1
         items.append({"no": i + 1, "wrong_pct": round(100 * wrong / n) if n else 0,
                       "choices": [round(100 * p / n) if n else 0 for p in picks]})
     top = sorted((it for it in items if it["wrong_pct"] > 0), key=lambda it: (-it["wrong_pct"], it["no"]))[:3]

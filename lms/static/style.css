@@ -2090,3 +2090,31 @@ h1 .fb-state { font-size: 13px; margin-left: 6px; }
 .omr-legend { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: var(--muted); }
 .omr-legend .bubble-v { width: 18px; height: 22px; font-size: 10px; }
 .omr-legend .bubble-v.is-mine { margin-left: 0; } .omr-legend .bubble-v.is-key { margin-left: 10px; }
+/* 복테·모의고사 회차 격자, OMR 반영 결과, 학부모 문자 */
+.round-grid { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; }
+.round-grid a { display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border: 1px solid var(--edge); border-radius: 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.round-grid a b { font-size: 15px; color: var(--ink); }
+.round-grid a span { font-size: 11.5px; }
+.round-grid a.has { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.round-grid a:hover { text-decoration: none; border-color: var(--ink); }
+.omr-log { border-top: 1px solid var(--rule); padding-top: 10px; }
+.omr-warn { color: var(--warn, #a86b00); }
+.omr-rows { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
+.omr-rows li { padding: 6px 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 160px 1fr; gap: 8px; }
+.omr-rows li.is-error { color: var(--danger); }
+.omr-rows li span { color: var(--muted); }
+.w-num { width: 80px; }
+.sms-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.sms-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sms-head .btn { margin-left: auto; }
+.sms-text { white-space: pre-wrap; font: inherit; font-size: 14px; line-height: 1.65; margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; }
+.wa-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.wa-item { border: 1px solid var(--edge); border-radius: 10px; padding: 12px 14px; background: var(--sheet); }
+.wa-item h3 { margin: 0 0 6px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.wa-item h3 .badge { font-size: 11.5px; }
+.wa-item p { margin: 4px 0 0; font-size: 14px; line-height: 1.6; }
+.wa-item .muted { font-size: 13px; }
+.learn-card { border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: 10px; padding: 14px 16px; background: var(--sheet); margin: 0 0 22px; }
+.learn-card h2 { margin: 0 0 6px; font-size: 16px; }
+.learn-card p { margin: 4px 0 0; font-size: 14px; line-height: 1.6; }
+.wa-sec { margin: 30px 0 10px; }

@@ -122,6 +122,30 @@ CREATE TABLE IF NOT EXISTS quiz_resets (
     PRIMARY KEY (user_id, topic)
 );
 
+-- 복테·모의고사 채점 결과 (OMR 엑셀에서). 학생 계정이 없어도 학생DB 기준으로 저장한다 (학부모 문자용)
+-- answers: 문항마다 '1'~'5' 고른 번호, 'R' 맞음(고른 번호 기록 없음), '0' 틀림(무응답·두 개 마킹·기록 없음)
+CREATE TABLE IF NOT EXISTS exam_results (
+    id          INTEGER PRIMARY KEY,
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    answers     TEXT NOT NULL,
+    score       REAL NOT NULL,
+    file_score  TEXT NOT NULL DEFAULT '',
+    note        TEXT NOT NULL DEFAULT '',
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (mock_id, student_id)
+);
+-- OMR 엑셀 올린 기록: 줄마다 처리 결과를 남겨 고친 뒤 다시 올릴 수 있게
+CREATE TABLE IF NOT EXISTS omr_uploads (
+    id          INTEGER PRIMARY KEY,
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    by_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    filename    TEXT NOT NULL DEFAULT '',
+    summary     TEXT NOT NULL DEFAULT '',
+    rows        TEXT NOT NULL DEFAULT '[]',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
 -- 복테·모의고사 1:1 첨삭: 학생이 회차마다 풀이 사진을 올리고 강사·조교가 답한다
 CREATE TABLE IF NOT EXISTS feedback_threads (
     id          INTEGER PRIMARY KEY,
@@ -650,6 +674,19 @@ def init_db(path):
     _add_column(conn, "mocks", "review", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "review_by", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "review_at", "TEXT")
+    _add_column(conn, "mocks", "items", "TEXT NOT NULL DEFAULT '[]'")          # 문항정보 (단원·핵심개념·선지구성·보기함정 …)
+    _add_column(conn, "mocks", "exam_date", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "students", "parent_phone_enc", "TEXT")                 # 학부모 연락처 (암호화). 수험번호 = 뒤 8자리
+    _add_column(conn, "students", "sms_ok", "INTEGER NOT NULL DEFAULT 1")     # 학부모 문자 수신 동의
+    # 복습 테스트·모의고사 1~50회를 미리 만들어 둔다 (문항 수 0 = 아직 결과 없음, 엑셀을 올리면 정해진다)
+    if conn.execute("SELECT 1 FROM settings WHERE key = 'seed_exam_rounds'").fetchone() is None:
+        for kind in ("복습 테스트", "모의고사"):
+            cur = conn.execute("INSERT INTO books (title, subject, expires_on, kind) VALUES (?, '통합과학', '2099-12-31', ?)",
+                               (kind, kind))
+            for n in range(1, 51):
+                conn.execute("""INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points)
+                                VALUES (?, ?, 0, 0, '[]', '[]')""", (cur.lastrowid, n))
+        conn.execute("INSERT INTO settings (key, value) VALUES ('seed_exam_rounds', '1')")
     # 대구 MDS 반은 단과 (한 번만 바꾼다: 이후 선생님이 바꾼 값은 그대로 둔다)
     if conn.execute("SELECT 1 FROM settings WHERE key = 'mig_mds_dangwa'").fetchone() is None:
         conn.execute("UPDATE classes SET track = '단과' WHERE name LIKE '%MDS%'")

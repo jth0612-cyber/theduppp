@@ -73,7 +73,7 @@ class StudyTest(unittest.TestCase):
         bid = int(r.headers["Location"].rsplit("/", 1)[-1])
         self.t.post(f"/t/books/{bid}/mocks", data={"round_no": "1", "n_items": "25", "full_score": "50",
                                                    "answer_key": KEY25, "high_items": "21-25", "low_items": "1-5"})
-        mid = self.q("SELECT id FROM mocks", one=True)["id"]
+        mid = self.q("SELECT id FROM mocks WHERE book_id = ?", (bid,), one=True)["id"]
         s = self.student(0)
         ans = ("2" if KEY25[0] != "2" else "3") + KEY25[1:24] + ("2" if KEY25[24] != "2" else "3")
         import io as _io                                                  # 강사가 OMR 결과(CSV)를 올린다

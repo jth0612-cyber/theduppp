@@ -232,7 +232,9 @@ def _student_fields():
         "student_no": _text("student_no", 30),
         "target": _text("target", 60, required=False),
         "phone": _text("phone", 30, required=False),
+        "parent_phone": _text("parent_phone", 30, required=False),
         "memo": _text("memo", 1000, required=False),
+        "sms_ok": 0 if request.form.get("sms_off") == "1" else 1,
     }
 
 
@@ -248,9 +250,10 @@ def student_create(cid):
     if query("SELECT 1 FROM students WHERE student_no = ?", (f["student_no"],), one=True):
         flash("이미 등록된 아이디입니다.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
-    sid = execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc)
-                     VALUES (?, ?, ?, ?, ?, ?)""",
-                  (cid, f["name"], f["student_no"], f["target"], encrypt(f["phone"]), encrypt(f["memo"])))
+    sid = execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc, parent_phone_enc, sms_ok)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                  (cid, f["name"], f["student_no"], f["target"], encrypt(f["phone"]), encrypt(f["memo"]),
+                   encrypt(f["parent_phone"]), f["sms_ok"]))
     audit("student_create", f"student:{sid}")
     flash(f"{f['name']} 학생을 등록했습니다.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid))
@@ -259,7 +262,7 @@ def student_create(cid):
 @bp.route("/classes/<int:cid>/import", methods=["POST"])
 @teacher_required
 def student_import(cid):
-    """CSV 일괄 등록. 헤더: 이름,아이디(또는 수험번호),연락처,목표,메모 (연락처 이후는 선택)"""
+    """CSV 일괄 등록. 헤더: 이름,아이디(또는 수험번호),연락처,학부모연락처,목표,메모 (연락처 이후는 선택)"""
     _get_class(cid)
     upload = request.files.get("csv")
     if not upload or not upload.filename.lower().endswith(".csv"):
@@ -296,11 +299,12 @@ def student_import(cid):
         if no in existing:
             skipped.append(f"{line_no}행({no} 중복)")
             continue
-        db.execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc)
-                      VALUES (?, ?, ?, ?, ?, ?)""",
+        db.execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc, parent_phone_enc)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)""",
                    (cid, name, no, (row.get("목표") or "").strip()[:60],
-                    encrypt((row.get("연락처") or "").strip()[:30]),
-                    encrypt((row.get("메모") or "").strip()[:1000])))
+                    encrypt((row.get("연락처") or row.get("학생연락처") or "").strip()[:30]),
+                    encrypt((row.get("메모") or "").strip()[:1000]),
+                    encrypt((row.get("학부모연락처") or "").strip()[:30])))
         existing.add(no)
         added += 1
         if added > 3000:
@@ -357,7 +361,7 @@ def student_detail(sid):
     engagement = None
     if account:
         engagement = {"streak": streak_info(account["id"])}
-    return render_template("teacher/student_detail.html", s=s, phone=decrypt(s["phone_enc"]),
+    return render_template("teacher/student_detail.html", s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]),
                            memo=decrypt(s["memo_enc"]), scores=scores, chart=chart, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
                            note_categories=NOTE_CATEGORIES, engagement=engagement)
@@ -382,9 +386,9 @@ def student_edit(sid):
         return redirect(url_for("teacher.student_detail", sid=sid))
     active = 1 if request.form.get("active") == "1" else 0
     execute("""UPDATE students SET class_id = ?, name = ?, student_no = ?, target = ?,
-               phone_enc = ?, memo_enc = ?, active = ? WHERE id = ?""",
+               phone_enc = ?, memo_enc = ?, active = ?, parent_phone_enc = ?, sms_ok = ? WHERE id = ?""",
             (class_id, f["name"], f["student_no"], f["target"], encrypt(f["phone"]),
-             encrypt(f["memo"]), active, sid))
+             encrypt(f["memo"]), active, encrypt(f["parent_phone"]), f["sms_ok"], sid))
     if not active:
         # 비활성(퇴원) 학생은 로그인 차단
         execute("DELETE FROM users WHERE student_id = ?", (sid,))

@@ -298,3 +298,13 @@ document.querySelectorAll("textarea[data-answer-tpl]").forEach(function (t) {
     }
   });
 })();
+// 복사 버튼: data-copy="요소 id" 의 글자를 클립보드로
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("[data-copy]");
+  if (!b) return;
+  var el = document.getElementById(b.getAttribute("data-copy"));
+  if (!el || !navigator.clipboard) return;
+  navigator.clipboard.writeText(el.textContent).then(function () {
+    var t = b.textContent; b.textContent = "복사됨"; setTimeout(function () { b.textContent = t; }, 1400);
+  });
+});

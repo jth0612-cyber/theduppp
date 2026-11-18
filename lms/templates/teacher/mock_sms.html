@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}학부모 문자 · {{ title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('books.teacher_mock', mid=m.id) }}">← {{ title }}</a></p>
+<div class="page-head">
+  <div><h1>학부모 문자</h1><p class="muted small">{{ title }} · {{ rows|length }}명 · 반 통계 기준 · 2000바이트 이내</p></div>
+  <a class="btn primary" href="{{ url_for('books.mock_sms', mid=m.id, csv=1) }}">CSV로 받기</a>
+</div>
+<ul class="sms-list">
+  {% for x in rows %}
+  <li class="card sms-item">
+    <div class="sms-head"><b>{{ x.r.name }}</b><span class="small muted">{{ x.r.cls }} · {{ x.phone or '연락처 없음' }} · {{ x.bytes }}바이트</span>
+      {% if x.state %}<span class="badge gray">{{ x.state }}</span>{% endif %}
+      <button type="button" class="btn small" data-copy="sms-{{ x.r.student_id }}">복사</button></div>
+    <pre class="sms-text" id="sms-{{ x.r.student_id }}">{{ x.text }}</pre>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

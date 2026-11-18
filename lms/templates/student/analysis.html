@@ -60,6 +60,7 @@
       </div>
     </div>
     <dl class="report-lines">
+      {% if rep %}<div><dt>{{ rep.cls }} 평균</dt><dd>{{ fmt(rep.st.avg) }}점 · 응시 {{ rep.st.n }}명</dd></div>{% endif %}
       <div><dt>채점 결과</dt><dd>{% if my_wrong %}{{ my_wrong|length }}문항 오답{% else %}모두 정답{% endif %}</dd></div>
       {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>
       <div><dt>놓친 점수</dt><dd>{{ fmt(lost) }}점</dd></div>{% endif %}
@@ -68,6 +69,30 @@
     </dl>
   </section>
 </div>
+
+{% if rep and (rep.wrongs or prof) %}
+<section class="wa-sec" aria-labelledby="h-wa">
+  <div class="sec-head"><h2 id="h-wa">오답 분석</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% else %}반 응시 {{ rep.st.n }}명이라 반 오답률은 표시하지 않음{% endif %}</span></div>
+  {% if prof and prof.type != '판단 보류' %}
+  <div class="learn-card"><h2>누적 학습 유형 · {{ prof.type }}</h2><p class="muted">{{ prof.basis }}</p><p>{{ prof.coach }}</p></div>
+  {% endif %}
+  {% if rep.wrongs %}
+  <ul class="wa-list">
+    {% for a in rep.wrongs %}
+    <li class="wa-item">
+      <h3>{{ a.no }}번{% if a.type %} <span class="badge">{{ a.type }}</span>{% endif %}
+        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %} · 반 오답률 {{ pct1(a.rate) }}%{% endif %}{% if a.unit %} · {{ a.unit }}{% endif %}</span></h3>
+      {% if a.diff %}<p>{{ a.diff }}</p>{% endif %}
+      {% if a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
+      {% if a.trap %}<p class="muted">{{ a.trap }}</p>{% endif %}
+      {% if rep.enough and a.dist %}<p class="muted">반 선택 비율: {{ a.dist }}</p>{% endif %}
+      {% if a.evidence == '문항 성격 추정' and a.concept %}<p class="muted">핵심 개념: {{ a.concept }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">틀린 문항이 없습니다.</p>{% endif %}
+</section>
+{% endif %}
 
 <section class="fb-sec" id="feedback" aria-labelledby="h-fb">
   <div class="sec-head"><h2 id="h-fb">1:1 첨삭</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>

@@ -172,8 +172,8 @@ class BooksTest(unittest.TestCase):
         blank = wrong[:6] + "0" + wrong[7:]
         r = self.upload(mid, [("S000", "학생0", "A반", wrong), ("S001", "", "", blank), ("Z999", "없는학생", "", KEY)])
         page = r.data.decode()
-        self.assertIn("2명 결과를 반영했습니다", page)
-        self.assertIn("Z999: 학생코드 없음", page)
+        self.assertIn("2명 반영", page)
+        self.assertIn("번호가 학생DB에 없습니다", page)
         with self.app.app_context():
             sc = {r["username"]: r["score"] for r in query(
                 "SELECT u.username, e.score FROM mock_entries e JOIN users u ON u.id = e.user_id WHERE e.mock_id = ?", (mid,))}
@@ -196,13 +196,13 @@ class BooksTest(unittest.TestCase):
         from openpyxl import load_workbook
         import io as _io
         ws = load_workbook(_io.BytesIO(form.data)).active
-        self.assertEqual([c.value for c in ws[1]][:4], ["학생코드", "이름", "반", 1])
-        self.assertEqual(ws.max_row, 13)
-        self.assertEqual(load_workbook(_io.BytesIO(form.data)).sheetnames, ["OMR", "작성 예시"])
+        self.assertEqual([c.value for c in ws[1]][:5], ["이름", "수험번호", "학생코드", "반", 1])
+        self.assertEqual(ws.max_row, 15)                                   # 머리글 + 정답 줄 + 배점 줄 + 학생 12명
+        self.assertEqual(load_workbook(_io.BytesIO(form.data)).sheetnames, ["OMR", "문항정보", "작성 예시"])
         # 빈 양식 그대로(문항 칸이 빈 학생) 올리면 건너뛴다
         r = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(form.data), "omr.xlsx")},
                         content_type="multipart/form-data", follow_redirects=True)
-        self.assertIn("학생 줄이 없습니다", r.data.decode())
+        self.assertIn("반영된 학생이 없습니다", r.data.decode())             # 정답 줄을 비워 두면 학생 줄은 모두 미응시로 건너뜀
         # 조교도 올릴 수 있고, 학생은 올릴 수 없다
         with self.app.app_context():
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta', ?, '조교')",
@@ -211,7 +211,7 @@ class BooksTest(unittest.TestCase):
         csv = "학생코드,답안\nS005,%s\n" % KEY
         r = ta.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(csv.encode()), "a.csv")},
                     content_type="multipart/form-data", follow_redirects=True)
-        self.assertIn("1명 결과를 반영했습니다", r.data.decode())
+        self.assertIn("1명 반영", r.data.decode())
         self.assertNotEqual(s0.post(f"/t/mocks/{mid}/omr").status_code, 302)
 
     def test_omr_csv_name_and_answer_column(self):
@@ -221,7 +221,7 @@ class BooksTest(unittest.TestCase):
         csv = "이름,답안\n학생3,%s\n학생4,%s\n" % (" ".join(KEY[i:i + 5] for i in range(0, 20, 5)), KEY[:19])
         r = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(csv.encode("utf-8-sig")), "a.csv")},
                         content_type="multipart/form-data", follow_redirects=True)
-        self.assertIn("2명 결과를 반영했습니다", r.data.decode())
+        self.assertIn("2명 반영", r.data.decode())
         with self.app.app_context():
             sc = sorted(r["score"] for r in query("SELECT score FROM mock_entries WHERE mock_id = ?", (mid,)))
         self.assertEqual(sc, [47, 50])                                  # 20번(3점) 무응답
@@ -262,7 +262,7 @@ class BooksTest(unittest.TestCase):
         self.assertIn("20번 선지별 응답", page)
         self.assertIn("등급", page)
         teacher = self.t.get(f"/t/mocks/{mid}").data.decode()
-        self.assertIn("채점 12명", teacher)
+        self.assertIn("응시 12명", teacher)
         self.assertEqual(self.student(0).get("/t/books").status_code, 403)
 
     def test_student_one_device(self):

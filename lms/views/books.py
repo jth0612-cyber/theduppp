@@ -13,7 +13,7 @@ from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, 
 
 import analysis
 from db import execute, query
-from security import audit, member_required, staff_required, student_required, teacher_only, teacher_required
+from security import audit, decrypt, member_required, staff_required, student_required, teacher_only, teacher_required
 
 bp = Blueprint("books", __name__)
 
@@ -41,7 +41,7 @@ def _stats(mock):
     step = analysis.score_step(json.loads(mock["points"]))
 
     def load():
-        rows = query("SELECT answers, score FROM mock_entries WHERE mock_id = ?", (mock["id"],))
+        rows = query("SELECT answers, score FROM exam_results WHERE mock_id = ?", (mock["id"],))
         return analysis.compute([dict(r) for r in rows], key, full, step)
     return analysis.cached(mock["id"], _ttl(), load)
 
@@ -114,7 +114,11 @@ def register_book():
 @bp.route("/s/analysis")
 @student_required
 def analysis_home():
-    """복테&모의 분석: 강사가 올린 OMR 결과로 채점된 내 답안·성적표·통계·총평·1:1 첨삭. 학생이 답을 적는 칸은 없다."""
+    """복테&모의 분석: 강사·조교가 올린 OMR 결과로 채점된 내 답안·성적표·오답 분석·학습 유형·통계·총평·1:1 첨삭.
+    학생이 답을 적는 칸은 없다."""
+    import exams
+    if g.user["student_id"]:
+        exams.sync_entries(student_id=g.user["student_id"])      # 가입 전에 올라온 결과도 가져온다
     mocks = _accessible_mocks()
     if not mocks:
         return render_template("student/analysis.html", mocks=[], mock=None, kinds=KINDS)
@@ -137,7 +141,10 @@ def analysis_home():
     my_wrong = set(analysis.wrong_items(marks, key)) if entry["mode"] == "answers" else set()
     from views.feedback import thread_for
     fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
+    rep = exams.student_report(mid, g.user["student_id"]) if g.user["student_id"] else None
+    prof = exams.classify_profile(exams.history(g.user["student_id"])) if rep else None
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
+                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),
@@ -225,7 +232,14 @@ def teacher_books():
     books = query("""SELECT b.*, (SELECT COUNT(*) FROM user_books ub WHERE ub.book_id = b.id) AS users,
                      (SELECT COUNT(*) FROM mocks m WHERE m.book_id = b.id) AS mocks
                      FROM books b ORDER BY b.created_at DESC""")
-    return render_template("teacher/books.html", books=books, today=_today(), shop=SHOP_BOOKS, links=shop_links())
+    rounds = {}
+    for r in query("""SELECT m.id, m.round_no, m.n_items, m.exam_date, b.kind,
+                             (SELECT COUNT(*) FROM exam_results x WHERE x.mock_id = m.id) AS n
+                      FROM mocks m JOIN books b ON b.id = m.book_id
+                      WHERE b.title IN ('복습 테스트', '모의고사') AND b.title = b.kind ORDER BY m.round_no"""):
+        rounds.setdefault(r["kind"], []).append(r)
+    return render_template("teacher/books.html", books=books, today=_today(), shop=SHOP_BOOKS, links=shop_links(),
+                           rounds=rounds, kinds=KINDS)
 
 
 def _book_or_404(bid):
@@ -406,103 +420,63 @@ def mock_review(mid):
 @bp.route("/t/mocks/<int:mid>")
 @staff_required
 def teacher_mock(mid):
+    """회차 화면 (강사·조교 같은 화면): 엑셀 올리기, 올린 결과, 반별 통계, 학생 결과, 학부모 문자, 총평, 문항 통계."""
+    import exams
     mock = _mock_or_404(mid)
-    stats = _stats(mock)
-    key = json.loads(mock["answer_key"])
-    entries = [dict(r, wrong=len(analysis.wrong_items(r["answers"], key))) for r in query(
-        """SELECT e.*, s.name, s.student_no, c.name AS cls FROM mock_entries e JOIN users u ON u.id = e.user_id
-           LEFT JOIN students s ON s.id = u.student_id LEFT JOIN classes c ON c.id = s.class_id
-           WHERE e.mock_id = ? ORDER BY e.score DESC, s.name""", (mid,))]
-    return render_template("teacher/mock_stats.html", mock=mock, stats=stats, selected=_selected_item(stats), entries=entries,
-                           my_wrong=set(), my_score=None, my_grade=None, my_bucket=None, mock_param=None, min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt,
-                           key=json.loads(mock["answer_key"]))
-
-
-# ---------- OMR 결과 엑셀 올리기 (강사) ----------
-
-def _student_index():
-    """학생 찾기용: 학생코드·아이디 → user, 이름 → [user...]"""
-    rows = query("""SELECT u.id AS uid, u.username, s.student_no, s.name, c.name AS cls FROM students s
-                    JOIN classes c ON c.id = s.class_id LEFT JOIN users u ON u.student_id = s.id AND u.role = 'student'
-                    WHERE s.active = 1""")
-    by_code, by_name = {}, {}
-    for r in rows:
-        for k in (r["student_no"], r["username"]):
-            if k:
-                by_code[str(k).strip().upper()] = r
-        by_name.setdefault(r["name"], []).append(r)
-    return by_code, by_name
-
-
-def _match(row, by_code, by_name):
-    if row["code"]:
-        r = by_code.get(row["code"].upper())
-        if r is None:
-            return None, "학생코드 없음"
-    else:
-        cands = by_name.get(row["name"], [])
-        if row["cls"] and len(cands) > 1:
-            cands = [c for c in cands if row["cls"] in c["cls"]]
-        if not cands:
-            return None, "이름 없음"
-        if len(cands) > 1:
-            return None, "같은 이름이 여러 명 (학생코드나 반을 적어 주세요)"
-        r = cands[0]
-    if not r["uid"]:
-        return None, "아직 가입 전"
-    return r, None
+    m = exams.load_mock(mid)
+    up = query("SELECT u.*, x.display_name, x.username, x.role FROM omr_uploads u LEFT JOIN users x ON x.id = u.by_id "
+               "WHERE u.mock_id = ? ORDER BY u.id DESC LIMIT 1", (mid,), one=True)
+    up_rows = json.loads(up["rows"]) if up else []
+    ctx = {"mock": mock, "m": m, "up": up, "up_rows": up_rows, "fmt": analysis._fmt, "pct1": exams.pct1,
+           "key_label": analysis.key_label, "min_n": exams.SET["min_n"]}
+    if m["n_items"]:
+        cs = exams.class_stats(mid)
+        stats = _stats(mock)
+        ctx.update(cs=cs, stats=stats, selected=_selected_item(stats), key=m["key"], entries=[
+            dict(r, wrong=len(analysis.wrong_items(r["answers"], m["key"]))) for r in cs["rows"]],
+            my_wrong=set(), my_score=None, my_grade=None, my_bucket=None, mock_param=None, min_for_cuts=analysis.MIN_FOR_CUTS)
+    return render_template("teacher/mock_stats.html", **ctx)
 
 
 @bp.route("/t/mocks/<int:mid>/omr", methods=["POST"])
 @staff_required
 def omr_upload(mid):
-    """OMR 결과 엑셀을 올리면 학생마다 채점해 저장한다. 같은 학생은 새 파일 내용으로 바뀐다."""
+    """채점기 엑셀(OMR)을 올리면 학생마다 채점해 저장하고, 학생 화면·학부모 문자에 바로 반영된다."""
+    import exams
     import omr
-    mock = _mock_or_404(mid)
-    key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
+    _mock_or_404(mid)
     f = request.files.get("file")
     if not f or not f.filename:
         flash("엑셀 파일을 골라 주세요.", "error")
         return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
-    try:
-        rows = omr.read(f.read(5 * 1024 * 1024 + 1)[:5 * 1024 * 1024], f.filename, mock["n_items"])
-    except Exception as e:                                   # 깨진 파일·형식 오류
-        flash(str(e) if isinstance(e, ValueError) else "파일을 읽지 못했습니다. 엑셀(.xlsx)로 다시 저장해 올려 주세요.", "error")
+    data = f.read(10 * 1024 * 1024 + 1)
+    if len(data) > 10 * 1024 * 1024:
+        flash("파일이 10MB를 넘습니다.", "error")
         return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
-    by_code, by_name = _student_index()
-    now = datetime.now().isoformat(sep=" ", timespec="seconds")
-    done, missed, seen = 0, [], set()
-    for row in rows:
-        r, why = _match(row, by_code, by_name)
-        if r is None or r["uid"] in seen:
-            missed.append(f"{row['row']}줄 {row['code'] or row['name']}: {why or '같은 학생이 두 번'}")
-            continue
-        seen.add(r["uid"])
-        score = analysis.score_omr(row["answers"], key, points)
-        execute("""INSERT INTO mock_entries (mock_id, user_id, mode, answers, score, updated_at) VALUES (?, ?, 'answers', ?, ?, ?)
-                   ON CONFLICT(mock_id, user_id) DO UPDATE SET mode = 'answers', answers = excluded.answers,
-                   score = excluded.score, updated_at = excluded.updated_at""", (mid, r["uid"], row["answers"], score, now))
-        done += 1
-    analysis.invalidate(mid)
-    audit("omr_upload", f"mock:{mid} rows:{done}")
-    flash(f"{done}명 결과를 반영했습니다. 학생 화면에 바로 보입니다." if done else "반영된 학생이 없습니다.", "ok" if done else "error")
-    if missed:
-        flash(f"반영 못 한 줄 {len(missed)}개 — " + " / ".join(missed[:15]) + (" …" if len(missed) > 15 else ""), "error")
+    try:
+        res = exams.apply_upload(mid, data, f.filename, g.user["id"])
+    except omr.OmrError as e:
+        flash(str(e), "error")
+        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+    audit("omr_upload", f"mock:{mid} rows:{res['ok']}")
+    flash(f"{res['summary']}. 학생 화면에 바로 보입니다." if res["ok"] else "반영된 학생이 없습니다. 아래 줄별 결과를 확인해 주세요.",
+          "ok" if res["ok"] else "error")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
 
 
 @bp.route("/t/mocks/<int:mid>/omr-form.xlsx")
 @staff_required
 def omr_template(mid):
-    """빈 양식: 지금 재원 중인 학생의 학생코드·이름·반이 미리 채워져 있다."""
+    """빈 양식: 재원생 이름·수험번호(학부모 번호 뒤 8자리)·학생코드·반이 채워져 있다."""
+    import exams
     import omr
-    mock = _mock_or_404(mid)
-    students = [(r["student_no"], r["name"], r["cls"]) for r in query(
-        """SELECT s.student_no, s.name, c.name AS cls FROM students s JOIN classes c ON c.id = s.class_id
-           WHERE s.active = 1 ORDER BY c.name, s.name""")]
-    data = omr.template(mock["n_items"], students)
-    name = f"OMR_{mock['book_title']}_{mock['round_no']}회.xlsx"
+    m = exams.load_mock(mid) or abort(404)
+    n = m["n_items"] or request.args.get("n", type=int) or (20 if m["kind"] == "복습 테스트" else 25)
+    n = max(1, min(n, 60))
+    students = [(s["name"], s["parent8"], s["student_no"], s["cls"]) for s in sorted(exams.student_index(), key=lambda s: (s["cls"], s["name"]))]
+    data = omr.template(n, students, m["info"])
     from urllib.parse import quote
+    name = f"OMR_{exams.exam_title(m)}.xlsx"
     return Response(data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f"attachment; filename=omr.xlsx; filename*=UTF-8''{quote(name)}"})
 
@@ -511,8 +485,38 @@ def omr_template(mid):
 @staff_required
 def omr_clear(mid):
     _mock_or_404(mid)
+    execute("DELETE FROM exam_results WHERE mock_id = ?", (mid,))
     execute("DELETE FROM mock_entries WHERE mock_id = ?", (mid,))
     analysis.invalidate(mid)
     audit("omr_clear", f"mock:{mid}")
     flash("이 회차의 학생 결과를 모두 지웠습니다.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+
+
+@bp.route("/t/mocks/<int:mid>/sms")
+@staff_required
+def mock_sms(mid):
+    """학부모 문자: 학생마다 분석 문자. 복사하거나 CSV 로 받아 문자 서비스에 붙여 넣는다."""
+    import exams
+    m = exams.load_mock(mid) or abort(404)
+    if not m["n_items"]:
+        abort(404)
+    cs = exams.class_stats(mid)
+    out = []
+    for r in cs["rows"]:
+        text = exams.sms_for(mid, r["student_id"], cs)
+        phone = decrypt(r["parent_phone_enc"])
+        state = "수신미동의" if not r["sms_ok"] else ("연락처없음" if not phone else "")
+        out.append({"r": r, "text": text, "phone": phone, "state": state, "bytes": exams.sms_bytes(text)})
+    if request.args.get("csv"):
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["반", "이름", "학부모연락처", "상태", "문자"])
+        for x in out:
+            w.writerow([x["r"]["cls"], x["r"]["name"], x["phone"], x["state"] or "발송 가능", x["text"]])
+        audit("sms_csv", f"mock:{mid}")
+        from urllib.parse import quote
+        return Response("\ufeff" + buf.getvalue(), mimetype="text/csv",
+                        headers={"Content-Disposition": f"attachment; filename=sms.csv; filename*=UTF-8''{quote('문자_' + exams.exam_title(m) + '.csv')}"})
+    audit("sms_view", f"mock:{mid}")
+    return render_template("teacher/mock_sms.html", m=m, rows=out, title=exams.exam_title(m))

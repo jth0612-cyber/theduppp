@@ -76,6 +76,10 @@ def today_classes(user_id):
 
 def wrong_list(user_id, only_open=False):
     from views.books import _stats
+    import exams
+    u = query("SELECT student_id FROM users WHERE id = ?", (user_id,), one=True)
+    if u and u["student_id"]:
+        exams.sync_entries(student_id=u["student_id"])
     entries = query("""SELECT e.*, m.round_no, m.title AS mtitle, m.answer_key, m.points, m.n_items, m.full_score,
                               m.book_id, b.title AS book_title, m.id AS mid
                        FROM mock_entries e JOIN mocks m ON m.id = e.mock_id JOIN books b ON b.id = m.book_id
