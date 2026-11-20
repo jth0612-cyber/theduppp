@@ -30,11 +30,21 @@
       <ul>
         <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식. 예) 기출 1단원 42p 3번</li>
         <li><b>학습질문</b>은 문제 사진 필수 (해설 질문이면 해설 사진도).</li>
+        <li><b>학습상담</b>은 공부 방법·계획 상담입니다. 상담받을 조교를 고를 수 있고, 나와 조교만 봅니다.</li>
         <li>어디서 막혔는지 적어 주세요.</li>
         <li>답변을 받은 뒤 <b>추가 질문은 2번까지</b> 할 수 있어요.</li>
         <li>이름·연락처는 적지 마세요.</li>
       </ul>
     </div>
+    <fieldset class="field ta-pick" data-consult {{ '' if dq == '학습상담' else 'hidden' }}>
+      <legend>상담 조교</legend>
+      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>가장 먼저 보는 조교가 답합니다</small></span></label>
+      {% for t in tas %}
+      <label class="ta-card"><input type="radio" name="assignee" value="{{ t.id }}"><span><b>{{ t.name }} 조교</b>
+        {% if t.intro %}<small>{{ t.intro }}</small>{% endif %}
+        <small class="ta-stat">이번 달 {{ t.month }}건 · 누적 {{ t.total }}건{% if t.rating %} · 평점 {{ t.rating }} ({{ t.n_rating }}){% endif %}{% if t.hours is not none %} · 첫 답변 평균 {{ t.hours }}시간{% endif %}</small></span></label>
+      {% endfor %}
+    </fieldset>
     <div class="field{{ ' has-err' if fe == 'body' }}"><label for="q-body">내용</label><textarea id="q-body" name="body" maxlength="5000" required>{{ draft.body if draft else '' }}</textarea></div>
     <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
       <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 3장까지, 한 장 20MB 이하 · 학습질문은 필수)</span></label>

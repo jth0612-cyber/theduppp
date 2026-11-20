@@ -685,7 +685,11 @@ def init_db(path):
     _add_column(conn, "mocks", "eval_time", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "eval_killer", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "eval_video", "TEXT NOT NULL DEFAULT ''")
-    _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
+    _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")
+    # 학습상담: 학생이 조교를 지정(없으면 누구나), 답변 뒤 학생이 1~5점 평가. 조교 소개 한 줄
+    _add_column(conn, "questions", "assignee_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
+    _add_column(conn, "questions", "rating", "INTEGER")
+    _add_column(conn, "users", "ta_intro", "TEXT NOT NULL DEFAULT ''")  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
     _add_column(conn, "exam_results", "ta_by", "INTEGER")
     _add_column(conn, "exam_results", "ta_at", "TEXT")
     # 복습 테스트·모의고사 1~50회를 미리 만들어 둔다 (문항 수 0 = 아직 결과 없음, 엑셀을 올리면 정해진다)

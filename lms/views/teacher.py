@@ -631,27 +631,49 @@ def questions():
     if qtype in QUESTION_TYPES:
         where += " AND q.qtype = ?"
         args = args + [qtype]
+    if request.args.get("mine") == "1":                        # 나를 지정한 학습상담
+        where += " AND q.assignee_id = ?"
+        args = args + [g.user["id"]]
+    if g.user["role"] == "assistant":                          # 다른 조교를 지정한 학습상담은 보이지 않는다
+        where += " AND NOT (q.qtype = '학습상담' AND q.assignee_id IS NOT NULL AND q.assignee_id != ?)"
+        args = args + [g.user["id"]]
     total = query(f"SELECT COUNT(*) AS n FROM questions q WHERE {where}", args, one=True)["n"]
     rows = query(f"""SELECT q.*, s.name, s.student_no, c.name AS class_name, u.nickname,
+                            (SELECT COALESCE(NULLIF(x.display_name, ''), x.username) FROM users x WHERE x.id = q.assignee_id) AS assignee_name,
                             (SELECT COUNT(*) FROM followups WHERE question_id = q.id) AS followup_count
                      FROM questions q
                      JOIN students s ON s.id = q.student_id JOIN classes c ON c.id = s.class_id
                      LEFT JOIN users u ON u.student_id = s.id
                      WHERE {where} ORDER BY q.created_at {'ASC' if status == 'open' else 'DESC'}
                      LIMIT ? OFFSET ?""", args + [PAGE_SIZE, (page - 1) * PAGE_SIZE])
-    return render_template("teacher/questions.html", questions=rows, status=status, page=page,
-                           qtype=qtype, qtypes=QUESTION_TYPES, pages=max(1, math.ceil(total / PAGE_SIZE)))
+    me = query("SELECT ta_intro FROM users WHERE id = ?", (g.user["id"],), one=True)
+    return render_template("teacher/questions.html", questions=rows, status=status, page=page, mine=request.args.get("mine") == "1",
+                           qtype=qtype, qtypes=QUESTION_TYPES, pages=max(1, math.ceil(total / PAGE_SIZE)), my_intro=me["ta_intro"])
+
+
+@bp.route("/me/intro", methods=["POST"])
+@staff_required
+def my_intro():
+    """조교 소개 한 줄: 학생이 학습상담 조교를 고를 때 보인다."""
+    execute("UPDATE users SET ta_intro = ? WHERE id = ?", (request.form.get("intro", "").strip()[:80], g.user["id"]))
+    flash("소개를 저장했습니다.", "ok")
+    return redirect(url_for("teacher.questions"))
 
 
 @bp.route("/questions/<int:qid>", methods=["GET", "POST"])
 @staff_required
 def question_detail(qid):
-    q = query("""SELECT q.*, s.name, s.student_no, s.id AS sid, c.name AS class_name, u.nickname FROM questions q
+    q = query("""SELECT q.*, s.name, s.student_no, s.id AS sid, c.name AS class_name, u.nickname,
+                        (SELECT COALESCE(NULLIF(x.display_name, ''), x.username) FROM users x WHERE x.id = q.assignee_id) AS assignee_name
+                 FROM questions q
                  JOIN students s ON s.id = q.student_id JOIN classes c ON c.id = s.class_id
                  LEFT JOIN users u ON u.student_id = s.id
                  WHERE q.id = ?""", (qid,), one=True)
     if q is None:
         abort(404)
+    import consult
+    if not consult.can_answer(q, g.user):                      # 다른 조교를 지정한 학습상담
+        abort(403)
     if request.method == "POST":
         try:
             body = _text("body", 5000)
@@ -665,7 +687,9 @@ def question_detail(qid):
             flash("답변을 등록했습니다.", "ok")
             from views.pwa import notify_student
             notify_student(q["sid"], "질문에 답변이 달렸어요", q["title"], url_for("student.question_detail", qid=qid))
-            nxt = query("SELECT id FROM questions WHERE status = 'open' ORDER BY created_at LIMIT 1", one=True)
+            nxt = query("""SELECT id FROM questions WHERE status = 'open' AND NOT (? = 'assistant' AND qtype = '학습상담'
+                           AND assignee_id IS NOT NULL AND assignee_id != ?) ORDER BY created_at LIMIT 1""",
+                        (g.user["role"], g.user["id"]), one=True)
             if request.form.get("go_next") == "1" and nxt:
                 return redirect(url_for("teacher.question_detail", qid=nxt["id"]))
             return redirect(url_for("teacher.question_detail", qid=qid))
@@ -802,12 +826,14 @@ def _get_assistant(uid):
 def answer_counts(month):
     """조교 월별 질문 답변 수 (월급 산정용). month 'YYYY-MM'.
     질문마다 가장 먼저 달린 답변 = Main 답변, 그 질문의 나머지 답변(재질문에 대한 답 등) = 부가 답변.
+    학습상담은 건당으로 따로 센다(consult.consult_counts).
     답변이 달린 날짜의 달로 센다. {author_id: {"main": n, "extra": n}}"""
     out = {}
     for r in query("""SELECT a.author_id AS u,
                              SUM(a.id = (SELECT MIN(x.id) FROM answers x WHERE x.question_id = a.question_id)) AS main,
                              SUM(a.id != (SELECT MIN(x.id) FROM answers x WHERE x.question_id = a.question_id)) AS extra
-                      FROM answers a WHERE strftime('%Y-%m', a.created_at) = ? GROUP BY a.author_id""", (month,)):
+                      FROM answers a JOIN questions q ON q.id = a.question_id
+                      WHERE strftime('%Y-%m', a.created_at) = ? AND q.qtype != '학습상담' GROUP BY a.author_id""", (month,)):
         out[r["u"]] = {"main": r["main"] or 0, "extra": r["extra"] or 0}
     return out
 
@@ -825,10 +851,12 @@ def staff_answers_csv():
     counts = answer_counts(month)
     out = io.StringIO()
     w = csv.writer(out)
-    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "합계"])
+    import consult
+    cons = consult.consult_counts(month)
+    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "질문 답변 합계", "학습상담(건)"])
     for a in query("SELECT * FROM users WHERE role = 'assistant' ORDER BY display_name"):
         c = counts.get(a["id"], {"main": 0, "extra": 0})
-        w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"]])
+        w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"], cons.get(a["id"], 0)])
     audit("staff_answers_csv", month)
     return Response("\ufeff" + out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename=answers-{month}.csv"})
@@ -857,7 +885,9 @@ def staff():
                                    temp=temp)
     month = _month_arg()
     counts = answer_counts(month)
-    rows = [dict(r, main=counts.get(r["id"], {}).get("main", 0), extra=counts.get(r["id"], {}).get("extra", 0))
+    import consult
+    cons = consult.consult_counts(month)
+    rows = [dict(r, main=counts.get(r["id"], {}).get("main", 0), extra=counts.get(r["id"], {}).get("extra", 0), consult=cons.get(r["id"], 0))
             for r in query("""SELECT u.*, (SELECT COUNT(*) FROM answers WHERE author_id = u.id) AS answer_count
                               FROM users u WHERE role = 'assistant' ORDER BY disabled, display_name""")]
     return render_template("teacher/staff.html", staff=rows, month=month)

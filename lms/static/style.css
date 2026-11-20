@@ -2129,3 +2129,15 @@ h1 .fb-state { font-size: 13px; margin-left: 6px; }
 .ev-dots { display: inline-flex; gap: 3px; }
 .ev-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
 .ev-dots i.on { background: var(--ink); }
+/* 학습상담: 조교 고르기, 평가 */
+.ta-pick { border: 0; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.ta-pick legend { font-size: 14px; font-weight: 600; margin-bottom: 6px; padding: 0; }
+.ta-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--sheet); cursor: pointer; }
+.ta-card:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.ta-card input { margin-top: 3px; accent-color: var(--accent); }
+.ta-card span { display: flex; flex-direction: column; gap: 3px; }
+.ta-card b { font-size: 15px; }
+.ta-card small { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.ta-card .ta-stat { font-variant-numeric: tabular-nums; }
+.rate-form { text-align: center; }
+.rate-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }

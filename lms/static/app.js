@@ -308,3 +308,10 @@ document.addEventListener("click", function (e) {
     var t = b.textContent; b.textContent = "복사됨"; setTimeout(function () { b.textContent = t; }, 1400);
   });
 });
+// 질문 유형이 '학습상담'일 때만 상담 조교 고르기를 보인다
+(function () {
+  var sel = document.querySelector("[data-qtype]"), box = document.querySelector("[data-consult]");
+  if (!sel || !box) return;
+  function sync() { box.hidden = sel.value !== "학습상담"; }
+  sel.addEventListener("change", sync); sync();
+})();

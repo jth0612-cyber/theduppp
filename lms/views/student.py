@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
                    send_file, session, url_for)
 
+import consult
 from content import MAX_FOLLOWUPS, NOTICE_TAGS, QUESTION_TYPES
 from db import execute, query
 from engagement import record_visit, streak_info
@@ -137,7 +138,8 @@ QUESTIONS_PER_PAGE = 30
 # 학습질문은 공개, 행정문의는 작성자 본인만 (선생님은 강사 화면에서 모두 봄)
 _VISIBLE = "(q.qtype = '학습질문' OR q.student_id = ?)"
 _PUBLIC_QUESTION_SELECT = """
-    SELECT q.id, q.title, q.body, q.image_id, q.qtype, q.status, q.created_at,
+    SELECT q.id, q.title, q.body, q.image_id, q.qtype, q.status, q.created_at, q.assignee_id, q.rating,
+           (SELECT COALESCE(NULLIF(x.display_name, ''), x.username) FROM users x WHERE x.id = q.assignee_id) AS assignee_name,
            COALESCE(u.nickname, '익명') AS nickname,
            (SELECT COUNT(*) FROM answers WHERE question_id = q.id) AS answer_count,
            (SELECT COUNT(*) FROM followups WHERE question_id = q.id) AS followup_count,
@@ -208,14 +210,18 @@ def questions():
             form_err = ("body", "내용을 적어 주세요.")
         elif len(title) > 120 or len(body) > 5000:
             form_err = ("body", "제목은 120자, 내용은 5000자 이내로 적어 주세요.")
+        elif qtype == "학습상담" and request.form.get("assignee") and \
+                request.form.get("assignee", type=int) not in {t["id"] for t in consult.assistants()}:
+            form_err = ("qtype", "상담 조교를 다시 골라 주세요.")
         else:
             try:
                 photos = _upload_images(required=qtype == "학습질문")
             except ValueError as e:
                 form_err = ("image", str(e) + " 적은 내용은 그대로 남아 있어요.")
             else:
-                qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype) VALUES (?, ?, ?, ?, ?)",
-                              (me["id"], title, body, photos[0] if photos else None, qtype))
+                assignee = request.form.get("assignee", type=int) if qtype == "학습상담" else None
+                qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype, assignee_id) VALUES (?, ?, ?, ?, ?, ?)",
+                              (me["id"], title, body, photos[0] if photos else None, qtype, assignee or None))
                 for pos, fid in enumerate(photos[1:], start=2):
                     execute("INSERT INTO question_images (question_id, file_id, pos) VALUES (?, ?, ?)", (qid, fid, pos))
                 audit("question_create", f"question:{qid}")
@@ -247,7 +253,7 @@ def questions():
                     ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
     best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
     return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs,
-                           qtype=qtype, qtypes=QUESTION_TYPES, draft=draft, form_err=form_err, best=best,
+                           qtype=qtype, qtypes=QUESTION_TYPES, draft=draft, form_err=form_err, best=best, tas=consult.ta_cards(),
                            pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total), 400 if form_err else 200
 
 
@@ -315,6 +321,21 @@ def question_followup(qid):
         audit("question_followup", f"question:{qid}")
         flash("추가 질문을 보냈습니다.", "ok")
         return redirect(url_for("student.question_detail", qid=qid, posted=1) + "#thread")
+    return redirect(url_for("student.question_detail", qid=qid) + "#thread")
+
+
+@bp.route("/questions/<int:qid>/rate", methods=["POST"])
+@student_required
+def question_rate(qid):
+    """학습상담 평가 (1~5점, 한 번만). 조교 고르기 화면의 평점에 들어간다."""
+    me = _me()
+    q = _get_visible_question(qid, me)
+    score = request.form.get("rating", type=int)
+    if not q["is_mine"] or q["qtype"] != "학습상담" or not q["answer_count"] or q["rating"] or score not in range(1, 6):
+        abort(400)
+    execute("UPDATE questions SET rating = ? WHERE id = ?", (score, qid))
+    audit("consult_rate", f"question:{qid}")
+    flash("평가를 남겼습니다.", "ok")
     return redirect(url_for("student.question_detail", qid=qid) + "#thread")
 
 

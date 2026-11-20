@@ -14,8 +14,17 @@
 <nav class="tabs">
   <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
   <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
-  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' }}">전체</a>
+  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' and not mine }}">전체</a>
+  {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>
+{% if g.user.role == 'assistant' %}
+<form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="small" for="ta-intro"><b>내 소개</b> <span class="muted">학생이 학습상담 조교를 고를 때 보입니다 (80자)</span></label>
+  <input type="text" id="ta-intro" name="intro" maxlength="80" value="{{ my_intro }}" placeholder="예: 생명 단원 개념 정리, 6월 이후 공부 계획 상담" class="grow">
+  <button class="btn small">저장</button>
+</form>
+{% endif %}
 <div class="card">
   {% if questions %}
   <div class="table-wrap"><table>
@@ -24,7 +33,8 @@
     <tr>
       <td>{{ qtype_badge(q.qtype) }} <a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a>
         {% if q.image_id %} <span class="badge gray">사진</span>{% endif %}
-        {% if q.followup_count %} <span class="badge open">추가질문 {{ q.followup_count }}</span>{% endif %}</td>
+        {% if q.followup_count %} <span class="badge open">추가질문 {{ q.followup_count }}</span>{% endif %}
+        {% if q.qtype == '학습상담' %} <span class="badge {{ '' if q.assignee_id == g.user.id else 'gray' }}">{{ (q.assignee_name ~ ' 지정') if q.assignee_name else '누구나' }}</span>{% if q.rating %} <span class="small muted">{{ q.rating }}점</span>{% endif %}{% endif %}</td>
       <td>{{ q.name }}<br><span class="small muted">{{ q.nickname or '' }}</span></td>
       <td class="muted">{{ q.class_name }}</td>
       <td>{{ status_badge(q.status) }}</td>

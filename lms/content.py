@@ -3,7 +3,7 @@ import re
 from urllib.parse import urlparse
 
 NOTICE_TAGS = ["공지", "정오", "일정", "시험", "자료"]
-QUESTION_TYPES = ["학습질문", "행정문의"]
+QUESTION_TYPES = ["학습질문", "학습상담", "행정문의"]   # 학습상담: 조교를 지정할 수 있고 본인·조교만 본다
 MAX_FOLLOWUPS = 2  # 답변 후 추가 질문 횟수
 
 # 강의 영상은 이 사이트 링크만 허용 (임의 사이트로 학생을 보내지 않도록)

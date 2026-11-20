@@ -211,3 +211,37 @@ class Update1114(unittest.TestCase):
         self.assertIn("최조교,ta2,1,2,3", csv_)
         self.assertIn(">Main<", self.t.get(f"/t/questions/{q1}").data.decode())
         self.assertNotEqual(ta.get("/t/staff/answers.csv").status_code, 200)        # 조교는 못 봄
+
+    def test_consult_pick_ta_and_count_per_case(self):
+        """학습상담: 학생이 조교를 고르면 그 조교(와 강사)만 답한다. 건당으로 세고 평점이 조교 카드에 보인다."""
+        with self.app.app_context():
+            for u, n in (("ta_a", "김조교"), ("ta_b", "이조교")):
+                execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', ?, ?, ?)", (u, hash_password(PW), n))
+            a_id = query("SELECT id FROM users WHERE username = 'ta_a'", one=True)["id"]
+        ta_a = self.app.test_client(); ta_a.post("/login", data={"username": "ta_a", "password": PW})
+        ta_b = self.app.test_client(); ta_b.post("/login", data={"username": "ta_b", "password": PW})
+        ta_a.post("/t/me/intro", data={"intro": "6월 이후 공부 계획 상담"})
+        form = self.s.get("/s/questions").data.decode()
+        self.assertIn("김조교 조교", form); self.assertIn("6월 이후 공부 계획 상담", form)
+        r = self.s.post("/s/questions", data={"qtype": "학습상담", "title": "상담QX7", "body": "하루 계획", "assignee": str(a_id)})
+        self.assertEqual(r.status_code, 302)                                   # 사진 없어도 된다
+        with self.app.app_context():
+            qid = query("SELECT id FROM questions WHERE qtype = '학습상담'", one=True)["id"]
+        self.assertNotIn("상담QX7", ta_b.get("/t/questions?status=all").data.decode())   # 다른 조교에게는 안 보임
+        self.assertEqual(ta_b.get(f"/t/questions/{qid}").status_code, 403)
+        self.assertIn("상담QX7", ta_a.get("/t/questions?mine=1").data.decode())
+        ta_a.post(f"/t/questions/{qid}", data={"body": "아침 1시간은 개념서"})
+        self.s.post(f"/s/questions/{qid}/followup", data={"body": "주말은요?"})
+        ta_a.post(f"/t/questions/{qid}", data={"body": "주말은 복습"})
+        self.s.post(f"/s/questions/{qid}/rate", data={"rating": "5"})
+        with self.app.app_context():
+            from datetime import date
+            from views.teacher import answer_counts
+            import consult
+            m = date.today().strftime("%Y-%m")
+            self.assertEqual(consult.consult_counts(m), {a_id: 1})            # 답변 2개여도 상담 1건
+            self.assertNotIn(a_id, answer_counts(m))                          # 질문 답변 집계와 따로
+            card = next(t for t in consult.ta_cards() if t["id"] == a_id)
+            self.assertEqual((card["month"], card["rating"]), (1, 5.0))
+        self.assertIn("김조교,ta_a,0,0,0,1", self.t.get("/t/staff/answers.csv").data.decode("utf-8-sig"))
+        self.assertEqual(self.s.post(f"/s/questions/{qid}/rate", data={"rating": "1"}).status_code, 400)   # 평가는 한 번
