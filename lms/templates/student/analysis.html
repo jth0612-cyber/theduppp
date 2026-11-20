@@ -79,6 +79,26 @@
   </section>
 </div>
 
+<section class="paper-sec" id="paper" aria-labelledby="h-paper">
+  <div class="sec-head"><h2 id="h-paper">시험지 첨삭</h2><span>풀이가 적힌 시험지를 찍어 올리면 조교가 틀린 문항을 첨삭합니다</span></div>
+  <ol class="hw-steps" aria-label="진행 상태">
+    <li class="{{ 'on' if paper }}"><b>시험지 제출</b><span>{{ paper.submitted_at[5:16] if paper else '—' }}</span></li>
+    <li class="{{ 'on' if paper }}{{ ' now' if paper and paper.status != 'done' }}"><b>선생님 검사</b><span>{% if paper and paper.status != 'done' %}검사 중{% elif paper %}완료{% else %}—{% endif %}</span></li>
+    <li class="{{ 'on' if paper and paper.status == 'done' }}"><b>문항별 첨삭</b><span>{% if paper and paper.status == 'done' %}{{ paper.reviewed_at[5:16] }} · {{ paper.reviewer }}{% else %}—{% endif %}</span></li>
+  </ol>
+  {% if paper and paper.status == 'done' and paper.comment %}<section class="mock-review"><h2>선생님 코멘트 <span>{{ paper.reviewer }}</span></h2><div class="pre">{{ paper.comment }}</div></section>{% endif %}
+  {% if paper_files %}<div class="q-photos">{% for fid in paper_files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="내 시험지 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
+  {% if not paper or paper.status != 'done' %}
+  <form method="post" action="{{ url_for('care.s_paper', mid=mock.id) }}" enctype="multipart/form-data" class="card mt">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label for="pp-image">시험지 사진 <span class="muted">(PNG·JPG, 6장까지{% if paper %} · 다시 올리면 이전 사진은 지워집니다{% endif %})</span></label>
+      <input type="file" id="pp-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required></div>
+    <div class="field"><label for="pp-note">조교에게 한 줄 <span class="muted">(선택)</span></label><input type="text" id="pp-note" name="note" maxlength="1000" value="{{ paper.note if paper else '' }}"></div>
+    <button class="btn primary">{{ '다시 올리기' if paper else '시험지 올리기' }}</button>
+  </form>
+  {% endif %}
+</section>
+
 {% if rep and (rep.wrongs or prof) %}
 <section class="wa-sec" aria-labelledby="h-wa">
   <div class="sec-head"><h2 id="h-wa">오답 분석</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% else %}반 응시 {{ rep.st.n }}명이라 반 오답률은 표시하지 않음{% endif %}</span></div>
@@ -94,6 +114,7 @@
       {% if a.diff %}<p>{{ a.diff }}</p>{% endif %}
       {% if a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
       {% if a.trap %}<p class="muted">{{ a.trap }}</p>{% endif %}
+      {% set pm = paper_marks.get(a.no) %}{% if pm and paper.status == 'done' %}<p class="ta-mark"><b>{{ paper.reviewer }} 첨삭</b>{% if pm.reason %} <span class="badge">{{ pm.reason }}</span>{% endif %} {{ pm.memo }}</p>{% endif %}
       {% if rep.enough and a.dist %}<p class="muted">반 선택 비율: {{ a.dist }}</p>{% endif %}
       {% if a.evidence == '문항 성격 추정' and a.concept %}<p class="muted">핵심 개념: {{ a.concept }}</p>{% endif %}
     </li>

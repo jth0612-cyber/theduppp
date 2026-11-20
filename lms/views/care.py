@@ -1,10 +1,10 @@
-"""학습 관리: 숙제 인증 · 문항별 첨삭 · 수업 기록 · 취약 단원 · 학부모 리포트.
+"""학습 관리: 시험지 첨삭 · 수업 기록 · 취약 단원 · 학부모 리포트.
 
-- 숙제: 강사·조교가 숙제(반·마감·문항 수)를 낸다 → 학생이 풀이 사진을 올린다 → 조교가 문항마다 O/X, 오답 유형, 메모를 단다.
-  학생 화면은 '제출 → 선생님 검사 → 문항별 첨삭' 세 단계로 보인다. 첨삭을 마치면 학생에게 알림이 간다.
+- 시험지 첨삭: 복테·모의 결과가 올라온 회차에서 학생이 풀이가 적힌 시험지를 사진으로 올린다 → 조교가 OMR로 틀린 문항마다
+  오답 유형·메모를 단다. 학생 화면은 '시험지 제출 → 선생님 검사 → 문항별 첨삭' 세 단계로 보이고, 끝나면 알림이 간다.
 - 수업 기록: 반별로 날짜·주제·수업 노트 사진을 올리면 그 반 학생 화면에 날짜순으로 쌓인다.
-- 학부모 리포트: 학생마다 비밀 링크(로그인 없음). 이번 주 숙제 제출·정답률, 4주 정답률 변화, 시험 결과, 단원별 성취도,
-  틀린 이유, 선생님 코멘트, 출결. 학부모 문자 끝에 이 링크가 붙는다."""
+- 학부모 리포트: 학생마다 비밀 링크(로그인 없음). 최근 시험 득점률과 변화, 시험 결과, 단원별 성취도,
+  틀린 이유(오답 분석·시험지 첨삭), 선생님 코멘트, 출결. 학부모 문자 끝에 이 링크가 붙는다."""
 import json
 import secrets
 from datetime import date, datetime, timedelta
@@ -15,7 +15,7 @@ from db import execute, query
 from security import IMAGE_EXTS, audit, delete_file, save_upload, staff_required, student_required
 
 bp = Blueprint("care", __name__)
-MAX_HW_PHOTOS = 6
+MAX_PAPER_PHOTOS = 6
 MAX_LESSON_PHOTOS = 10
 ERR_TYPES = ("개념 부족", "자료 해석", "조건 독해", "계산 실수", "시간 부족", "기타")
 
@@ -50,188 +50,113 @@ def _staff_name(uid):
     return "정태혁 선생님" if u["role"] == "teacher" else f"{u['display_name'] or u['username']} 조교"
 
 
-# ================================================================== 숙제
+# ================================================================== 시험지 첨삭
+# 학생이 복테·모의 시험지(풀이 과정이 적힌 것)를 사진으로 올린다 → 조교가 OMR로 틀린 문항마다 오답 유형·메모를 단다.
 @bp.app_context_processor
-def _hw_counts():
-    """메뉴 숫자: 학생은 마감 전 안 낸 숙제, 강사·조교는 검사 기다리는 제출."""
+def _paper_counts():
+    """메뉴 숫자: 강사·조교는 첨삭 기다리는 시험지 수."""
     u = g.get("user")
-    if u is None:
+    if u is None or u["role"] not in ("teacher", "assistant"):
         return {}
-    if u["role"] in ("teacher", "assistant"):
-        return {"hw_wait": query("SELECT COUNT(*) AS n FROM hw_submissions WHERE status = 'submitted'", one=True)["n"]}
-    if u["role"] == "student" and u["student_id"]:
-        s = query("SELECT class_id FROM students WHERE id = ?", (u["student_id"],), one=True)
-        if s:
-            return {"hw_todo": query("""SELECT COUNT(*) AS n FROM homeworks h WHERE (h.class_id IS NULL OR h.class_id = ?)
-                                        AND h.due_at >= datetime('now', 'localtime')
-                                        AND h.id NOT IN (SELECT homework_id FROM hw_submissions WHERE student_id = ?)""",
-                                     (s["class_id"], u["student_id"]), one=True)["n"]}
-    return {}
+    return {"paper_wait": query("SELECT COUNT(*) AS n FROM exam_papers WHERE status = 'submitted'", one=True)["n"]}
 
 
-def hw_for_student(student_id, class_id):
-    return [dict(r) for r in query("""
-        SELECT h.*, s.id AS sub_id, s.status, s.submitted_at, s.reviewed_at,
-               (SELECT COUNT(*) FROM hw_marks k WHERE k.submission_id = s.id AND k.verdict = 'O') AS n_o,
-               (SELECT COUNT(*) FROM hw_marks k WHERE k.submission_id = s.id AND k.verdict = 'X') AS n_x
-        FROM homeworks h LEFT JOIN hw_submissions s ON s.homework_id = h.id AND s.student_id = ?
-        WHERE h.class_id IS NULL OR h.class_id = ? ORDER BY h.due_at DESC, h.id DESC LIMIT 100""", (student_id, class_id))]
+def paper_of(mid, student_id):
+    """(시험지 행, 사진 id 목록, {문항: 첨삭})"""
+    p = query("SELECT * FROM exam_papers WHERE mock_id = ? AND student_id = ?", (mid, student_id), one=True)
+    if not p:
+        return None, [], {}
+    files = [r["file_id"] for r in query("SELECT file_id FROM exam_paper_files WHERE paper_id = ? ORDER BY pos", (p["id"],))]
+    marks = {r["item_no"]: dict(r) for r in query("SELECT * FROM exam_paper_marks WHERE paper_id = ?", (p["id"],))}
+    return dict(p, reviewer=_staff_name(p["reviewed_by"])), files, marks
 
 
-@bp.route("/s/homework")
+@bp.route("/s/analysis/<int:mid>/paper", methods=["POST"])
 @student_required
-def s_homework():
+def s_paper(mid):
+    """내 결과가 올라온 회차에만 올릴 수 있다. 첨삭 전에는 다시 올리면 사진이 바뀐다."""
     me = _me()
-    return render_template("care/s_homework.html", me=me, rows=hw_for_student(me["id"], me["class_id"]),
-                           now=datetime.now().isoformat(sep=" ", timespec="minutes"))
+    if not query("SELECT 1 FROM exam_results WHERE mock_id = ? AND student_id = ?", (mid, me["id"]), one=True):
+        abort(404)
+    p = query("SELECT * FROM exam_papers WHERE mock_id = ? AND student_id = ?", (mid, me["id"]), one=True)
+    back = url_for("books.analysis_home", mock=mid) + "#paper"
+    if p and p["status"] == "done":
+        flash("첨삭이 끝난 시험지는 다시 올릴 수 없습니다.", "error")
+        return redirect(back)
+    try:
+        photos = _photos("image", MAX_PAPER_PHOTOS)
+        if not photos:
+            raise ValueError("시험지 사진을 1장 이상 올려 주세요.")
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(back)
+    note = request.form.get("note", "").strip()[:1000]
+    if p:
+        old = [r["file_id"] for r in query("SELECT file_id FROM exam_paper_files WHERE paper_id = ?", (p["id"],))]
+        execute("DELETE FROM exam_paper_files WHERE paper_id = ?", (p["id"],))
+        for fid in old:
+            delete_file(fid)
+        execute("UPDATE exam_papers SET note = ?, submitted_at = datetime('now', 'localtime') WHERE id = ?", (note, p["id"]))
+        pid = p["id"]
+    else:
+        pid = execute("INSERT INTO exam_papers (mock_id, student_id, note) VALUES (?, ?, ?)", (mid, me["id"], note))
+    for pos, fid in enumerate(photos, start=1):
+        execute("INSERT INTO exam_paper_files (paper_id, file_id, pos) VALUES (?, ?, ?)", (pid, fid, pos))
+    audit("paper_submit", f"mock:{mid}")
+    flash("시험지를 올렸습니다.", "ok")
+    return redirect(back)
 
 
-def _hw_visible(hid, me):
-    h = query("SELECT * FROM homeworks WHERE id = ? AND (class_id IS NULL OR class_id = ?)", (hid, me["class_id"]), one=True)
-    return h or abort(404)
+@bp.route("/t/papers")
+@staff_required
+def t_papers():
+    status = "done" if request.args.get("status") == "done" else "submitted"
+    rows = query(f"""SELECT p.*, st.name, st.student_no, c.name AS cls, b.title AS book_title, m.round_no, r.score, m.full_score,
+                            (SELECT COUNT(*) FROM exam_paper_files f WHERE f.paper_id = p.id) AS n_files
+                     FROM exam_papers p JOIN students st ON st.id = p.student_id JOIN classes c ON c.id = st.class_id
+                     JOIN mocks m ON m.id = p.mock_id JOIN books b ON b.id = m.book_id
+                     LEFT JOIN exam_results r ON r.mock_id = p.mock_id AND r.student_id = p.student_id
+                     WHERE p.status = ? ORDER BY p.submitted_at {'ASC' if status == 'submitted' else 'DESC'} LIMIT 300""", (status,))
+    counts = {r["status"]: r["n"] for r in query("SELECT status, COUNT(*) AS n FROM exam_papers GROUP BY status")}
+    import analysis
+    return render_template("care/t_papers.html", rows=rows, status=status, counts=counts, fmt=analysis._fmt)
 
 
-def submission_detail(sub_id):
-    files = [r["file_id"] for r in query("SELECT file_id FROM hw_files WHERE submission_id = ? ORDER BY pos", (sub_id,))]
-    marks = {r["item_no"]: dict(r) for r in query("SELECT * FROM hw_marks WHERE submission_id = ?", (sub_id,))}
-    return files, marks
-
-
-@bp.route("/s/homework/<int:hid>", methods=["GET", "POST"])
-@student_required
-def s_homework_detail(hid):
-    me = _me()
-    h = _hw_visible(hid, me)
-    sub = query("SELECT * FROM hw_submissions WHERE homework_id = ? AND student_id = ?", (hid, me["id"]), one=True)
+@bp.route("/t/papers/<int:pid>", methods=["GET", "POST"])
+@staff_required
+def t_paper(pid):
+    import exams
+    p = query("""SELECT p.*, st.name, st.student_no, c.name AS cls FROM exam_papers p
+                 JOIN students st ON st.id = p.student_id JOIN classes c ON c.id = st.class_id WHERE p.id = ?""", (pid,), one=True) or abort(404)
+    rep = exams.student_report(p["mock_id"], p["student_id"])
+    if rep is None:
+        abort(404)
+    n = rep["mock"]["n_items"]
     if request.method == "POST":
-        if sub and sub["status"] == "done":
-            flash("첨삭이 끝난 숙제는 다시 올릴 수 없습니다.", "error")
-            return redirect(url_for("care.s_homework_detail", hid=hid))
-        try:
-            photos = _photos("image", MAX_HW_PHOTOS)
-            if not photos:
-                raise ValueError("풀이 사진을 1장 이상 올려 주세요.")
-        except ValueError as e:
-            flash(str(e), "error")
-            return redirect(url_for("care.s_homework_detail", hid=hid))
-        note = request.form.get("note", "").strip()[:1000]
-        if sub:                                               # 검사 전이면 다시 올릴 수 있다 (사진은 새로 올린 것으로 바뀜)
-            old = [r["file_id"] for r in query("SELECT file_id FROM hw_files WHERE submission_id = ?", (sub["id"],))]
-            execute("DELETE FROM hw_files WHERE submission_id = ?", (sub["id"],))
-            for fid in old:
-                delete_file(fid)
-            execute("UPDATE hw_submissions SET note = ?, submitted_at = datetime('now', 'localtime') WHERE id = ?", (note, sub["id"]))
-            sid = sub["id"]
-        else:
-            sid = execute("INSERT INTO hw_submissions (homework_id, student_id, note) VALUES (?, ?, ?)", (hid, me["id"], note))
-        for pos, fid in enumerate(photos, start=1):
-            execute("INSERT INTO hw_files (submission_id, file_id, pos) VALUES (?, ?, ?)", (sid, fid, pos))
-        audit("hw_submit", f"homework:{hid}")
-        flash("숙제를 제출했습니다.", "ok")
-        return redirect(url_for("care.s_homework_detail", hid=hid))
-    files, marks = submission_detail(sub["id"]) if sub else ([], {})
-    return render_template("care/s_homework_detail.html", me=me, h=h, sub=sub, files=files, marks=marks,
-                           reviewer=_staff_name(sub["reviewed_by"]) if sub else "",
-                           late=bool(sub and sub["submitted_at"] > h["due_at"]))
-
-
-@bp.route("/t/homework", methods=["GET", "POST"])
-@staff_required
-def t_homework():
-    if request.method == "POST":
-        title = request.form.get("title", "").strip()[:120]
-        due = request.form.get("due", "").strip().replace("T", " ")
-        try:
-            datetime.fromisoformat(due)
-        except ValueError:
-            due = ""
-        cid = request.form.get("class_id", type=int)
-        if not title or not due:
-            flash("숙제 이름과 마감 일시를 넣어 주세요.", "error")
-        else:
-            n = max(0, min(request.form.get("n_items", type=int) or 0, 100))
-            hid = execute("INSERT INTO homeworks (class_id, title, body, due_at, n_items, created_by) VALUES (?, ?, ?, ?, ?, ?)",
-                          (cid or None, title, request.form.get("body", "").strip()[:2000], due[:16], n, g.user["id"]))
-            audit("hw_create", f"homework:{hid}")
-            flash("숙제를 냈습니다.", "ok")
-            return redirect(url_for("care.t_homework_detail", hid=hid))
-    rows = query("""SELECT h.*, c.name AS class_name,
-                           (SELECT COUNT(*) FROM hw_submissions s WHERE s.homework_id = h.id) AS n_sub,
-                           (SELECT COUNT(*) FROM hw_submissions s WHERE s.homework_id = h.id AND s.status = 'submitted') AS n_wait,
-                           (SELECT COUNT(*) FROM students s JOIN classes c2 ON c2.id = s.class_id WHERE s.active = 1
-                              AND ((h.class_id IS NULL AND c2.is_test = 0) OR s.class_id = h.class_id)) AS n_target
-                    FROM homeworks h LEFT JOIN classes c ON c.id = h.class_id ORDER BY h.due_at DESC LIMIT 200""")
-    classes = query("SELECT id, name FROM classes WHERE archived = 0 ORDER BY is_test, name")
-    return render_template("care/t_homework.html", rows=rows, classes=classes,
-                           default_due=(date.today() + timedelta(days=2)).isoformat() + "T22:00")
-
-
-@bp.route("/t/homework/<int:hid>")
-@staff_required
-def t_homework_detail(hid):
-    h = query("SELECT h.*, c.name AS class_name FROM homeworks h LEFT JOIN classes c ON c.id = h.class_id WHERE h.id = ?", (hid,), one=True) or abort(404)
-    subs = query("""SELECT s.*, st.name, st.student_no, c.name AS cls,
-                           (SELECT COUNT(*) FROM hw_files f WHERE f.submission_id = s.id) AS n_files,
-                           (SELECT COUNT(*) FROM hw_marks k WHERE k.submission_id = s.id AND k.verdict = 'X') AS n_x
-                    FROM hw_submissions s JOIN students st ON st.id = s.student_id JOIN classes c ON c.id = st.class_id
-                    WHERE s.homework_id = ? ORDER BY s.status = 'done', s.submitted_at""", (hid,))
-    missing = query("""SELECT st.name, c.name AS cls FROM students st JOIN classes c ON c.id = st.class_id
-                       WHERE st.active = 1 AND (? IS NULL AND c.is_test = 0 OR st.class_id = ?)
-                       AND st.id NOT IN (SELECT student_id FROM hw_submissions WHERE homework_id = ?)
-                       ORDER BY c.name, st.name""", (h["class_id"], h["class_id"], hid))
-    return render_template("care/t_homework_detail.html", h=h, subs=subs, missing=missing)
-
-
-@bp.route("/t/homework/<int:hid>/delete", methods=["POST"])
-@staff_required
-def t_homework_delete(hid):
-    for r in query("""SELECT f.file_id FROM hw_files f JOIN hw_submissions s ON s.id = f.submission_id WHERE s.homework_id = ?""", (hid,)):
-        delete_file(r["file_id"])
-    execute("DELETE FROM homeworks WHERE id = ?", (hid,))
-    audit("hw_delete", f"homework:{hid}")
-    flash("숙제를 지웠습니다.", "ok")
-    return redirect(url_for("care.t_homework"))
-
-
-@bp.route("/t/homework/review/<int:sid>", methods=["GET", "POST"])
-@staff_required
-def t_review(sid):
-    sub = query("""SELECT s.*, st.name, st.student_no, c.name AS cls, h.title, h.n_items, h.id AS hid
-                   FROM hw_submissions s JOIN students st ON st.id = s.student_id JOIN classes c ON c.id = st.class_id
-                   JOIN homeworks h ON h.id = s.homework_id WHERE s.id = ?""", (sid,), one=True) or abort(404)
-    n = sub["n_items"] or request.form.get("n", type=int) or 0
-    if request.method == "POST":
-        n = max(0, min(request.form.get("n", type=int) or sub["n_items"] or 0, 100))
-        execute("DELETE FROM hw_marks WHERE submission_id = ?", (sid,))
+        execute("DELETE FROM exam_paper_marks WHERE paper_id = ?", (pid,))
         for i in range(1, n + 1):
-            v = request.form.get(f"v{i}", "")
-            v = v if v in ("O", "X") else ""
             reason = request.form.get(f"r{i}", "")
-            reason = reason if (reason in ERR_TYPES and v == "X") else ""
+            reason = reason if reason in ERR_TYPES else ""
             memo = request.form.get(f"m{i}", "").strip()[:500]
-            if v or memo:
-                execute("INSERT INTO hw_marks (submission_id, item_no, verdict, reason, memo) VALUES (?, ?, ?, ?, ?)",
-                        (sid, i, v, reason, memo))
-        execute("""UPDATE hw_submissions SET status = 'done', comment = ?, reviewed_by = ?,
-                   reviewed_at = datetime('now', 'localtime') WHERE id = ?""",
-                (request.form.get("comment", "").strip()[:1500], g.user["id"], sid))
-        audit("hw_review", f"submission:{sid}")
+            if reason or memo:
+                execute("INSERT INTO exam_paper_marks (paper_id, item_no, reason, memo) VALUES (?, ?, ?, ?)", (pid, i, reason, memo))
+        execute("""UPDATE exam_papers SET status = 'done', comment = ?, reviewed_by = ?, reviewed_at = datetime('now', 'localtime')
+                   WHERE id = ?""", (request.form.get("comment", "").strip()[:1500], g.user["id"], pid))
+        audit("paper_review", f"paper:{pid}")
         from views.pwa import notify_student
-        notify_student(sub["student_id"], "숙제 첨삭 완료", sub["title"], url_for("care.s_homework_detail", hid=sub["hid"]))
-        flash(f"{sub['name']} 학생 첨삭을 저장했습니다.", "ok")
-        nxt = query("SELECT id FROM hw_submissions WHERE homework_id = ? AND status = 'submitted' AND id != ? ORDER BY submitted_at LIMIT 1",
-                    (sub["hid"], sid), one=True)
-        return redirect(url_for("care.t_review", sid=nxt["id"]) if nxt else url_for("care.t_homework_detail", hid=sub["hid"]))
-    files, marks = submission_detail(sid)
-    if not n and marks:
-        n = max(marks)
-    return render_template("care/t_review.html", sub=sub, files=files, marks=marks, n=n or 10, err_types=ERR_TYPES,
-                           reviewer=_staff_name(sub["reviewed_by"]))
+        notify_student(p["student_id"], "시험지 첨삭 완료", exams.exam_title(rep["mock"]),
+                       url_for("books.analysis_home", mock=p["mock_id"]) + "#paper")
+        flash(f"{p['name']} 학생 시험지 첨삭을 저장했습니다.", "ok")
+        nxt = query("SELECT id FROM exam_papers WHERE status = 'submitted' AND id != ? ORDER BY submitted_at LIMIT 1", (pid,), one=True)
+        return redirect(url_for("care.t_paper", pid=nxt["id"]) if nxt else url_for("care.t_papers"))
+    _, files, marks = paper_of(p["mock_id"], p["student_id"])
+    return render_template("care/t_paper.html", p=p, rep=rep, files=files, marks=marks, err_types=ERR_TYPES,
+                           title=exams.exam_title(rep["mock"]), reviewer=_staff_name(p["reviewed_by"]), pct1=exams.pct1)
 
 
-def hw_review_counts(month):
-    """{조교 id: 그 달 숙제 첨삭 건수} — 월급 산정 표에 쓴다."""
-    return {r["u"]: r["n"] for r in query("""SELECT reviewed_by AS u, COUNT(*) AS n FROM hw_submissions
+def paper_review_counts(month):
+    """{조교 id: 그 달 시험지 첨삭 건수} — 월급 산정 표에 쓴다."""
+    return {r["u"]: r["n"] for r in query("""SELECT reviewed_by AS u, COUNT(*) AS n FROM exam_papers
                                              WHERE status = 'done' AND strftime('%Y-%m', reviewed_at) = ? GROUP BY reviewed_by""", (month,))}
 
 
@@ -350,75 +275,64 @@ def parent_token(student_id, renew=False):
     return tok
 
 
-def _week_hw(student_id, class_id, start, end):
-    hws = query("""SELECT h.id FROM homeworks h WHERE (h.class_id IS NULL OR h.class_id = ?) AND h.due_at >= ? AND h.due_at < ?""",
-                (class_id, start, end))
-    ids = [h["id"] for h in hws]
-    if not ids:
-        return {"assigned": 0, "submitted": 0, "o": 0, "x": 0, "rate": None}
-    marks = query(f"""SELECT k.verdict, COUNT(*) AS n FROM hw_marks k JOIN hw_submissions s ON s.id = k.submission_id
-                      WHERE s.student_id = ? AND s.homework_id IN ({','.join('?' * len(ids))}) GROUP BY k.verdict""", [student_id] + ids)
-    c = {r["verdict"]: r["n"] for r in marks}
-    sub = query(f"SELECT COUNT(*) AS n FROM hw_submissions WHERE student_id = ? AND homework_id IN ({','.join('?' * len(ids))})",
-                [student_id] + ids, one=True)["n"]
-    o, x = c.get("O", 0), c.get("X", 0)
-    return {"assigned": len(ids), "submitted": sub, "o": o, "x": x, "rate": round(100 * o / (o + x)) if o + x else None}
-
-
 def parent_report(student_id):
     import exams
     import sysdata
     s = query("SELECT s.*, c.name AS cls FROM students s JOIN classes c ON c.id = s.class_id WHERE s.id = ?", (student_id,), one=True)
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    weeks = []
-    for k in range(3, -1, -1):                                 # 3주 전 ~ 이번 주
-        st = monday - timedelta(days=7 * k)
-        w = _week_hw(student_id, s["class_id"], st.isoformat(), (st + timedelta(days=7)).isoformat())
-        w["label"] = "이번 주" if k == 0 else ("지난주" if k == 1 else f"{k}주 전")
-        weeks.append(w)
-    this, last = weeks[-1], weeks[-2]
-    delta = (this["rate"] - last["rate"]) if this["rate"] is not None and last["rate"] is not None else None
-    # 틀린 이유: 이번 주 숙제 오답(유형·메모) + 최근 시험 오답 분석
-    reasons = [dict(r) for r in query("""
-        SELECT h.title, k.item_no, k.reason, k.memo FROM hw_marks k JOIN hw_submissions sb ON sb.id = k.submission_id
-        JOIN homeworks h ON h.id = sb.homework_id
-        WHERE sb.student_id = ? AND k.verdict = 'X' AND sb.reviewed_at >= ? ORDER BY sb.reviewed_at DESC LIMIT 6""",
-        (student_id, (today - timedelta(days=14)).isoformat()))]
+    rows = query("""SELECT r.mock_id FROM exam_results r JOIN mocks m ON m.id = r.mock_id JOIN books b ON b.id = m.book_id
+                    WHERE r.student_id = ? AND m.n_items > 0 AND b.is_practice = 0
+                    ORDER BY m.exam_date DESC, r.updated_at DESC LIMIT 6""", (student_id,))
     exams_out = []
-    for r in query("""SELECT r.mock_id FROM exam_results r JOIN mocks m ON m.id = r.mock_id JOIN books b ON b.id = m.book_id
-                      WHERE r.student_id = ? AND m.n_items > 0 AND b.is_practice = 0 ORDER BY m.exam_date DESC LIMIT 4""", (student_id,)):
+    for r in rows:
         rep = exams.student_report(r["mock_id"], student_id)
-        if rep:
-            exams_out.append({"title": exams.exam_title(rep["mock"]), "score": rep["r"]["score"], "full": rep["mock"]["full_score"],
-                              "avg": rep["st"]["avg"], "date": rep["mock"]["exam_date"],
-                              "wrongs": [a for a in rep["wrongs"] if a["type"]][:3]})
+        if not rep:
+            continue
+        _, _, marks = paper_of(r["mock_id"], student_id)
+        whys = []
+        for a in rep["wrongs"]:
+            k = marks.get(a["no"], {})
+            if k.get("reason") or k.get("memo") or a["type"]:
+                whys.append({"no": a["no"], "type": k.get("reason") or a["type"], "text": k.get("memo") or a["analysis"]})
+        full = rep["mock"]["full_score"]
+        exams_out.append({"title": exams.exam_title(rep["mock"]), "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
+                          "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
+                          "n_wrong": len(rep["wrong"]), "n": rep["mock"]["n_items"], "whys": whys})
+    last = exams_out[0] if exams_out else None
+    prev = exams_out[1] if len(exams_out) > 1 else None
+    delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
     comment = query("""SELECT x.text, x.at FROM (
-                         SELECT comment AS text, reviewed_at AS at FROM hw_submissions WHERE student_id = ? AND comment != ''
+                         SELECT comment AS text, reviewed_at AS at FROM exam_papers WHERE student_id = ? AND comment != ''
                          UNION ALL SELECT ta_note, ta_at FROM exam_results WHERE student_id = ? AND ta_note != '') x
                        ORDER BY x.at DESC LIMIT 1""", (student_id, student_id), one=True)
     units, weak = weak_card(student_id)
-    att = sysdata.attendance(sysdata.code_of_student(student_id)) if hasattr(sysdata, "attendance") else None
-    lines = []                                                 # 이번 주 요약: 숫자로만
-    if this["assigned"]:
-        lines.append(f"숙제 {this['assigned']}개 중 {this['submitted']}개를 제출했습니다.")
-    if this["rate"] is not None:
-        lines.append(f"첨삭한 문항 정답률은 {this['rate']}%" + (f"로 지난주보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다." if delta else "입니다."))
+    att = sysdata.attendance(sysdata.code_of_student(student_id))
+    lines = []                                                 # 요약: 숫자로만
+    if last:
+        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점입니다.")
+        if delta:
+            lines.append(f"득점률이 이전 시험보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
     if weak:
         lines.append(f"최근 시험에서 득점률이 가장 낮은 단원은 {weak['unit']['unit']}({weak['unit']['pct']}%)입니다.")
-    return {"s": s, "weeks": weeks, "this": this, "delta": delta, "reasons": reasons, "exams": exams_out,
-            "comment": comment, "units": units[:6], "weak": weak, "att": att, "lines": lines,
-            "period": f"{monday.month}.{monday.day}~{(monday + timedelta(days=6)).month}.{(monday + timedelta(days=6)).day}"}
+    return {"s": s, "exams": exams_out, "last": last, "delta": delta, "comment": comment, "units": units[:6], "weak": weak,
+            "att": att, "lines": lines}
 
 
-def rate_chart(weeks):
-    pts = [(i, w["rate"]) for i, w in enumerate(weeks) if w["rate"] is not None]
+def num_fmt(x):
+    import analysis
+    return analysis._fmt(x)
+
+
+def rate_chart(exams_out):
+    """최근 시험 득점률 변화 (오래된 것부터)."""
+    seq = [e for e in reversed(exams_out) if e["rate"] is not None]
     W, H, L, R, T, B = 320, 120, 28, 28, 22, 22
-    x = lambda i: L + (W - L - R) * (i / (len(weeks) - 1))
+    if not seq:
+        return {"pts": []}
+    x = lambda i: L + (W - L - R) * (i / max(1, len(seq) - 1)) if len(seq) > 1 else W / 2
     y = lambda v: T + (H - T - B) * (1 - v / 100)
-    return {"w": W, "h": H, "pts": [{"x": round(x(i), 1), "y": round(y(v), 1), "v": v} for i, v in pts],
-            "poly": " ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in pts),
-            "labels": [{"x": round(x(i), 1), "t": w["label"]} for i, w in enumerate(weeks)], "base": H - B}
+    return {"w": W, "h": H, "pts": [{"x": round(x(i), 1), "y": round(y(e["rate"]), 1), "v": e["rate"]} for i, e in enumerate(seq)],
+            "poly": " ".join(f"{x(i):.1f},{y(e['rate']):.1f}" for i, e in enumerate(seq)),
+            "labels": [{"x": round(x(i), 1), "t": (e["date"] or "")[5:].replace("-", ".")} for i, e in enumerate(seq)], "base": H - B}
 
 
 @bp.route("/p/<token>")
@@ -428,7 +342,7 @@ def parent_page(token):
         abort(404)
     s = query("SELECT id FROM students WHERE parent_token = ? AND active = 1", (token,), one=True) or abort(404)
     rep = parent_report(s["id"])
-    return render_template("care/parent.html", r=rep, chart=rate_chart(rep["weeks"]))
+    return render_template("care/parent.html", r=rep, chart=rate_chart(rep["exams"]), fmt=num_fmt)
 
 
 @bp.route("/t/students/<int:sid>/parent-link", methods=["POST"])

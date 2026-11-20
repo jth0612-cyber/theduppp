@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}시험지 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>시험지 첨삭</h1><p class="muted small">학생이 복테·모의 결과 화면에서 시험지 사진을 올리면 여기에 쌓입니다. 틀린 문항은 OMR 결과로 미리 표시됩니다.</p></div>
+  {% set first = rows|first %}{% if status == 'submitted' and first %}<a class="btn primary" href="{{ url_for('care.t_paper', pid=first.id) }}">첨삭 시작</a>{% endif %}</div>
+<nav class="tabs">
+  <a href="{{ url_for('care.t_papers') }}" class="{{ 'active' if status == 'submitted' }}">첨삭 대기 {{ counts.get('submitted', 0) }}</a>
+  <a href="{{ url_for('care.t_papers', status='done') }}" class="{{ 'active' if status == 'done' }}">첨삭 완료 {{ counts.get('done', 0) }}</a>
+</nav>
+<div class="card">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>학생</th><th>반</th><th>시험</th><th class="num">점수</th><th class="num">사진</th><th class="num">{{ '제출' if status == 'submitted' else '첨삭' }}</th></tr></thead>
+    <tbody>{% for p in rows %}<tr><td><a href="{{ url_for('care.t_paper', pid=p.id) }}">{{ p.name }}</a> <span class="small muted">{{ p.student_no }}</span></td>
+      <td class="muted">{{ p.cls }}</td><td>{{ p.book_title }} {{ p.round_no }}회</td>
+      <td class="num">{% if p.score is not none %}{{ fmt(p.score) }}<span class="muted">/{{ fmt(p.full_score) }}</span>{% endif %}</td>
+      <td class="num">{{ p.n_files }}</td><td class="small muted num nowrap">{{ (p.submitted_at if status == 'submitted' else p.reviewed_at)[5:16] }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">{{ '첨삭을 기다리는 시험지가 없습니다.' if status == 'submitted' else '첨삭한 시험지가 없습니다.' }}</p>{% endif %}
+</div>
+{% endblock %}

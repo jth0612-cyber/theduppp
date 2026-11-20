@@ -2213,3 +2213,6 @@ body.parent-page { background: var(--frame); }
 .weak-card { margin-top: 12px; padding: 14px 16px; border: 1px solid var(--warn, #c9842b); border-radius: 12px; background: var(--warn-soft, #fff4e3); }
 .weak-card p { margin: 4px 0; font-size: 14px; }
 .weak-card .row { margin-top: 8px; gap: 8px; }
+.paper-sec { margin: 30px 0 0; }
+.ta-mark { margin-top: 8px !important; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 14px; }
+.ta-mark b { color: var(--accent-ink); margin-right: 4px; }

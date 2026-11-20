@@ -122,20 +122,10 @@ CREATE TABLE IF NOT EXISTS quiz_resets (
     PRIMARY KEY (user_id, topic)
 );
 
--- 숙제 인증: 강사·조교가 숙제를 내고, 학생은 풀이 사진을 올리고, 조교가 문항별로 첨삭한다
-CREATE TABLE IF NOT EXISTS homeworks (
-    id          INTEGER PRIMARY KEY,
-    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,      -- NULL = 모든 반
-    title       TEXT NOT NULL,
-    body        TEXT NOT NULL DEFAULT '',
-    due_at      TEXT NOT NULL,
-    n_items     INTEGER NOT NULL DEFAULT 0,
-    created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-);
-CREATE TABLE IF NOT EXISTS hw_submissions (
+-- 시험지 첨삭: 학생이 복테·모의 시험지(풀이가 적힌 것)를 사진으로 올리고, 조교가 틀린 문항마다 오답 유형·메모를 단다
+CREATE TABLE IF NOT EXISTS exam_papers (
     id           INTEGER PRIMARY KEY,
-    homework_id  INTEGER NOT NULL REFERENCES homeworks(id) ON DELETE CASCADE,
+    mock_id      INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
     student_id   INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     note         TEXT NOT NULL DEFAULT '',
     status       TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'done')),
@@ -143,22 +133,21 @@ CREATE TABLE IF NOT EXISTS hw_submissions (
     submitted_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     reviewed_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
     reviewed_at  TEXT,
-    UNIQUE (homework_id, student_id)
+    UNIQUE (mock_id, student_id)
 );
-CREATE TABLE IF NOT EXISTS hw_files (
-    id            INTEGER PRIMARY KEY,
-    submission_id INTEGER NOT NULL REFERENCES hw_submissions(id) ON DELETE CASCADE,
-    file_id       INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
-    pos           INTEGER NOT NULL DEFAULT 1
+CREATE TABLE IF NOT EXISTS exam_paper_files (
+    id          INTEGER PRIMARY KEY,
+    paper_id    INTEGER NOT NULL REFERENCES exam_papers(id) ON DELETE CASCADE,
+    file_id     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    pos         INTEGER NOT NULL DEFAULT 1
 );
-CREATE INDEX IF NOT EXISTS idx_hw_files_file ON hw_files(file_id);
-CREATE TABLE IF NOT EXISTS hw_marks (
-    submission_id INTEGER NOT NULL REFERENCES hw_submissions(id) ON DELETE CASCADE,
-    item_no       INTEGER NOT NULL,
-    verdict       TEXT NOT NULL DEFAULT '' CHECK (verdict IN ('', 'O', 'X')),
-    reason        TEXT NOT NULL DEFAULT '',
-    memo          TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (submission_id, item_no)
+CREATE INDEX IF NOT EXISTS idx_exam_paper_files_file ON exam_paper_files(file_id);
+CREATE TABLE IF NOT EXISTS exam_paper_marks (
+    paper_id    INTEGER NOT NULL REFERENCES exam_papers(id) ON DELETE CASCADE,
+    item_no     INTEGER NOT NULL,
+    reason      TEXT NOT NULL DEFAULT '',
+    memo        TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (paper_id, item_no)
 );
 -- 수업 기록: 반별 날짜·주제·수업 노트 사진
 CREATE TABLE IF NOT EXISTS lessons (
