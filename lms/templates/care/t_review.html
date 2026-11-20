@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ sub.name }} 첨삭 · {{ sub.title }} · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('care.t_homework_detail', hid=sub.hid) }}">← {{ sub.title }}</a></p>
+<div class="page-head"><div><h1>{{ sub.name }} <span class="small muted">{{ sub.cls }} · {{ sub.student_no }}</span></h1>
+  <p class="muted small">제출 {{ sub.submitted_at[5:16] }}{% if sub.status == 'done' %} · 첨삭 {{ sub.reviewed_at[5:16] }} {{ reviewer }}{% endif %}</p></div></div>
+{% if sub.note %}<p class="aside-note"><span>학생</span>{{ sub.note }}</p>{% endif %}
+<div class="review-grid">
+  <div class="review-photos">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="풀이 사진 {{ loop.index }}"></a>{% endfor %}</div>
+  <form method="post" class="review-form-hw">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="n" value="{{ n }}">
+    <table class="mark-table"><thead><tr><th class="num">번</th><th>결과</th><th>오답 유형</th><th>메모</th></tr></thead><tbody>
+    {% for i in range(1, n + 1) %}{% set k = marks.get(i, {}) %}
+    <tr><td class="num">{{ i }}</td>
+      <td class="nowrap"><label class="ox"><input type="radio" name="v{{ i }}" value="O" {{ 'checked' if k.verdict == 'O' }}><span>O</span></label><label class="ox ox-x"><input type="radio" name="v{{ i }}" value="X" {{ 'checked' if k.verdict == 'X' }}><span>X</span></label></td>
+      <td><select name="r{{ i }}" aria-label="{{ i }}번 오답 유형"><option value="">—</option>{% for t in err_types %}<option {{ 'selected' if k.reason == t }}>{{ t }}</option>{% endfor %}</select></td>
+      <td><input type="text" name="m{{ i }}" value="{{ k.memo or '' }}" maxlength="500" aria-label="{{ i }}번 메모"></td></tr>
+    {% endfor %}</tbody></table>
+    <div class="field mt"><label for="rv-comment">코멘트 <span class="muted">학생 화면과 학부모 리포트에 보입니다</span></label><textarea id="rv-comment" name="comment" rows="3" maxlength="1500">{{ sub.comment }}</textarea></div>
+    <button class="btn primary">첨삭 저장{{ ' (다음 학생으로)' if sub.status != 'done' }}</button>
+  </form>
+</div>
+{% endblock %}

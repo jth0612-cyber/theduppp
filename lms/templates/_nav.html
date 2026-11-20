@@ -44,6 +44,8 @@
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), 0),
     ('feedback.t_list', '1:1 첨삭', 'pen', ep.startswith('feedback.'), feedback_wait or 0),
+    ('care.t_homework', '숙제 첨삭', 'task', ep.startswith('care.t_homework') or ep == 'care.t_review', hw_wait or 0),
+    ('care.t_lessons', '수업 기록', 'folder', ep == 'care.t_lessons', 0),
     ('books.teacher_books', '복테·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
     ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
@@ -68,6 +70,8 @@
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book' or ep.startswith('feedback.'), feedback_new or 0)]),
   ('수업', [
+    ('care.s_homework', '숙제', 'task', ep.startswith('care.s_homework'), hw_todo or 0),
+    ('care.s_lessons', '수업 기록', 'folder', ep == 'care.s_lessons', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0),
     ('study.timetable', '시간표', 'timetable', ep == 'study.timetable', 0),
     ('student.materials', '자료실', 'folder', ep == 'student.materials', 0),

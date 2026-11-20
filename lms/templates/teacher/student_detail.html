@@ -34,6 +34,11 @@
     <h2>기본 정보</h2>
     <p><span class="muted small">연락처</span><br>{{ phone or '-' }}</p>
     <p><span class="muted small">학부모 연락처 (OMR 수험번호 = 뒤 8자리)</span><br>{{ parent_phone or '-' }}{% if not s.sms_ok %} <span class="badge gray">문자 수신 거부</span>{% endif %}</p>
+    <div id="parent" class="mt"><span class="muted small">학부모 리포트 링크 (로그인 없이 열림, 학부모 문자 끝에 붙음)</span>
+      {% if plink %}<p class="small"><a href="{{ plink }}" target="_blank" rel="noopener" id="plink">{{ plink }}</a> <button type="button" class="btn small" data-copy="plink">복사</button></p>{% endif %}
+      <form method="post" action="{{ url_for('care.t_parent_link', sid=s.id) }}" class="inline-form"{% if plink %} data-confirm="새 링크를 만들면 이전 링크는 열리지 않습니다."{% endif %}>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if plink %}<input type="hidden" name="renew" value="1">{% endif %}
+        <button class="btn small">{{ '새 링크로 바꾸기' if plink else '링크 만들기' }}</button></form></div>
     <p><span class="muted small">메모</span><br><span class="pre">{{ memo or '-' }}</span></p>
     <h3 class="mt">로그인 계정</h3>
     {% if account %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ h.title }} · 숙제 · 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="small"><a href="{{ url_for('care.s_homework') }}">숙제</a> /</p>
+<header class="ed-head"><h1>{{ h.title }}</h1><p class="ed-lede">마감 {{ h.due_at[5:16] }}{% if h.n_items %} · {{ h.n_items }}문항{% endif %}</p></header>
+{% if h.body %}<div class="card pre">{{ h.body }}</div>{% endif %}
+
+<ol class="hw-steps" aria-label="진행 상태">
+  <li class="{{ 'on' if sub }}"><b>숙제 제출</b><span>{% if sub %}{{ sub.submitted_at[5:16] }}{% if late %} · 마감 후{% endif %}{% else %}—{% endif %}</span></li>
+  <li class="{{ 'on' if sub }}{{ ' now' if sub and sub.status != 'done' }}"><b>선생님 검사</b><span>{% if sub and sub.status != 'done' %}검사 중{% elif sub %}완료{% else %}—{% endif %}</span></li>
+  <li class="{{ 'on' if sub and sub.status == 'done' }}"><b>문항별 첨삭</b><span>{% if sub and sub.status == 'done' %}{{ sub.reviewed_at[5:16] }} · {{ reviewer }}{% else %}—{% endif %}</span></li>
+</ol>
+
+{% if sub and sub.status == 'done' %}
+  {% set o = marks.values()|selectattr('verdict', 'equalto', 'O')|list|length %}{% set x = marks.values()|selectattr('verdict', 'equalto', 'X')|list|length %}
+  {% if o + x %}<p class="hw-score"><b>{{ o }}</b> / {{ o + x }} 정답</p>{% endif %}
+  {% if sub.comment %}<section class="mock-review"><h2>선생님 코멘트 <span>{{ reviewer }}</span></h2><div class="pre">{{ sub.comment }}</div></section>{% endif %}
+  <ol class="hw-marks">
+    {% for no, k in marks|dictsort %}
+    <li class="is-{{ 'o' if k.verdict == 'O' else ('x' if k.verdict == 'X' else 'n') }}">
+      <span class="hw-no">{{ no }}</span>
+      <span class="hw-v">{{ '정답' if k.verdict == 'O' else ('오답' if k.verdict == 'X' else '메모') }}</span>
+      <span class="hw-memo">{% if k.reason %}<span class="badge">{{ k.reason }}</span> {% endif %}{{ k.memo }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+{% endif %}
+
+{% if files %}
+<div class="q-photos mt">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="내 풀이 사진 {{ loop.index }}"></a>{% endfor %}</div>
+{% endif %}
+
+{% if not sub or sub.status != 'done' %}
+<form method="post" enctype="multipart/form-data" class="card mt">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field photo-field" data-photo>
+    <label for="hw-image">풀이 사진 <span class="muted">(PNG·JPG, 6장까지{% if sub %} · 다시 올리면 이전 사진은 지워집니다{% endif %})</span></label>
+    <input type="file" id="hw-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
+  </div>
+  <div class="field"><label for="hw-note">조교에게 한 줄 <span class="muted">(선택)</span></label><input type="text" id="hw-note" name="note" maxlength="1000" value="{{ sub.note if sub else '' }}"></div>
+  <button class="btn primary">{{ '다시 제출' if sub else '제출' }}</button>
+</form>
+{% endif %}
+{% endblock %}

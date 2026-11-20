@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>{{ r.s.name }} 학생 리포트 · 정태혁 통합과학</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</head>
+<body class="no-shell parent-page">
+<main class="pr-wrap">
+  <header class="pr-head">
+    <p class="small muted">정태혁 통합과학 · 학부모 리포트 · {{ r.period }}</p>
+    <h1>{{ r.s.name }} <span>{{ r.s.cls }}</span></h1>
+  </header>
+
+  <section class="pr-card pr-top">
+    <div class="pr-big"><span>숙제 정답률</span><b>{% if r.this.rate is not none %}{{ r.this.rate }}<small>%</small>{% else %}—{% endif %}</b>
+      {% if r.delta %}<em class="{{ 'up' if r.delta > 0 else 'down' }}">{{ '+' if r.delta > 0 }}{{ r.delta }}%p</em>{% endif %}</div>
+    <dl class="pr-tiles">
+      <div><dt>숙제 제출</dt><dd>{{ r.this.submitted }}/{{ r.this.assigned }}</dd></div>
+      <div><dt>첨삭 문항</dt><dd>{{ r.this.o + r.this.x }}</dd></div>
+      <div><dt>오답</dt><dd>{{ r.this.x }}</dd></div>
+    </dl>
+  </section>
+
+  {% if r.lines %}<section class="pr-card"><h2>이번 주</h2>{% for l in r.lines %}<p>{{ l }}</p>{% endfor %}</section>{% endif %}
+
+  {% if chart.pts %}
+  <section class="pr-card"><h2>숙제 정답률 변화</h2>
+    <svg class="pr-chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="최근 4주 숙제 정답률: {% for p in chart.pts %}{{ p.v }}%{{ ', ' if not loop.last }}{% endfor %}">
+      <line x1="10" x2="{{ chart.w - 10 }}" y1="{{ chart.base }}" y2="{{ chart.base }}" class="pr-axis"></line>
+      {% if chart.pts|length > 1 %}<polyline points="{{ chart.poly }}" class="pr-line"></polyline>{% endif %}
+      {% for p in chart.pts %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" class="pr-dot"></circle><text x="{{ p.x }}" y="{{ p.y - 9 }}" class="pr-val">{{ p.v }}%</text>{% endfor %}
+      {% for l in chart.labels %}<text x="{{ l.x }}" y="{{ chart.h - 6 }}" class="pr-lab">{{ l.t }}</text>{% endfor %}
+    </svg>
+  </section>
+  {% endif %}
+
+  {% if r.exams %}
+  <section class="pr-card"><h2>시험 결과</h2>
+    <ul class="pr-exams">{% for e in r.exams %}<li><span>{{ e.title }}<small>{{ e.date[5:] if e.date }}</small></span><b>{{ e.score|round(1)|replace('.0', '') }}<small>/{{ e.full|round(1)|replace('.0', '') }}</small></b><span class="small muted">반 평균 {{ e.avg }}</span></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if r.units %}
+  <section class="pr-card"><h2>단원별 성취도</h2>
+    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
+      <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
+      <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% set why = r.reasons %}{% set ex = r.exams[0].wrongs if r.exams else [] %}
+  {% if why or ex %}
+  <section class="pr-card"><h2>틀린 이유</h2>
+    <ul class="pr-why">
+      {% for a in ex %}<li><span class="pr-no">{{ a.no }}번</span><span><b>{{ a.type }}</b>{% if a.analysis %}<br><small>{{ a.analysis }}</small>{% endif %}</span></li>{% endfor %}
+      {% for k in why %}<li><span class="pr-no">{{ k.item_no }}번</span><span><b>{{ k.reason or '오답' }}</b> <small class="muted">{{ k.title }}</small>{% if k.memo %}<br><small>{{ k.memo }}</small>{% endif %}</span></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if r.comment %}<section class="pr-card"><h2>선생님 코멘트</h2><p class="pre">{{ r.comment.text }}</p></section>{% endif %}
+
+  {% if r.att %}<section class="pr-card"><h2>출결</h2><ul class="pr-att">{% for a in r.att[:7] %}<li><span>{{ a.day[5:] }}</span><b>{{ a.status }}</b><small class="muted">{{ a.arrived }}</small></li>{% endfor %}</ul></section>{% endif %}
+
+</main>
+</body>
+</html>

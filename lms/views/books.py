@@ -152,8 +152,10 @@ def analysis_home():
     fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
     rep = exams.student_report(mid, g.user["student_id"]) if g.user["student_id"] else None
     prof = exams.classify_profile(exams.history(g.user["student_id"])) if rep else None
+    from views.care import weak_card
+    units, weak = weak_card(g.user["student_id"]) if g.user["student_id"] else ([], None)
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
-                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev,
+                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, weak=weak,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),
@@ -528,8 +530,11 @@ def mock_sms(mid):
         abort(404)
     cs = exams.class_stats(mid)
     out = []
+    from views.care import parent_token
+    root = request.url_root.rstrip("/")
     for r in cs["rows"]:
         text = exams.sms_for(mid, r["student_id"], cs)
+        text += f"\n\n학생 리포트: {root}{url_for('care.parent_page', token=parent_token(r['student_id']))}"
         phone = decrypt(r["parent_phone_enc"])
         state = "수신미동의" if not r["sms_ok"] else ("연락처없음" if not phone else "")
         out.append({"r": r, "text": text, "phone": phone, "state": state, "bytes": exams.sms_bytes(text)})

@@ -122,6 +122,62 @@ CREATE TABLE IF NOT EXISTS quiz_resets (
     PRIMARY KEY (user_id, topic)
 );
 
+-- 숙제 인증: 강사·조교가 숙제를 내고, 학생은 풀이 사진을 올리고, 조교가 문항별로 첨삭한다
+CREATE TABLE IF NOT EXISTS homeworks (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,      -- NULL = 모든 반
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL DEFAULT '',
+    due_at      TEXT NOT NULL,
+    n_items     INTEGER NOT NULL DEFAULT 0,
+    created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS hw_submissions (
+    id           INTEGER PRIMARY KEY,
+    homework_id  INTEGER NOT NULL REFERENCES homeworks(id) ON DELETE CASCADE,
+    student_id   INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    note         TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'done')),
+    comment      TEXT NOT NULL DEFAULT '',
+    submitted_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    reviewed_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at  TEXT,
+    UNIQUE (homework_id, student_id)
+);
+CREATE TABLE IF NOT EXISTS hw_files (
+    id            INTEGER PRIMARY KEY,
+    submission_id INTEGER NOT NULL REFERENCES hw_submissions(id) ON DELETE CASCADE,
+    file_id       INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    pos           INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_hw_files_file ON hw_files(file_id);
+CREATE TABLE IF NOT EXISTS hw_marks (
+    submission_id INTEGER NOT NULL REFERENCES hw_submissions(id) ON DELETE CASCADE,
+    item_no       INTEGER NOT NULL,
+    verdict       TEXT NOT NULL DEFAULT '' CHECK (verdict IN ('', 'O', 'X')),
+    reason        TEXT NOT NULL DEFAULT '',
+    memo          TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (submission_id, item_no)
+);
+-- 수업 기록: 반별 날짜·주제·수업 노트 사진
+CREATE TABLE IF NOT EXISTS lessons (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    body        TEXT NOT NULL DEFAULT '',
+    created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS lesson_files (
+    id          INTEGER PRIMARY KEY,
+    lesson_id   INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    file_id     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    pos         INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_lesson_files_file ON lesson_files(file_id);
+
 -- 복테·모의고사 채점 결과 (OMR 엑셀에서). 학생 계정이 없어도 학생DB 기준으로 저장한다 (학부모 문자용)
 -- answers: 문항마다 '1'~'5' 고른 번호, 'R' 맞음(고른 번호 기록 없음), '0' 틀림(무응답·두 개 마킹·기록 없음)
 CREATE TABLE IF NOT EXISTS exam_results (
@@ -689,7 +745,8 @@ def init_db(path):
     # 학습상담: 학생이 조교를 지정(없으면 누구나), 답변 뒤 학생이 1~5점 평가. 조교 소개 한 줄
     _add_column(conn, "questions", "assignee_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
     _add_column(conn, "questions", "rating", "INTEGER")
-    _add_column(conn, "users", "ta_intro", "TEXT NOT NULL DEFAULT ''")  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
+    _add_column(conn, "users", "ta_intro", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "students", "parent_token", "TEXT")                     # 학부모 리포트 비밀 링크  # 조교가 직접 쓴 피드백 (학부모 문자에 들어감)
     _add_column(conn, "exam_results", "ta_by", "INTEGER")
     _add_column(conn, "exam_results", "ta_at", "TEXT")
     # 복습 테스트·모의고사 1~50회를 미리 만들어 둔다 (문항 수 0 = 아직 결과 없음, 엑셀을 올리면 정해진다)

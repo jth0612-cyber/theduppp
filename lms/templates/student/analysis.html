@@ -103,6 +103,25 @@
 </section>
 {% endif %}
 
+{% if units %}
+<section class="unit-sec" aria-labelledby="h-unit">
+  <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 복테·모의 · 배점 기준</span></div>
+  <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
+    <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
+    <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
+  {% if weak %}
+  <div class="weak-card">
+    <p><b>{{ weak.unit.unit }}</b> {{ weak.unit.got|round(1)|replace('.0', '') }}/{{ weak.unit.total|round(1)|replace('.0', '') }}점 · {{ weak.unit.pct }}%</p>
+    {% if weak.wrongs %}<p class="small">틀린 문항: {% for t, no in weak.wrongs[:8] %}{{ t }} {{ no }}번{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+    <div class="row">
+      <a class="btn small" href="{{ url_for('study.wrong_notes') }}">오답 노트</a>
+      {% if weak.topic %}<a class="btn small primary" href="{{ url_for('games.quiz', topic=weak.topic.code) }}">TOPIC {{ weak.topic.code }} {{ weak.topic.title }} Quiz</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="fb-sec" id="feedback" aria-labelledby="h-fb">
   <div class="sec-head"><h2 id="h-fb">1:1 첨삭</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>
   {% with msgs=fb_msgs, action=url_for('feedback.ask', mid=mock.id), me_staff=false,

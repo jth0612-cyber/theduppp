@@ -361,7 +361,8 @@ def student_detail(sid):
     engagement = None
     if account:
         engagement = {"streak": streak_info(account["id"])}
-    return render_template("teacher/student_detail.html", s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]),
+    plink = (request.url_root.rstrip("/") + url_for("care.parent_page", token=s["parent_token"])) if s["parent_token"] else ""
+    return render_template("teacher/student_detail.html", s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]), plink=plink,
                            memo=decrypt(s["memo_enc"]), scores=scores, chart=chart, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
                            note_categories=NOTE_CATEGORIES, engagement=engagement)
@@ -853,10 +854,12 @@ def staff_answers_csv():
     w = csv.writer(out)
     import consult
     cons = consult.consult_counts(month)
-    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "질문 답변 합계", "학습상담(건)"])
+    from views.care import hw_review_counts
+    hw = hw_review_counts(month)
+    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "질문 답변 합계", "학습상담(건)", "숙제 첨삭(건)"])
     for a in query("SELECT * FROM users WHERE role = 'assistant' ORDER BY display_name"):
         c = counts.get(a["id"], {"main": 0, "extra": 0})
-        w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"], cons.get(a["id"], 0)])
+        w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"], cons.get(a["id"], 0), hw.get(a["id"], 0)])
     audit("staff_answers_csv", month)
     return Response("\ufeff" + out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename=answers-{month}.csv"})
@@ -887,7 +890,10 @@ def staff():
     counts = answer_counts(month)
     import consult
     cons = consult.consult_counts(month)
-    rows = [dict(r, main=counts.get(r["id"], {}).get("main", 0), extra=counts.get(r["id"], {}).get("extra", 0), consult=cons.get(r["id"], 0))
+    from views.care import hw_review_counts
+    hw = hw_review_counts(month)
+    rows = [dict(r, main=counts.get(r["id"], {}).get("main", 0), extra=counts.get(r["id"], {}).get("extra", 0), consult=cons.get(r["id"], 0),
+                 hw=hw.get(r["id"], 0))
             for r in query("""SELECT u.*, (SELECT COUNT(*) FROM answers WHERE author_id = u.id) AS answer_count
                               FROM users u WHERE role = 'assistant' ORDER BY disabled, display_name""")]
     return render_template("teacher/staff.html", staff=rows, month=month)

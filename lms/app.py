@@ -88,6 +88,8 @@ def create_app(test_config=None):
     app.register_blueprint(cast_bp)
     from views.feedback import bp as feedback_bp
     app.register_blueprint(feedback_bp)
+    from views.care import bp as care_bp                     # 숙제 인증·문항별 첨삭·수업 기록·학부모 리포트
+    app.register_blueprint(care_bp)
     csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다
     app.jinja_env.globals["google_enabled"] = google_enabled
     if not app.config.get("TESTING") or app.config.get("SEED_PRACTICE"):

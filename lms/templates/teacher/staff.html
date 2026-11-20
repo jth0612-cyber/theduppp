@@ -24,12 +24,12 @@
     <form method="get" class="row"><label class="sr-only" for="month">월</label><input type="month" id="month" name="month" value="{{ month }}">
       <button class="btn small">보기</button>
       <a class="btn small" href="{{ url_for('teacher.staff_answers_csv', month=month) }}">엑셀로 받기</a></form></div>
-  <p class="small muted">질문마다 처음 달린 답변 = Main, 같은 질문에 이어 단 답변(재질문 답 등) = 부가. 학습상담은 첫 답변을 단 조교에게 1건. 답변을 단 날짜의 달로 셉니다.</p>
+  <p class="small muted">질문마다 처음 달린 답변 = Main, 같은 질문에 이어 단 답변(재질문 답 등) = 부가. 학습상담은 첫 답변을 단 조교에게 1건, 숙제 첨삭은 학생 1명 제출 1건. 답변을 단 날짜의 달로 셉니다.</p>
   {% if staff %}
   <div class="table-wrap"><table>
-    <tr><th>조교</th><th class="num">Main 답변</th><th class="num">부가 답변</th><th class="num">질문 합계</th><th class="num">학습상담(건)</th></tr>
+    <tr><th>조교</th><th class="num">Main 답변</th><th class="num">부가 답변</th><th class="num">질문 합계</th><th class="num">학습상담(건)</th><th class="num">숙제 첨삭(건)</th></tr>
     {% for a in staff %}<tr class="{{ 'inactive' if a.disabled }}"><td>{{ a.display_name }} <span class="small muted">{{ a.username }}</span></td>
-      <td class="num"><b>{{ a.main }}</b></td><td class="num">{{ a.extra }}</td><td class="num">{{ a.main + a.extra }}</td><td class="num"><b>{{ a.consult }}</b></td></tr>{% endfor %}
+      <td class="num"><b>{{ a.main }}</b></td><td class="num">{{ a.extra }}</td><td class="num">{{ a.main + a.extra }}</td><td class="num"><b>{{ a.consult }}</b></td><td class="num"><b>{{ a.hw }}</b></td></tr>{% endfor %}
   </table></div>
   {% endif %}
 </div>
