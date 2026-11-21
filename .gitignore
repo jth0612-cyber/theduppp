@@ -10,3 +10,4 @@ lms/instance/
 **/__pycache__/
 *.sqlite3
 student-lms-update.zip
+handover-package.zip
