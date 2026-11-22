@@ -64,14 +64,15 @@
 
   {% if selected %}
   <div class="choice-panel">
-    <h3>{{ selected.no }}번 선지별 응답 <span>오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}</span></h3>
+    {% set mine = (marks[selected.no - 1] if marks is defined and marks and marks|length >= selected.no else '') %}
+    <h3>{{ selected.no }}번 선지별 응답 <span>오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}{% if mine and mine != '0' %} · 내 답 {{ mine }}번{% endif %}</span></h3>
     <svg class="hbars" viewBox="0 0 400 130" role="img" aria-label="{{ selected.no }}번 선지별 응답 비율">
       {% for p in selected.choices %}
         {% set y = loop.index0 * 26 %}
         <text class="lab" x="20" y="{{ y + 17 }}" text-anchor="middle">{{ '①②③④⑤'[loop.index0] }}</text>
         <line class="axis" x1="40" x2="40" y1="{{ y }}" y2="{{ y + 26 }}"></line>
         <rect class="hb{{ ' hb-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 7 }}" width="{{ (p * 3)|round(1) }}" height="12"></rect>
-        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%</text>
+        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%{% if mine == loop.index|string %} · 내 답{% endif %}</text>
       {% endfor %}
     </svg>
   </div>
