@@ -27,6 +27,8 @@
   </form>
   <p class="door-links">
     <a class="text-link" href="{{ url_for('auth.signup') }}">학생코드로 가입</a>
+    {% set oc = site_contact().openchat %}
+    {% if oc %}<a class="text-link" href="{{ oc }}" target="_blank" rel="noopener noreferrer">비밀번호 분실</a>{% endif %}
     {% if google_enabled() %}<a class="text-link" href="{{ url_for('google.start', mode='login') }}">Google 계정으로 입장</a>{% endif %}
   </p>
 </section>

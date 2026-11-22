@@ -248,12 +248,13 @@ class AppTest(unittest.TestCase):
         self.assertIn('href="mailto:lab@example.com"', page)
 
     def test_openchat_link_for_lost_password(self):
-        self.assertNotIn("비밀번호 분실", self.app.test_client().get("/login").data.decode())
-        for url, shown in (("https://open.kakao.com/o/abc123", True), ("https://evil.example/o/x", False)):
-            with mock.patch.dict(os.environ, {"KAKAO_OPENCHAT_URL": url}):
-                page = self.app.test_client().get("/login").data.decode()
-            self.assertEqual("비밀번호 분실" in page, shown, url)
-            self.assertEqual(f'href="{url}"' in page, shown, url)
+        for path in ("/login", "/"):                         # 첫 화면 입장 칸 아래에도
+            self.assertNotIn("비밀번호 분실", self.app.test_client().get(path).data.decode())
+            for url, shown in (("https://open.kakao.com/o/abc123", True), ("https://evil.example/o/x", False)):
+                with mock.patch.dict(os.environ, {"KAKAO_OPENCHAT_URL": url}):
+                    page = self.app.test_client().get(path).data.decode()
+                self.assertEqual("비밀번호 분실" in page, shown, (path, url))
+                self.assertEqual(f'href="{url}"' in page, shown, (path, url))
 
     def test_csv_formula_injection_neutralized(self):
         cid = self.setup_class_with_students()
