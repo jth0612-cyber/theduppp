@@ -270,7 +270,11 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       pv.querySelector("span").textContent = files.length + "장"; pv.hidden = false;
     });
     pv.querySelector("[data-photo-clear]").addEventListener("click", function () { clearPhoto(); inp.focus(); });
-    if (qt) qt.addEventListener("change", function () { if (qt.value !== "학습질문") showErr(""); });
+    if (qt) qt.addEventListener("change", function () {
+      if (qt.value !== "학습질문") showErr("");
+      var t = document.getElementById("q-title");      // 유형에 맞는 제목 예시
+      if (t) t.placeholder = { "행정문의": "예) 교재 환불 · FRAMING 해설편 2권", "학습상담": "예) 평일 공부 계획 상담" }[qt.value] || "[교재-페이지-번호] 예) 개념서 42p 3번";
+    });
     f.addEventListener("submit", function (e) {
       save();
       if (qt && qt.value === "학습질문" && !(inp.files && inp.files.length)) {
@@ -321,4 +325,16 @@ document.addEventListener("click", function (e) {
   if (!sel || !box) return;
   function sync() { box.hidden = sel.value !== "학습상담"; }
   sel.addEventListener("change", sync); sync();
+})();
+// 시험지 첨삭: 메모가 빈 문항이 있으면 저장 전에 몇 번인지 알린다
+(function () {
+  var f = document.querySelector(".review-form-hw");
+  if (!f) return;
+  f.addEventListener("submit", function (e) {
+    var empty = [];
+    f.querySelectorAll('input[name^="m"]').forEach(function (inp) {
+      if (!inp.value.trim()) empty.push(inp.name.slice(1) + "번");
+    });
+    if (empty.length && !confirm("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장하시겠습니까?")) e.preventDefault();
+  });
 })();
