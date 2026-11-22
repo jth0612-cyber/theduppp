@@ -11,3 +11,5 @@ lms/instance/
 *.sqlite3
 student-lms-update.zip
 handover-package.zip
+_nas-backup/
+_deploy/

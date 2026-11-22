@@ -124,6 +124,9 @@ input.score { width: 90px; text-align: right; }
 .flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; }
 .flash.ok { background: var(--ok-soft); color: var(--ok); }
 .flash.error { background: var(--danger-soft); color: var(--danger); }
+.flash.inapp { background: var(--accent-soft); color: var(--accent-ink); margin: 0; border-radius: 0;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.flash.inapp p { margin: 0; flex: 1 1 200px; }
 .notice-box { background: var(--warn-soft); color: var(--warn); padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; }
 .badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 12px; font-weight: 500;
   background: var(--accent-soft); color: var(--accent-ink); white-space: nowrap; }

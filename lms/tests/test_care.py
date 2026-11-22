@@ -116,7 +116,9 @@ class Care(unittest.TestCase):
         with self.app.app_context():
             tok = query("SELECT parent_token FROM students WHERE id = ?", (self.s1,), one=True)["parent_token"]
         anon = self.app.test_client()
-        page = anon.get(f"/p/{tok}").data.decode()
+        resp = anon.get(f"/p/{tok}")
+        self.assertEqual(resp.headers["Cache-Control"], "no-store")
+        page = resp.data.decode()
         for word in ("김하나", "득점률", "40", "자료 해석", "x축을 시간으로 읽음", "그래프 축부터 확인", "산과 염기", "모의고사 1회"):
             self.assertIn(word, page)
         self.assertIn("noindex", page)

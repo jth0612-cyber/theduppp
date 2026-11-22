@@ -9,7 +9,7 @@ import json
 import secrets
 from datetime import date, datetime, timedelta
 
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, g, make_response, redirect, render_template, request, url_for
 
 from db import execute, query
 from security import IMAGE_EXTS, audit, delete_file, save_upload, staff_required, student_required
@@ -342,7 +342,10 @@ def parent_page(token):
         abort(404)
     s = query("SELECT id FROM students WHERE parent_token = ? AND active = 1", (token,), one=True) or abort(404)
     rep = parent_report(s["id"])
-    return render_template("care/parent.html", r=rep, chart=rate_chart(rep["exams"]), fmt=num_fmt)
+    resp = make_response(render_template("care/parent.html", r=rep, chart=rate_chart(rep["exams"]), fmt=num_fmt))
+    # 로그인 없는 화면이라 app.py 의 no-store 가 붙지 않는다. 성적·출결이 브라우저·프록시에 남지 않게 한다
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @bp.route("/t/students/<int:sid>/parent-link", methods=["POST"])
