@@ -136,13 +136,14 @@ def analysis_home():
     if mid not in ids:
         abort(404)
     mock = _mock_or_404(mid)
+    why_open = "새 1:1 첨삭 답변이 있는 회차" if unread and mid == unread["mock_id"] and "mock" not in request.args else ""
     key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
     from content import youtube_id
     ev = {"level": EVAL_LEVELS.get(mock["eval_level"]), "n": mock["eval_level"], "yt": youtube_id(mock["eval_video"]) if mock["eval_video"] else None}
     if entry is None:                                          # 내 결과가 없는 회차: 시험 평가만
         stats = _stats(mock) if mock["n_items"] else None
-        return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
+        return render_template("student/analysis.html", why_open=why_open, mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
                                fmt=analysis._fmt)
     stats = _stats(mock)
     my_score = entry["score"]
@@ -157,7 +158,7 @@ def analysis_home():
     from views.care import unit_scores
     season_units = [u for u in unit_scores(g.user["student_id"], limit=500) if u["pct"] < 80][:5] if g.user["student_id"] else []
     paper, paper_files, paper_marks = paper_of(mid, g.user["student_id"]) if g.user["student_id"] else (None, [], {})
-    return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
+    return render_template("student/analysis.html", why_open=why_open, mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
                            rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, season_units=season_units, weak=weak, paper=paper, paper_files=paper_files, paper_marks=paper_marks,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,

@@ -11,6 +11,18 @@
   </div>
 </header>
 
+{% if news and (news.feedback or news.papers or news.answers or news.lessons) %}
+<section class="panel home-news" aria-labelledby="h-news">
+  <div class="sec-head"><h2 id="h-news">새로 온 것</h2><span>최근 7일</span></div>
+  <ul class="mini-list">
+    {% if news.feedback %}<li><a href="{{ url_for('books.analysis_home') }}">1:1 첨삭 답변 {{ news.feedback }}건</a></li>{% endif %}
+    {% if news.papers %}<li><a href="{{ url_for('books.analysis_home') }}">시험지 첨삭 완료 {{ news.papers }}건</a></li>{% endif %}
+    {% if news.answers %}<li><a href="{{ url_for('student.questions', view='mine') }}">내 질문에 답변 {{ news.answers }}건</a></li>{% endif %}
+    {% if news.lessons %}<li><a href="{{ url_for('care.s_lessons') }}">새 수업 기록 {{ news.lessons }}건</a></li>{% endif %}
+  </ul>
+</section>
+{% endif %}
+
 <div class="home-cols home-core">
   <section class="panel" aria-labelledby="h-notice">
     <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체 보기 →</a></div>

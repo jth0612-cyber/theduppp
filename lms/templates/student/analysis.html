@@ -12,7 +12,7 @@
 <header class="ed-head ed-head-split">
   <div>
     <h1>복테&모의 분석</h1>
-    <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %}{% if mock.n_items %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}</p>
+    <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %}{% if mock.n_items %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if why_open %} · <b>{{ why_open }}</b>{% endif %}</p>
   </div>
   <form method="get" class="pick" data-autosubmit>
     <label for="mock">다른 회차 보기</label>

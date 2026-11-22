@@ -35,7 +35,7 @@
         {{ csrf() }}
         <div class="w-head">
           <span class="w-no">{{ it.no }}번</span>
-          <span class="muted small">내 답 {{ it.mine if it.mine != "0" else "무응답" }} · {{ fmt(it.points) }}점{% if it.rate is not none %} · 반 오답률 {{ it.rate }}%{% endif %}</span>
+          <span class="muted small">내 답 {{ it.mine if it.mine != "0" else "무응답" }} · {{ fmt(it.points) }}점{% if it.rate is not none %} · 전체 오답률 {{ it.rate }}%{% endif %}</span>
           <a class="small" href="{{ url_for('books.analysis_home', mock=gr.mock_id, item=it.no) }}#map">선지 비율 보기</a>
         </div>
         <div class="w-reasons" role="radiogroup" aria-label="{{ it.no }}번 틀린 이유">

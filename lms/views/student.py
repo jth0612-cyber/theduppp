@@ -44,7 +44,16 @@ def home():
     notices = query("SELECT * FROM notices WHERE class_id = ? ORDER BY created_at DESC LIMIT 5", (me["class_id"],))
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 5", (me["id"],))
     cast = query("SELECT id, title, created_at FROM casts ORDER BY created_at DESC LIMIT 1", one=True)
-    return render_template("student/home.html", me=me, notices=notices, questions=questions, cast=cast)
+    # 새로 온 것 (최근 7일): 1:1 첨삭 답변, 시험지 첨삭 완료, 내 질문의 답변, 새 수업 기록
+    week = "datetime('now', 'localtime', '-7 days')"
+    news = query(f"""SELECT
+        (SELECT COUNT(*) FROM feedback_threads WHERE user_id = ? AND unread = 1) AS feedback,
+        (SELECT COUNT(*) FROM exam_papers WHERE student_id = ? AND status = 'done' AND reviewed_at >= {week}) AS papers,
+        (SELECT COUNT(DISTINCT a.question_id) FROM answers a JOIN questions q ON q.id = a.question_id
+           WHERE q.student_id = ? AND a.created_at >= {week}) AS answers,
+        (SELECT COUNT(*) FROM lessons WHERE class_id = ? AND created_at >= {week}) AS lessons""",
+                 (g.user["id"], me["id"], me["id"], me["class_id"]), one=True)
+    return render_template("student/home.html", me=me, notices=notices, questions=questions, cast=cast, news=news)
 
 
 @bp.route("/notices")
