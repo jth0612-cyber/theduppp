@@ -593,7 +593,7 @@ export default {
       planSeat(from, id) { const s = SEATS[id]; return route(from.x, from.z, s.x, s.z - 0.65).concat([[s.x, s.z]]); },
       leaveSeat(s) { return [s.x, s.z - 0.65]; },
       step(x, z, nx, nz) { const a = region(x, z), b = region(nx, nz); if (!b || (a && !OK[a].includes(b))) return [x, z]; return [nx, nz]; },
-      welcome: "작은 바닷가 역 · 승강장 의자에 앉으세요. 기차는 3분마다 지나갑니다.",
+      welcome: "작은 바닷가 역 / 승강장 의자에 앉으세요 / 기차는 3분마다 통과",
       sitText: "자리에 앉았습니다.",
       focusText: (m) => `${m}분, 다음 기차가 몇 번 지나갈 때까지`,
       spaceAction: "sea",

@@ -739,7 +739,7 @@ const colors = root.dataset.colors.split(",");
 let myColor = root.dataset.color;
 const meName = root.dataset.meName || (document.querySelector(".m-who") || {}).textContent || "나", meCap = root.dataset.meCap || null;
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", cap: meCap, me: true });
-me.onStageUp = (n) => whisper(["5분 · 여기부터 기록됩니다.", "15분 · 어깨 위로 불티", "40분 · 등 뒤로 열공 불꽃", "80분 · 푸른 불꽃이 붙었습니다."][n - 1], 4200);
+me.onStageUp = (n) => whisper(["5분 / 여기부터 기록", "15분 / 어깨 위로 불티", "40분 / 등 뒤로 열공 불꽃", "80분 / 푸른 불꽃"][n - 1], 4200);
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
 // 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
 const QS = new URLSearchParams(location.search);

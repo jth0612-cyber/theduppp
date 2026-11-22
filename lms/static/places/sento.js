@@ -473,7 +473,7 @@ export default {
         if (ha !== hb) { const H = HUTS[ha >= 0 ? ha : hb]; if (!H || Math.abs(nz - (H.z + 1.2)) > 1.1) return [x, z]; }
         return c;
       },
-      welcome: "눈 내리는 노천탕 · 탕이나 화롯가 방석에 앉으세요.",
+      welcome: "눈 내리는 노천탕 / 탕이나 화롯가 방석에 앉으세요",
       sitText: (s) => s.kind === "water" ? "탕에 들어갔습니다." : "화롯가 방석에 앉았습니다.",
       sitSound: (s) => s.kind === "water" ? "soak" : "cushion",
       focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만`,

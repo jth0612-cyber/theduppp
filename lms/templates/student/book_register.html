@@ -23,14 +23,14 @@
 {% else %}
   <header class="ed-head">
     <h1>교재 코드 입력</h1>
-    <p class="ed-lede">표지 안쪽 첫 장의 12자리 · 수업 배포 코드도 여기에</p>
+    <p class="ed-lede">표지 안쪽 첫 장의 12자리 / 수업 배포 코드도 여기에 입력</p>
   </header>
   <form method="post" class="code-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="code">코드 12자리</label>
     <input type="text" id="code" name="code" class="code-input" required maxlength="20" autocomplete="off"
            autocapitalize="characters" spellcheck="false" placeholder="ABCD EFGH JKMN" aria-describedby="code-help" data-code-input>
-    <p class="fine" id="code-help">띄어쓰기·하이픈 없이 · 0·1·O·I·L은 쓰지 않습니다. 인쇄가 흐리면 행정문의로 사진</p>
+    <p class="fine" id="code-help">띄어쓰기·하이픈 없이 / 0·1·O·I·L 미사용 / 인쇄가 흐리면 행정문의로 사진</p>
     <button class="btn primary" type="submit">등록</button>
   </form>
   <p class="mt"><a href="{{ url_for('books.analysis_home') }}">복테&모의 분석으로</a></p>

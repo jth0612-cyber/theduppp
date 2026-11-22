@@ -239,7 +239,7 @@ class Upload(unittest.TestCase):
 
     def test_missing_key_stops(self):
         html = self.up(xlsx([["이름", "1", "2"], ["학생00", 1, 2]]))
-        self.assertIn("정답이 없는 문항이 있습니다: 1, 2번", html)
+        self.assertIn("정답이 없는 문항: 1, 2번", html)
         self.assertEqual(self.res(), {})
 
     def test_ox_10_and_wrong_list_euckr(self):

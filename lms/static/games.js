@@ -680,7 +680,7 @@
 
     var stageNeutral = function (st, box) {
       var ml = 0;
-      var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개 · 완전히 중화되는 양은 몇 mL입니까?");
+      var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개) / 수산화 나트륨 수용액 5 mL에 OH⁻ " + st.oh + "개 / 완전히 중화되는 양은 몇 mL입니까?");
       var row = el("div", "pl-beakers");
       var acid = beaker("묽은 염산 " + st.acid_ml + "\u00a0mL", [["H⁺", st.h], ["Cl⁻", st.h]], st.acid_ml);
       var plusSign = el("span", "pl-plus", "+");
