@@ -13,7 +13,7 @@ from flask import (Blueprint, Response, abort, current_app, flash, g, redirect, 
 
 import analysis
 from db import execute, query
-from security import audit, decrypt, member_required, staff_required, student_required, teacher_only, teacher_required
+from security import audit, decrypt, member_required, staff_required, student_required, teacher_required
 
 bp = Blueprint("books", __name__)
 
@@ -193,7 +193,7 @@ def _clean_url(raw):
 
 
 @bp.route("/t/books/shop", methods=["POST"])
-@teacher_required
+@staff_required
 def shop_save():
     bad = []
     for key, name, _ in SHOP_BOOKS:
@@ -223,8 +223,6 @@ def shop():
 @bp.route("/t/books", methods=["GET", "POST"])
 @staff_required
 def teacher_books():
-    if request.method == "POST":
-        teacher_only()  # 조교는 보기만
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         expires_on = request.form.get("expires_on", "").strip()
@@ -277,7 +275,7 @@ def teacher_book(bid):
 
 
 @bp.route("/t/books/<int:bid>/edit", methods=["POST"])
-@teacher_required
+@staff_required
 def edit_book(bid):
     _book_or_404(bid)
     expires_on = request.form.get("expires_on", "").strip()
@@ -299,7 +297,7 @@ def _code_taken(c):
 
 
 @bp.route("/t/books/<int:bid>/codes", methods=["POST"])
-@teacher_required
+@staff_required
 def make_codes(bid):
     book = _book_or_404(bid)
     kind = request.form.get("kind")
@@ -332,7 +330,7 @@ def make_codes(bid):
 
 
 @bp.route("/t/codes/<int:cid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def delete_code(cid):
     row = query("SELECT book_id FROM book_codes WHERE id = ?", (cid,), one=True)
     if row is None:
@@ -344,7 +342,7 @@ def delete_code(cid):
 
 
 @bp.route("/t/books/<int:bid>/mocks", methods=["POST"])
-@teacher_required
+@staff_required
 def add_mock(bid):
     _book_or_404(bid)
     try:
@@ -377,7 +375,7 @@ def add_mock(bid):
 
 
 @bp.route("/t/mocks/<int:mid>/toggle", methods=["POST"])
-@teacher_required
+@staff_required
 def toggle_mock(mid):
     m = _mock_or_404(mid)
     execute("UPDATE mocks SET open = ? WHERE id = ?", (0 if m["open"] else 1, mid))
@@ -385,7 +383,7 @@ def toggle_mock(mid):
 
 
 @bp.route("/t/mocks/<int:mid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def delete_mock(mid):
     m = _mock_or_404(mid)
     from views.feedback import delete_mock_files

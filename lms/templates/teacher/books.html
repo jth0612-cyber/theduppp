@@ -45,7 +45,7 @@
       <div class="row"><input type="text" id="buy-{{ key }}" autocapitalize="off" spellcheck="false" name="{{ key }}" value="{{ links[key] }}" maxlength="500" inputmode="url" placeholder="https://" class="grow">
       {% if links[key] %}<a class="btn small" href="{{ links[key] }}" target="_blank" rel="noopener noreferrer">열어 보기</a>{% endif %}</div></div>
     {% endfor %}
-    {% if g.user.role == 'teacher' %}<button class="btn primary" type="submit">저장</button>{% else %}<p class="small muted">구매 링크는 강사 계정에서만 바꿀 수 있어요.</p>{% endif %}
+    <button class="btn primary" type="submit">저장</button>
   </form>
 </div>
 

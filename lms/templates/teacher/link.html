@@ -40,10 +40,8 @@
     <li>시트의 Apps Script에 아래 코드를 새 파일로 붙여 넣고, <code>pushToWeb</code>를 한 번 실행해 권한을 허용해요.</li>
     <li>성적 반영이나 문자 생성 뒤에 <code>pushToWeb</code>가 돌게 하거나, 트리거로 1시간마다 돌게 해요.</li>
   </ol>
-  {% if g.user.role == 'teacher' %}
   <form method="post" action="{{ url_for('link.t_link_token') }}">{{ csrf() }}
     <button class="btn" data-confirm="새 열쇠를 만들면 지금 시트에 넣어 둔 열쇠는 더 이상 쓸 수 없어요. 만들까요?">열쇠 만들기</button></form>
-  {% endif %}
   <details class="mt"><summary>시트에 붙일 코드 (WebSync.gs)</summary>
 <pre class="code-block">// THedu 통합과학 lab 웹으로 앱용 표 보내기
 var WEB_URL = '{{ base }}';

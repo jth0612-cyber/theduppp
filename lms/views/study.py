@@ -11,7 +11,7 @@ import analysis
 import taskkit
 from db import execute, get_setting, query, set_setting
 from security import (IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required,
-                      staff_required, teacher_only, teacher_required)
+                      staff_required)
 
 bp = Blueprint("study", __name__)
 
@@ -308,7 +308,6 @@ def timetable_import():
 def t_timetable():
     """수능 D-day 설정 (시간표는 학생이 각자 만든다)."""
     if request.method == "POST":
-        teacher_only()  # 조교는 보기만
         d = _parse_day(request.form.get("exam_day"))
         label = request.form.get("exam_label", "").strip()[:20] or "수능"
         if d is None:

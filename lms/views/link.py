@@ -10,7 +10,7 @@ from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template
 
 import sysdata
 from db import execute, normalize_student_code, query
-from security import audit, staff_required, student_required, teacher_required
+from security import audit, staff_required, student_required
 
 api = Blueprint("link_api", __name__)
 bp = Blueprint("link", __name__)
@@ -59,7 +59,7 @@ def t_link():
 
 
 @bp.route("/t/link/token", methods=["POST"])
-@teacher_required
+@staff_required
 def t_link_token():
     token = sysdata.new_token()
     audit("sys_token_new")

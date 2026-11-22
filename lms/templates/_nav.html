@@ -57,8 +57,8 @@
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] + ([
   ('계정', [
     ('teacher.signups', '가입 승인', 'signup', ep == 'teacher.signups', pending_signups or 0),
-    ('teacher.staff', '조교 계정', 'shield', ep.startswith('teacher.staff'), 0),
-    ('teacher.audit_log', '접근 기록', 'list', ep == 'teacher.audit_log', 0)])] if u.role == 'teacher' else []) -%}
+    ('teacher.audit_log', '접근 기록', 'list', ep == 'teacher.audit_log', 0)] + ([
+    ('teacher.staff', '조교 계정', 'shield', ep.startswith('teacher.staff'), 0)] if u.role == 'teacher' else []))]) -%}
 {%- else -%}
 {%- set vocab_ep = ep == 'games.hub' or ep.startswith('games.vocab') or (ep.startswith('games.speed') and (request.view_args or {}).get('kind') == 'vocab_speed') -%}
 {%- set groups = [

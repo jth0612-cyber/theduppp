@@ -142,6 +142,7 @@
     <div class="field"><label><input type="checkbox" name="active" value="1" {{ 'checked' if s.active }}> 재원 중 (해제하면 퇴원 처리되고 로그인 계정이 삭제됩니다)</label></div>
     <button class="btn primary">저장</button>
   </form>
+  {% if g.user.role == 'teacher' %}
   <hr>
   <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적·메모·질문을 영구 삭제합니다. 되돌릴 수 없습니다.">
     {{ csrf() }}
@@ -151,5 +152,6 @@
       <div class="field shrink"><button class="btn danger">영구 삭제</button></div>
     </div>
   </form>
+  {% endif %}
 </details>
 {% endblock %}

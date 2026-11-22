@@ -4,7 +4,7 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 
 from content import youtube_id
 from db import execute, query
-from security import audit, login_required, teacher_required
+from security import audit, login_required, staff_required
 
 bp = Blueprint("cast", __name__)
 viewer_required = login_required(("teacher", "assistant", "student"))
@@ -39,7 +39,7 @@ def cast_detail(cid):
 
 
 @bp.route("/cast/new", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def cast_new():
     draft = None
     if request.method == "POST":
@@ -56,7 +56,7 @@ def cast_new():
 
 
 @bp.route("/cast/<int:cid>/edit", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def cast_edit(cid):
     c = query("SELECT * FROM casts WHERE id = ?", (cid,), one=True) or abort(404)
     if request.method == "POST":

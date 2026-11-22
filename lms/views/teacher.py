@@ -15,7 +15,7 @@ from engagement import streak_info
 from nickname import generate_nickname
 from views.student import question_thread
 from security import (audit, decrypt, delete_file, encrypt, generate_temp_password,
-                      hash_password, save_upload, staff_required, teacher_only, teacher_required)
+                      hash_password, save_upload, staff_required, teacher_required)
 
 bp = Blueprint("teacher", __name__, url_prefix="/t")
 
@@ -125,8 +125,6 @@ def dashboard():
 @staff_required
 def classes():
     if request.method == "POST":
-        teacher_only()  # 조교는 보기만
-    if request.method == "POST":
         try:
             name = _text("name", 60)
             desc = _text("description", 300, required=False)
@@ -206,7 +204,7 @@ def class_detail(cid):
 
 
 @bp.route("/classes/<int:cid>/edit", methods=["POST"])
-@teacher_required
+@staff_required
 def class_edit(cid):
     _get_class(cid)
     try:
@@ -239,7 +237,7 @@ def _student_fields():
 
 
 @bp.route("/classes/<int:cid>/students", methods=["POST"])
-@teacher_required
+@staff_required
 def student_create(cid):
     _get_class(cid)
     try:
@@ -260,7 +258,7 @@ def student_create(cid):
 
 
 @bp.route("/classes/<int:cid>/import", methods=["POST"])
-@teacher_required
+@staff_required
 def student_import(cid):
     """CSV 일괄 등록. 헤더: 이름,아이디(또는 수험번호),연락처,학부모연락처,목표,메모 (연락처 이후는 선택)"""
     _get_class(cid)
@@ -369,7 +367,7 @@ def student_detail(sid):
 
 
 @bp.route("/students/<int:sid>/edit", methods=["POST"])
-@teacher_required
+@staff_required
 def student_edit(sid):
     _get_student(sid)
     try:
@@ -425,7 +423,7 @@ def student_delete(sid):
 
 
 @bp.route("/students/<int:sid>/notes", methods=["POST"])
-@teacher_required
+@staff_required
 def note_create(sid):
     _get_student(sid)
     try:
@@ -443,7 +441,7 @@ def note_create(sid):
 
 
 @bp.route("/notes/<int:nid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def note_delete(nid):
     note = query("SELECT * FROM notes WHERE id = ?", (nid,), one=True)
     if note is None:
@@ -473,7 +471,7 @@ def _issue_account(student):
 
 
 @bp.route("/students/<int:sid>/account", methods=["POST"])
-@teacher_required
+@staff_required
 def student_account(sid):
     s = _get_student(sid)
     if not s["active"]:
@@ -490,7 +488,7 @@ def student_account(sid):
 
 
 @bp.route("/students/<int:sid>/account/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def student_account_delete(sid):
     _get_student(sid)
     execute("DELETE FROM users WHERE student_id = ?", (sid,))
@@ -500,7 +498,7 @@ def student_account_delete(sid):
 
 
 @bp.route("/classes/<int:cid>/accounts", methods=["POST"])
-@teacher_required
+@staff_required
 def class_accounts(cid):
     """계정이 없는 학생들에게 일괄 발급하고 임시 비밀번호 CSV 를 한 번만 내려준다."""
     cls = _get_class(cid)
@@ -522,7 +520,7 @@ def class_accounts(cid):
 # ---------- 시험 / 성적 ----------
 
 @bp.route("/classes/<int:cid>/exams", methods=["POST"])
-@teacher_required
+@staff_required
 def exam_create(cid):
     _get_class(cid)
     try:
@@ -609,7 +607,7 @@ def exam_export(eid):
 
 
 @bp.route("/exams/<int:eid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def exam_delete(eid):
     exam = _get_exam(eid)
     execute("DELETE FROM exams WHERE id = ?", (eid,))
@@ -740,7 +738,7 @@ def notice_pin(nid):
 
 
 @bp.route("/notices/<int:nid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def notice_delete(nid):
     n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
     if n is None:
@@ -767,7 +765,7 @@ def material_create(cid):
 
 
 @bp.route("/materials/<int:mid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def material_delete(mid):
     m = query("SELECT * FROM materials WHERE id = ?", (mid,), one=True)
     if m is None:
@@ -802,7 +800,7 @@ def video_create(cid):
 
 
 @bp.route("/videos/<int:vid>/delete", methods=["POST"])
-@teacher_required
+@staff_required
 def video_delete(vid):
     v = query("SELECT * FROM videos WHERE id = ?", (vid,), one=True)
     if v is None:
@@ -933,7 +931,7 @@ def _pending_signups():
 
 
 @bp.route("/classes/<int:cid>/codes", methods=["POST"])
-@teacher_required
+@staff_required
 def class_codes(cid):
     """학생 개별 가입 코드: 붙여넣어 등록(행정 시스템에서 뽑은 것) / 사이트에서 난수로 만들기 / 안 쓴 코드 지우기."""
     _get_class(cid)
@@ -992,7 +990,7 @@ def class_codes_csv(cid):
 
 
 @bp.route("/classes/<int:cid>/joincode", methods=["POST"])
-@teacher_required
+@staff_required
 def class_joincode(cid):
     _get_class(cid)
     action = request.form.get("action")
@@ -1030,7 +1028,7 @@ def _approve(req):
 
 
 @bp.route("/signups", methods=["GET", "POST"])
-@teacher_required
+@staff_required
 def signups():
     if request.method == "POST":
         action = request.form.get("action")
@@ -1064,7 +1062,7 @@ def signups():
 # ---------- 감사 로그 ----------
 
 @bp.route("/audit")
-@teacher_required
+@staff_required
 def audit_log():
     page = _page()
     total = query("SELECT COUNT(*) AS n FROM audit_log", one=True)["n"]

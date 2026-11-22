@@ -691,25 +691,37 @@ class FeatureTest(AppTest):
         # 학생에게는 '[조교] 김조교 답변' 으로 보임 (본명 앞에 캡션)
         student_view = s1.get(f"/s/questions/{qid}").data.decode()
         self.assertIn('<span class="cap">조교</span> 김조교 답변', student_view)
-        # 조교도 볼 수 있는 화면 (보기 위주로 열어 둠)
+        # 조교(실장 포함)도 선생님과 같은 화면·일을 한다
         for url in ["/t/", "/t/students", f"/t/students/{sid}", "/t/classes", f"/t/classes/{cid}",
-                    "/t/timetable", "/t/rooms", "/t/books", f"/t/students/{sid}/report"]:
+                    "/t/timetable", "/t/rooms", "/t/books", f"/t/students/{sid}/report", "/t/audit", "/t/signups"]:
             self.assertEqual(ta.get(url).status_code, 200, url)
-        # 계정·기록·삭제 같은 관리 일은 선생님만
-        for url in ["/t/audit", "/t/staff", "/t/signups"]:
-            self.assertEqual(ta.get(url).status_code, 403, url)
-        r = ta.post(f"/t/classes/{cid}/accounts", headers={"Referer": f"http://localhost/t/classes/{cid}"})
+        ta.post("/t/classes", data={"name": "조교가 만든 반"})
+        r = ta.post(f"/t/students/{sid}/account")                             # 비밀번호 분실 학생 임시 비밀번호
+        self.assertIn("임시 비밀번호", r.data.decode())
+        # 영구 삭제와 조교 계정 관리만 선생님 전용
+        self.assertEqual(ta.get("/t/staff").status_code, 403)
+        page = ta.get(f"/t/students/{sid}").data.decode()
+        self.assertNotIn("영구 삭제", page)
+        self.assertNotIn("조교 계정", page)
+        r = ta.post(f"/t/students/{sid}/delete", data={"confirm_name": "x"}, headers={"Referer": f"http://localhost/t/students/{sid}"})
         self.assertEqual(r.status_code, 302)                                  # 오류 화면 대신 안내하고 돌려보냄
-        self.assertIn("선생님만", ta.get(f"/t/classes/{cid}").data.decode())
+        self.assertIn("선생님만", ta.get(f"/t/students/{sid}").data.decode())
         ta.post("/t/staff", data={"display_name": "x", "username": "ta_x"})
-        ta.post(f"/t/students/{sid}/delete")
-        ta.post("/t/classes", data={"name": "몰래 만든 반"})
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE username='ta_x'", one=True)["n"], 0)
             self.assertIsNotNone(query("SELECT id FROM students WHERE id=?", (sid,), one=True))
-            self.assertIsNone(query("SELECT id FROM classes WHERE name='몰래 만든 반'", one=True))
+            self.assertIsNotNone(query("SELECT id FROM classes WHERE name='조교가 만든 반'", one=True))
         # 학생 화면도 못 씀
         self.assertEqual(ta.get("/s/").status_code, 403)
+
+    def test_greeting_password_frame_and_book_code_link(self):
+        _, s1, _ = self._students()
+        with self.app.app_context():
+            execute("UPDATE users SET display_name='정태혁' WHERE username='teacher'")
+        self.assertIn("안녕하세요, 정태혁 선생님", self.c.get("/t/").data.decode())   # 아이디 대신 이름
+        page = self.c.get("/password").data.decode()
+        self.assertIn('class="sheet container"', page)                       # 앱 틀 안에서는 좁은 로그인 틀을 쓰지 않음
+        self.assertIn('href="/s/books/register"', s1.get("/s/analysis").data.decode())
 
     def test_assistant_disable_and_username_rules(self):
         self._students()

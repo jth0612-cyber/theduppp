@@ -41,7 +41,6 @@
     </div>
     <p class="small">등록 {{ codes|length }}개 · 가입 {{ codes|selectattr('student_id')|list|length }}명{% if codes %} · <a href="{{ url_for('teacher.class_codes_csv', cid=cls.id) }}">CSV로 받기</a>{% endif %}</p>
   </div>
-  {% if g.user.role == 'teacher' %}
   <div class="grid grid-2">
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
       {{ csrf() }}<input type="hidden" name="action" value="paste">
@@ -57,22 +56,21 @@
       <p class="small muted">'CSV로 받기'로 내려받아 한 명에게 하나씩.</p>
     </form>
   </div>
-  {% endif %}
   {% if codes %}
   <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
     {{ csrf() }}<input type="hidden" name="action" value="delete">
     <div class="table-wrap codes-table"><table>
-      <tr>{% if g.user.role == 'teacher' %}<th></th>{% endif %}<th>코드</th><th>메모</th><th>가입</th></tr>
+      <tr><th></th><th>코드</th><th>메모</th><th>가입</th></tr>
       {% for c in codes %}
       <tr>
-        {% if g.user.role == 'teacher' %}<td>{% if not c.student_id %}<input type="checkbox" name="ids" value="{{ c.id }}" aria-label="{{ c.code }} 고르기">{% endif %}</td>{% endif %}
+        <td>{% if not c.student_id %}<input type="checkbox" name="ids" value="{{ c.id }}" aria-label="{{ c.code }} 고르기">{% endif %}</td>
         <td><code>{{ c.code }}</code></td>
         <td class="small">{{ c.memo }}</td>
         <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }} · {{ c.s_no }} · {{ c.used_at[5:16] }}{% else %}<span class="muted">아직</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </table></div>
-    {% if g.user.role == 'teacher' %}<button class="btn small danger mt" data-confirm="고른 코드를 지울까요? (가입에 쓴 코드는 지워지지 않아요)">고른 코드 지우기</button>{% endif %}
+    <button class="btn small danger mt" data-confirm="고른 코드를 지울까요? (가입에 쓴 코드는 지워지지 않아요)">고른 코드 지우기</button>
   </form>
   {% endif %}
 </section>

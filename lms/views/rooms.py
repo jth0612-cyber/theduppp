@@ -6,8 +6,7 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
 from db import execute, get_db, query
-from security import (audit, member_required, role_caption, shown_name, student_required, staff_required,
-                      teacher_only, teacher_required)
+from security import (audit, member_required, role_caption, shown_name, student_required, staff_required)
 from wordfilter import bad_word
 
 bp = Blueprint("rooms", __name__)

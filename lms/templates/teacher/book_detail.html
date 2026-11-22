@@ -94,10 +94,12 @@
     <label class="consent"><input type="checkbox" name="is_free" value="1" {{ 'checked' if book.is_free }}> 배포본</label>
     <button class="btn mt" type="submit">저장</button>
   </form>
+  {% if g.user.role == 'teacher' %}
   <form method="post" action="{{ url_for('books.delete_book', bid=book.id) }}" class="mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field"><label for="confirm_title">삭제하려면 교재 이름을 그대로 입력하세요</label><input type="text" id="confirm_title" name="confirm_title" autocomplete="off"></div>
     <button class="btn danger" type="submit">교재 삭제 (회차·코드·가채점 기록 모두)</button>
   </form>
+  {% endif %}
 </details>
 {% endblock %}

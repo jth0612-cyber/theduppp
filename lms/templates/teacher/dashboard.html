@@ -2,7 +2,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <h1>안녕하세요, {{ g.user.username }} 선생님</h1>
+    <h1>안녕하세요, {{ shown_name(g.user) }} 선생님</h1>
     <p class="muted small">마지막 로그인 {{ g.user.last_login_at or '-' }}</p>
   </div>
   <form method="get" action="{{ url_for('teacher.students') }}" class="row">
