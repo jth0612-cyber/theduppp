@@ -748,6 +748,10 @@ def init_db(path):
                                 VALUES (?, ?, 0, 0, '[]', '[]')""", (cur.lastrowid, n))
         conn.execute("INSERT INTO settings (key, value) VALUES ('seed_exam_rounds', '1')")
     # 대구 MDS 반은 단과 (한 번만 바꾼다: 이후 선생님이 바꾼 값은 그대로 둔다)
+    # 오답 노트 이유 '조건 놓침' → 분석·첨삭과 같은 '조건 독해' (한 번만)
+    if conn.execute("SELECT 1 FROM settings WHERE key = 'mig_reason_cond'").fetchone() is None:
+        conn.execute("UPDATE wrong_notes SET reason = '조건 독해' WHERE reason = '조건 놓침'")
+        conn.execute("INSERT INTO settings (key, value) VALUES ('mig_reason_cond', '1')")
     if conn.execute("SELECT 1 FROM settings WHERE key = 'mig_mds_dangwa'").fetchone() is None:
         conn.execute("UPDATE classes SET track = '단과' WHERE name LIKE '%MDS%'")
         conn.execute("INSERT INTO settings (key, value) VALUES ('mig_mds_dangwa', '1')")

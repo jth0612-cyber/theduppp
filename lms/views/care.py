@@ -6,6 +6,7 @@
 - 학부모 리포트: 학생마다 비밀 링크(로그인 없음). 최근 시험 득점률과 변화, 시험 결과, 단원별 성취도,
   틀린 이유(오답 분석·시험지 첨삭), 선생님 코멘트, 출결. 학부모 문자 끝에 이 링크가 붙는다."""
 import json
+import re
 import secrets
 from datetime import date, datetime, timedelta
 
@@ -200,11 +201,12 @@ def t_lessons():
         if uids:
             notify_users(uids, "수업 기록", f"{title} · 노트 {len(photos)}장", url_for("care.s_lessons"))
         flash("수업 기록을 올렸습니다.", "ok")
-        return redirect(url_for("care.t_lessons"))
+        return redirect(url_for("care.t_lessons", c=cid))
     rows = query("""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
                     FROM lessons l JOIN classes c ON c.id = l.class_id ORDER BY l.day DESC, l.id DESC LIMIT 200""")
     classes = query("SELECT id, name FROM classes WHERE archived = 0 ORDER BY is_test, name")
-    return render_template("care/t_lessons.html", rows=rows, classes=classes, today=date.today().isoformat())
+    return render_template("care/t_lessons.html", rows=rows, classes=classes, today=date.today().isoformat(),
+                           last_cid=request.args.get("c", type=int))      # 방금 올린 반을 그대로 골라 둔다
 
 
 @bp.route("/t/lessons/<int:lid>/delete", methods=["POST"])
@@ -292,7 +294,9 @@ def parent_report(student_id):
         for a in rep["wrongs"]:
             k = marks.get(a["no"], {})
             if k.get("reason") or k.get("memo") or a["type"]:
-                whys.append({"no": a["no"], "type": k.get("reason") or a["type"], "text": k.get("memo") or a["analysis"]})
+                # 번호·유형은 앞에 따로 나오니 분석 문장의 '4번은 ○○ 오류입니다(…)' 머리는 떼고 고른 선지 설명만 남긴다
+                text = k.get("memo") or re.sub(r"^\d+번은 (?:\S+ )*?오류(?:입니다|로,)\s*\(?", "", a["analysis"] or "").rstrip(").")
+                whys.append({"no": a["no"], "type": k.get("reason") or a["type"], "text": "" if text == f"{a['no']}번" else text})
         full = rep["mock"]["full_score"]
         exams_out.append({"title": exams.exam_title(rep["mock"]), "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
                           "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
@@ -300,9 +304,11 @@ def parent_report(student_id):
     last = exams_out[0] if exams_out else None
     prev = exams_out[1] if len(exams_out) > 1 else None
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
-    comment = query("""SELECT x.text, x.at FROM (
-                         SELECT comment AS text, reviewed_at AS at FROM exam_papers WHERE student_id = ? AND comment != ''
-                         UNION ALL SELECT ta_note, ta_at FROM exam_results WHERE student_id = ? AND ta_note != '') x
+    comment = query("""SELECT x.text, x.at, x.src, x.mock_id FROM (
+                         SELECT comment AS text, reviewed_at AS at, '시험지 첨삭 코멘트' AS src, mock_id FROM exam_papers
+                          WHERE student_id = ? AND comment != ''
+                         UNION ALL SELECT ta_note, ta_at, '회차 화면의 학생 메모', mock_id FROM exam_results
+                          WHERE student_id = ? AND ta_note != '') x
                        ORDER BY x.at DESC LIMIT 1""", (student_id, student_id), one=True)
     units, weak = weak_card(student_id)
     att = sysdata.attendance(sysdata.code_of_student(student_id))

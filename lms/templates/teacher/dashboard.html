@@ -2,8 +2,8 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <h1>안녕하세요, {{ shown_name(g.user) }} 선생님</h1>
-    <p class="muted small">마지막 로그인 {{ g.user.last_login_at or '-' }}</p>
+    <h1>안녕하세요, {{ shown_name(g.user) }} {{ '선생님' if g.user.role == 'teacher' else '조교' }}</h1>
+    <p class="muted small">마지막 로그인 {{ (g.user.last_login_at or '-')[:16]|replace('T', ' ') }}</p>
   </div>
   <form method="get" action="{{ url_for('teacher.students') }}" class="row">
     <input type="search" name="q" placeholder="학생 이름 또는 아이디">
@@ -11,8 +11,12 @@
   </form>
 </div>
 
-<p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 답변 대기 질문 <b>{{ stats.open_questions }}</b>개 · 등록한 시험 <b>{{ stats.exams }}</b>개</p>
+<div class="todo-row" aria-label="처리할 일">
+  <a class="todo{{ ' is-on' if stats.open_questions }}" href="{{ url_for('teacher.questions') }}"><b>{{ stats.open_questions }}</b><span>답변 대기 질문</span></a>
+  <a class="todo{{ ' is-on' if feedback_wait }}" href="{{ url_for('feedback.t_list') }}"><b>{{ feedback_wait or 0 }}</b><span>1:1 첨삭 대기</span></a>
+  <a class="todo{{ ' is-on' if paper_wait }}" href="{{ url_for('care.t_papers') }}"><b>{{ paper_wait or 0 }}</b><span>시험지 첨삭 대기</span></a>
 </div>
+<p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 등록한 시험 <b>{{ stats.exams }}</b>개</p>
 
 <div class="grid grid-2">
   <div class="card">

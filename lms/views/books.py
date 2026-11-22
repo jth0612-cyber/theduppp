@@ -154,9 +154,11 @@ def analysis_home():
     prof = exams.classify_profile(exams.history(g.user["student_id"])) if rep else None
     from views.care import paper_of, weak_card
     units, weak = weak_card(g.user["student_id"]) if g.user["student_id"] else ([], None)
+    from views.care import unit_scores
+    season_units = [u for u in unit_scores(g.user["student_id"], limit=500) if u["pct"] < 80][:5] if g.user["student_id"] else []
     paper, paper_files, paper_marks = paper_of(mid, g.user["student_id"]) if g.user["student_id"] else (None, [], {})
     return render_template("student/analysis.html", mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
-                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, weak=weak, paper=paper, paper_files=paper_files, paper_marks=paper_marks,
+                           rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, season_units=season_units, weak=weak, paper=paper, paper_files=paper_files, paper_marks=paper_marks,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),

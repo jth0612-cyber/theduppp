@@ -308,14 +308,36 @@ for name, c in cls.items():
         pw = secrets.token_urlsafe(10) + "!1"
         accounts[st["id"]] = (st["no"], pw, signup(c, st, pw, sess(c, 1)))
 SEO = P["대구 토요일 A반"]
+STUDY = {"대구 토요일 A반": ("개념 다지기형", "해설 참고형"), "대구 토요일 B반": ("심화 도전형", ""), "대치 일요일반": ("벼락치기형", "미이행형"),
+         "대치 목요일반": ("미이행형", "개념 다지기형"), "대구 재종 1반": ("안정형", ""), "대구 재종 2반": ("불안·과소확신형", "해설 참고형"),
+         "대치 재종 1반": ("마무리 다듬기형", ""), "대치 재종 2반": ("양치기형", "")}
+TYPE_POOL = ["안정형"] * 8 + ["개념 다지기형"] * 5 + ["마무리 다듬기형"] * 5 + ["심화 도전형"] * 5 + ["양치기형"] * 5 +             ["벼락치기형"] * 4 + ["해설 참고형"] * 5 + ["불안·과소확신형"] * 5 + ["미이행형"] * 4
+PRACTICE = {"개념 다지기형": "필기노트 복습 후 같은 단원 기출 10문항", "심화 도전형": "LOGIC BUILD 킬러 1문항 끝까지 혼자 풀기",
+            "벼락치기형": "수업 다음 날 30분 복습 고정", "미이행형": "과제 1개만 정해 끝까지", "안정형": "지금 순서 유지 · 오답 이유 고르기",
+            "불안·과소확신형": "맞힌 문항도 근거 한 줄 쓰기", "마무리 다듬기형": "시간 재고 모의고사 1회", "양치기형": "푼 문항 중 3개만 다시 풀기",
+            "해설 참고형": "해설 보기 전 5분 더 고민"}
+with app.app_context():
+    from db import get_db
+    import json as _json
+    db_ = get_db()
+    for name, c in cls.items():
+        for st in c["students"]:
+            code = q("SELECT code FROM student_codes WHERE student_id = ?", (st["id"],), one=True)
+            if not code:
+                continue
+            main, sub = STUDY[name] if st is c["students"][0] else (rng.choice(TYPE_POOL), "")
+            data = {"학생코드": code["code"], "이름": st["name"], "진단일": day(1, 6).isoformat(), "공부유형": main, "보조유형": sub,
+                    "판정": "확정", "설명": f"1주차 공부 유형 자가진단 결과 {main}", "이번주실천": PRACTICE[main]}
+            db_.execute("INSERT INTO sys_rows (tbl, code, data) VALUES ('공부유형', ?, ?)", (code["code"], _json.dumps(data, ensure_ascii=False)))
+    db_.execute("INSERT INTO sys_sync (tbl, n_rows, synced_at, source) VALUES ('공부유형', ?, ?, 'csv')",
+                (sum(len(c["students"]) for c in cls.values()), ts(day(1, 6), 21)))
+    db_.commit()
 OTHERS = [(st, accounts[st["id"]]) for _, st in ALL_STUDENTS if st["id"] in accounts]
 
 # ---------------------------------------------------------------- 교재 · 인증 코드
-ok("교재 복습 테스트", T.post("/t/books", data={"title": "SEASON 1 복습 테스트", "subject": "통합과학", "expires_on": "2027-11-30", "kind": "복습 테스트"}))
-ok("교재 모의고사", T.post("/t/books", data={"title": "정태혁 모의고사 SEASON 1", "subject": "통합과학", "expires_on": "2027-11-30",
-                                           "kind": "모의고사", "notice": "매주 1회분 + SEQUENCE 분석 교재"}))
-BOOK_R = q("SELECT id FROM books WHERE title = 'SEASON 1 복습 테스트'", one=True)["id"]
-BOOK_M = q("SELECT id FROM books WHERE title = '정태혁 모의고사 SEASON 1'", one=True)["id"]
+# 앱이 미리 만들어 둔 '복습 테스트'·'모의고사' 1~50회에 결과를 올린다 (실제 운영 방식)
+BOOK_R = q("SELECT id FROM books WHERE title = '복습 테스트' AND is_practice = 0", one=True)["id"]
+BOOK_M = q("SELECT id FROM books WHERE title = '모의고사' AND is_practice = 0", one=True)["id"]
 ok("교재 코드", T.post(f"/t/books/{BOOK_M}/codes", data={"kind": "single", "count": "40"}))
 for name, p in P.items():
     code = q("SELECT code FROM book_codes WHERE book_id = ? AND uses = 0 ORDER BY id LIMIT 1", (BOOK_M,), one=True)["code"]
@@ -341,12 +363,20 @@ def omr_workbook(n_items, key, pts, units, absent):
                 pr -= 0.4
             row.append(k if rng.random() < pr else rng.choice([v for v in range(1, 6) if v != k]))
         ws.append([st["name"], st["parent8"], c_name] + row)
-    info = wb.create_sheet("문항정보")
-    info.append(["문항번호", "정답", "배점", "단원", "핵심개념", "문항형식", "선지구성", "보기함정", "선지분석"])
+    info = wb.create_sheet("문항정보")                    # 테스트반_연습파일 2_복습테스트_문항정보 양식
+    info.append(["문항번호", "정답", "배점", "단원", "핵심개념", "요구역량", "난이도", "문항형식", "선지구성", "보기함정", "선지분석", "검토완료"])
     for i in range(n_items):
-        w1, w2 = (key[i] % 5) + 1, ((key[i] + 1) % 5) + 1
-        info.append([i + 1, key[i], pts[i], units[i], "", "일반", "", "",
-                     f"{w1}번: 정의를 반대로 기억함(개념 부족) / {w2}번: 조건 하나를 놓침(조건 독해)"])
+        level = "상" if i >= n_items * 2 // 3 else ("중" if i >= n_items // 3 else "하")
+        skill = ["개념 이해", "자료·그래프 해석", "계산", "조건 독해"][i % 4]
+        if i % 5 == 4:                                    # 합답형: 보기함정으로 고른 답의 원인을 짚는다
+            info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 보기 판단", skill, level, "합답형", "①ㄱ ②ㄴ ③ㄱ,ㄷ ④ㄴ,ㄷ ⑤ㄱ,ㄴ,ㄷ",
+                         "ㄱ(O): 정의를 반대로 기억해 옳은 진술을 틀렸다고 판단한 경우입니다. [개념 부족] / "
+                         "ㄴ(O): 그래프 축의 의미를 바꿔 읽은 경우입니다. [자료 해석] / ㄷ(X): 조건 하나를 놓쳐 틀린 진술을 옳다고 본 경우입니다. [조건 독해]",
+                         None, "Y"])
+        else:
+            w1, w2 = (key[i] % 5) + 1, ((key[i] + 1) % 5) + 1
+            info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 핵심", skill, level, "일반", None, None,
+                         f"{w1}번: 정의를 반대로 기억함(개념 부족) / {w2}번: 조건 하나를 놓침(조건 독해)", "Y"])
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
@@ -357,8 +387,6 @@ def make_round(book, rnd, n_items, full, when, weeks):
     pts = [full // n_items] * n_items
     pool = [u for w in weeks for u in CURRICULUM[w][1]]
     units = [pool[(i * 3 + rnd) % len(pool)] for i in range(n_items)]
-    ok(f"회차 {book}-{rnd}", T.post(f"/t/books/{book}/mocks", data={"round_no": str(rnd), "n_items": str(n_items),
-                                                                    "full_score": str(full), "answer_key": "".join(map(str, key))}))
     mid = q("SELECT id FROM mocks WHERE book_id = ? AND round_no = ?", (book, rnd), one=True)["id"]
     absent = {st["id"] for _, st in ALL_STUDENTS if rng.random() < 0.06}
     absent.discard(SEO["st"]["id"])
@@ -402,6 +430,7 @@ def answer(cl, qid, body, when):
 
 # ---------------------------------------------------------------- 시즌 시작 전 설정
 MOCK = {}
+CAST_VIDEO = "https://youtu.be/WEdAfYkqiZ8"         # 태혁쌤 영상 (cast·강의 영상 데모용)
 ok("D-day", T.post("/t/timetable", data={"exam_day": "2027-11-18", "exam_label": "수능"}))
 for name, c in cls.items():
     ok(f"개강 공지 {name}", T.post(f"/t/classes/{c['id']}/notices", data={
@@ -429,24 +458,19 @@ for w in range(1, WEEKS + 1):
             "class_id": str(c["id"]), "day": d.isoformat(), "title": f"{w}주차 {topic}", "body": f"필기노트 {w}호 판서 / 다음 시간 복습 테스트 범위",
             "image": [img(f"lesson{k}_1.png"), img(f"lesson{k}_2.png")]}, content_type="multipart/form-data"))
         at("lessons", last_id("lessons"), created_at=ts(d, 23))
-        r = T.post(f"/t/classes/{c['id']}/exams", data={"name": f"{w}주차 주간 테스트", "subject": "통합과학",
-                                                        "exam_date": d.isoformat(), "max_score": "50"})
-        ok(f"주간테스트 {name} {w}", r, (302,))
-        eid = int(r.headers["Location"].rstrip("/").rsplit("/", 1)[-1])
-        ok(f"점수 {name} {w}", T.post(f"/t/exams/{eid}", data={
-            f"score_{st['id']}": str(max(8, min(50, round(rng.gauss(26 + SKILL[st['id']] * 20, 4))))) for st in c["students"] if rng.random() > 0.05}))
+        # 매주 시험은 복습 테스트(OMR)로만 올린다 (반 '시험·성적'에 따로 넣지 않는다)
         if w in (2, 6, 10):
             ok("정오", T.post(f"/t/classes/{c['id']}/notices", data={"tag": "정오", "textbook": "LINE UP 개념서", "title": f"LINE UP {w * 9}p 정오",
                                                                     "body": f"예제 {w % 3 + 1}번 보기 ㄴ의 단위를 'mL'에서 'L'로 고칩니다."}))
             at("notices", last_id("notices"), created_at=ts(day(w, 2), 18))
         if w in (4, 8, 12):
-            ok("영상", T.post(f"/t/classes/{c['id']}/videos", data={"title": f"{w}주차 {topic} 보충", "url": "https://youtu.be/dQw4w9WgXcQ",
+            ok("영상", T.post(f"/t/classes/{c['id']}/videos", data={"title": f"{w}주차 {topic} 보충", "url": CAST_VIDEO,
                                                                    "duration": "42:10", "expires_on": (TODAY + timedelta(days=60)).isoformat()}))
             at("videos", last_id("videos"), created_at=ts(day(w, 1), 21))
     MOCK[("r", w)] = make_round(BOOK_R, w, 20, 40, day(w, 5), [w])
     MOCK[("m", w)] = make_round(BOOK_M, w, 25, 50, day(w, 6), list(range(max(1, w - 2), w + 1)))
     if w in (3, 7, 11):
-        ok(f"cast {w}", T.post("/cast/new", data={"title": f"{w}주차를 마치며", "body": f"{topic}까지 왔습니다. 오답 노트 이유 고르기를 빠뜨리지 마세요.", "video_url": ""}))
+        ok(f"cast {w}", T.post("/cast/new", data={"title": f"{w}주차를 마치며", "body": f"{topic}까지 왔습니다. 오답 노트 이유 고르기를 빠뜨리지 마세요.", "video_url": CAST_VIDEO}))
         at("casts", last_id("casts"), created_at=ts(day(w, 6), 23), updated_at=ts(day(w, 6), 23))
     if w == 2:
         ok("자료", T.post(f"/t/classes/{SEO['c']['id']}/materials", data={"title": "필기노트 2호 보충: 생명중심원리 정리",

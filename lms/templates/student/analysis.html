@@ -128,7 +128,8 @@
 
 {% if units %}
 <section class="unit-sec" aria-labelledby="h-unit">
-  <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 복테·모의 · 배점 기준</span></div>
+  <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 복테·모의 6회 · 배점 기준</span></div>
+  {% if season_units %}<p class="small">시즌 전체 낮은 단원: {% for u in season_units %}<b>{{ u.unit }}</b> {{ u.pct }}%{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
   <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
     <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
     <b>{{ u.pct }}%</b></li>{% endfor %}</ul>

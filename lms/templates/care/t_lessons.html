@@ -5,7 +5,7 @@
 <form method="post" enctype="multipart/form-data" class="card">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="row">
-    <div class="field"><label for="ls-class">반</label><select id="ls-class" name="class_id" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="ls-class">반</label><select id="ls-class" name="class_id" required>{% for c in classes %}<option value="{{ c.id }}"{{ ' selected' if c.id == last_cid }}>{{ c.name }}</option>{% endfor %}</select></div>
     <div class="field"><label for="ls-day">날짜</label><input type="date" id="ls-day" name="day" value="{{ today }}"></div>
     <div class="field wide"><label for="ls-title">주제</label><input type="text" id="ls-title" name="title" maxlength="120" required placeholder="예: TOPIC 24 산과 염기 · 중화 반응"></div>
   </div>

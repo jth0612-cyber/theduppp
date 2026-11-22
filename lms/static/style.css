@@ -1180,6 +1180,13 @@ input[type=file]::file-selector-button:hover { border-color: var(--ink); }
 .ft-charm { width: 9px; height: 12px; border-radius: 2px; flex: none; }
 .ft-charm.c-0 { background: #e2ae25; } .ft-charm.c-1 { background: #e0708a; } .ft-charm.c-2 { background: #4b8fd6; } .ft-charm.c-3 { background: #5fa865; } .ft-charm.c-4 { background: #9673d4; }
 .dash-sum { margin: 0 0 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.todo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 12px; }
+.todo { display: flex; align-items: baseline; gap: 8px; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 10px;
+        color: var(--muted); text-decoration: none; background: var(--raised); }
+.todo b { font-size: 1.5rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.todo.is-on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.todo.is-on b { color: var(--accent-ink); }
+@media (max-width: 560px) { .todo-row { grid-template-columns: 1fr; } }
 .dash-sum b { color: var(--ink); font-weight: 700; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

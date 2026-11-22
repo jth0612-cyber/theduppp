@@ -7,7 +7,7 @@
   <div class="row small">
     <a href="{{ url_for('teacher.questions', status=status) }}" class="badge {{ '' if not qtype else 'gray' }}">전체 유형</a>
     {% for t in qtypes %}
-    <a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="badge {{ '' if qtype == t else 'gray' }}">{{ t }}</a>
+    <a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="badge {{ '' if qtype == t else 'gray' }}">{{ t }}{% if waiting.get(t) %} <b>{{ waiting[t] }}</b>{% endif %}</a>
     {% endfor %}
   </div>
 </div>

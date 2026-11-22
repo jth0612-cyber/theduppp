@@ -34,13 +34,15 @@
 <div class="card">
   {% if classes %}
   <div class="table-wrap"><table>
-    <tr><th>구분</th><th>반</th><th>설명</th><th class="num">학생 수</th><th>만든 날</th></tr>
+    <tr><th>구분</th><th>반</th><th>설명</th><th class="num">학생 수</th><th class="num">복습 테스트<br>평균 득점률</th><th class="num">모의고사<br>평균 득점률</th><th>만든 날</th></tr>
     {% for c in classes %}
     <tr>
       <td><span class="badge {{ 'type' if c.track == '단과' else 'gray' }}">{{ c.track }}</span></td>
       <td><a href="{{ url_for('teacher.class_detail', cid=c.id) }}">{{ c.name }}</a></td>
       <td class="muted">{{ c.description }}</td>
       <td class="num">{{ c.student_count }}</td>
+      <td class="num">{{ '%g%%'|format(c.exam_rate) if c.exam_rate is not none else '-' }}</td>
+      <td class="num">{{ '%g%%'|format(c.mock_rate) if c.mock_rate is not none else '-' }}</td>
       <td class="small muted">{{ c.created_at[:10] }}</td>
     </tr>
     {% endfor %}

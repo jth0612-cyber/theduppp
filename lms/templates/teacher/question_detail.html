@@ -35,7 +35,7 @@
   {% endif %}
 {% endfor %}
 <div class="card">
-  <h2>답변 작성</h2>
+  {% if q.status == 'answered' %}<details><summary><b>추가 답변 쓰기</b> <span class="small muted">답변 완료된 질문</span></summary>{% else %}<h2>답변 작성</h2>{% endif %}
   <form method="post">
     {{ csrf() }}
     {% if g.user.role == 'assistant' %}{% set tpl = "안녕하세요 :) " ~ shown_name(g.user) ~ " 조교입니다.\n\n질문 남겨주셔서 감사합니다.\n\n\n\n혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!\n\n감사합니다 :)" %}{% endif %}
@@ -45,5 +45,6 @@
       <label class="small"><input type="checkbox" name="go_next" value="1" checked> 등록 후 다음 대기 질문으로 이동</label>
     </div>
   </form>
+  {% if q.status == 'answered' %}</details>{% endif %}
 </div>
 {% endblock %}

@@ -714,6 +714,41 @@ class FeatureTest(AppTest):
         # 학생 화면도 못 씀
         self.assertEqual(ta.get("/s/").status_code, 403)
 
+    def test_dashboard_todo_and_layout(self):
+        cid, s1, _ = self._students()
+        self.ask(s1, "42p 3번")
+        page = self.c.get("/t/").data.decode()
+        self.assertIn('class="todo-row"', page)
+        self.assertIn("<b>1</b><span>답변 대기 질문</span>", page)
+        self.assertIn("1:1 첨삭 대기", page)
+        self.assertIn("시험지 첨삭 대기", page)
+        main = page.split('<main class="sheet', 1)[1].split("</main>", 1)[0]
+        self.assertIn("답변 대기 질문 <a", main)                             # 본문 카드 안에 질문 목록이 있다
+        self.assertIn("담당 반", main)
+        self.assertNotIn("실장 TEST반", page.split("담당 반", 1)[0])         # 연습반은 요약 숫자에서 빠진다
+        nav = self.c.get("/t/classes").data.decode()
+        self.assertIn("복습 테스트<br>평균 득점률", nav)
+        q_page = self.c.get("/t/questions").data.decode()
+        self.assertIn("학습질문 <b>1</b>", q_page)                           # 유형 탭 옆 대기 수
+
+    def test_notice_to_several_classes(self):
+        cid = self.setup_class_with_students()
+        other = int(self.c.post("/t/classes", data={"name": "B반"}).headers["Location"].rsplit("/", 1)[-1])
+        self.assertIn('name="also"', self.c.get(f"/t/classes/{cid}?tab=notices").data.decode())
+        self.c.post(f"/t/classes/{cid}/notices", data={"tag": "공지", "title": "4월 휴강", "body": "4/10 · 4/17 · 4/24", "also": [str(other)]})
+        with self.app.app_context():
+            rows = query("SELECT class_id FROM notices WHERE title = '4월 휴강' ORDER BY class_id")
+        self.assertEqual([r["class_id"] for r in rows], sorted([cid, other]))
+
+    def test_student_detail_shows_parent_report_parts(self):
+        cid, s1, _ = self._students()
+        with self.app.app_context():
+            sid = query("SELECT id FROM students WHERE student_no='A001'", one=True)["id"]
+        page = self.c.get(f"/t/students/{sid}").data.decode()
+        self.assertIn("복테·모의고사", page)
+        self.assertIn("학부모 리포트에 나가는 코멘트", page)
+        self.assertIn("반 시험 성적 추이", page)
+
     def test_greeting_password_frame_and_book_code_link(self):
         _, s1, _ = self._students()
         with self.app.app_context():

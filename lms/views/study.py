@@ -15,7 +15,7 @@ from security import (IMAGE_EXTS, audit, delete_file, login_required, save_uploa
 
 bp = Blueprint("study", __name__)
 
-WRONG_REASONS = ["개념 부족", "자료 해석", "조건 놓침", "계산 실수", "시간 부족", "찍음"]
+WRONG_REASONS = ["개념 부족", "자료 해석", "조건 독해", "계산 실수", "시간 부족", "찍음"]   # 분석·첨삭과 같은 이름
 TASK_EXTS = IMAGE_EXTS | {"pdf"}
 WEEKDAYS = "월화수목금토일"
 UNITS = ["과학의 기초", "물질과 규칙성", "시스템과 상호작용", "변화와 다양성", "환경과 에너지", "과학과 미래사회"]

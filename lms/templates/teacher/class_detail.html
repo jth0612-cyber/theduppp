@@ -183,6 +183,11 @@
     </div>
     <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required></textarea></div>
     <label class="consent"><input type="checkbox" name="pinned" value="1"> 목록 맨 위에 고정</label>
+    {% if other_classes %}
+    <details class="mt"><summary class="small">다른 반에도 올리기</summary>
+      <p class="small">{% for c in other_classes %}<label class="consent"><input type="checkbox" name="also" value="{{ c.id }}"> {{ c.name }}</label> {% endfor %}</p>
+    </details>
+    {% endif %}
     <button class="btn primary mt">등록</button>
     <p class="small muted">말머리를 '정오'로 하면 학생 화면의 정오표 탭에 교재별로 모입니다.</p>
   </form>

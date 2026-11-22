@@ -15,7 +15,7 @@
     <tr><td class="num"><b>{{ a.no }}</b></td>
       <td class="small nowrap">{{ a.mine or '-' }} → {{ a.key }}{% if rep.enough %}<br><span class="muted">반 오답률 {{ pct1(a.rate) }}%</span>{% endif %}</td>
       <td><select name="r{{ a.no }}" aria-label="{{ a.no }}번 오답 유형"><option value="">-</option>{% for t in err_types %}<option {{ 'selected' if (k.reason or a.type) == t }}>{{ t }}</option>{% endfor %}</select></td>
-      <td><input type="text" name="m{{ a.no }}" value="{{ k.memo or '' }}" maxlength="500" aria-label="{{ a.no }}번 메모" placeholder="{{ a.trap or a.analysis or '' }}"></td></tr>
+      <td><input type="text" name="m{{ a.no }}" value="{{ k.memo or '' }}" maxlength="500" aria-label="{{ a.no }}번 메모" placeholder="예: 조건 하나를 놓침"></td></tr>
     {% endfor %}</tbody></table>
     {% else %}<p class="muted">틀린 문항이 없습니다.</p>{% endif %}
     <div class="field mt"><label for="rv-comment">코멘트 <span class="muted">학생 화면과 학부모 리포트에 보입니다</span></label><textarea id="rv-comment" name="comment" rows="3" maxlength="1500">{{ p.comment }}</textarea></div>

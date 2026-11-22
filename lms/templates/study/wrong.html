@@ -14,7 +14,7 @@
 </header>
 
 {% if not code %}{% include "sys/_link_box.html" %}{% elif sys_groups or sys_types %}{% include "sys/_wrong.html" %}{% endif %}
-{% if (groups or reason_counts) and (sys_groups or sys_types) %}<h2 class="sec-title">교재 모의고사 오답</h2>{% endif %}
+{% if (groups or reason_counts) and (sys_groups or sys_types) %}<h2 class="sec-title">복테 및 모의고사 오답</h2>{% endif %}
 
 {% if reason_counts %}
 <section class="reason-bar" aria-label="틀린 이유 모아 보기">

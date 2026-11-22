@@ -71,7 +71,7 @@
   {% endif %}
 
   <section class="rs-sec">
-    <h2>교재 모의고사</h2>
+    <h2>복테 및 모의고사</h2>
     {% if r.mocks %}
     <table class="ledger compact"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
       <tbody>{% for m in r.mocks %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>

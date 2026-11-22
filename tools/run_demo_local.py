@@ -1,4 +1,4 @@
-"""데모 폴더(_deploy/demo/student-lms-demo)를 이 PC에서 띄운다: http://127.0.0.1:5060"""
+"""데모 폴더(_deploy/demo/student-lms-demo)를 이 PC에서 띄운다: http://127.0.0.1:5077"""
 import os
 import sys
 
@@ -8,4 +8,4 @@ sys.path.insert(0, HERE)
 os.chdir(HERE)
 from app import create_app  # noqa: E402
 
-create_app().run(host="127.0.0.1", port=5060, debug=False, threaded=True)
+create_app().run(host="127.0.0.1", port=5077, debug=False, threaded=True)
