@@ -322,9 +322,9 @@ document.addEventListener("click", function (e) {
 });
 // 질문 유형이 '학습상담'일 때만 상담 조교 고르기를 보인다
 (function () {
-  var sel = document.querySelector("[data-qtype]"), box = document.querySelector("[data-consult]");
+  var sel = document.querySelector("[data-qtype]"), box = document.querySelector("[data-consult]"), unit = document.querySelector("[data-unit-field]");
   if (!sel || !box) return;
-  function sync() { box.hidden = sel.value !== "학습상담"; }
+  function sync() { box.hidden = sel.value !== "학습상담"; if (unit) unit.hidden = sel.value !== "학습질문"; }
   sel.addEventListener("change", sync); sync();
 })();
 // 시험지 첨삭: 메모가 빈 문항이 있으면 저장 전에 몇 번인지 알린다

@@ -59,6 +59,13 @@ CURRICULUM = {  # 주차: (진도, 단원 목록)
     13: ("렌츠, 에너지", ["전자기 유도", "에너지 전환"]),
     14: ("6단원 + 예시문항 분석", ["과학과 미래 사회", "예시문항"]),
 }
+WEEK_UNIT = {1: "물질과 규칙성", 2: "물질과 규칙성", 3: "시스템과 상호작용", 4: "시스템과 상호작용", 5: "시스템과 상호작용",
+             6: "물질과 규칙성", 7: "시스템과 상호작용", 8: "변화와 다양성", 9: "변화와 다양성", 10: "변화와 다양성",
+             11: "변화와 다양성", 12: "환경과 에너지", 13: "환경과 에너지", 14: "과학과 미래사회"}   # 학습질문 단원 (taskkit.UNITS)
+def unit_of(title, w):   # 11주차는 진화(변화와 다양성)와 생태계(환경과 에너지)가 섞여 있다
+    return "환경과 에너지" if "생태계" in title else WEEK_UNIT[w]
+
+
 LOGIC_BUILD = {1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 8: 6, 10: 7, 12: 8}     # 주차 → LOGIC BUILD 호
 QUESTIONS = {  # 주차: [(제목, 내용, 조교 답변)]  · 2022 개정 통합과학 범위 안
     1: [("[LINE UP I-24-3] 흡수 스펙트럼 선의 위치", "흡수선과 방출선 위치가 같다는 게 왜인지 모르겠습니다.",
@@ -414,8 +421,8 @@ def make_round(book, rnd, n_items, full, when, weeks):
     return mid
 
 
-def ask(cl, title, body, qtype, when, image=True, assignee=None):
-    data = {"title": title, "body": body, "qtype": qtype}
+def ask(cl, title, body, qtype, when, image=True, assignee=None, unit=""):
+    data = {"title": title, "body": body, "qtype": qtype, "unit": unit}
     if image:
         data["image"] = [img("question.png")]
     if assignee:
@@ -488,7 +495,7 @@ for w in range(1, WEEKS + 1):
             S.get(f"/s/notices/{r['id']}")
         if rng.random() < per["ask"]:
             title, body, ans = QUESTIONS[w][rng.randint(0, 1)]
-            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])))
+            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit_of(title, w))
             if not (last_week and name in ("대구 토요일 A반", "대구 재종 1반")):      # 이 둘은 오늘 조교가 답할 질문
                 answer(TA if rng.random() < 0.6 else TA2, qid, ans, day(w, 3))
                 if rng.random() < 0.3:
@@ -544,7 +551,7 @@ for w in range(1, WEEKS + 1):
                 at("game_rounds", st_["round_id"], started_at=ts(when, 22), finished_at=ts(when, 22, 10))
     for st, (user, pw, uid) in rng.sample(OTHERS, 3):                               # 다른 학생들 공개 질문
         title, body, ans = QUESTIONS[w][rng.randint(0, 1)]
-        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)))
+        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)), unit=unit_of(title, w))
         if not last_week or rng.random() < 0.5:
             answer(TA2 if rng.random() < 0.5 else TA, qid, ans, day(w, 4))
     if w == 2:

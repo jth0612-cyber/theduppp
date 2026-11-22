@@ -22,6 +22,11 @@
           <option value="">선택</option>
           {% for t in qtypes %}<option value="{{ t }}" {{ "selected" if t == dq }}>{{ t }}</option>{% endfor %}
         </select></div>
+      <div class="field shrink" data-unit-field><label for="q-unit">단원</label>
+        <select id="q-unit" name="unit">
+          <option value="">모름</option>
+          {% for u in units %}<option value="{{ u }}" {{ "selected" if draft and draft.unit == u }}>{{ u }}</option>{% endfor %}
+        </select></div>
       <div class="field wide{{ ' has-err' if fe == 'title' }}"><label for="q-title">제목</label>
         <input type="text" id="q-title" name="title" maxlength="120" required value="{{ draft.title if draft else '' }}" placeholder="[교재-페이지-번호] 예) 개념서 42p 3번"></div>
     </div>

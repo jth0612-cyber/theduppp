@@ -172,8 +172,17 @@ def rooms():
     week = query("SELECT COALESCE(SUM(minutes), 0) AS m FROM focus_logs WHERE user_id = ? AND ended_at >= ?",
                  (g.user["id"], monday), one=True)["m"]
     kings = {p: (_ranking(p, _since("week"), limit=1) or [None])[0] for p in PLACES}
+    # 지난 기록: 이번 주 포함 4주를 주(월~일)별 합계로. 리포트의 '4주'와 같은 기간
+    start = today - timedelta(days=today.weekday() + 21)
+    sums = {r["d"]: r["m"] for r in query("""SELECT date(ended_at) AS d, SUM(minutes) AS m FROM focus_logs
+                                             WHERE user_id = ? AND ended_at >= ? GROUP BY d""", (g.user["id"], start.isoformat()))}
+    weeks = []
+    for i in range(4):
+        mon = start + timedelta(days=7 * i)
+        days = [(mon + timedelta(days=k)).isoformat() for k in range(7)]
+        weeks.append({"label": "이번 주" if i == 3 else f"{mon.month}/{mon.day}~", "m": sum(sums.get(d, 0) for d in days)})
     return render_template("rooms/index.html", places=PLACES, counts=_counts(),
-                           today=_my_today(g.user["id"]), week=week, kings=kings, poster=POSTER)
+                           today=_my_today(g.user["id"]), week=week, weeks=weeks[::-1], kings=kings, poster=POSTER)
 
 
 @bp.route("/s/rooms/<place>")

@@ -103,6 +103,32 @@ class Care(unittest.TestCase):
         self.assertEqual(self.c1.get(f"/s/file/{fid}").status_code, 200)
         self.assertNotEqual(self.c2.get(f"/s/file/{fid}").status_code, 200)
 
+    def test_lesson_needs_photo_or_note(self):
+        self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})
+        self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "글만", "day": "2026-11-20", "body": "중화 반응 정리"})
+        with self.app.app_context():
+            self.assertEqual([r["title"] for r in query("SELECT title FROM lessons")], ["글만"])
+        self.assertIn("사진 없음", self.ta.get("/t/lessons").data.decode())
+
+    def test_question_unit_filter(self):
+        r = self.c1.post("/s/questions", data={"qtype": "학습질문", "unit": "물질과 규칙성", "title": "[개념서-42-3]", "body": "질문",
+                                               "image": [(io.BytesIO(PNG), "q.png")]}, content_type="multipart/form-data")
+        self.assertEqual(r.status_code, 302)
+        with self.app.app_context():
+            self.assertEqual(query("SELECT unit FROM questions", one=True)["unit"], "물질과 규칙성")
+            execute("INSERT INTO questions (student_id, title, body, unit) VALUES (?, '[기출-10-1]', 'x', '환경과 에너지')", (self.s1,))
+        page = self.ta.get("/t/questions?unit=물질과 규칙성").data.decode()
+        self.assertIn("[개념서-42-3]", page); self.assertNotIn("[기출-10-1]", page)
+
+    def test_rooms_four_week_history(self):
+        from datetime import date, timedelta
+        with self.app.app_context():
+            uid = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
+            last_week = (date.today() - timedelta(days=7)).isoformat() + " 12:00:00"
+            execute("INSERT INTO focus_logs (user_id, place, minutes, ended_at) VALUES (?, 'sento', 75, ?)", (uid, last_week))
+        page = self.c1.get("/s/rooms").data.decode()
+        self.assertIn("최근 4주 기록", page); self.assertIn("1시간 15분", page)
+
     def test_parent_report_and_weak_unit(self):
         mid = self._exam()
         page = self.c1.get(f"/s/analysis?mock={mid}").data.decode()

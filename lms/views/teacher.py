@@ -9,6 +9,7 @@ from flask import (Blueprint, Response, abort, flash, g, redirect, render_templa
                    url_for)
 
 from content import NOTICE_TAGS, QUESTION_TYPES, VIDEO_HOSTS, validate_https_url
+from taskkit import UNITS
 from db import (execute, get_db, join_code_taken, new_join_code, new_student_code, nickname_taken,
                 normalize_student_code, query)
 from engagement import streak_info
@@ -643,6 +644,12 @@ def questions():
     if qtype in QUESTION_TYPES:
         where += " AND q.qtype = ?"
         args = args + [qtype]
+    unit = request.args.get("unit", "")
+    if unit in UNITS:
+        where += " AND q.unit = ?"
+        args = args + [unit]
+    else:
+        unit = ""
     word = request.args.get("q", "").strip()[:60]               # 제목 검색 ([교재-페이지-번호] 로 같은 문항 모아 보기)
     if word:
         where += " AND (q.title LIKE ? OR q.body LIKE ?)"
@@ -670,7 +677,7 @@ def questions():
     waiting = {r["qtype"]: r["n"] for r in query(              # 유형 탭 옆 숫자: 답변 대기만
         f"SELECT qtype, COUNT(*) AS n FROM questions WHERE status = 'open' {hide[0]} GROUP BY qtype", hide[1])}
     return render_template("teacher/questions.html", word=word, faq=faq, waiting=waiting, questions=rows, status=status, page=page, mine=request.args.get("mine") == "1",
-                           qtype=qtype, qtypes=QUESTION_TYPES, pages=max(1, math.ceil(total / PAGE_SIZE)), my_intro=me["ta_intro"])
+                           qtype=qtype, qtypes=QUESTION_TYPES, unit=unit, units=UNITS, pages=max(1, math.ceil(total / PAGE_SIZE)), my_intro=me["ta_intro"])
 
 
 @bp.route("/me/intro", methods=["POST"])

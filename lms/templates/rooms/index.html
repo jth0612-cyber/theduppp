@@ -8,6 +8,9 @@
   </div>
   <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
+  <details class="small my-weeks"><summary>최근 4주 기록</summary>
+    <table><tbody>{% for w in weeks %}<tr><td>{{ w.label }}</td><td class="num">{{ w.m|hm if w.m else '-' }}</td></tr>{% endfor %}</tbody></table>
+  </details>
   <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a></p>
   </div>
 </header>

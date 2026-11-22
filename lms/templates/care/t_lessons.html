@@ -9,13 +9,13 @@
     <div class="field"><label for="ls-day">날짜</label><input type="date" id="ls-day" name="day" value="{{ today }}"></div>
     <div class="field wide"><label for="ls-title">주제</label><input type="text" id="ls-title" name="title" maxlength="120" required placeholder="예: TOPIC 24 산과 염기 · 중화 반응"></div>
   </div>
-  <div class="field"><label for="ls-body">한 줄 정리 <span class="muted">(선택)</span></label><textarea id="ls-body" name="body" rows="2" maxlength="2000"></textarea></div>
+  <div class="field"><label for="ls-body">한 줄 정리 <span class="muted">(사진이 없으면 필수)</span></label><textarea id="ls-body" name="body" rows="2" maxlength="2000"></textarea></div>
   <div class="field"><label for="ls-image">노트 사진 <span class="muted">(PNG·JPG, 10장까지)</span></label><input type="file" id="ls-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg"></div>
   <button class="btn primary">올리기</button>
 </form>
 <div class="card">
   {% if rows %}<div class="table-wrap"><table><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th><th></th></tr></thead><tbody>
-  {% for l in rows %}<tr><td class="nowrap">{{ l.day }}</td><td class="muted">{{ l.cls }}</td><td>{{ l.title }}</td><td class="num">{{ l.n_files }}장</td>
+  {% for l in rows %}<tr><td class="nowrap">{{ l.day }}</td><td class="muted">{{ l.cls }}</td><td>{{ l.title }}</td><td class="num">{{ (l.n_files ~ "장") if l.n_files else "사진 없음" }}</td>
     <td class="num"><form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 삭제하시겠습니까?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">아직 올린 수업 기록이 없습니다.</p>{% endif %}
 </div>

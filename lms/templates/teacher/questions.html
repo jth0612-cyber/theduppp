@@ -11,17 +11,23 @@
     {% endfor %}
   </div>
 </div>
+{% if qtype in ('', '학습질문') %}
+<div class="row small mt">
+  <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, q=word or None) }}" class="badge {{ '' if not unit else 'gray' }}">전체 단원</a>
+  {% for u in units %}<a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=u, q=word or None) }}" class="badge {{ '' if unit == u else 'gray' }}">{{ u }}</a>{% endfor %}
+</div>
+{% endif %}
 <nav class="tabs">
-  <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
-  <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
-  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
+  <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
+  <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
+  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
   <a href="{{ url_for('teacher.questions', status='all', faq=1) }}" class="{{ 'active' if faq }}">자주 묻는 질문</a>
   {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>
 <form method="get" class="row small mt" role="search">
-  <input type="hidden" name="status" value="{{ status }}">{% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
+  <input type="hidden" name="status" value="{{ status }}">{% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}{% if unit %}<input type="hidden" name="unit" value="{{ unit }}">{% endif %}
   <input type="search" name="q" value="{{ word }}" placeholder="제목·내용 검색 (예: Squeeze 4호)" aria-label="질문 검색">
-  <button class="btn small">검색</button>{% if word %} <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None) }}">검색 지우기</a>{% endif %}
+  <button class="btn small">검색</button>{% if word %} <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=unit or None) }}">검색 지우기</a>{% endif %}
 </form>
 {% if g.user.role == 'assistant' %}
 <form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">
@@ -38,7 +44,7 @@
     {% for q in questions %}
     <tr>
       <td>{{ qtype_badge(q.qtype) }} <a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a>
-        {% if q.image_id %} <span class="badge gray">사진</span>{% endif %}
+        {% if q.unit %} <span class="badge gray">{{ q.unit }}</span>{% endif %}{% if q.image_id %} <span class="badge gray">사진</span>{% endif %}
         {% if q.followup_count %} <span class="badge open">추가질문 {{ q.followup_count }}</span>{% endif %}
         {% if q.qtype == '학습상담' %} <span class="badge {{ '' if q.assignee_id == g.user.id else 'gray' }}">{{ (q.assignee_name ~ ' 지정') if q.assignee_name else '누구나' }}</span>{% if q.rating %} <span class="small muted">{{ q.rating }}점</span>{% endif %}{% endif %}</td>
       <td>{{ q.name }}<br><span class="small muted">{{ q.nickname or '' }}</span></td>
@@ -48,7 +54,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None, q=word or None, faq=1 if faq else None) }}
+  {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None, unit=unit or None, q=word or None, faq=1 if faq else None) }}
   {% else %}<p class="muted">질문이 없습니다.</p>{% endif %}
 </div>
 {% endblock %}

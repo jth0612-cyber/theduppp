@@ -9,6 +9,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect, render_tem
 
 import consult
 from content import MAX_FOLLOWUPS, NOTICE_TAGS, QUESTION_TYPES
+from taskkit import UNITS
 from db import execute, query
 from engagement import record_visit, streak_info
 from security import IMAGE_EXTS, audit, delete_file, login_required, save_upload, student_required
@@ -218,7 +219,9 @@ def questions():
         title = request.form.get("title", "").strip()
         body = request.form.get("body", "").strip()
         qtype = request.form.get("qtype", "")
-        draft = {"title": title, "body": body, "qtype": qtype}
+        unit = request.form.get("unit", "")
+        unit = unit if qtype == "학습질문" and unit in UNITS else ""
+        draft = {"title": title, "body": body, "qtype": qtype, "unit": unit}
         if qtype not in QUESTION_TYPES:
             form_err = ("qtype", "질문 유형을 골라 주세요.")
         elif not title:
@@ -237,8 +240,8 @@ def questions():
                 form_err = ("image", str(e) + " 작성한 내용은 그대로 남아 있습니다.")
             else:
                 assignee = request.form.get("assignee", type=int) if qtype == "학습상담" else None
-                qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype, assignee_id) VALUES (?, ?, ?, ?, ?, ?)",
-                              (me["id"], title, body, photos[0] if photos else None, qtype, assignee or None))
+                qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype, assignee_id, unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                              (me["id"], title, body, photos[0] if photos else None, qtype, assignee or None, unit))
                 for pos, fid in enumerate(photos[1:], start=2):
                     execute("INSERT INTO question_images (question_id, file_id, pos) VALUES (?, ?, ?)", (qid, fid, pos))
                 audit("question_create", f"question:{qid}")
@@ -273,7 +276,7 @@ def questions():
                     ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
     best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
     return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs,
-                           qtype=qtype, qtypes=QUESTION_TYPES, draft=draft, form_err=form_err, best=best, tas=consult.ta_cards(),
+                           qtype=qtype, qtypes=QUESTION_TYPES, units=UNITS, draft=draft, form_err=form_err, best=best, tas=consult.ta_cards(),
                            pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total), 400 if form_err else 200
 
 

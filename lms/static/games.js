@@ -270,11 +270,12 @@
           slots.appendChild(li);
         }
         chips.forEach(function (c, k) { c.disabled = seq.indexOf(k) >= 0; });
-        ok.disabled = seq.length !== item.items.length;
+        ok.disabled = seq.length < item.items.length - 1;      // 한 칸만 남았으면 확인할 때 남은 것을 채운다
       };
       box.appendChild(slots); box.appendChild(pool); box.appendChild(ok);
       ok.addEventListener("click", function () {
-        ok.disabled = true; slots.classList.add("is-done");
+        for (var r = 0; r < item.items.length; r++) if (seq.indexOf(r) < 0) seq.push(r);
+        draw(); ok.disabled = true; slots.classList.add("is-done");
         sendPick(seq.slice()).then(function (res) {
           slots.querySelectorAll(".or-slot").forEach(function (li, n) { li.classList.add(seq[n] === res.answer_list[n] ? "is-right" : "is-wrong"); });
           pool.classList.add("hidden"); ok.classList.add("is-spent");
