@@ -102,19 +102,19 @@ def dashboard():
         (SELECT COUNT(*) FROM students s JOIN classes c ON c.id = s.class_id
            WHERE s.active = 1 AND c.archived = 0 AND c.is_test = 0) AS students,
         (SELECT COUNT(*) FROM questions WHERE status = 'open') AS open_questions,
-        (SELECT COUNT(*) FROM exams) AS exams""", one=True)
+        (SELECT COUNT(DISTINCT r.mock_id) FROM exam_results r JOIN mocks m ON m.id = r.mock_id JOIN books b ON b.id = m.book_id
+           WHERE b.is_practice = 0) AS exams""", one=True)
     classes = query("""SELECT c.*, COUNT(s.id) AS student_count FROM classes c
                        LEFT JOIN students s ON s.class_id = c.id AND s.active = 1
-                       WHERE c.archived = 0 GROUP BY c.id ORDER BY c.is_test, c.name""")
+                       WHERE c.archived = 0 AND c.is_test = 0 GROUP BY c.id ORDER BY c.name""")
     open_questions = query("""SELECT q.id, q.title, q.created_at, s.name, c.name AS class_name
                               FROM questions q JOIN students s ON s.id = q.student_id
                               JOIN classes c ON c.id = s.class_id
                               WHERE q.status = 'open' ORDER BY q.created_at LIMIT 10""")
-    recent_exams = query("""SELECT e.*, c.name AS class_name,
-                              (SELECT ROUND(AVG(score), 1) FROM scores WHERE exam_id = e.id) AS avg,
-                              (SELECT COUNT(*) FROM scores WHERE exam_id = e.id) AS n
-                            FROM exams e JOIN classes c ON c.id = e.class_id
-                            ORDER BY e.exam_date DESC, e.id DESC LIMIT 8""")
+    recent_exams = query("""SELECT m.id, b.title || ' ' || m.round_no || '회' AS name, m.exam_date, m.full_score AS max_score,
+                              COUNT(r.id) AS n, ROUND(AVG(r.score), 1) AS avg
+                            FROM mocks m JOIN books b ON b.id = m.book_id JOIN exam_results r ON r.mock_id = m.id
+                            WHERE b.is_practice = 0 GROUP BY m.id ORDER BY m.exam_date DESC, m.id DESC LIMIT 8""")
     return render_template("teacher/dashboard.html", stats=stats, classes=classes,
                            open_questions=open_questions, recent_exams=recent_exams)
 
@@ -170,8 +170,10 @@ def class_detail(cid):
         ctx["students"] = query(f"""
             SELECT s.id, s.name, s.student_no, s.target, s.active,
                    u.id AS account_id, u.last_login_at,
-                   (SELECT ROUND(AVG(sc.score * 100.0 / e.max_score), 1) FROM scores sc
-                      JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = s.id) AS avg_pct,
+                   COALESCE((SELECT ROUND(AVG(r.score * 100.0 / m.full_score), 1) FROM exam_results r JOIN mocks m ON m.id = r.mock_id
+                               JOIN books b ON b.id = m.book_id WHERE r.student_id = s.id AND b.is_practice = 0 AND m.full_score > 0),
+                            (SELECT ROUND(AVG(sc.score * 100.0 / e.max_score), 1) FROM scores sc
+                               JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = s.id)) AS avg_pct,
                    (SELECT COUNT(*) FROM questions WHERE student_id = s.id AND status = 'open') AS open_q
             FROM students s LEFT JOIN users u ON u.student_id = s.id
             WHERE {where} ORDER BY s.active DESC, s.name LIMIT ? OFFSET ?""",
@@ -370,7 +372,7 @@ def student_detail(sid):
         engagement = {"streak": streak_info(account["id"])}
     plink = (request.url_root.rstrip("/") + url_for("care.parent_page", token=s["parent_token"])) if s["parent_token"] else ""
     from views.care import parent_report
-    rep = parent_report(sid)                     # 학부모 리포트와 같은 복테·모의고사·단원·코멘트
+    rep = parent_report(sid, limit=200)          # 학부모 리포트와 같은 복테·모의고사·단원·코멘트 (시즌 전체)
     return render_template("teacher/student_detail.html", rep=rep, s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]), plink=plink,
                            memo=decrypt(s["memo_enc"]), scores=scores, chart=chart, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
@@ -632,7 +634,7 @@ def exam_delete(eid):
 @bp.route("/questions")
 @staff_required
 def questions():
-    status = request.args.get("status", "open")
+    status = request.args.get("status", "all" if request.args.get("q") else "open")   # 검색은 기본으로 모든 상태에서
     if status not in ("open", "answered", "all"):
         status = "open"
     page = _page()

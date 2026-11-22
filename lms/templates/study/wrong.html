@@ -29,6 +29,7 @@
   {% set total = reason_counts|sum(attribute='n') %}
   {% for r in reason_counts %}<span><b>{{ r.reason }}</b> {{ r.n }}문항 · {{ (100 * r.n / total)|round|int }}%</span>{% endfor %}
 </section>
+<p class="small muted">내가 고른 이유 기준 / 복테&모의 분석의 학습 유형은 문항정보로 자동 분류한 결과라 숫자가 다를 수 있음</p>
 {% endif %}
 
 {% for gr in groups %}

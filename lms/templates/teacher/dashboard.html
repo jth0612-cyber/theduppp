@@ -16,7 +16,7 @@
   <a class="todo{{ ' is-on' if feedback_wait }}" href="{{ url_for('feedback.t_list') }}"><b>{{ feedback_wait or 0 }}</b><span>1:1 첨삭 대기</span></a>
   <a class="todo{{ ' is-on' if paper_wait }}" href="{{ url_for('care.t_papers') }}"><b>{{ paper_wait or 0 }}</b><span>시험지 첨삭 대기</span></a>
 </div>
-<p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 등록한 시험 <b>{{ stats.exams }}</b>개</p>
+<p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 결과가 올라온 회차 <b>{{ stats.exams }}</b>개</p>
 
 <div class="grid grid-2">
   <div class="card">
@@ -35,20 +35,19 @@
   </div>
 
   <div class="card">
-    <h2>최근 시험</h2>
+    <h2>최근 회차 <a class="small" href="{{ url_for('books.teacher_books') }}">복테·모의고사</a></h2>
     {% if recent_exams %}
     <div class="table-wrap"><table>
-      <tr><th>시험</th><th>반</th><th class="num">응시</th><th class="num">평균</th></tr>
+      <tr><th>회차</th><th class="num">응시</th><th class="num">평균</th></tr>
       {% for e in recent_exams %}
       <tr>
-        <td><a href="{{ url_for('teacher.exam_detail', eid=e.id) }}">{{ e.name }}</a><br><span class="small muted">{{ e.exam_date }}</span></td>
-        <td>{{ e.class_name }}</td>
+        <td><a href="{{ url_for('books.teacher_mock', mid=e.id) }}">{{ e.name }}</a><br><span class="small muted">{{ e.exam_date or '' }}</span></td>
         <td class="num">{{ e.n }}</td>
         <td class="num">{{ e.avg if e.avg is not none else '-' }} / {{ '%g'|format(e.max_score) }}</td>
       </tr>
       {% endfor %}
     </table></div>
-    {% else %}<p class="muted">아직 등록한 시험이 없습니다.</p>{% endif %}
+    {% else %}<p class="muted">아직 결과가 올라온 회차가 없습니다.</p>{% endif %}
   </div>
 </div>
 

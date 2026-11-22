@@ -12,9 +12,9 @@
   </div>
 </div>
 <nav class="tabs">
-  <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
-  <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
-  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
+  <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
+  <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
+  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None, q=word or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
   <a href="{{ url_for('teacher.questions', status='all', faq=1) }}" class="{{ 'active' if faq }}">자주 묻는 질문</a>
   {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>

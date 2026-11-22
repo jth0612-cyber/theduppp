@@ -105,7 +105,7 @@
 <section class="wa-sec" aria-labelledby="h-wa">
   <div class="sec-head"><h2 id="h-wa">오답 분석</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% else %}반 응시 {{ rep.st.n }}명이라 반 오답률은 표시하지 않음{% endif %}</span></div>
   {% if prof and prof.type != '판단 보류' %}
-  <div class="learn-card"><h2>누적 학습 유형 · {{ prof.type }}</h2><p class="muted">{{ prof.basis }}</p><p>{{ prof.coach }}</p></div>
+  <div class="learn-card"><h2>누적 학습 유형 · {{ prof.type }}</h2><p class="muted">{{ prof.basis }} (문항정보로 자동 분류)</p><p>{{ prof.coach }}</p></div>
   {% endif %}
   {% if rep.wrongs %}
   <ul class="wa-list">

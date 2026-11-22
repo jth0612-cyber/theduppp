@@ -285,13 +285,13 @@ def parent_token(student_id, renew=False):
     return tok
 
 
-def parent_report(student_id):
+def parent_report(student_id, limit=6):
     import exams
     import sysdata
     s = query("SELECT s.*, c.name AS cls FROM students s JOIN classes c ON c.id = s.class_id WHERE s.id = ?", (student_id,), one=True)
     rows = query("""SELECT r.mock_id FROM exam_results r JOIN mocks m ON m.id = r.mock_id JOIN books b ON b.id = m.book_id
                     WHERE r.student_id = ? AND m.n_items > 0 AND b.is_practice = 0
-                    ORDER BY m.exam_date DESC, r.updated_at DESC LIMIT 6""", (student_id,))
+                    ORDER BY m.exam_date DESC, r.updated_at DESC LIMIT ?""", (student_id, limit))
     exams_out = []
     for r in rows:
         rep = exams.student_report(r["mock_id"], student_id)

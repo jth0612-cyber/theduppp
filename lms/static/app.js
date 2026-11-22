@@ -161,6 +161,7 @@ document.addEventListener("click", function (e) {
           headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
           body: JSON.stringify({ endpoint: sub.endpoint }) }).then(function () { return sub.unsubscribe(); });
       }
+      b.textContent = "권한 창에서 '허용'을 눌러 주세요";      // 권한 창이 늦게 뜨거나 안 떠도 지금 상태를 알 수 있게
       return Notification.requestPermission().then(function (perm) {
         if (perm !== "granted") throw new Error("denied");
         return fetch("/push/key", { credentials: "same-origin" }).then(function (r) { return r.json(); });

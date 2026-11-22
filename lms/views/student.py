@@ -141,8 +141,9 @@ def scores():
     # 복테·모의고사 (OMR로 올라온 결과): 학부모 리포트와 같은 숫자
     from views.care import parent_report, rate_chart
     omr = []
+    season = parent_report(me["id"], limit=200)["exams"]                # 시즌 전체
     for kind in ("복습 테스트", "모의고사"):
-        ex = [e for e in parent_report(me["id"])["exams"] if e["kind"] == kind]
+        ex = [e for e in season if e["kind"] == kind]
         if ex:
             omr.append({"kind": kind, "exams": ex, "chart": rate_chart(ex)})
     return render_template("student/scores.html", me=me, scores=rows, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt, omr=omr)

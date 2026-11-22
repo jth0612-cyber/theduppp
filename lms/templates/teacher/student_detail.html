@@ -27,7 +27,7 @@
         <circle class="dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"><title>{{ c.date }} {{ c.label }}: {{ c.pct }}%</title></circle>
       {% endfor %}
     </svg>
-    {% else %}<p class="muted">아직 성적이 없습니다.</p>{% endif %}
+    {% else %}<p class="muted">직접 입력한 반 시험이 없습니다 / 복테·모의고사는 아래 표</p>{% endif %}
   </div>
 
   <div class="card">
@@ -62,9 +62,9 @@
   </div>
 </div>
 
+{% if scores %}
 <div class="card">
-  <h2>시험 기록</h2>
-  {% if scores %}
+  <h2>반 시험 기록 <span class="small muted">직접 입력한 점수</span></h2>
   <div class="table-wrap"><table>
     <tr><th>날짜</th><th>시험</th><th>과목</th><th class="num">점수</th><th class="num">득점률</th><th class="num">반 평균</th><th class="num">석차</th></tr>
     {% for r in scores|reverse %}
@@ -79,8 +79,8 @@
     </tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="muted">시험 기록이 없습니다.</p>{% endif %}
 </div>
+{% endif %}
 
 <div class="card" id="mocks">
   <h2>복테·모의고사 <span class="small muted">학부모 리포트와 같은 내용</span></h2>
