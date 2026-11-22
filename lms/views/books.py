@@ -143,7 +143,8 @@ def analysis_home():
     ev = {"level": EVAL_LEVELS.get(mock["eval_level"]), "n": mock["eval_level"], "yt": youtube_id(mock["eval_video"]) if mock["eval_video"] else None}
     if entry is None:                                          # 내 결과가 없는 회차: 시험 평가만
         stats = _stats(mock) if mock["n_items"] else None
-        return render_template("student/analysis.html", why_open=why_open, mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
+        absent = bool(query("SELECT 1 FROM omr_uploads WHERE mock_id = ? LIMIT 1", (mid,), one=True))   # OMR은 올라왔는데 내 답안이 없음 = 미응시
+        return render_template("student/analysis.html", absent=absent, why_open=why_open, mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
                                fmt=analysis._fmt)
     stats = _stats(mock)
     my_score = entry["score"]

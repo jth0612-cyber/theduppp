@@ -412,7 +412,9 @@ def analyze_item(no, mine, k, info):
             labels = sorted(set(missed) | set(added))
             if labels:
                 lab = ", ".join(labels)
-                res.update(evidence="보기 차이 근거", confused=lab, diff=f"{mine_i}번과 {single}번의 차이는 보기 {lab}입니다.")
+                # 보기가 전부 다르면 차이 문장은 정보가 없어 뺀다
+                res.update(evidence="보기 차이 근거", confused=lab,
+                           diff="" if len(labels) >= 3 else f"{mine_i}번과 {single}번의 차이는 보기 {lab}입니다.")
                 first = labels[0]
                 tr = traps.get(first)
                 res["type"] = (tr[2] if tr and tr[2] else "")

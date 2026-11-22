@@ -135,7 +135,7 @@ function pushLabel() {
   var all = document.querySelectorAll("[data-push]");
   if (!all.length) return;
   if (!pushSupported()) {
-    all.forEach(function (b) { b.textContent = "알림: 홈 화면에 설치 후 사용"; b.disabled = true; });
+    all.forEach(function (b) { b.textContent = "알림: 홈 화면에 추가 후 사용"; });
     return;
   }
   navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
@@ -148,7 +148,12 @@ function pushLabel() {
 document.addEventListener("DOMContentLoaded", pushLabel);
 document.addEventListener("click", function (e) {
   var b = e.target.closest("[data-push]");
-  if (!b || !pushSupported()) return;
+  if (!b) return;
+  if (!pushSupported()) {                      // 아이폰 사파리는 홈 화면에 추가한 앱에서만 알림이 된다
+    b.textContent = /iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? "공유 버튼 → 홈 화면에 추가 → 앱에서 알림 켜기" : "이 브라우저는 알림을 지원하지 않음";
+    return;
+  }
   navigator.serviceWorker.ready.then(function (reg) {
     return reg.pushManager.getSubscription().then(function (sub) {
       if (sub) {
@@ -167,7 +172,9 @@ document.addEventListener("click", function (e) {
           headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() }, body: JSON.stringify(s) });
       });
     });
-  }).catch(function () {}).then(pushLabel);
+  }).then(pushLabel, function (err) {         // 실패 이유를 버튼에 남긴다 (조용히 아무 일도 없던 것처럼 보이지 않게)
+    b.textContent = err && err.message === "denied" ? "알림: 차단됨 / 브라우저 설정에서 허용" : "알림을 켜지 못함 / 다시 누르기";
+  });
 });
 
 // ---------- 휴대폰 전체 메뉴 ----------

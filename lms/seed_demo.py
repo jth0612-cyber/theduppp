@@ -369,10 +369,13 @@ def omr_workbook(n_items, key, pts, units, absent):
         level = "상" if i >= n_items * 2 // 3 else ("중" if i >= n_items // 3 else "하")
         skill = ["개념 이해", "자료·그래프 해석", "계산", "조건 독해"][i % 4]
         if i % 5 == 4:                                    # 합답형: 보기함정으로 고른 답의 원인을 짚는다
+            right = {1: "ㄱ", 2: "ㄴ", 3: "ㄱㄷ", 4: "ㄴㄷ", 5: "ㄱㄴㄷ"}[key[i]]     # 정답 선지에 든 보기 = 옳은 진술
+            why = {"ㄱ": ("정의를 반대로 기억함", "개념 부족"), "ㄴ": ("그래프 축의 의미를 바꿔 읽음", "자료 해석"), "ㄷ": ("조건 하나를 놓침", "조건 독해")}
+            traps = " / ".join(
+                f"{b}(O): {why[b][0]}, 옳은 진술을 틀렸다고 판단한 경우입니다. [{why[b][1]}]" if b in right else
+                f"{b}(X): {why[b][0]}, 틀린 진술을 옳다고 본 경우입니다. [{why[b][1]}]" for b in "ㄱㄴㄷ")
             info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 보기 판단", skill, level, "합답형", "①ㄱ ②ㄴ ③ㄱ,ㄷ ④ㄴ,ㄷ ⑤ㄱ,ㄴ,ㄷ",
-                         "ㄱ(O): 정의를 반대로 기억해 옳은 진술을 틀렸다고 판단한 경우입니다. [개념 부족] / "
-                         "ㄴ(O): 그래프 축의 의미를 바꿔 읽은 경우입니다. [자료 해석] / ㄷ(X): 조건 하나를 놓쳐 틀린 진술을 옳다고 본 경우입니다. [조건 독해]",
-                         None, "Y"])
+                         traps, None, "Y"])
         else:
             w1, w2 = (key[i] % 5) + 1, ((key[i] + 1) % 5) + 1
             info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 핵심", skill, level, "일반", None, None,
@@ -548,6 +551,30 @@ for w in range(1, WEEKS + 1):
         faq = q("SELECT id FROM questions WHERE title LIKE '%샤가프 법칙 비율%' ORDER BY id LIMIT 1", one=True)
         if faq:
             ok("자주 묻는 질문", TA.post(f"/t/questions/{faq['id']}/faq"))
+
+# 출결 (조교 시스템 '출결' 표 형식): 수업마다 출석·지각·결석. 최민서는 결석이 잦다
+with app.app_context():
+    from db import get_db
+    import json as _json
+    db_ = get_db()
+    n_att = 0
+    for name, c in cls.items():
+        for st in c["students"]:
+            code = q("SELECT code FROM student_codes WHERE student_id = ?", (st["id"],), one=True)
+            if not code:
+                continue
+            miss = 0.3 if st is P["대치 일요일반"]["st"] else 0.05
+            start = P["대치 목요일반"]["per"]["late"] if st is P["대치 목요일반"]["st"] else 1
+            for k in range(start, WEEKS + 1):
+                r = rng.random()
+                status = "결석" if r < miss else ("지각" if r < miss + 0.07 else "출석")
+                hh, mm = map(int, c["slots"][0][1].split(":"))
+                arrived = "" if status == "결석" else f"{hh if status == '출석' else hh:02d}:{(mm + (rng.randint(5, 25) if status == '지각' else -rng.randint(0, 10))) % 60:02d}"
+                db_.execute("INSERT INTO sys_rows (tbl, code, data) VALUES ('출결', ?, ?)",
+                            (code["code"], _json.dumps({"학생코드": code["code"], "날짜": sess(c, k).isoformat(), "출결": status, "도착시각": arrived}, ensure_ascii=False)))
+                n_att += 1
+    db_.execute("INSERT INTO sys_sync (tbl, n_rows, synced_at, source) VALUES ('출결', ?, ?, 'csv')", (n_att, ts(TODAY, 22)))
+    db_.commit()
 
 # 한승우: 비밀번호 분실 → 조교가 임시 비밀번호 발급 → 직접 바꿈
 han = P["대치 재종 2반"]

@@ -730,6 +730,9 @@ class FeatureTest(AppTest):
         self.assertIn("복습 테스트<br>평균 득점률", nav)
         q_page = self.c.get("/t/questions").data.decode()
         self.assertIn("학습질문 <b>1</b>", q_page)                           # 유형 탭 옆 대기 수
+        self.assertIn("42p 3번", self.c.get("/t/questions?status=all&q=42p").data.decode())   # 제목 검색
+        self.assertNotIn("42p 3번", self.c.get("/t/questions?status=all&q=없는문항").data.decode())
+        self.assertNotIn("42p 3번", self.c.get("/t/questions?status=all&faq=1").data.decode())
 
     def test_notice_to_several_classes(self):
         cid = self.setup_class_with_students()

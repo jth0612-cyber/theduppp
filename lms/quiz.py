@@ -126,7 +126,7 @@ def make_pick(code, stmts):
     others = [x for x in subsets if x != right]
     opts = sorted(_rng.sample(others, 4) + [right], key=lambda x: (len(x), x))
     label = lambda x: ", ".join(_GA[i] for i in x)
-    exp = " / ".join(f"{_GA[i]}. {'옳다' if s[1] else '옳지 않다'} — {s[2]}" for i, s in enumerate(stmts))
+    exp = " / ".join(f"{_GA[i]}. {'옳다' if s[1] else '옳지 않다'}" + (f": {s[2]}" if s[2] else "") for i, s in enumerate(stmts))
     return {"kind": "pick", "question": "옳은 것만을 있는 대로 고른 것은?", "lines": [s[0] for s in stmts],
             "choices": [label(x) for x in opts], "answer_index": opts.index(right), "explanation": exp, "topic": code}
 

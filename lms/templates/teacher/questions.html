@@ -14,9 +14,15 @@
 <nav class="tabs">
   <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
   <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
-  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' and not mine }}">전체</a>
+  <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
+  <a href="{{ url_for('teacher.questions', status='all', faq=1) }}" class="{{ 'active' if faq }}">자주 묻는 질문</a>
   {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>
+<form method="get" class="row small mt" role="search">
+  <input type="hidden" name="status" value="{{ status }}">{% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
+  <input type="search" name="q" value="{{ word }}" placeholder="제목·내용 검색 (예: Squeeze 4호)" aria-label="질문 검색">
+  <button class="btn small">검색</button>{% if word %} <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None) }}">검색 지우기</a>{% endif %}
+</form>
 {% if g.user.role == 'assistant' %}
 <form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -42,7 +48,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None) }}
+  {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None, q=word or None, faq=1 if faq else None) }}
   {% else %}<p class="muted">질문이 없습니다.</p>{% endif %}
 </div>
 {% endblock %}

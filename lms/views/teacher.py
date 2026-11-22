@@ -641,6 +641,13 @@ def questions():
     if qtype in QUESTION_TYPES:
         where += " AND q.qtype = ?"
         args = args + [qtype]
+    word = request.args.get("q", "").strip()[:60]               # 제목 검색 ([교재-페이지-번호] 로 같은 문항 모아 보기)
+    if word:
+        where += " AND (q.title LIKE ? OR q.body LIKE ?)"
+        args = args + [f"%{word}%", f"%{word}%"]
+    faq = request.args.get("faq") == "1"
+    if faq:
+        where += " AND q.faq = 1"
     if request.args.get("mine") == "1":                        # 나를 지정한 학습상담
         where += " AND q.assignee_id = ?"
         args = args + [g.user["id"]]
@@ -660,7 +667,7 @@ def questions():
     hide = ("AND NOT (qtype = '학습상담' AND assignee_id IS NOT NULL AND assignee_id != ?)", [g.user["id"]])         if g.user["role"] == "assistant" else ("", [])
     waiting = {r["qtype"]: r["n"] for r in query(              # 유형 탭 옆 숫자: 답변 대기만
         f"SELECT qtype, COUNT(*) AS n FROM questions WHERE status = 'open' {hide[0]} GROUP BY qtype", hide[1])}
-    return render_template("teacher/questions.html", waiting=waiting, questions=rows, status=status, page=page, mine=request.args.get("mine") == "1",
+    return render_template("teacher/questions.html", word=word, faq=faq, waiting=waiting, questions=rows, status=status, page=page, mine=request.args.get("mine") == "1",
                            qtype=qtype, qtypes=QUESTION_TYPES, pages=max(1, math.ceil(total / PAGE_SIZE)), my_intro=me["ta_intro"])
 
 

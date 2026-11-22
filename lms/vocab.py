@@ -148,14 +148,14 @@ def _mc(w):                       # 단어 → 뜻 (4지)
     choices = [MEANING[w]] + [MEANING[x] for x in others]
     order = list(range(4)); _rng.shuffle(order)
     return {"kind": "mc", "question": w, "prompt": "뜻을 고르세요", "choices": [choices[k] for k in order],
-            "answer_index": order.index(0), "explanation": f"{w} — {MEANING[w]}", "word": w}
+            "answer_index": order.index(0), "explanation": f"{w}: {MEANING[w]}", "word": w}
 
 
 def _rev(w):                      # 뜻 → 단어 (4지)
     choices = [w] + _others(w, 3)
     order = list(range(4)); _rng.shuffle(order)
     return {"kind": "rev", "question": MEANING[w], "prompt": "알맞은 단어를 고르세요", "choices": [choices[k] for k in order],
-            "answer_index": order.index(0), "explanation": f"{w} — {MEANING[w]}", "word": w}
+            "answer_index": order.index(0), "explanation": f"{w}: {MEANING[w]}", "word": w}
 
 
 def _listen(w):                   # 발음을 듣고 뜻 고르기 (단어는 답한 뒤에 보인다)
@@ -168,7 +168,7 @@ def _ox(w):                       # 단어와 뜻이 맞는 짝인지 (O/X)
     right = _rng.random() < 0.5
     shown = MEANING[w] if right else MEANING[_others(w, 1)[0]]
     return {"kind": "ox", "question": w, "sub": shown, "prompt": "이 뜻이 맞나요?", "choices": ["맞아요", "아니에요"],
-            "answer_index": 0 if right else 1, "explanation": f"{w} — {MEANING[w]}", "word": w}
+            "answer_index": 0 if right else 1, "explanation": f"{w}: {MEANING[w]}", "word": w}
 
 
 def _spell(w):                    # 뜻을 보고 글자 조각으로 철자 맞추기
@@ -177,7 +177,7 @@ def _spell(w):                    # 뜻을 보고 글자 조각으로 철자 맞
     tiles = letters + decoys
     _rng.shuffle(tiles)
     return {"kind": "spell", "question": MEANING[w], "prompt": "글자를 순서대로 눌러 단어를 완성하세요", "tiles": tiles,
-            "n": len(letters), "answer_text": w.lower(), "explanation": f"{w} — {MEANING[w]}", "word": w}
+            "n": len(letters), "answer_text": w.lower(), "explanation": f"{w}: {MEANING[w]}", "word": w}
 
 
 def quiz_items(words):
@@ -229,7 +229,7 @@ def speed_items(uid, n=40):
     for _ in range(n):
         w = _rng.choice(pool)
         right = _rng.random() < 0.5
-        out.append({"word": w, "q": w, "a": MEANING[w] if right else MEANING[_others(w, 1)[0]], "ok": right, "exp": f"{w} — {MEANING[w]}"})
+        out.append({"word": w, "q": w, "a": MEANING[w] if right else MEANING[_others(w, 1)[0]], "ok": right, "exp": f"{w}: {MEANING[w]}"})
     return out
 
 

@@ -83,6 +83,9 @@
   {% endfor %}
   <a href="{{ url_for('student.questions', view='mine') }}" class="{{ 'active' if view == 'mine' }}">내 질문</a>
 </nav>
+{% if view == 'mine' %}
+<p class="row small">{% for st, label in [('', '전체'), ('answered', '답변 완료'), ('open', '답변 대기')] %}<a href="{{ url_for('student.questions', view='mine', status=st or None) }}" class="badge {{ '' if (request.args.get('status') or '') == st else 'gray' }}">{{ label }}</a> {% endfor %}</p>
+{% endif %}
 
 <div class="card">
   <div class="page-head">

@@ -17,7 +17,7 @@
   <ul class="mini-list">
     {% if news.feedback %}<li><a href="{{ url_for('books.analysis_home') }}">1:1 첨삭 답변 {{ news.feedback }}건</a></li>{% endif %}
     {% if news.papers %}<li><a href="{{ url_for('books.analysis_home') }}">시험지 첨삭 완료 {{ news.papers }}건</a></li>{% endif %}
-    {% if news.answers %}<li><a href="{{ url_for('student.questions', view='mine') }}">내 질문에 답변 {{ news.answers }}건</a></li>{% endif %}
+    {% if news.answers %}<li><a href="{{ url_for('student.questions', view='mine', status='answered') }}">내 질문에 답변 {{ news.answers }}건</a></li>{% endif %}
     {% if news.lessons %}<li><a href="{{ url_for('care.s_lessons') }}">새 수업 기록 {{ news.lessons }}건</a></li>{% endif %}
   </ul>
 </section>

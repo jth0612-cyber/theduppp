@@ -29,6 +29,27 @@
 <p class="small muted">세로선 = 반 평균</p>
 {% endif %}
 
+{% for o in omr %}
+<section class="card sys-scores" aria-label="{{ o.kind }} 성적">
+  <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회 · 복테&모의 분석과 같은 점수</span></div>
+  {% if o.chart.pts|length > 1 %}
+  <svg class="pr-chart" viewBox="0 0 {{ o.chart.w }} {{ o.chart.h }}" role="img" aria-label="{{ o.kind }} 득점률: {% for p in o.chart.pts %}{{ p.v }}%{{ ', ' if not loop.last }}{% endfor %}">
+    <line x1="10" x2="{{ o.chart.w - 10 }}" y1="{{ o.chart.base }}" y2="{{ o.chart.base }}" class="pr-axis"></line>
+    <polyline points="{{ o.chart.poly }}" class="pr-line"></polyline>
+    {% for p in o.chart.pts %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="3" class="pr-dot"></circle>{% endfor %}
+  </svg>
+  {% endif %}
+  <ul class="ss-list">
+    {% for e in o.exams %}
+    <li class="ss-row">
+      <div class="ss-main"><b>{{ e.title }}</b><span class="small muted">{{ (e.date or '')[5:]|replace('-', '.') }} · 틀린 문항 {{ e.n_wrong }}개</span></div>
+      <div class="ss-num"><span class="ss-score"><b>{{ fmt(e.score) }}</b><small> / {{ fmt(e.full) }}</small></span><span class="small muted">반 평균 {{ fmt(e.avg) }}</span></div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
 {% if scores %}
 <div class="card">
   {% if sys_scores %}<h2 class="sec-title">웹에 입력된 성적</h2>{% endif %}
@@ -45,5 +66,5 @@
     {% endfor %}
   </table></div>
 </div>
-{% elif not sys_scores %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
+{% elif not sys_scores and not omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
 {% endblock %}

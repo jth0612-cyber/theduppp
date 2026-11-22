@@ -138,7 +138,14 @@ def scores():
                     WHERE sc.student_id = ? ORDER BY e.exam_date DESC, e.id DESC""", (me["id"],))
     import sysdata
     code = sysdata.code_of_student(me["id"])
-    return render_template("student/scores.html", me=me, scores=rows, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt)
+    # 복테·모의고사 (OMR로 올라온 결과): 학부모 리포트와 같은 숫자
+    from views.care import parent_report, rate_chart
+    omr = []
+    for kind in ("복습 테스트", "모의고사"):
+        ex = [e for e in parent_report(me["id"])["exams"] if e["kind"] == kind]
+        if ex:
+            omr.append({"kind": kind, "exams": ex, "chart": rate_chart(ex)})
+    return render_template("student/scores.html", me=me, scores=rows, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt, omr=omr)
 
 
 # ---------- 질답 게시판 ----------
@@ -247,6 +254,9 @@ def questions():
     if view == "mine":
         where.append("q.student_id = ?")
         args.append(me["id"])
+        if request.args.get("status") in ("open", "answered"):        # 내 질문: 답변 완료 / 대기만
+            where.append("q.status = ?")
+            args.append(request.args["status"])
     if qtype in QUESTION_TYPES:
         where.append("q.qtype = ?")
         args.append(qtype)
