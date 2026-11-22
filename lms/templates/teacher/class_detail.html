@@ -217,7 +217,8 @@
         <div class="field"><label>교재명</label><input type="text" name="textbook" value="{{ n.textbook or '' }}" maxlength="60"></div>
       </div>
       <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required>{{ n.body }}</textarea></div>
-      <button class="btn small primary">저장</button> <span class="small muted">이 반 공지만 바뀜 · 학생에게 다시 알림은 가지 않음</span>
+      <label class="consent small"><input type="checkbox" name="siblings" value="1" checked> 같이 올린 다른 반 공지도 함께 수정</label>
+      <button class="btn small primary">저장</button> <span class="small muted">학생에게 다시 알림은 가지 않음</span>
     </form>
   </details>
 </div>

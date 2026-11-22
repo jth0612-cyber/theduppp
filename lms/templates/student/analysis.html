@@ -19,7 +19,7 @@
     <div class="pick-row">
       <select id="mock" name="mock">
         {% for k in kinds %}{% set ms = mocks|selectattr('kind', 'equalto', k)|list %}{% if ms %}
-        <optgroup label="{{ k }}">{% for m in ms %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else ' · 평가만' }}</option>{% endfor %}</optgroup>
+        <optgroup label="{{ k }}">{% for m in ms %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' · 미응시' if m.uploaded else ' · 평가만') }}</option>{% endfor %}</optgroup>
         {% endif %}{% endfor %}
       </select>
       <button class="btn small js-hide" type="submit">이동</button>

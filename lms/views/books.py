@@ -67,7 +67,8 @@ KINDS = ("복습 테스트", "모의고사")
 def _accessible_mocks():
     """학생이 볼 수 있는 회차: 강사가 올린 OMR 결과에 이 학생 답안이 있는 회차 (열려 있는 것만)."""
     return query("""SELECT m.*, b.title AS book_title, b.subject, b.kind,
-                           EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?) AS mine
+                           EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?) AS mine,
+                           EXISTS (SELECT 1 FROM omr_uploads o WHERE o.mock_id = m.id) AS uploaded
                     FROM mocks m JOIN books b ON b.id = m.book_id
                     WHERE m.open = 1 AND b.is_practice = 0 AND (
                           EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?)

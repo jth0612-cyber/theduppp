@@ -779,9 +779,15 @@ def notice_edit(nid):
         flash(str(e), "error")
     else:
         tag = request.form.get("tag") if request.form.get("tag") in NOTICE_TAGS else n["tag"]
-        execute("UPDATE notices SET tag = ?, textbook = ?, title = ?, body = ? WHERE id = ?", (tag, textbook, title, body, nid))
-        audit("notice_edit", f"notice:{nid}")
-        flash("공지를 수정했습니다.", "ok")
+        ids = [nid]
+        if request.form.get("siblings") == "1":                # '다른 반에도 올리기'로 같이 올린 공지 (같은 글·1분 안)
+            ids += [r["id"] for r in query("""SELECT id FROM notices WHERE id != ? AND title = ? AND body = ? AND tag = ?
+                                              AND ABS(strftime('%s', created_at) - strftime('%s', ?)) <= 60""",
+                                           (nid, n["title"], n["body"], n["tag"], n["created_at"]))]
+        for i in ids:
+            execute("UPDATE notices SET tag = ?, textbook = ?, title = ?, body = ? WHERE id = ?", (tag, textbook, title, body, i))
+            audit("notice_edit", f"notice:{i}")
+        flash("공지를 수정했습니다." if len(ids) == 1 else f"공지를 {len(ids)}개 반에서 수정했습니다.", "ok")
     return redirect(url_for("teacher.class_detail", cid=n["class_id"], tab="notices"))
 
 

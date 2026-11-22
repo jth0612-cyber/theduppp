@@ -744,9 +744,10 @@ class FeatureTest(AppTest):
         self.assertEqual([r["class_id"] for r in rows], sorted([cid, other]))
         with self.app.app_context():
             nid = query("SELECT id FROM notices WHERE class_id = ? AND title = '4월 휴강'", (cid,), one=True)["id"]
-        self.c.post(f"/t/notices/{nid}/edit", data={"tag": "공지", "title": "4월 휴강 (수정)", "body": "4/10 · 4/17 · 4/24 토"})
+        self.c.post(f"/t/notices/{nid}/edit", data={"tag": "공지", "title": "4월 휴강 (수정)", "body": "4/10 · 4/17 · 4/24 토", "siblings": "1"})
         with self.app.app_context():
-            self.assertEqual(query("SELECT title FROM notices WHERE id = ?", (nid,), one=True)["title"], "4월 휴강 (수정)")
+            titles = [r["title"] for r in query("SELECT title FROM notices WHERE class_id IN (?, ?)", (cid, other))]
+        self.assertEqual(titles, ["4월 휴강 (수정)"] * 2)                     # 같이 올린 반도 함께
 
     def test_student_detail_shows_parent_report_parts(self):
         cid, s1, _ = self._students()
