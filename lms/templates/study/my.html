@@ -48,7 +48,7 @@
 
 <section class="my-sec" id="progress" aria-labelledby="h-prog">
   <div class="sec-head"><h2 id="h-prog">학습 진도</h2>
-    <form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="통과 Quiz 34개 TOPIC 진도를 모두 초기화할까요? 공부 시간 기록은 그대로 남습니다.">
+    <form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="통과 Quiz 34개 TOPIC 진도를 모두 초기화하시겠습니까? 공부 시간 기록은 그대로 남습니다.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="all">
       <button class="btn small">전체 초기화</button></form></div>
   <p class="small muted">통과 Quiz: TOPIC 진술 중 마지막에 맞힌 비율 · 영단어: Day 01~50 1000단어 중 외운 비율</p>
@@ -61,7 +61,7 @@
       <tr><td><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="muted">{{ t.code }}</span> {{ t.title }}</a></td>
         <td><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></td>
         <td class="num">{{ t.pct }}%</td>
-        <td class="num">{% if t.pct %}<form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="TOPIC {{ t.code }} 진도를 초기화할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="{{ t.code }}"><button class="btn small">초기화</button></form>{% endif %}</td></tr>
+        <td class="num">{% if t.pct %}<form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="TOPIC {{ t.code }} 진도를 초기화하시겠습니까?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="{{ t.code }}"><button class="btn small">초기화</button></form>{% endif %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

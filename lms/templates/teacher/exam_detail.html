@@ -10,7 +10,7 @@
   </div>
   <div class="row">
     <a class="btn" href="{{ url_for('teacher.exam_export', eid=exam.id) }}">CSV 내보내기</a>
-    <form method="post" action="{{ url_for('teacher.exam_delete', eid=exam.id) }}" data-confirm="시험과 입력된 점수를 모두 삭제할까요?">
+    <form method="post" action="{{ url_for('teacher.exam_delete', eid=exam.id) }}" data-confirm="시험과 입력된 점수를 모두 삭제하시겠습니까?">
       {{ csrf() }}<button class="btn danger">시험 삭제</button></form>
   </div>
 </div>

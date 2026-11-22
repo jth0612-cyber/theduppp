@@ -112,7 +112,7 @@ class RoomsTest(unittest.TestCase):
         with self.app.app_context():
             execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
         r = a.post("/s/rooms/sento/write", data={"body": "시1발 졸려"}).get_json()        # 욕설 거르기
-        self.assertFalse(r["ok"]); self.assertIn("쓸 수 없는 말", r["error"])
+        self.assertFalse(r["ok"]); self.assertIn("사용할 수 없는 말", r["error"])
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 1)
         # 같은 장소의 친구는 beat 로 칠판 글을 받는다
         board = b.post("/s/rooms/sento/beat", data={}).get_json()["board"]

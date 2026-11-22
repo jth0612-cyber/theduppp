@@ -83,22 +83,22 @@ def register_book():
         fails = query("SELECT COUNT(*) AS n FROM audit_log WHERE user_id = ? AND action = 'book_code_failed' "
                       "AND created_at >= ?", (g.user["id"], since), one=True)["n"]
         if fails >= MAX_CODE_FAILS_PER_HOUR:
-            flash("코드 입력이 여러 번 맞지 않아 잠시 막아 두었어요. 1시간 뒤에 다시 시도해 주세요.", "error")
+            flash("코드 입력이 여러 번 맞지 않아 잠시 차단했습니다. 1시간 뒤에 다시 시도해 주세요.", "error")
             return render_template("student/book_register.html", step=2), 429
         code = analysis.normalize_code(request.form.get("code"))
         row = query("SELECT c.*, b.title, b.expires_on FROM book_codes c JOIN books b ON b.id = c.book_id "
                     "WHERE c.code = ?", (code,), one=True) if code else None
         error = None
         if row is None:
-            error = "일치하는 코드가 없어요. 12자리를 다시 확인해 주세요. 코드에는 숫자 0·1과 영문 O·I·L이 들어가지 않아요."
+            error = "일치하는 코드가 없습니다. 12자리를 다시 확인해 주세요. 코드에는 숫자 0·1과 영문 O·I·L이 포함되지 않습니다."
         elif row["expires_on"] < _today():
-            error = "이용 기간이 지난 교재예요."
+            error = "이용 기간이 지난 교재입니다."
         elif query("SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",
                    (g.user["id"], row["book_id"]), one=True):
-            flash("이미 등록한 교재예요.", "ok")
+            flash("이미 등록한 교재입니다.", "ok")
             return redirect(url_for("books.analysis_home"))
         elif row["max_uses"] is not None and row["uses"] >= row["max_uses"]:
-            error = "이미 다른 계정에서 쓴 코드예요. 착오라면 선생님께 알려 주세요."
+            error = "이미 다른 계정에서 사용한 코드입니다. 착오라면 선생님께 알려 주세요."
         if error:
             audit("book_code_failed", f"code:{(code or '')[:4]}")
             flash(error, "error")
@@ -337,7 +337,7 @@ def delete_code(cid):
         abort(404)
     execute("DELETE FROM book_codes WHERE id = ?", (cid,))
     audit("book_code_deleted", f"code:{cid}")
-    flash("코드를 삭제했습니다. 이미 등록한 학생은 계속 쓸 수 있어요.", "ok")
+    flash("코드를 삭제했습니다. 이미 등록한 학생은 계속 사용할 수 있습니다.", "ok")
     return redirect(url_for("books.teacher_book", bid=row["book_id"]))
 
 

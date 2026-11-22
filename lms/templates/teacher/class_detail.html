@@ -15,7 +15,7 @@
       <div class="field"><label>구분</label><div class="seg-pick" role="radiogroup" aria-label="구분">
         <label><input type="radio" name="track" value="단과" {{ 'checked' if cls.track == '단과' }}><span>단과</span></label>
         <label><input type="radio" name="track" value="재종" {{ 'checked' if cls.track == '재종' }}><span>재종</span></label></div>
-        <p class="small muted">단과 학생은 출결 카드 번호가 아이디예요.</p></div>
+        <p class="small muted">단과 학생은 출결 카드 번호가 아이디입니다.</p></div>
       <div class="field"><label>반 이름</label><input type="text" name="name" value="{{ cls.name }}" maxlength="60" required></div>
       <div class="field"><label>설명</label><input type="text" name="description" value="{{ cls.description }}" maxlength="300"></div>
       <div class="field"><label><input type="checkbox" name="archived" value="1" {{ 'checked' if cls.archived }}> 보관(종강)</label></div>
@@ -37,7 +37,7 @@
   <div class="page-head">
     <div>
       <h2 id="h-codes">학생 개별 가입 코드</h2>
-      <p class="small muted">학생마다 다른 코드를 하나씩 나눠 주세요. 학생은 가입할 때 <b>코드 + 이름 + 아이디 + 비밀번호</b>를 넣고, 코드가 맞으면 바로 가입돼요. 한 코드는 한 번만 쓸 수 있어요.</p>
+      <p class="small muted">학생마다 다른 코드를 하나씩 나눠 주세요. 학생은 가입할 때 <b>코드 + 이름 + 아이디 + 비밀번호</b>를 넣고, 코드가 맞으면 바로 가입됩니다. 한 코드는 한 번만 사용할 수 있습니다.</p>
     </div>
     <p class="small">등록 {{ codes|length }}개 · 가입 {{ codes|selectattr('student_id')|list|length }}명{% if codes %} · <a href="{{ url_for('teacher.class_codes_csv', cid=cls.id) }}">CSV로 받기</a>{% endif %}</p>
   </div>
@@ -53,7 +53,7 @@
       <div class="field"><label for="codes-n">이 사이트에서 난수 코드 만들기</label>
         <div class="row"><input id="codes-n" type="number" name="count" min="1" max="200" value="30" class="shrink"><span class="small muted">개</span></div></div>
       <button class="btn">만들기</button>
-      <p class="small muted">'CSV로 받기'로 내려받아 한 명에게 하나씩.</p>
+      <p class="small muted">'CSV로 받기'로 내려받아 한 명에게 하나씩</p>
     </form>
   </div>
   {% if codes %}
@@ -70,7 +70,7 @@
       </tr>
       {% endfor %}
     </table></div>
-    <button class="btn small danger mt" data-confirm="고른 코드를 지울까요? (가입에 쓴 코드는 지워지지 않아요)">고른 코드 지우기</button>
+    <button class="btn small danger mt" data-confirm="선택한 코드를 삭제하시겠습니까? (가입에 사용한 코드는 삭제되지 않습니다)">고른 코드 지우기</button>
   </form>
   {% endif %}
 </section>
@@ -81,7 +81,7 @@
       {{ csrf() }}
       <div class="row">
         <div class="field"><label>이름</label><input type="text" name="name" maxlength="40" required></div>
-        <div class="field"><label>아이디 (로그인할 때 써요)</label><input type="text" name="student_no" maxlength="30" required></div>
+        <div class="field"><label>아이디 (로그인할 때 사용)</label><input type="text" name="student_no" maxlength="30" required></div>
       </div>
       <div class="row">
         <div class="field"><label>목표 (선택)</label><input type="text" name="target" maxlength="60" placeholder="예: 목표 대학·학과"></div>
@@ -194,7 +194,7 @@
       <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · <b>{{ n.readers }}/{{ n.members }}명 읽음</b> · 좋아요 {{ n.likes }}{% if n.renotified_at %} · 안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at[5:16] }}){% endif %}</span></div>
     <div class="row">
       <form method="post" action="{{ url_for('teacher.notice_pin', nid=n.id) }}">{{ csrf() }}<button class="btn small">{{ '고정 해제' if n.pinned else '맨 위 고정' }}</button></form>
-      <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제할까요?">
+      <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제하시겠습니까?">
         {{ csrf() }}<button class="btn small danger">삭제</button>
       </form>
     </div>
@@ -224,7 +224,7 @@
       <td>{{ kind_badge(m.original_name) }} <a href="{{ url_for('student.file', fid=m.file_id) }}">{{ m.original_name }}</a></td>
       <td class="num small">{{ filesize(m.size) }}</td>
       <td class="small muted">{{ m.created_at[:10] }}</td>
-      <td><form method="post" action="{{ url_for('teacher.material_delete', mid=m.id) }}" data-confirm="이 자료를 삭제할까요?">
+      <td><form method="post" action="{{ url_for('teacher.material_delete', mid=m.id) }}" data-confirm="이 자료를 삭제하시겠습니까?">
         {{ csrf() }}<button class="btn small danger">삭제</button></form></td>
     </tr>
     {% endfor %}
@@ -262,7 +262,7 @@
       <td class="small">{{ v.duration or '-' }}</td>
       <td class="small muted">{{ v.created_at[:10] }}</td>
       <td class="small">{% if v.expires_on %}{{ v.expires_on }}{% if v.expires_on < today %} <span class="badge gray">만료</span>{% endif %}{% else %}-{% endif %}</td>
-      <td><form method="post" action="{{ url_for('teacher.video_delete', vid=v.id) }}" data-confirm="이 영상을 목록에서 삭제할까요?">
+      <td><form method="post" action="{{ url_for('teacher.video_delete', vid=v.id) }}" data-confirm="이 영상을 목록에서 삭제하시겠습니까?">
         {{ csrf() }}<button class="btn small danger">삭제</button></form></td>
     </tr>
     {% endfor %}

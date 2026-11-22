@@ -217,7 +217,7 @@ def questions():
             try:
                 photos = _upload_images(required=qtype == "학습질문")
             except ValueError as e:
-                form_err = ("image", str(e) + " 적은 내용은 그대로 남아 있어요.")
+                form_err = ("image", str(e) + " 작성한 내용은 그대로 남아 있습니다.")
             else:
                 assignee = request.form.get("assignee", type=int) if qtype == "학습상담" else None
                 qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype, assignee_id) VALUES (?, ?, ?, ?, ?, ?)",
@@ -298,7 +298,7 @@ def question_followup(qid):
     if not q["is_mine"]:
         abort(404)
     if q["answer_count"] == 0:
-        flash("선생님 답변이 달린 뒤에 추가 질문을 할 수 있어요.", "error")
+        flash("선생님 답변이 달린 뒤에 추가 질문을 할 수 있습니다.", "error")
     elif q["followup_count"] >= MAX_FOLLOWUPS:
         flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 가능합니다. 새 질문으로 올려 주세요.", "error")
     else:
@@ -310,7 +310,7 @@ def question_followup(qid):
             try:
                 image_id = _upload_image(required=False)
             except ValueError as e:
-                err = str(e) + " 적은 내용은 그대로 남아 있어요."
+                err = str(e) + " 작성한 내용은 그대로 남아 있습니다."
         if err:   # 적은 내용을 날리지 않고 같은 화면에 그대로 돌려준다
             can_follow_up = q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
             return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),

@@ -65,7 +65,7 @@ def login():
         if error:
             pending = query("SELECT password_hash FROM signup_requests WHERE student_no = ?", (username,), one=True)
             if pending and verify_password(pending["password_hash"], password):
-                error = "가입 승인을 기다리고 있어요. 선생님이 승인하면 로그인할 수 있어요."
+                error = "가입 승인 대기 중입니다. 선생님이 승인하면 로그인할 수 있습니다."
             flash(error, "error")
             return render_template("login.html", username=username)
         login_user(user)
@@ -150,15 +150,15 @@ def signup():
         if not track:
             error, field = "단과와 재종 중 하나를 골라 주세요.", "track"
         elif sc is None:
-            error, field = "학생코드가 올바르지 않아요. 조교 선생님께 받은 코드를 다시 확인해 주세요.", "code"
+            error, field = "학생코드가 올바르지 않습니다. 조교 선생님께 받은 코드를 다시 확인해 주세요.", "code"
         elif sc["student_id"]:
-            error, field = "이미 가입에 쓴 코드예요. 착오라면 선생님께 알려 주세요.", "code"
+            error, field = "이미 가입에 사용한 코드입니다. 착오라면 선생님께 알려 주세요.", "code"
         elif sc["track"] != track:
-            error, field = f"이 학생코드는 {sc['track']} 반 코드예요. 위에서 {sc['track']}을 골라 주세요.", "code"
+            error, field = f"이 학생코드는 {sc['track']} 반 코드입니다. 위에서 {sc['track']}을 골라 주세요.", "code"
         elif not _NAME.match(form["name"]):
             error, field = "이름은 한글 또는 영문 2~20자로 입력하세요.", "name"
         elif track == "단과" and not normalize_card(form["student_no"]):
-            error, field = "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자예요.", "student_no"
+            error, field = "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자입니다.", "student_no"
         elif track == "재종" and not _STUDENT_NO.match(form["student_no"]):
             error, field = "아이디는 영문·숫자·- 로 3~30자입니다.", "student_no"
         elif problem := password_problem(password):
@@ -166,15 +166,15 @@ def signup():
         elif password != request.form.get("confirm", ""):
             error, field = "비밀번호가 서로 일치하지 않습니다.", "confirm"
         elif request.form.get("consent") != "1":
-            error, field = "개인정보 수집·이용에 동의해야 가입할 수 있어요.", "consent"
+            error, field = "개인정보 수집·이용에 동의해야 가입할 수 있습니다.", "consent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
-            error, field = ("이미 등록된 카드예요. 카드를 잘못 받았다면 조교 선생님께 알려 주세요." if track == "단과"
-                            else "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요."), "student_no"
+            error, field = ("이미 등록된 카드입니다. 카드를 잘못 받았다면 조교 선생님께 알려 주세요." if track == "단과"
+                            else "이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요."), "student_no"
         elif (roster := query("SELECT * FROM students WHERE student_no = ?", (form["student_no"],), one=True)) and \
                 (roster["class_id"] != sc["class_id"] or not roster["active"]):
-            error, field = "이미 쓰이고 있는 아이디예요. 다른 아이디를 정해 주세요.", "student_no"
+            error, field = "이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요.", "student_no"
         elif gid and query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True):
-            error = "이 Google 계정은 이미 가입했어요. 로그인해 주세요."
+            error = "이 Google 계정은 이미 가입되어 있습니다. 로그인해 주세요."
         if error:
             if sc is None:
                 audit("signup_code_failed", f"code:{code[:4]}")
@@ -200,6 +200,6 @@ def signup():
         user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)
         login_user(user)
         g.user = user
-        flash(f"{sc['class_name']} 가입 완료.", "ok")
+        flash(f"{sc['class_name']} 가입 완료", "ok")
         return redirect(_home_for(user))
     return render_template("signup.html", form=form, gid=gid, errors={}, track=track)

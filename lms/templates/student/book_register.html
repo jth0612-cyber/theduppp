@@ -4,7 +4,7 @@
 <div class="narrow">
 {% if step == 3 %}
   <header class="ed-head">
-    <h1>교재를 등록했어요</h1>
+    <h1>교재 등록 완료</h1>
   </header>
   <div class="tag-card" aria-label="등록한 교재">
     <span class="tag-hole" aria-hidden="true"></span>
@@ -23,14 +23,14 @@
 {% else %}
   <header class="ed-head">
     <h1>교재 코드 입력</h1>
-    <p class="ed-lede">표지 안쪽 첫 장의 12자리. 수업 배포 코드도 여기에.</p>
+    <p class="ed-lede">표지 안쪽 첫 장의 12자리 · 수업 배포 코드도 여기에</p>
   </header>
   <form method="post" class="code-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="code">코드 12자리</label>
     <input type="text" id="code" name="code" class="code-input" required maxlength="20" autocomplete="off"
            autocapitalize="characters" spellcheck="false" placeholder="ABCD EFGH JKMN" aria-describedby="code-help" data-code-input>
-    <p class="fine" id="code-help">띄어쓰기·하이픈 없이. 0·1·O·I·L은 쓰지 않습니다. 인쇄가 흐리면 행정문의로 사진.</p>
+    <p class="fine" id="code-help">띄어쓰기·하이픈 없이 · 0·1·O·I·L은 쓰지 않습니다. 인쇄가 흐리면 행정문의로 사진</p>
     <button class="btn primary" type="submit">등록</button>
   </form>
   <p class="mt"><a href="{{ url_for('books.analysis_home') }}">복테&모의 분석으로</a></p>

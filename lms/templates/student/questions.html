@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>질답 게시판</h1>
-    <p class="muted small">학습질문은 닉네임 <b>{{ g.user.nickname }}</b>(으)로 공개. 행정문의는 비공개.</p>
+    <p class="muted small">학습질문은 닉네임 <b>{{ g.user.nickname }}</b>(으)로 공개 · 행정문의는 비공개</p>
   </div>
 </div>
 
@@ -28,11 +28,11 @@
     <div class="guide small">
       <b>질문 작성 안내</b>
       <ul>
-        <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식. 예) 기출 1단원 42p 3번</li>
+        <li><b>제목</b>은 <code>[교재-페이지-번호]</code> 형식 · 예) 기출 1단원 42p 3번</li>
         <li><b>학습질문</b>은 문제 사진 필수 (해설 질문이면 해설 사진도).</li>
         <li><b>학습상담</b>은 공부 방법·계획 상담입니다. 상담받을 조교를 고를 수 있고, 나와 조교만 봅니다.</li>
         <li>어디서 막혔는지 적어 주세요.</li>
-        <li>답변을 받은 뒤 <b>추가 질문은 2번까지</b> 할 수 있어요.</li>
+        <li>답변을 받은 뒤 <b>추가 질문은 2번까지</b> 할 수 있습니다.</li>
         <li>이름·연락처는 적지 마세요.</li>
       </ul>
     </div>
@@ -49,11 +49,11 @@
     <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
       <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 3장까지, 한 장 20MB 이하 · 학습질문은 필수)</span></label>
       <input type="file" id="q-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
-      <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 적은 내용은 그대로 있어요.{% endif %}</p>
+      <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 작성한 내용은 그대로 있습니다.{% endif %}</p>
       <div class="photo-preview" data-photo-preview hidden><div class="photo-thumbs" data-photo-thumbs></div><span></span><button type="button" class="btn small" data-photo-clear>모두 빼기</button></div>
     </div>
     <button class="btn primary">질문 등록</button>
-    <p class="small muted draft-note" data-draft-note hidden>쓰던 내용을 불러왔어요.</p>
+    <p class="small muted draft-note" data-draft-note hidden>작성하던 내용을 불러왔습니다.</p>
   </form>
 </details>
 

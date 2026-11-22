@@ -739,7 +739,7 @@ const colors = root.dataset.colors.split(",");
 let myColor = root.dataset.color;
 const meName = root.dataset.meName || (document.querySelector(".m-who") || {}).textContent || "나", meCap = root.dataset.meCap || null;
 const me = new Avatar({ color: myColor, nick: meName.trim() || "나", cap: meCap, me: true });
-me.onStageUp = (n) => whisper(["5분. 여기부터 기록됩니다.", "15분. 어깨 위로 불티.", "40분. 등 뒤로 열공 불꽃.", "80분. 푸른 불꽃이 붙었어요."][n - 1], 4200);
+me.onStageUp = (n) => whisper(["5분 · 여기부터 기록됩니다.", "15분 · 어깨 위로 불티", "40분 · 등 뒤로 열공 불꽃", "80분 · 푸른 불꽃이 붙었습니다."][n - 1], 4200);
 me.place(P.spawn.x, P.spawn.z, P.spawn.yaw !== undefined ? P.spawn.yaw : Math.PI);
 // 장소 사진(썸네일) 찍기: ?shot=1&cam=x,y,z&look=x,y,z&fov=45 → 내 캐릭터를 숨기고 카메라를 그 자리에 고정
 const QS = new URLSearchParams(location.search);
@@ -874,11 +874,11 @@ function tap(cx, cy) {
   if (o.userData.seat !== undefined) return goSit(o.userData.seat);
   if (o.userData.notes) {      // 판을 누르면: 쓸 수 있으면 입력칸으로, 아니면 어디 앉아야 하는지 안내
     const inp = chatEl && !chatEl.hidden ? chatEl.querySelector("input") : null;
-    if (inp) inp.focus(); else whisper((P.chat && P.chat.hint) || "자리에 앉으면 여기에 쓸 수 있어요.");
+    if (inp) inp.focus(); else whisper((P.chat && P.chat.hint) || "자리에 앉으면 여기에 작성할 수 있습니다.");
     return;
   }
   if (o.userData.action) return act(o.userData.action, o);
-  if (state === "focus") return whisper("집중 중에는 자리에 머물러요. 일어나려면 '그만하기'를 누르세요.");
+  if (state === "focus") return whisper("집중 중에는 자리에 머뭅니다. 일어나려면 '그만하기'를 누르세요.");
   const pts = P.planWalk(me.pos, h.point, o);
   if (!pts || !pts.length) return;
   standUp(true);
@@ -922,8 +922,8 @@ function nearestFreeSeat() {
   return best;
 }
 function goSit(id) {
-  if (state === "focus") return whisper("집중 중이에요. 자리를 옮기려면 먼저 '그만하기'를 누르세요.");
-  if (occupiedSeats().has(id)) return whisper(`그 ${P.seatNoun}에는 이미 누가 있어요.`);
+  if (state === "focus") return whisper("집중 중입니다. 자리를 옮기려면 먼저 '그만하기'를 누르세요.");
+  if (occupiedSeats().has(id)) return whisper(`그 ${P.seatNoun}에는 이미 다른 사람이 있습니다.`);
   standUp(true);
   const path = P.planSeat(me.pos, id);
   me.walkTo(path);
@@ -941,7 +941,7 @@ function sitAt(id) {
   // 실내 자리·보는 방향이 정해진 자리는 카메라를 돌리는 동안 벽에 가려지므로, 돌리지 않고 바로 자리 화면으로 넘어간다
   if (s.fp || s.camYaw !== undefined || (P.indoor && P.indoor(s.x, s.z))) camCut();
   audio.sfx((typeof P.sitSound === "function" ? P.sitSound(s) : P.sitSound) || "cushion");
-  whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았어요.");
+  whisper((typeof P.sitText === "function" ? P.sitText(s) : P.sitText) || "자리에 앉았습니다.");
   render(); sync(true);
 }
 function standUp(silent) {
@@ -949,7 +949,7 @@ function standUp(silent) {
   if (state === "focus") return;
   state = "free"; me.seat = null; mySeat = null; me.pose = "stand"; cam.tDist = CAM.free; cam.tPitch = CAM.pitch;
   if (SEATS[me.lastSeat] && P.leaveSeat) { const [x, z] = P.leaveSeat(SEATS[me.lastSeat]); me.place(x, z); }
-  if (!silent) whisper("천천히 일어났어요.");
+  if (!silent) whisper("천천히 일어났습니다.");
   render(); sync(true);
 }
 // 장소가 쓰는 공통 기능
@@ -1022,7 +1022,7 @@ if (chatEl) chatEl.addEventListener("submit", (e) => {
     if (d.board && P.board) P.board(d.board);
     if (d.ok) { inp.value = ""; inp.blur(); audio.sfx(P.writeSound || "cushion"); if (P.chat && P.chat.done) whisper(P.chat.done); }
     else whisper(d.error || "다시 시도해 주세요.", 3600);
-  }).catch(() => whisper("연결이 불안정해요. 잠시 뒤 다시 눌러 주세요.")).finally(() => { b.disabled = false; });
+  }).catch(() => whisper("연결이 불안정합니다. 잠시 뒤 다시 눌러 주세요.")).finally(() => { b.disabled = false; });
 });
 Object.assign(ICON, P.icons || {});
 const LABEL = Object.assign({ jump: "점프", hi: "하이!", sit: "앉기", focus: "집중 시작", breathe: "숨 고르기", gassho: "합장", bow: "절하기", stand: "일어나기", stop: "그만하기" }, P.labels || {});
@@ -1045,8 +1045,8 @@ function render() {
   $("[data-timer]").hidden = state !== "focus";
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
-  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요` : `바닥을 누르면 걸어가요 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 앉아요 · 스페이스는 점프`)
-    : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록돼요";
+  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 이동 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 착석` : `바닥을 누르면 이동 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 착석 · 스페이스는 점프`)
+    : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록됩니다";
 }
 actionsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act); });
 const ctaEl = $("[data-cta]"), ctaMin = $("[data-cta-min]");
@@ -1055,10 +1055,10 @@ plansEl.addEventListener("change", () => { ctaMin.textContent = chosenPlan() + "
 let stopArmed = 0;       // '그만하기'는 두 번 눌러야 끝난다 (잘못 눌러 집중이 끊기지 않게)
 function act(id, obj) {
   if (P.custom && P.custom[id]) return P.custom[id](E, obj);
-  if (id === "sit") { const s = nearestFreeSeat(); return s === null ? whisper(`빈 ${josa(P.seatNoun, "이", "가")} 없어요.`) : goSit(s); }
+  if (id === "sit") { const s = nearestFreeSeat(); return s === null ? whisper(`빈 ${josa(P.seatNoun, "이", "가")} 없습니다.`) : goSit(s); }
   if (id === "stand") return standUp();
-  if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모았어요."); sync(true); return; }
-  if (id === "bow") { me.bow(); whisper("천천히 고개를 숙여요."); E.share("bow"); return; }
+  if (id === "gassho") { me.pose = me.pose === "gassho" ? (me.seat !== null ? "sit" : "stand") : "gassho"; if (me.pose === "gassho") whisper("두 손을 모았습니다."); sync(true); return; }
+  if (id === "bow") { me.bow(); whisper("천천히 고개를 숙입니다."); E.share("bow"); return; }
   if (id === "hi") { me.gesture("wave", 2.2); me.say("하이!"); audio.sfx("hi"); E.share("hi"); return; }
   if (id === "jump") {
     if (state !== "free" || me.seat !== null) return;     // 앉아 있거나 집중 중에는 뛰지 않는다
@@ -1070,7 +1070,7 @@ function act(id, obj) {
     stopArmed = Date.now() + 4000;
     const b = actionsEl.querySelector('[data-act="stop"]'), min = Math.floor((Date.now() - focusStart) / 60000);
     if (b) { b.classList.add("is-armed"); b.querySelector("span").textContent = "한 번 더"; setTimeout(() => { if (Date.now() >= stopArmed && state === "focus") render(); }, 4100); }
-    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않아요. 끝내려면 한 번 더 누르세요." : `지금 끝내면 ${min}분이 기록돼요. 끝내려면 한 번 더 누르세요.`, 4000);
+    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않습니다. 끝내려면 한 번 더 누르세요." : `지금 끝내면 ${min}분이 기록됩니다. 끝내려면 한 번 더 누르세요.`, 4000);
   }
 }
 
@@ -1120,7 +1120,7 @@ let breathing = false;
 async function breathe() {
   if (breathing) return; breathing = true;
   me.pose = "breathe"; sync(true);
-  const steps = [["숨을 천천히 들이쉬어요", 4000], ["잠깐 멈추고", 2000], ["어깨 힘을 빼고 길게 내쉬어요", 6000]];
+  const steps = [["숨을 천천히 들이쉽니다", 4000], ["잠깐 멈추고", 2000], ["어깨 힘을 빼고 길게 내쉽니다", 6000]];
   for (let r = 0; r < 3 && breathing; r++) for (const [t, ms] of steps) { whisper(t, ms - 150); await new Promise((ok) => setTimeout(ok, ms)); }
   whisperEl.classList.remove("is-on");
   if (me.pose === "breathe") me.pose = me.seat !== null ? "sit" : "stand";
@@ -1136,7 +1136,7 @@ function startFocus() {
   planMin = chosenPlan(); state = "focus"; focusStart = Date.now(); me.focus = true;
   seatCam(true);
   audio.sfx("bowl"); audio.duck(true);
-  whisper(P.focusText ? P.focusText(planMin) : planMin + "분, 지금부터 고요히.");
+  whisper(P.focusText ? P.focusText(planMin) : planMin + "분, 지금부터 고요히");
   render(); tickTimer(); post(root.dataset.beat, { action: "start", plan: planMin }).then(onBeat).catch(() => {}); sync(true);
 }
 let finishing = false;
@@ -1146,10 +1146,10 @@ function finishFocus(complete) {
   post(root.dataset.done, { minutes: complete ? planMin : minutes }).then((d) => {
     state = "sitting"; me.focus = false; audio.duck(false); audio.sfx("bowl");
     seatCam(false); render();
-    const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분.` : `5분이 안 돼서 기록하지 않았어요. 오늘 ${d.today}분.`;
+    const m = d.minutes >= 5 ? `${d.minutes}분 기록했습니다. 오늘 모두 ${d.today}분` : `5분이 안 되어 기록하지 않았습니다. 오늘 ${d.today}분`;
     whisper(m, 5000); msgEl.textContent = m;
     sync(true);
-  }).catch(() => { finishRetry = Date.now() + 5000; whisper(complete ? "연결이 불안정해요. 기록을 다시 보내는 중이에요." : "연결이 불안정해요. 잠시 뒤 다시 눌러 주세요."); }).finally(() => { finishing = false; });
+  }).catch(() => { finishRetry = Date.now() + 5000; whisper(complete ? "연결이 불안정합니다. 기록을 다시 보내는 중입니다." : "연결이 불안정합니다. 잠시 뒤 다시 눌러 주세요."); }).finally(() => { finishing = false; });
 }
 let finishRetry = 0;
 const ringEl = $("[data-ring]"), RING = 2 * Math.PI * 14;
@@ -1207,7 +1207,7 @@ function onBeat(d) {
     let o = others.get(m.id);
     if (!o) {
       o = new Avatar({ color: m.color, nick: m.nick, cap: m.cap }); o.place(m.x, m.z, m.ry); others.set(m.id, o);
-      if (entered) whisper(m.cap ? `${m.nick} ${m.cap === "선생님" ? "선생님이" : "조교님이"} 들어왔어요.` : `${m.nick}님이 들어왔어요.`, 2600);
+      if (entered) whisper(m.cap ? `${m.nick} ${m.cap === "선생님" ? "선생님이" : "조교님이"} 입장했습니다.` : `${m.nick}님이 입장했습니다.`, 2600);
     }
     o.setColor(m.color); o.setKing(m.king); o.setCharm(m.charm);
     // 친구가 한 동작을 내 화면에서도 보여 준다 (처음 본 순간의 번호는 기록만)

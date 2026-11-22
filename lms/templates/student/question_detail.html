@@ -11,7 +11,7 @@
       <span class="muted">{{ q.nickname }}{% if q.is_mine %} <span class="badge">나</span>{% endif %} · {{ q.created_at[:16] }}{% if q.qtype == '학습상담' %} · 상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구든 먼저' }}{% endif %}</span></p>
   </div>
   {% if q.is_mine and q.status == 'open' and not q.answer_count %}
-  <form method="post" action="{{ url_for('student.question_delete', qid=q.id) }}" data-confirm="질문을 삭제할까요?">
+  <form method="post" action="{{ url_for('student.question_delete', qid=q.id) }}" data-confirm="질문을 삭제하시겠습니까?">
     {{ csrf() }}<button class="btn small danger">삭제</button></form>
   {% endif %}
 </div>
@@ -61,10 +61,10 @@
     <div class="photo-preview" data-photo-preview hidden><img alt="첨부할 사진 미리보기"><span></span><button type="button" class="btn small" data-photo-clear>빼기</button></div>
   </div>
   <button class="btn primary">보내기</button>
-  <p class="small muted draft-note" data-draft-note hidden>쓰던 내용을 불러왔어요.</p>
+  <p class="small muted draft-note" data-draft-note hidden>작성하던 내용을 불러왔습니다.</p>
 </form>
 {% elif q.answer_count and q.followup_count >= max_followups %}
-<p class="small muted center">추가 질문을 다 썼어요. 새 질문으로 올려 주세요.</p>
+<p class="small muted center">추가 질문을 모두 사용했습니다. 새 질문으로 올려 주세요.</p>
 {% endif %}
 {% endif %}
 {% endblock %}

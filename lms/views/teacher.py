@@ -685,7 +685,7 @@ def question_detail(qid):
             audit("question_answer", f"question:{qid}")
             flash("답변을 등록했습니다.", "ok")
             from views.pwa import notify_student
-            notify_student(q["sid"], "질문에 답변이 달렸어요", q["title"], url_for("student.question_detail", qid=qid))
+            notify_student(q["sid"], "질문에 답변이 달렸습니다", q["title"], url_for("student.question_detail", qid=qid))
             nxt = query("""SELECT id FROM questions WHERE status = 'open' AND NOT (? = 'assistant' AND qtype = '학습상담'
                            AND assignee_id IS NOT NULL AND assignee_id != ?) ORDER BY created_at LIMIT 1""",
                         (g.user["role"], g.user["id"]), one=True)
@@ -961,13 +961,13 @@ def class_codes(cid):
         if bad:
             flash(f"영문·숫자 4~32자가 아닌 줄 {len(bad)}개는 건너뛰었어요: {', '.join(bad[:5])}", "error")
         if not (added or dup or bad):
-            flash("붙여넣은 코드가 없어요.", "error")
+            flash("붙여넣은 코드가 없습니다.", "error")
     elif action == "generate":
         n = max(1, min(200, request.form.get("count", type=int) or 0))
         for _ in range(n):
             execute("INSERT INTO student_codes (class_id, code) VALUES (?, ?)", (cid, new_student_code()))
         audit("student_codes_generate", f"class:{cid} n:{n}")
-        flash(f"코드 {n}개를 만들었어요. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
+        flash(f"코드 {n}개를 생성했습니다. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
     elif action == "delete":
         ids = [int(x) for x in request.form.getlist("ids") if x.isdigit()]
         n = 0
@@ -975,7 +975,7 @@ def class_codes(cid):
             n += get_db().execute("DELETE FROM student_codes WHERE id = ? AND class_id = ? AND student_id IS NULL", (i, cid)).rowcount
         get_db().commit()
         audit("student_codes_delete", f"class:{cid} n:{n}")
-        flash(f"쓰지 않은 코드 {n}개를 지웠어요.", "ok")
+        flash(f"쓰지 않은 코드 {n}개를 삭제했습니다.", "ok")
     return back
 
 
@@ -996,7 +996,7 @@ def class_joincode(cid):
     action = request.form.get("action")
     if action == "regen":
         execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(join_code_taken), cid))
-        flash("새 가입 코드를 만들었습니다. 예전 코드는 더 이상 쓸 수 없어요.", "ok")
+        flash("새 가입 코드를 만들었습니다. 예전 코드는 더 이상 사용할 수 없습니다.", "ok")
     elif action in ("open", "close"):
         execute("UPDATE classes SET join_open = ? WHERE id = ?", (1 if action == "open" else 0, cid))
         flash("가입을 받습니다." if action == "open" else "가입 받기를 멈췄습니다.", "ok")
@@ -1048,7 +1048,7 @@ def signups():
             for r in reqs:
                 execute("DELETE FROM signup_requests WHERE id = ?", (r["id"],))
                 audit("signup_reject", f"request:{r['id']} no:{r['student_no']}")
-            flash(f"{len(reqs)}건을 거절했습니다. 신청 정보는 지웠어요.", "ok")
+            flash(f"{len(reqs)}건을 거절했습니다. 신청 정보는 삭제했습니다.", "ok")
         return redirect(url_for("teacher.signups"))
     rows = query("""SELECT r.*, c.name AS class_name, s.name AS roster_name, s.class_id AS roster_class_id,
                            rc.name AS roster_class_name

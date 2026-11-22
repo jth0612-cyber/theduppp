@@ -189,7 +189,7 @@ def apply_upload(mid, raw, filename, by_id):
     mode = omr.mode_of(p, any(k != "" for k in key))
     missing = [i + 1 for i, k in enumerate(key) if k == ""]
     if mode == "choice" and missing:
-        raise omr.OmrError(f"정답이 없는 문항이 있습니다: {', '.join(map(str, missing))}번. 파일에 '정답' 줄을 넣거나 문항정보 시트에 정답을 적어 주세요.")
+        raise omr.OmrError(f"정답이 없는 문항이 있습니다: {', '.join(map(str, missing))}번 · 파일에 '정답' 줄을 넣거나 문항정보 시트에 정답을 적어 주세요.")
     # 배점: 파일의 배점 줄 > 문항정보 > 이미 저장된 배점 > 1
     oldp = m["pts"] if len(m["pts"]) == n else [None] * n
     pts = []

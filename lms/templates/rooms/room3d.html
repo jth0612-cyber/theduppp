@@ -11,7 +11,7 @@
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}" data-seat="{{ me.seat if me.seat is not none else '' }}"
      data-color="{{ my_color }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
-    <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
+    <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉습니다." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
 
     <div class="w3-top">
@@ -42,7 +42,7 @@
         <b>집중 시작</b><span data-cta-min>40분</span>
       </button>
       <nav class="w3-actions" data-actions aria-label="동작"></nav>
-      <p class="w3-hint" data-hint>바닥을 누르면 걸어가요 · 끌어서 둘러보기</p>
+      <p class="w3-hint" data-hint>바닥을 누르면 이동 · 끌어서 둘러보기</p>
     </div>
 
     <div class="w3-enter" data-enter>

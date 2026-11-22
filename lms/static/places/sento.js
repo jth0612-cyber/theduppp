@@ -305,7 +305,7 @@ export default {
       x.fillStyle = "#2f3b33"; x.fillRect(0, 0, 768, 480);
       for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`; x.fillRect(Math.random() * 768, Math.random() * 480, 2 + Math.random() * 30, 1 + Math.random() * 3); }
       x.textBaseline = "middle"; x.textAlign = "left";
-      if (!lines || !lines.length) { x.font = "400 36px 'Noto Sans KR', sans-serif"; x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 쓸 수 있어요", 384, 270); }
+      if (!lines || !lines.length) { x.font = "400 36px 'Noto Sans KR', sans-serif"; x.fillStyle = "rgba(232,239,230,.55)"; x.textAlign = "center"; x.fillText("화롯가에 앉으면 여기에 작성할 수 있습니다", 384, 270); }
       else {
         // 최근 글 최대 4개 (위에서 아래로 오래된 → 최근), 판 위쪽부터. 긴 글은 두 줄
         const NICK = 22, LH = 38, GAP = 18, TOP = 28, BOT = 452;
@@ -473,10 +473,10 @@ export default {
         if (ha !== hb) { const H = HUTS[ha >= 0 ? ha : hb]; if (!H || Math.abs(nz - (H.z + 1.2)) > 1.1) return [x, z]; }
         return c;
       },
-      welcome: "눈 내리는 노천탕. 탕이나 화롯가 방석에 앉으세요.",
-      sitText: (s) => s.kind === "water" ? "탕에 들어갔어요." : "화롯가 방석에 앉았어요.",
+      welcome: "눈 내리는 노천탕 · 탕이나 화롯가 방석에 앉으세요.",
+      sitText: (s) => s.kind === "water" ? "탕에 들어갔습니다." : "화롯가 방석에 앉았습니다.",
       sitSound: (s) => s.kind === "water" ? "soak" : "cushion",
-      focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만.`,
+      focusText: (m) => `${m}분, 김이 오르는 동안 한 가지에만`,
       spaceAction: "splash",
       actions: { free: ["soak", "hearth", "splash"], sitting: ["focus", "splash", "stand"], focus: ["stop"] },
       labels: { soak: "탕에 들어가기", hearth: "화롯가로", splash: "물 튕기기" },
@@ -486,21 +486,21 @@ export default {
         splash: '<svg viewBox="0 0 24 24"><path d="M12 4c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg>',
       },
       custom: {
-        soak(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 다 찼어요. 화롯가는 남아 있어요.") : E.sit(s); },
-        hearth(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(hearthSeat); s === null ? E.whisper("화롯가 방석이 다 찼어요.") : E.sit(s); },
+        soak(E) { if (E.state === "focus") return E.whisper("집중 중입니다. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 다 찼습니다. 화롯가는 남아 있습니다.") : E.sit(s); },
+        hearth(E) { if (E.state === "focus") return E.whisper("집중 중입니다. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(hearthSeat); s === null ? E.whisper("화롯가 방석이 다 찼습니다.") : E.sit(s); },
         splash(E) {
           if (!inPool(E.me.pos.x, E.me.pos.z) && E.me.seat === null) {
             const a = Math.atan2(E.me.pos.z - POOL.z, E.me.pos.x - POOL.x), r = poolR(a) + 0.6;
             if (!E.walk(route(E.me.pos.x, E.me.pos.z, POOL.x + Math.cos(a) * r, POOL.z + Math.sin(a) * r), () => { E.face(POOL.x, POOL.z); setTimeout(() => { splash(E); E.share("splash"); }, 250); })) return;
             return;
           }
-          splash(E); E.share("splash"); E.whisper("찰방, 물방울이 김 속으로 흩어져요.");
+          splash(E); E.share("splash"); E.whisper("찰방, 물방울이 김 속으로 흩어집니다.");
         },
       },
       remote: { splash: (E, av) => splash(E, av, false) },
       // 서버가 오두막별로 보낸다: { "0": [...], "1": [...], "2": [...] }
       board(b) { if (Array.isArray(b)) drawBoard(b, 0); else for (let i = 0; i < HUTS.length; i++) drawBoard((b && b[i]) || [], i); },
-      chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 적었어요.", hint: "화롯가 방석에 앉으면 칠판에 쓸 수 있어요." },
+      chat: { can: (s) => !!s && s.kind === "hearth", placeholder: "칠판에 한 줄 (화롯가 친구들에게)", done: "칠판에 기록했습니다.", hint: "화롯가 방석에 앉으면 칠판에 작성할 수 있습니다." },
       sounds: {
         // 물소리는 고음을 깎은 부드러운 판으로 낮게, 물방울·대나무는 드물게 (귀가 따갑지 않게)
         loops: [{ f: "sento/fire", g: 0.32 }, { f: "sento/water-soft", g: 0.42 }, { f: "sento/spout-soft", g: 0.2 }, { f: "sanji/wind", g: 0.26 }],

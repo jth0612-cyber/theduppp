@@ -14,7 +14,7 @@ bp = Blueprint("rooms", __name__)
 # key: (이름, 지역 느낌 한 줄, 남기는 글 이름, 남기는 글 안내, 소리)
 PLACES = {
     "sento": ("노천탕", "탕 자리 8개 · 화롯가 오두막 3채 · 화롯가 칠판", "휴게소 칠판", "몸 녹이고 나가며 한 줄 남기기", "water"),
-    "eki": ("바닷가 역", "승강장 의자 · 3분마다 열차가 지나가요 · 역 노트", "역 노트", "기차를 기다리며 노트에 한 줄", "waves"),
+    "eki": ("바닷가 역", "승강장 의자 · 3분마다 열차 통과 · 역 노트", "역 노트", "기차를 기다리며 노트에 한 줄", "waves"),
     "kissa": ("골목 찻집", "창가·바 자리, 다다미방 · 늘 비 오는 저녁", "냅킨 메모", "냅킨에 적어 두고 가기", "rain"),
 }
 # 장소 카드의 여행 포스터: 세로 일본어 이름, 영어 이름
@@ -26,8 +26,8 @@ SENTO_HEARTH = set(range(8, 20))
 # 3D 장소 안 판(칠판·역 노트)에 학생 글을 띄우는 곳
 #  chat : 정해진 자리에 앉은 학생만 짧게 쓰는 칠판 (노천탕 화롯가 방석 8~19번, 찻집 다다미 8~13번)
 #  notes: 그 장소에 남기는 글(하루 5줄)을 판에 보여 준다
-BOARDS = {"sento": {"kind": "chat", "seats": SENTO_HEARTH, "max": 40, "need": "화롯가 방석에 앉은 사람만 칠판에 쓸 수 있어요."},
-          "kissa": {"kind": "chat", "seats": set(range(8, 14)), "max": 40, "need": "다다미방 보라색 방석에 앉은 사람만 메모판에 쓸 수 있어요."},
+BOARDS = {"sento": {"kind": "chat", "seats": SENTO_HEARTH, "max": 40, "need": "화롯가 방석에 앉은 사람만 칠판에 작성할 수 있습니다."},
+          "kissa": {"kind": "chat", "seats": set(range(8, 14)), "max": 40, "need": "다다미방 보라색 방석에 앉은 사람만 메모판에 작성할 수 있습니다."},
           "eki": {"kind": "notes", "max": 40}}
 BOARD_LINES = 5
 CHAT_GAP_SECONDS = 4
@@ -319,7 +319,7 @@ def write(place):
     if not body:
         return fail("한 줄을 적어 주세요.")
     if bad_word(body):
-        return fail("쓸 수 없는 말이 들어 있어요.")
+        return fail("사용할 수 없는 말이 포함되어 있습니다.")
     if b["kind"] == "chat":
         me = query(f"""SELECT seat FROM room_presence WHERE user_id = ? AND place = ?
                        AND last_seen >= datetime('now', 'localtime', '-{PRESENT_SECONDS} seconds')""", (uid, place), one=True)
@@ -327,16 +327,16 @@ def write(place):
             return fail(b["need"])
         last = query("SELECT created_at FROM room_chat WHERE user_id = ? ORDER BY id DESC LIMIT 1", (uid,), one=True)
         if last and (datetime.now() - datetime.fromisoformat(last["created_at"])).total_seconds() < CHAT_GAP_SECONDS:
-            return fail("너무 빨라요. 잠시 뒤에 적어 주세요.")
+            return fail("너무 빠릅니다. 잠시 뒤에 작성해 주세요.")
         if query("""SELECT COUNT(*) AS n FROM room_chat WHERE user_id = ?
                     AND date(created_at) = date('now', 'localtime')""", (uid,), one=True)["n"] >= CHAT_DAY_MAX:
-            return fail("하루 다섯 줄을 다 썼어요.")
+            return fail("하루 다섯 줄 제한을 모두 사용했습니다.")
         execute("INSERT INTO room_chat (place, user_id, body, board) VALUES (?, ?, ?, ?)",
                 (place, uid, body, _board_of_seat(place, me["seat"])))
     else:
         if query("""SELECT COUNT(*) AS n FROM room_notes WHERE user_id = ?
                     AND created_at >= datetime('now', 'localtime', '-1 day')""", (uid,), one=True)["n"] >= 5:
-            return fail("하루에 다섯 줄까지 남길 수 있어요.")
+            return fail("하루에 다섯 줄까지 남길 수 있습니다.")
         execute("INSERT INTO room_notes (place, user_id, body) VALUES (?, ?, ?)", (place, uid, body))
     return jsonify(ok=True, board=_board(place))
 

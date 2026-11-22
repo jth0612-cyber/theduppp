@@ -316,18 +316,18 @@ export function buildEggs(K, { dark }) {
   }
 
   const TEXT = {
-    cat: "야옹, 검은 고양이가 눈을 가늘게 떠요.",
-    shrine: "작은 여우 사당.",
-    vend: "덜컹, 따뜻한 캔커피가 굴러 나왔어요.",
-    kasa: "앗, 우산 도깨비가 깜짝 놀라 우산을 접었어요.",
-    lab: "문이 살짝 더 열리고 분필 소리가 들려요. 누군가의 비밀 연구실인가 봐요.",
-    wisp: "도깨비불이 우물 속으로 스르륵 숨었어요.",
+    cat: "야옹, 검은 고양이가 눈을 가늘게 뜹니다.",
+    shrine: "작은 여우 사당",
+    vend: "덜컹, 따뜻한 캔커피가 굴러 나왔습니다.",
+    kasa: "앗, 우산 도깨비가 깜짝 놀라 우산을 접었습니다.",
+    lab: "문이 살짝 더 열리고 분필 소리가 들립니다. 누군가의 비밀 연구실인 듯합니다.",
+    wisp: "도깨비불이 우물 속으로 스르륵 숨었습니다.",
   };
   function found(id) {
     let got = []; try { got = JSON.parse(localStorage.getItem("kissa-eggs") || "[]"); } catch (_) {}
     const first = !got.includes(id); if (first) { got.push(id); try { localStorage.setItem("kissa-eggs", JSON.stringify(got)); } catch (_) {} }
     const n = got.filter((k) => TEXT[k]).length, all = Object.keys(TEXT).length;
-    return first ? (n === all ? ` 골목의 비밀 ${all}개를 모두 찾았어요!` : ` (골목의 비밀 ${n}/${all})`) : "";
+    return first ? (n === all ? ` 골목의 비밀 ${all}개를 모두 찾았습니다!` : ` (골목의 비밀 ${n}/${all})`) : "";
   }
   return {
     picks,

@@ -8,7 +8,7 @@
   <div class="pre article-body">{{ n.body }}</div>
   <form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn{{ ' is-on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '공감했어요' if liked else '공감' }} · {{ likes }}</button>
+    <button class="btn{{ ' is-on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '공감함' if liked else '공감' }} · {{ likes }}</button>
   </form>
 </article>
 {% endblock %}

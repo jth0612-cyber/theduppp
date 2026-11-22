@@ -42,7 +42,7 @@
           {% for r in reasons %}<label class="chip"><input type="radio" name="reason" value="{{ r }}" {{ 'checked' if it.reason == r }}><span>{{ r }}</span></label>{% endfor %}
         </div>
         <div class="w-foot">
-          <input type="text" name="memo" maxlength="300" value="{{ it.memo }}" placeholder="한 줄 메모: 무엇을 놓쳤나요?" aria-label="{{ it.no }}번 메모">
+          <input type="text" name="memo" maxlength="300" value="{{ it.memo }}" placeholder="한 줄 메모: 놓친 부분" aria-label="{{ it.no }}번 메모">
           <label class="check"><input type="checkbox" name="reviewed" value="1" {{ 'checked' if it.reviewed }}> 다시 풀어서 맞힘</label>
           <button class="btn small" type="submit">저장</button>
         </div>
@@ -50,11 +50,11 @@
     </li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">이 회차는 모두 복습했어요.</p>{% endif %}
+  {% else %}<p class="muted">이 회차는 모두 복습했습니다.</p>{% endif %}
 </section>
 {% else %}{% if not sys_groups %}
 <div class="quiet-box">
-  <p>아직 모인 오답이 없어요.</p>
+  <p>아직 모인 오답이 없습니다.</p>
   <p class="muted small">복테&모의 분석에서 채점하면 쌓입니다.</p>
   <a class="btn" href="{{ url_for('books.analysis_home') }}">복테&모의 분석으로</a>
 </div>

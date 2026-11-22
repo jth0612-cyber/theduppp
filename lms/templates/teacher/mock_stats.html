@@ -75,7 +75,7 @@
       <td class="num">{{ fmt(e.score) }}</td><td class="num">{{ e.wrong }}</td>
       <td class="answer-key small">{% for ch in e.answers %}{{ '·' if ch == '0' else ('○' if ch == 'R' else ch) }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
   </table></div>
-  <form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 지울까요?">
+  <form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 삭제하시겠습니까?">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 지우기</button></form>
 </section>
 

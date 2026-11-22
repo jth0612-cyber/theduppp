@@ -27,7 +27,7 @@
     {% endfor %}
     </ol>
   </section>
-  {% else %}<p class="muted">{{ '찾는 정오표가 없어요.' if q else '정오표가 아직 없어요.' }}</p>{% endfor %}
+  {% else %}<p class="muted">{{ '찾는 정오표가 없습니다.' if q else '정오표가 아직 없습니다.' }}</p>{% endfor %}
 {% else %}
   {% set pinned = notices|selectattr('pinned')|list %}
   {% set rest = notices|rejectattr('pinned')|list %}
@@ -42,7 +42,7 @@
   <section class="panel">
     <ol class="ledger-list">
       {% for n in rest %}{% include "student/_notice_row.html" %}
-      {% else %}<li class="ll-empty">{{ '찾는 공지가 없어요.' if q else ('고정 공지 말고는 아직 없어요.' if pinned else '공지가 아직 없어요.') }}</li>{% endfor %}
+      {% else %}<li class="ll-empty">{{ '찾는 공지가 없습니다.' if q else ('고정 공지 외에는 아직 없습니다.' if pinned else '공지가 아직 없습니다.') }}</li>{% endfor %}
     </ol>
   </section>
 {% endif %}

@@ -95,24 +95,24 @@ def callback():
         flash("Google 로그인을 다시 시도하세요. (요청이 만료되었거나 올바르지 않습니다)", "error")
         return redirect(url_for("auth.login"))
     if request.args.get("error") or not request.args.get("code"):
-        flash("Google 로그인을 취소했어요.", "error")
+        flash("Google 로그인을 취소했습니다.", "error")
         return redirect(url_for("auth.change_password") if saved["mode"] == "link" else
                         url_for("auth.signup") if saved["mode"] == "signup" else url_for("auth.login"))
     try:
         ident = fetch_identity(request.args["code"], saved["verifier"], url_for("google.callback", _external=True))
     except (urllib.error.URLError, KeyError, ValueError, TimeoutError):
-        flash("Google 과 연결하지 못했어요. 잠시 후 다시 시도하세요.", "error")
+        flash("Google 과 연결하지 못했습니다. 잠시 후 다시 시도하세요.", "error")
         return redirect(url_for("auth.login"))
     if not ident["email_verified"]:
-        flash("이메일 인증이 끝난 Google 계정만 쓸 수 있어요.", "error")
+        flash("이메일 인증이 끝난 Google 계정만 사용할 수 있습니다.", "error")
         return redirect(url_for("auth.login"))
 
     if saved["mode"] == "signup":
         if query("SELECT 1 FROM users WHERE google_sub = ?", (ident["sub"],), one=True):
-            flash("이미 가입된 Google 계정이에요. 'Google 계정으로 로그인'을 눌러 주세요.", "error")
+            flash("이미 가입된 Google 계정입니다. 'Google 계정으로 로그인'을 눌러 주세요.", "error")
             return redirect(url_for("auth.login"))
         if query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (ident["sub"],), one=True):
-            flash("이 Google 계정으로 이미 가입 신청했어요. 선생님 승인을 기다려 주세요.", "error")
+            flash("이 Google 계정으로 이미 가입 신청했습니다. 선생님 승인을 기다려 주세요.", "error")
             return redirect(url_for("auth.login"))
         session["g_signup"] = {"sub": ident["sub"], "email": ident["email"], "at": datetime.now().timestamp()}
         return redirect(url_for("auth.signup"))
@@ -122,20 +122,20 @@ def callback():
             return redirect(url_for("auth.login"))
         other = query("SELECT id FROM users WHERE google_sub = ? AND id != ?", (ident["sub"], g.user["id"]), one=True)
         if other:
-            flash("이 Google 계정은 이미 다른 계정에 연결되어 있어요.", "error")
+            flash("이 Google 계정은 이미 다른 계정에 연결되어 있습니다.", "error")
         else:
             execute("UPDATE users SET google_sub = ?, google_email = ? WHERE id = ?",
                     (ident["sub"], ident["email"], g.user["id"]))
             audit("google_linked", f"user:{g.user['username']}")
-            flash(f"Google 계정({ident['email']})을 연결했어요. 다음부터 Google 로 로그인할 수 있어요.", "ok")
+            flash(f"Google 계정({ident['email']})을 연결했습니다. 다음부터 Google 로 로그인할 수 있습니다.", "ok")
         return redirect(url_for("auth.change_password"))
 
     user = query("SELECT * FROM users WHERE google_sub = ?", (ident["sub"],), one=True)
     if user is None and query("SELECT 1 FROM signup_requests WHERE google_sub = ?", (ident["sub"],), one=True):
-        flash("가입 승인 대기 중이에요. 선생님이 승인하면 이 Google 계정으로 로그인할 수 있어요.", "error")
+        flash("가입 승인 대기 중입니다. 선생님이 승인하면 이 Google 계정으로 로그인할 수 있습니다.", "error")
         return redirect(url_for("auth.login"))
     if user is None:
-        flash("이 Google 계정과 연결된 계정이 없어요. 먼저 수험번호로 로그인한 뒤 '내 계정'에서 Google 계정을 연결하세요.",
+        flash("이 Google 계정과 연결된 계정이 없습니다. 먼저 수험번호로 로그인한 뒤 '내 계정'에서 Google 계정을 연결하세요.",
               "error")
         return redirect(url_for("auth.login"))
     if user["disabled"]:
@@ -159,5 +159,5 @@ def unlink():
         return redirect(url_for("auth.login"))
     execute("UPDATE users SET google_sub = NULL, google_email = NULL WHERE id = ?", (g.user["id"],))
     audit("google_unlinked", f"user:{g.user['username']}")
-    flash("Google 계정 연결을 해제했어요. 이제 수험번호와 비밀번호로만 로그인할 수 있어요.", "ok")
+    flash("Google 계정 연결을 해제했습니다. 이제 수험번호와 비밀번호로만 로그인할 수 있습니다.", "ok")
     return redirect(url_for("auth.change_password"))

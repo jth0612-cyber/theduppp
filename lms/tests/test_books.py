@@ -235,8 +235,8 @@ class BooksTest(unittest.TestCase):
         codes = re.findall(r"[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}", r.data.decode("utf-8-sig"))
         self.assertEqual(len(codes), 2)
         a, b = self.student(0), self.student(1)
-        self.assertIn("교재를 등록했어요", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
-        self.assertIn("이미 다른 계정에서 쓴 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
+        self.assertIn("교재 등록 완료", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
+        self.assertIn("이미 다른 계정에서 사용한 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
         bid2, _ = self.make_book(expires="2000-01-01")
         old = self.shared_code(bid2)
         self.assertIn("이용 기간이 지난", b.post("/s/books/register", data={"code": old}).data.decode())
@@ -287,12 +287,12 @@ class BooksTest(unittest.TestCase):
             self.assertIn("accounts.google.com", r.headers["Location"])
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
             r = anon.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True)
-            self.assertIn("연결된 계정이 없어요", r.data.decode())
+            self.assertIn("연결된 계정이 없습니다", r.data.decode())
             # 학생이 로그인한 뒤 연결
             s = self.student(0)
             r = s.get("/auth/google/start?mode=link")
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
-            self.assertIn("연결했어요", s.get(f"/auth/google/callback?state={state}&code=x",
+            self.assertIn("연결했습니다", s.get(f"/auth/google/callback?state={state}&code=x",
                                              follow_redirects=True).data.decode())
             # 이제 Google 로 로그인
             anon = self.app.test_client()

@@ -46,9 +46,9 @@
         {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '아직 접속 안 함' }}
         {% if account.must_change_pw %}· <span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
       <div class="row">
-        <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급할까요?">
+        <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급하시겠습니까?">
           {{ csrf() }}<button class="btn small">비밀번호 초기화</button></form>
-        <form method="post" action="{{ url_for('teacher.student_account_delete', sid=s.id) }}" data-confirm="계정을 삭제하면 학생이 로그인할 수 없습니다. 계속할까요?">
+        <form method="post" action="{{ url_for('teacher.student_account_delete', sid=s.id) }}" data-confirm="계정을 삭제하면 학생이 로그인할 수 없습니다. 계속하시겠습니까?">
           {{ csrf() }}<button class="btn small danger">계정 삭제</button></form>
       </div>
     {% elif s.active %}
@@ -89,7 +89,7 @@
     <div class="row">
       <div class="field shrink"><label>분류</label>
         <select name="category">{% for c in note_categories %}<option>{{ c }}</option>{% endfor %}</select></div>
-      <div class="field wide"><label>내용</label><textarea name="body" maxlength="3000" required placeholder="예: 화학 결합 개념 약함. 다음 주까지 2단원 기출 20문항."></textarea></div>
+      <div class="field wide"><label>내용</label><textarea name="body" maxlength="3000" required placeholder="예: 화학 결합 개념 약함 · 다음 주까지 2단원 기출 20문항"></textarea></div>
     </div>
     <button class="btn primary">메모 추가</button>
   </form>
@@ -98,7 +98,7 @@
     <div class="note">
       <div class="page-head">
         <span class="small"><span class="badge">{{ n.category }}</span> <span class="muted">{{ n.created_at[:16] }}</span></span>
-        <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제할까요?">
+        <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제하시겠습니까?">
           {{ csrf() }}<button class="btn link small">삭제</button></form>
       </div>
       <div class="pre">{{ n.body }}</div>

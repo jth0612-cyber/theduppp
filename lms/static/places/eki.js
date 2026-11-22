@@ -593,9 +593,9 @@ export default {
       planSeat(from, id) { const s = SEATS[id]; return route(from.x, from.z, s.x, s.z - 0.65).concat([[s.x, s.z]]); },
       leaveSeat(s) { return [s.x, s.z - 0.65]; },
       step(x, z, nx, nz) { const a = region(x, z), b = region(nx, nz); if (!b || (a && !OK[a].includes(b))) return [x, z]; return [nx, nz]; },
-      welcome: "작은 바닷가 역. 승강장 의자에 앉으세요. 기차는 3분마다 지나갑니다.",
-      sitText: "자리에 앉았어요.",
-      focusText: (m) => `${m}분, 다음 기차가 몇 번 지나갈 때까지.`,
+      welcome: "작은 바닷가 역 · 승강장 의자에 앉으세요. 기차는 3분마다 지나갑니다.",
+      sitText: "자리에 앉았습니다.",
+      focusText: (m) => `${m}분, 다음 기차가 몇 번 지나갈 때까지`,
       spaceAction: "sea",
       actions: { free: ["sit", "sea", "wait"], sitting: ["focus", "wait", "stand"], focus: ["stop"] },
       labels: { sea: "바다 보기", wait: "기차 언제?" },
@@ -605,19 +605,19 @@ export default {
       },
       custom: {
         sea(E) {
-          if (E.state !== "free") { E.look(0, 9, 0.18); return E.whisper("멀리 수평선이 보여요."); }
+          if (E.state !== "free") { E.look(0, 9, 0.18); return E.whisper("멀리 수평선이 보입니다."); }
           const [tx, tz] = seaSpot();
-          E.walk(route(E.me.pos.x, E.me.pos.z, tx, tz), () => { E.face(tx, -40); E.look(0, 7, 0.16); E.whisper("선로 너머로 바다가 넓게 펼쳐져요."); });
+          E.walk(route(E.me.pos.x, E.me.pos.z, tx, tz), () => { E.face(tx, -40); E.look(0, 7, 0.16); E.whisper("선로 너머로 바다가 넓게 펼쳐집니다."); });
         },
         wait(E) {
           const c = clockSec(); const left = c < ARRIVE + STOP ? 0 : CYCLE - c;
-          if (left === 0) return E.whisper("지금 기차가 서 있어요.");
+          if (left === 0) return E.whisper("지금 기차가 정차 중입니다.");
           const m = Math.floor(left / 60), s = Math.floor(left % 60);
-          E.whisper(`다음 기차까지 ${m ? m + "분 " : ""}${s}초 남았어요.`);
+          E.whisper(`다음 기차까지 ${m ? m + "분 " : ""}${s}초 남았습니다.`);
         },
       },
       board(lines) { drawNotes(lines); },
-      chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 적었어요.", hint: "아래 칸에 한 줄 적으면 역 노트에 붙어요." },
+      chat: { can: (seat, st) => st !== "focus", placeholder: "역 노트에 한 줄 (하루 5줄)", done: "역 노트에 기록했습니다.", hint: "아래 칸에 한 줄 적으면 역 노트에 붙습니다." },
       sounds: {
         // 바닷가: 파도가 주인공(먼 파도 + 가까이 부서지는 파도), 바람은 넓게, 저녁 마을 소리는 작게, 갈매기는 아주 가끔
         loops: [{ f: "eki/waves", g: 0.9 }, { f: "eki/shore", g: 0.28 }, { f: "eki/wind", g: 0.28 }, { f: "eki/evening", g: 0.28 }],
@@ -648,7 +648,7 @@ export default {
         train.position.x = trainX(c);
         const phase = c < 2 ? 0 : 1;
         if (phase === 0 && lastPhase !== 0 && E.audioOn) E.sfx("train");
-        if (phase === 0 && lastPhase === 1) E.whisper("멀리서 기차가 들어와요.", 3000);
+        if (phase === 0 && lastPhase === 1) E.whisper("멀리서 기차가 들어옵니다.", 3000);
         lastPhase = phase;
       },
     };

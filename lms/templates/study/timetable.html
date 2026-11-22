@@ -5,7 +5,7 @@
 <header class="ed-head ed-head-split">
   <div>
     <h1>내 시간표</h1>
-    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> · {{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없어요.{% else %}빈 칸을 눌러 수업·자습·인강을 넣어 보세요.{% endif %}</p>
+    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> · {{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없습니다.{% else %}빈 칸을 눌러 수업·자습·인강 추가{% endif %}</p>
   </div>
   <div class="tt-head-side">
     {% if dday %}<p class="dday"><span>{{ dday.label }}</span><b>{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</b></p>{% endif %}
@@ -50,7 +50,7 @@
       <div class="tt-tones">{% for t in range(8) %}<label class="tt-tone tone-{{ t }}"><input type="radio" name="tone" value="{{ t }}"><span class="sr-only">색 {{ t + 1 }}</span></label>{% endfor %}</div>
     </div>
     <div class="tt-form-actions">
-      <button class="btn danger" name="action" value="delete" data-tt-del hidden formnovalidate data-confirm="이 일정을 지울까요?">지우기</button>
+      <button class="btn danger" name="action" value="delete" data-tt-del hidden formnovalidate data-confirm="이 일정을 삭제하시겠습니까?">지우기</button>
       <button class="btn primary" data-tt-save>넣기</button>
     </div>
   </form>

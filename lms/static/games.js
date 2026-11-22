@@ -12,7 +12,7 @@
       body: JSON.stringify(body || {})
     }).then(function (r) {
       if (r.status === 410) throw new Error("시간이 지나 끝났습니다. 다시 시작해 주세요.");
-      if (r.status === 401 || r.redirected) throw new Error("로그인이 만료됐어요. 새로고침해 주세요.");
+      if (r.status === 401 || r.redirected) throw new Error("로그인이 만료되었습니다. 새로고침해 주세요.");
       if (!r.ok) throw new Error("오류가 났습니다. 잠시 후 다시 해 주세요.");
       return r.json();
     });
@@ -680,7 +680,7 @@
 
     var stageNeutral = function (st, box) {
       var ml = 0;
-      var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개. 몇 mL를 넣으면 완전히 중화될까요?");
+      var info = el("p", "pl-q", "묽은 염산 " + st.acid_ml + " mL (H⁺ " + st.h + "개). 수산화 나트륨 수용액은 5 mL에 OH⁻ " + st.oh + "개 · 완전히 중화되는 양은 몇 mL입니까?");
       var row = el("div", "pl-beakers");
       var acid = beaker("묽은 염산 " + st.acid_ml + "\u00a0mL", [["H⁺", st.h], ["Cl⁻", st.h]], st.acid_ml);
       var plusSign = el("span", "pl-plus", "+");

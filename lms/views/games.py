@@ -256,7 +256,7 @@ def _grade_mc(r, label, after=None):
 @student_required
 def chargaff():
     return render_template("student/games/mc.html", game="chargaff", title="샤가프 법칙", parent="sci",
-                           intro="A=T, G=C. 전사된 RNA 문제 포함 5문제.", topics=None)
+                           intro="A=T, G=C. 전사된 RNA 문제 포함 5문제", topics=None)
 
 
 @bp.route("/chargaff/start", methods=["POST"])
@@ -283,7 +283,7 @@ def chargaff_submit(rid):
 @student_required
 def mixed():
     return render_template("student/games/mc.html", game="mixed", title="섞어 풀기", parent="sci",
-                           intro="TOPIC 01~34에서 10문제. O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산.", topics=None)
+                           intro="TOPIC 01~34에서 10문제 · O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산", topics=None)
 
 
 @bp.route("/mixed/start", methods=["POST"])
@@ -309,8 +309,8 @@ def mixed_submit(rid):
 # ---------- 스피드 O/X (영단어 · 통과 공통): 60초 동안 많이 맞히기 ----------
 
 SPEED_SECONDS = 60
-SPEED = {"vocab_speed": ("영단어 스피드 O/X", "단어와 뜻이 맞으면 O, 틀리면 X. 제한 60초.", "vocab"),
-         "sci_speed": ("O/X 스피드", "개념 문장이 옳으면 O, 틀리면 X. 제한 60초.", "sci")}
+SPEED = {"vocab_speed": ("영단어 스피드 O/X", "단어와 뜻이 맞으면 O, 틀리면 X. 제한 60초", "vocab"),
+         "sci_speed": ("O/X 스피드", "개념 문장이 옳으면 O, 틀리면 X. 제한 60초", "sci")}
 
 
 @bp.route("/speed/<kind>")
@@ -365,7 +365,7 @@ def quiz_page():
     pick = request.args.get("topic", "")
     title = f"TOPIC {pick} {quiz.TOPICS[pick][0]}" if pick in quiz.TOPICS else "TOPIC 퀴즈"
     return render_template("student/games/mc.html", game="quiz", title=title, pick=pick, parent="sci",
-                           intro="10문제. 처음 보는 문제와 전에 틀린 문제가 먼저 나옵니다.", topic_label="TOPIC",
+                           intro="10문제 · 처음 보는 문제와 전에 틀린 문제가 먼저 나옵니다.", topic_label="TOPIC",
                            topics=[(k, f"TOPIC {k} {v[0]}") for k, v in quiz.TOPICS.items()])
 
 
@@ -471,7 +471,7 @@ def vocab_submit(rid):
 def vocab_review():
     n = len(vocab.review_words(g.user["id"], limit=999))
     return render_template("student/games/mc.html", game="vocab_review", title="영단어 복습", topics=None, empty=n == 0, parent="vocab",
-                           intro=f"틀린 단어 {n}개 중 최근 {min(n, vocab.DAILY)}개. 맞히면 목록에서 빠집니다."
+                           intro=f"틀린 단어 {n}개 중 최근 {min(n, vocab.DAILY)}개 · 맞히면 목록에서 빠집니다."
                            if n else "복습할 단어가 없습니다.")
 
 

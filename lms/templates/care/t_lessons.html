@@ -16,7 +16,7 @@
 <div class="card">
   {% if rows %}<div class="table-wrap"><table><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th><th></th></tr></thead><tbody>
   {% for l in rows %}<tr><td class="nowrap">{{ l.day }}</td><td class="muted">{{ l.cls }}</td><td>{{ l.title }}</td><td class="num">{{ l.n_files }}장</td>
-    <td class="num"><form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 지울까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form></td></tr>{% endfor %}
+    <td class="num"><form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 삭제하시겠습니까?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">아직 올린 수업 기록이 없습니다.</p>{% endif %}
 </div>
 {% endblock %}

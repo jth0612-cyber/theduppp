@@ -5,7 +5,7 @@
   <div>
     <p class="small"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> / <a href="{{ url_for('games.quiz', topic=info.topic) }}">TOPIC {{ info.topic }} {{ topic_title }}</a> /</p>
     <h1>{{ info.title }}</h1>
-    <p class="muted small">{{ info.intro }} {{ stages }}판.</p>
+    <p class="muted small">{{ info.intro }} {{ stages }}판</p>
   </div>
 </div>
 <div class="card game pl-game" id="play-game" data-game="{{ game }}" data-start="{{ url_for('games.play_start', game=game) }}">

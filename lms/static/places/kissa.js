@@ -148,7 +148,7 @@ export default {
       x.fillStyle = "#b58a5a"; x.fillRect(0, 0, 768, 488);
       for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? "90,60,30" : "230,200,150"},${Math.random() * 0.18})`; x.fillRect(Math.random() * 768, Math.random() * 488, 2 + Math.random() * 3, 2 + Math.random() * 3); }
       x.textBaseline = "middle"; x.textAlign = "left";
-      if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 34px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 쓸 수 있어요", 384, 270); }
+      if (!lines || !lines.length) { x.fillStyle = "rgba(255,250,240,.85)"; x.textAlign = "center"; x.font = "500 34px 'Noto Sans KR', sans-serif"; x.fillText("보라색 방석에 앉으면 여기에 작성할 수 있습니다", 384, 270); }
       else {
         // 냅킨 최대 4장 (아래가 최근), 판 위쪽부터. 긴 글은 두 줄
         const LH = 38, GAP = 14, TOP = 22, BOT = 470, BASE = 40;
@@ -388,12 +388,12 @@ export default {
         if (a && a !== b && (nz < DOOR.z0 || nz > DOOR.z1)) return [x, z];
         return [nx, nz];
       },
-      welcome: "비 오는 골목 찻집. 창가 자리나 바 자리에 앉으세요.",
+      welcome: "비 오는 골목 찻집 · 창가 자리나 바 자리에 앉으세요.",
       board(lines) { drawMemo(lines); },
-      chat: { can: (s) => !!s && s.kind === "tatami", placeholder: "메모판에 한 줄 (다다미방 친구들에게)", done: "메모판에 꽂았어요.", hint: "보라색 방석에 앉으면 메모판에 쓸 수 있어요." },
-      sitText: (s) => s.kind === "window" ? "창가 자리예요. 유리창에 빗방울이 맺혀요." : s.kind === "tatami" ? "보라색 방석에 앉았어요. 상 위에 책을 펼쳐요." : "바 자리에 앉았어요. 주전자에서 김이 올라와요.",
+      chat: { can: (s) => !!s && s.kind === "tatami", placeholder: "메모판에 한 줄 (다다미방 친구들에게)", done: "메모판에 꽂았습니다.", hint: "보라색 방석에 앉으면 메모판에 작성할 수 있습니다." },
+      sitText: (s) => s.kind === "window" ? "창가 자리입니다. 유리창에 빗방울이 맺힙니다." : s.kind === "tatami" ? "보라색 방석에 앉았습니다. 상 위에 책을 펼칩니다." : "바 자리에 앉았습니다. 주전자에서 김이 올라옵니다.",
       sitSound: "cushion",
-      focusText: (m) => `${m}분, 비가 그칠 때까지는 여기서.`,
+      focusText: (m) => `${m}분, 비가 그칠 때까지는 여기서`,
       spaceAction: "coffee",
       actions: { free: ["sit", "window", "coffee"], sitting: ["focus", "coffee", "page", "stand"], focus: ["coffee", "page", "stop"] },
       labels: { window: "창가 자리", coffee: "커피 한 모금", page: "책장 넘기기" },
@@ -404,9 +404,9 @@ export default {
       },
       custom: {
         egg(E, o) { EGGS.tap(E, o); },
-        window(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(windowSeat); s === null ? E.whisper("창가 자리가 다 찼어요. 바 자리는 남아 있어요.") : E.sit(s); },
-        coffee(E) { E.me.gesture("sip", 3.6); E.share("coffee"); E.sfx("sip"); E.whisper(E.state === "free" ? "따뜻한 커피를 후- 불어 한 모금." : "커피 한 모금. 다시 한 줄만 더."); },
-        page(E) { E.sfx("page"); E.share("page"); E.whisper("사락, 다음 장으로."); },
+        window(E) { if (E.state === "focus") return E.whisper("집중 중입니다. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(windowSeat); s === null ? E.whisper("창가 자리가 다 찼습니다. 바 자리는 남아 있습니다.") : E.sit(s); },
+        coffee(E) { E.me.gesture("sip", 3.6); E.share("coffee"); E.sfx("sip"); E.whisper(E.state === "free" ? "따뜻한 커피를 후- 불어 한 모금" : "커피 한 모금 · 다시 한 줄만 더"); },
+        page(E) { E.sfx("page"); E.share("page"); E.whisper("사락, 다음 장으로"); },
       },
       remote: { coffee: (E, av) => av.gesture("sip", 3.6), page: (E) => E.sfx("pageFar") },
       sounds: {
