@@ -114,6 +114,10 @@ def wrong_list(user_id, only_open=False):
 def wrong_notes():
     only_open = request.args.get("view") == "open"
     groups = wrong_list(g.user["id"], only_open)
+    rounds = [(gr["mock_id"], gr["title"]) for gr in groups]       # 회차 고르기 (한 회차만 정리할 때)
+    pick = request.args.get("mock", type=int)
+    if pick:
+        groups = [gr for gr in groups if gr["mock_id"] == pick]
     reasons = query("""SELECT reason, COUNT(*) AS n FROM wrong_notes WHERE user_id = ? AND reason != ''
                        GROUP BY reason ORDER BY n DESC""", (g.user["id"],))
     import sysdata
@@ -122,7 +126,7 @@ def wrong_notes():
     if only_open:
         sys_groups = [dict(gr, items=[i for i in gr["items"] if i["redo"] != "맞힘"]) for gr in sys_groups]
         sys_groups = [gr for gr in sys_groups if gr["items"]]
-    return render_template("study/wrong.html", groups=groups, reasons=WRONG_REASONS, reason_counts=reasons,
+    return render_template("study/wrong.html", rounds=rounds, pick=pick, groups=groups, reasons=WRONG_REASONS, reason_counts=reasons,
                            only_open=only_open, fmt=analysis._fmt, code=code, sys_groups=sys_groups,
                            sys_types=sysdata.type_counts(sysdata.wrong_notes(code)), sfmt=sysdata.fmt)
 
@@ -145,7 +149,7 @@ def wrong_update(mid, no):
     if request.headers.get("X-Requested-With") == "fetch":
         return jsonify(ok=True)
     flash(f"{no}번을 저장했습니다.", "ok")
-    return redirect(url_for("study.wrong_notes", view=request.args.get("view")) + f"#w-{mid}-{no}")
+    return redirect(url_for("study.wrong_notes", view=request.args.get("view"), mock=request.args.get("mock")) + f"#w-{mid}-{no}")
 
 
 def _classes():

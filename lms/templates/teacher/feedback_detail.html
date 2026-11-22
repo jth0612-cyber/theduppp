@@ -6,6 +6,7 @@
   <div>
     <h1>{{ t.student_name or '-' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>
     <p class="ed-lede">{{ t.class_name or '' }} · {{ t.book_title }} {{ t.round_no }}회{% if t.mock_title %} {{ t.mock_title }}{% endif %}</p>
+    {% if paper %}<p class="small">같은 회차 시험지 첨삭: <a href="{{ url_for('care.t_paper', pid=paper.id) }}">{{ '첨삭 완료' if paper.status == 'done' else '첨삭 대기' }}</a></p>{% endif %}
   </div>
   {% if t.status == 'done' %}
   <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="reopen"><button class="btn small">대기로 되돌리기</button></form>

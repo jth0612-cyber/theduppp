@@ -151,7 +151,9 @@ def t_paper(pid):
         nxt = query("SELECT id FROM exam_papers WHERE status = 'submitted' AND id != ? ORDER BY submitted_at LIMIT 1", (pid,), one=True)
         return redirect(url_for("care.t_paper", pid=nxt["id"]) if nxt else url_for("care.t_papers"))
     _, files, marks = paper_of(p["mock_id"], p["student_id"])
-    return render_template("care/t_paper.html", p=p, rep=rep, files=files, marks=marks, err_types=ERR_TYPES,
+    fb = query("""SELECT t.id, t.status FROM feedback_threads t JOIN users u ON u.id = t.user_id
+                  WHERE t.mock_id = ? AND u.student_id = ?""", (p["mock_id"], p["student_id"]), one=True)
+    return render_template("care/t_paper.html", fb=fb, p=p, rep=rep, files=files, marks=marks, err_types=ERR_TYPES,
                            title=exams.exam_title(rep["mock"]), reviewer=_staff_name(p["reviewed_by"]), pct1=exams.pct1)
 
 

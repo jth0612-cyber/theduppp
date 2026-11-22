@@ -3,8 +3,9 @@
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }} · {{ book.expires_on }}까지 · 등록 학생 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
+  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }} · {{ book.expires_on }}까지 · 인증 코드 등록 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
 </div>
+<p class="small muted">학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차 / 인증 코드 등록 여부와는 상관없음</p>
 
 <div class="grid grid-2">
   <section class="card" aria-labelledby="h-mocks">

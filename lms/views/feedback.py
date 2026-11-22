@@ -148,13 +148,17 @@ def t_detail(tid):
                    WHERE id = ?""", (g.user["id"], tid))
         audit("feedback_reply", f"feedback:{tid}")
         flash("답변을 보냈습니다.", "ok")
-        return redirect(url_for("feedback.t_list"))
+        nxt = query("SELECT id FROM feedback_threads WHERE status = 'wait' AND id != ? ORDER BY updated_at LIMIT 1", (tid,), one=True)
+        return redirect(url_for("feedback.t_detail", tid=nxt["id"]) if nxt else url_for("feedback.t_list"))
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (t["mock_id"], t["user_id"]), one=True)
     key, points = json.loads(t["answer_key"]), json.loads(t["points"])
     wrong = []
     if entry and entry["mode"] == "answers" and entry["answers"]:
         wrong = sorted(analysis.wrong_items(entry["answers"], key))
-    return render_template("teacher/feedback_detail.html", t=t, msgs=messages(tid), entry=entry, wrong=wrong,
+    # 같은 학생·같은 회차의 시험지 첨삭 (둘이 따로 쌓여 한쪽을 놓치지 않게)
+    paper = query("""SELECT p.id, p.status FROM exam_papers p JOIN users u ON u.student_id = p.student_id
+                     WHERE p.mock_id = ? AND u.id = ?""", (t["mock_id"], t["user_id"]), one=True)
+    return render_template("teacher/feedback_detail.html", paper=paper, t=t, msgs=messages(tid), entry=entry, wrong=wrong,
                            points=points, key=key, fmt=analysis._fmt)
 
 
