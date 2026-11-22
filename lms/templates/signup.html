@@ -39,6 +39,8 @@
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
              autocapitalize="characters" spellcheck="false" placeholder="예: 271234" inputmode="numeric"{{ bad('code') }}>
       {{ err('code') }}
+      {% set oc = site_contact().openchat %}
+      {% if oc and errors.get('code') %}<p class="small">착오라면 <a href="{{ oc }}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>으로 알려 주세요.</p>{% endif %}
     </div>
     <div class="field">
       <label for="name">이름</label>

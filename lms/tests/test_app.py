@@ -857,7 +857,12 @@ class FeatureTest(AppTest):
             row = query("SELECT * FROM student_codes WHERE code=?", (codes[0],), one=True)
             self.assertEqual(row["student_id"], u["student_id"])
         # 같은 코드는 다시 못 씀, 같은 아이디도 못 씀
-        self.assertIn("이미 가입에 쓴 코드", self._signup(self.app.test_client(), codes[0], no="S101").data.decode())
+        used = self._signup(self.app.test_client(), codes[0], no="S101").data.decode()
+        self.assertIn("이미 가입에 쓴 코드", used)
+        self.assertNotIn("카카오톡 오픈채팅</a>으로 알려", used)
+        with mock.patch.dict(os.environ, {"KAKAO_OPENCHAT_URL": "https://open.kakao.com/o/abc123"}):
+            used = self._signup(self.app.test_client(), codes[0], no="S101").data.decode()
+        self.assertIn("카카오톡 오픈채팅</a>으로 알려", used)  # 로그인 전이라 행정문의 게시판 대신
         self.assertIn("이미 쓰이고 있는 아이디", self._signup(self.app.test_client(), codes[1], no="S100").data.decode())
         # 선생님 화면: 코드 목록에 가입한 학생, CSV 받기
         page = self.c.get(f"/t/classes/{cid}").data.decode()
