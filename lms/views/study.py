@@ -205,7 +205,7 @@ def _slot_form():
     if not days:
         return "요일을 하나 이상 골라 주세요."
     if not (_valid_time(starts) and _valid_time(ends)):
-        return "시작·끝 시간을 확인해 주세요."
+        return "시작 및 끝 시간을 확인해 주세요."
     if starts >= ends:
         return "끝나는 시간이 시작 시간보다 뒤여야 합니다."
     if starts < f"{TT_FIRST:02d}:00" or (ends > "24:00"):

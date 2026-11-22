@@ -2,7 +2,7 @@
 {% block title %}{{ mock.book_title }} {{ mock.round_no }}회 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 복테·모의고사</a></p>
-{% if m.is_practice %}<p class="aside-note"><span>연습</span>실장 TEST반 전용 연습 회차입니다. 실제 학생 화면·통계에는 나가지 않습니다.</p>{% endif %}
+{% if m.is_practice %}<p class="aside-note"><span>연습</span>실장 TEST반 전용 연습 회차입니다. 실제 학생 화면 및 통계에는 나가지 않습니다.</p>{% endif %}
 <div class="page-head">
   <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
     <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항 · {{ fmt(m.full_score) }}점 · 응시 {{ cs.all.n }}명{% if cs.all.avg is not none %} · 평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %} · {{ m.exam_date }}{% endif %}{% else %}결과 없음 · 엑셀을 올리면 문항 수·정답·배점이 정해집니다{% endif %}</p></div>

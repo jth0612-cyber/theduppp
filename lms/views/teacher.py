@@ -959,7 +959,7 @@ def class_codes(cid):
         if dup:
             flash(f"이미 등록된 코드 {len(dup)}개는 건너뛰었어요: {', '.join(dup[:5])}{' …' if len(dup) > 5 else ''}", "error")
         if bad:
-            flash(f"영문·숫자 4~32자가 아닌 줄 {len(bad)}개는 건너뛰었어요: {', '.join(bad[:5])}", "error")
+            flash(f"영문 및 숫자 4~32자가 아닌 줄 {len(bad)}개는 건너뛰었어요: {', '.join(bad[:5])}", "error")
         if not (added or dup or bad):
             flash("붙여넣은 코드가 없습니다.", "error")
     elif action == "generate":

@@ -18,7 +18,7 @@
   {% endif %}
   </div>
 </div>
-<p class="small muted">{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개됩니다.{% else %}행정문의는 이 학생과 선생님·조교만 볼 수 있습니다.{% endif %}</p>
+<p class="small muted">{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개됩니다.{% else %}행정문의는 이 학생과 선생님 및 조교만 볼 수 있습니다.{% endif %}</p>
 <div class="card">
   <div class="pre">{{ q.body }}</div>
   {% set photos = question_photos(q) %}{% if photos %}

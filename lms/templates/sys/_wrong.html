@@ -1,7 +1,7 @@
 {# 조교 시스템의 시험 오답 분석 (학생코드 기준). 오답 유형·분석은 시스템이 정한 그대로 보여 준다. #}
 {% from "_macros.html" import csrf %}
 <section id="sys" class="sys-wrong" aria-labelledby="sys-h">
-  <div class="sec-head"><h2 id="sys-h">시험 오답 분석</h2><span class="small muted">조교 선생님이 채점·분석한 결과</span></div>
+  <div class="sec-head"><h2 id="sys-h">시험 오답 분석</h2><span class="small muted">조교 선생님이 채점 및 분석한 결과</span></div>
   {% if sys_types %}{% set total = sys_types|sum(attribute=1) %}
   <div class="reason-bar" aria-label="오답 유형 모아 보기">{% for t, n in sys_types %}<span><b>{{ t }}</b> {{ n }}문항 · {{ (100 * n / total)|round|int }}%</span>{% endfor %}</div>
   {% endif %}

@@ -37,7 +37,7 @@
 
 <div class="card" id="shop">
   <h2>교재 구매 링크</h2>
-  <p class="muted small"><a href="{{ url_for('books.shop') }}">교재 구매</a> 화면의 링크 / 비워 두면 '준비 중'</p>
+  <p class="muted small"><a href="{{ url_for('books.shop') }}">교재 구매</a> 화면의 링크 / 비워 두면 '준비 중' 표시</p>
   <form method="post" action="{{ url_for('books.shop_save') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for key, name, sub in shop %}

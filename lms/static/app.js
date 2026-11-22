@@ -250,7 +250,7 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
-          clearPhoto(); return showErr("PNG·JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
+          clearPhoto(); return showErr("PNG 및 JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
         }
         if (file.size > MAX) { clearPhoto(); return showErr("한 장에 20MB 이하만 올릴 수 있습니다."); }
       }

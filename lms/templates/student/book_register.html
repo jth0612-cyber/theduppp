@@ -30,7 +30,7 @@
     <label for="code">코드 12자리</label>
     <input type="text" id="code" name="code" class="code-input" required maxlength="20" autocomplete="off"
            autocapitalize="characters" spellcheck="false" placeholder="ABCD EFGH JKMN" aria-describedby="code-help" data-code-input>
-    <p class="fine" id="code-help">띄어쓰기·하이픈 없이 / 0·1·O·I·L 미사용 / 인쇄가 흐리면 행정문의로 사진</p>
+    <p class="fine" id="code-help">띄어쓰기 및 하이픈 없이 입력 / 0·1·O·I·L 사용 금지 / 인쇄가 흐리면 행정문의로 사진 보내기</p>
     <button class="btn primary" type="submit">등록</button>
   </form>
   <p class="mt"><a href="{{ url_for('books.analysis_home') }}">복테&모의 분석으로</a></p>

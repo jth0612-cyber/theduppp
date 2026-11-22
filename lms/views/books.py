@@ -90,7 +90,7 @@ def register_book():
                     "WHERE c.code = ?", (code,), one=True) if code else None
         error = None
         if row is None:
-            error = "일치하는 코드가 없습니다. 12자리를 다시 확인해 주세요. 코드에는 숫자 0·1과 영문 O·I·L이 포함되지 않습니다."
+            error = "일치하는 코드가 없습니다. 12자리를 다시 확인해 주세요. 코드에는 숫자 0 및 1과 영문 O·I·L이 포함되지 않습니다."
         elif row["expires_on"] < _today():
             error = "이용 기간이 지난 교재입니다."
         elif query("SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",

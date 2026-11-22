@@ -1,5 +1,5 @@
 // 카카오톡·네이버 등 앱 안 브라우저로 열렸을 때 기본 브라우저로 넘긴다.
-// 앱 안 브라우저에서는 홈 화면 설치·알림이 안 되고, Google 로그인도 막힌다.
+// 앱 안 브라우저에서는 홈 화면 설치 및 알림이 안 되고, Google 로그인도 막힌다.
 (function () {
   var ua = navigator.userAgent || "";
   var here = location.href;
@@ -25,8 +25,8 @@
     box.setAttribute("role", "status");
     var msg = document.createElement("p");
     msg.textContent = android
-      ? "앱 안 브라우저에서는 홈 화면 설치·알림이 되지 않습니다."
-      : "앱 안 브라우저에서는 홈 화면 설치·알림이 되지 않습니다. 주소를 복사해 Safari에서 여세요.";
+      ? "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않습니다."
+      : "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않습니다. 주소를 복사해 Safari에서 여세요.";
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn small";
