@@ -2226,3 +2226,6 @@ body.parent-page { background: var(--frame); }
 .paper-sec { margin: 30px 0 0; }
 .ta-mark { margin-top: 8px !important; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 14px; }
 .ta-mark b { color: var(--accent-ink); margin-right: 4px; }
+
+/* 접는 표 제목: summary 안의 h2 는 한 줄로 */
+summary h2.inline { display: inline; margin: 0; }

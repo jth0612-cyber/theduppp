@@ -57,6 +57,8 @@
     </form>
   </div>
   {% if codes %}
+  {% set unused = codes|rejectattr('student_id')|list|length %}
+  <details{{ ' open' if unused == codes|length }}><summary class="small">코드 목록 {{ codes|length }}개 · 미사용 {{ unused }}개</summary>
   <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
     {{ csrf() }}<input type="hidden" name="action" value="delete">
     <div class="table-wrap codes-table"><table>
@@ -72,6 +74,7 @@
     </table></div>
     <button class="btn small danger mt" data-confirm="선택한 코드를 삭제하시겠습니까? (가입에 사용한 코드는 삭제되지 않습니다)">고른 코드 지우기</button>
   </form>
+  </details>
   {% endif %}
 </section>
 <div class="grid grid-2">

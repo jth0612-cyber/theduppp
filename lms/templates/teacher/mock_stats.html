@@ -52,9 +52,9 @@
 <section class="card" aria-labelledby="h-cls">
   <h2 id="h-cls">반별 결과</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>반 오답률 30% 이상 문항</th></tr></thead>
+    <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>오답률 높은 문항 <span class="small muted">30% 이상, 높은 순 5개</span></th></tr></thead>
     <tbody>{% for c, st in cs.cls|dictsort %}<tr><td class="nowrap">{{ c }}</td><td class="num nowrap">{{ st.n }}명</td><td class="num nowrap">{{ fmt(st.avg) }}</td>
-      <td class="small">{% if st.n >= min_n %}{% for w in st.wrong %}{% if w >= 30 %}{{ loop.index }}번({{ pct1(w) }}%) {% endif %}{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
+      <td class="small">{% if st.n >= min_n %}{% set hi = [] %}{% for w in st.wrong %}{% if w >= 30 %}{% set _ = hi.append((w, loop.index)) %}{% endif %}{% endfor %}{% for w, i in (hi|sort(reverse=true))[:5] %}{{ i }}번({{ pct1(w) }}%) {% else %}<span class="muted">없음</span>{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
 </section>
 
@@ -67,8 +67,10 @@
   </table></div>
 </details>
 
+{% include "_analysis_stats.html" %}
+
 <section class="card" aria-labelledby="h-res">
-  <h2 id="h-res">학생 결과 <span class="small muted">{{ entries|length }}명</span></h2>
+  <details><summary><h2 id="h-res" class="inline">학생 결과 <span class="small muted">{{ entries|length }}명 · 눌러서 펼치기</span></h2></summary>
   <div class="table-wrap"><table>
     <thead><tr><th>학생</th><th>반</th><th class="num">점수</th><th class="num">오답</th><th>답안</th></tr></thead>
     <tbody>{% for e in entries %}<tr><td>{{ e.name }} <span class="small muted">{{ e.student_no }}</span>{% if e.note %} <span class="badge open" title="{{ e.note }}">확인</span>{% endif %}</td><td class="muted">{{ e.cls }}</td>
@@ -77,8 +79,8 @@
   </table></div>
   <form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 삭제하시겠습니까?">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 지우기</button></form>
+  </details>
 </section>
 
-{% include "_analysis_stats.html" %}
 {% endif %}
 {% endblock %}
