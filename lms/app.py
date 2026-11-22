@@ -103,7 +103,9 @@ def create_app(test_config=None):
     def site_contact():
         # instance/.env 에서 읽는다. 비어 있으면 문의 버튼은 질답 게시판(행정문의)으로 연결된다
         url = os.environ.get("KAKAO_CHANNEL_URL", "").strip()
-        return {"kakao": url if url.startswith("https://") else "", "note": os.environ.get("CONTACT_NOTE", "").strip()}
+        return {"kakao": url if url.startswith("https://") else "", "note": os.environ.get("CONTACT_NOTE", "").strip(),
+                # 하단 운영자 줄 아래 연락처. 비어 있으면 줄 자체를 감춘다
+                "email": os.environ.get("CONTACT_EMAIL", "").strip(), "phone": os.environ.get("CONTACT_PHONE", "").strip()}
     app.jinja_env.globals["site_contact"] = site_contact
 
     def question_photos(q):

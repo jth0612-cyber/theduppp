@@ -236,6 +236,17 @@ class AppTest(unittest.TestCase):
         self.assertEqual(r.headers["X-Frame-Options"], "DENY")
         self.assertEqual(r.headers["Cache-Control"], "no-store")
 
+    def test_footer_operator_and_optional_contact(self):
+        page = self.app.test_client().get("/login").data.decode()
+        self.assertIn("운영자 정태혁 · 개인정보 보호책임자 정태혁", page)
+        self.assertNotIn("mailto:", page)  # 메일을 넣기 전에는 연락처 줄이 없다
+        os.environ["CONTACT_EMAIL"] = "lab@example.com"
+        try:
+            page = self.app.test_client().get("/login").data.decode()
+        finally:
+            del os.environ["CONTACT_EMAIL"]
+        self.assertIn('href="mailto:lab@example.com"', page)
+
     def test_csv_formula_injection_neutralized(self):
         cid = self.setup_class_with_students()
         self.c.post(f"/t/classes/{cid}/students", data={"name": "=HYPERLINK(1)", "student_no": "B1"})
