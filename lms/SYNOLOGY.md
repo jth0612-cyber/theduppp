@@ -156,3 +156,19 @@ CONTACT_PHONE=운영자 연락처
 ```
 `KAKAO_OPENCHAT_URL`(open.kakao.com 주소만)을 넣으면 로그인 화면에 '비밀번호 분실: 카카오톡 오픈채팅으로 문의'와 화면 아래 오픈채팅 링크가 나옵니다. `CONTACT_EMAIL`·`CONTACT_PHONE`은 화면 아래 '운영자 정태혁 · 개인정보 보호책임자 정태혁' 줄 밑에 나옵니다. 비워 두면 그 줄은 나오지 않습니다.
 바꾼 뒤 컨테이너를 **다시 시작**하세요.
+
+## 12. 데모 사이트 (가짜 데이터, 실제 사이트와 분리)
+
+SEASON 1을 진행한 상황을 가짜 데이터로 채운 체험용 사이트입니다. 폴더·DB·비밀키가 실제 사이트와 완전히 따로라 무엇을 눌러도 실제 학생 데이터에는 영향이 없습니다. 비용은 들지 않습니다 (NAS 메모리 100~200MB 정도).
+
+1. PC에서 데모 폴더 만들기: `python tools/make_demo.py 14` (14 = 14주차까지. 4를 넣으면 4주차까지)
+   - `_deploy/demo/student-lms-demo/` 에 코드 사본 + 새 `instance`(데모 DB·비밀키·사진)가 생깁니다.
+   - 로그인 정보는 같은 폴더의 `DEMO_CREDENTIALS.txt` 입니다. NAS에는 올리지 마세요.
+2. File Station에서 `docker` 안에 `student-lms-demo` 폴더를 만들고, `student-lms-demo` 폴더 안의 내용을 통째로 올립니다 (`DEMO_CREDENTIALS.txt` 빼고).
+3. `instance` 폴더 권한: 2장과 같이 `Everyone` 읽기·쓰기 허용.
+4. Container Manager → 프로젝트 → 생성 → 이름 `student-lms-demo`, 경로 `/docker/student-lms-demo`, 기존 docker-compose.yml 사용. (컨테이너 이름 `student-lms-demo`, 포트 8051)
+5. 주소: 제어판 → 외부 액세스 → DDNS 에서 `demo.jth4377.synology.me` 처럼 하위 주소를 쓸 수 있는지 확인 (와일드카드 사용 또는 호스트 추가). 제어판 → 보안 → 인증서 → 추가 → Let's Encrypt 로 그 주소 인증서를 받습니다.
+6. 리버스 프록시 (6장과 같은 방법): 소스 `HTTPS / demo.jth4377.synology.me / 443` → 대상 `HTTP / localhost / 8051`, 사용자 지정 머리글도 6장과 똑같이.
+7. 데모를 처음 상태로 되돌리려면 1번을 다시 하고 `instance` 폴더만 바꿔 올린 뒤 컨테이너를 다시 시작합니다.
+
+실제 사이트를 업데이트할 때 데모는 따로 갱신해야 합니다 (1번부터 다시).
