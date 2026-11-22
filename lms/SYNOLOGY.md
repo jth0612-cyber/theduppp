@@ -164,7 +164,7 @@ SEASON 1을 진행한 상황을 가짜 데이터로 채운 체험용 사이트�
 1. PC에서 데모 폴더 만들기: `python tools/make_demo.py 14` (14 = 14주차까지. 4를 넣으면 4주차까지)
    - `_deploy/demo/student-lms-demo/` 에 코드 사본 + 새 `instance`(데모 DB·비밀키·사진)가 생깁니다.
    - 로그인 정보는 같은 폴더의 `DEMO_CREDENTIALS.txt` 입니다. NAS에는 올리지 마세요.
-2. File Station에서 `docker` 안에 `student-lms-demo` 폴더를 만들고, `student-lms-demo` 폴더 안의 내용을 통째로 올립니다 (`DEMO_CREDENTIALS.txt` 빼고).
+2. File Station에서 `docker` 안에 `student-lms-demo` 폴더를 만들고, `_deploy/student-lms-demo.zip`(로그인 정보 파일은 빠져 있음)을 올려 그 폴더에 압축을 풉니다.
 3. `instance` 폴더 권한: 2장과 같이 `Everyone` 읽기·쓰기 허용.
 4. Container Manager → 프로젝트 → 생성 → 이름 `student-lms-demo`, 경로 `/docker/student-lms-demo`, 기존 docker-compose.yml 사용. (컨테이너 이름 `student-lms-demo`, 포트 8051)
 5. 주소: 제어판 → 외부 액세스 → DDNS 에서 `demo.jth4377.synology.me` 처럼 하위 주소를 쓸 수 있는지 확인 (와일드카드 사용 또는 호스트 추가). 제어판 → 보안 → 인증서 → 추가 → Let's Encrypt 로 그 주소 인증서를 받습니다.
