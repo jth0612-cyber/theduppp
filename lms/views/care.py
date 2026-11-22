@@ -171,6 +171,12 @@ def s_lessons():
     rows = [dict(r, files=[x["file_id"] for x in query("SELECT file_id FROM lesson_files WHERE lesson_id = ? ORDER BY pos", (r["id"],))])
             for r in query("SELECT * FROM lessons WHERE class_id = ? ORDER BY day DESC, id DESC LIMIT 60", (me["class_id"],))]
     week_ago = (date.today() - timedelta(days=3)).isoformat()
+    # 그 수업 날부터 6일 안에 올라온 강의 영상 (결석생이 놓친 주차 영상을 바로 찾게)
+    vids = query("""SELECT id, title, url, created_at FROM videos WHERE class_id = ?
+                    AND (expires_on IS NULL OR expires_on = '' OR expires_on >= date('now', 'localtime'))""", (me["class_id"],))
+    for r in rows:
+        end = (date.fromisoformat(r["day"]) + timedelta(days=6)).isoformat()
+        r["videos"] = [v for v in vids if r["day"] <= v["created_at"][:10] <= end]
     return render_template("care/s_lessons.html", me=me, rows=rows, new_since=week_ago)
 
 
