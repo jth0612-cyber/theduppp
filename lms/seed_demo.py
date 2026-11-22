@@ -6,7 +6,7 @@
 로그인 정보: DEMO_CREDENTIALS.txt (이 파일 옆)
 
 페르소나
-- 선생님 정태혁 (teacher)        공지·회차·시험 평가·행정문의·cast
+- 선생님 정태혁 (master)         공지·회차·시험 평가·행정문의·cast
 - 조교 한지수 (ta_hanjisu)        학습질문·학습상담·1:1 첨삭·시험지 첨삭·OMR·수업 기록
 - 학생 8명, 반마다 1명 (PERSONAS)  중심 인물은 박서윤 (대구 토요일 A반)
 
@@ -200,9 +200,9 @@ def at(table, row_id, **cols):
 PW = {"teacher": secrets.token_urlsafe(8) + "!7", "ta": secrets.token_urlsafe(8) + "!7", "ta2": secrets.token_urlsafe(8) + "!7"}
 with app.app_context():
     from security import encrypt, hash_password
-    x("INSERT INTO users (role, username, display_name, password_hash) VALUES ('teacher', 'teacher', '정태혁', ?)",
+    x("INSERT INTO users (role, username, display_name, password_hash) VALUES ('teacher', 'master', '정태혁', ?)",
       (hash_password(PW["teacher"]),))
-T = login("teacher", PW["teacher"])
+T = login("master", PW["teacher"])
 ok("조교 추가", T.post("/t/staff", data={"display_name": "한지수", "username": "ta_hanjisu"}))
 ok("조교 추가 2", T.post("/t/staff", data={"display_name": "김도윤", "username": "ta_kimdoyun"}))
 with app.app_context():
@@ -616,7 +616,7 @@ with app.app_context():
 
 with open(CRED, "w", encoding="utf-8") as fh:
     fh.write(f"데모 로그인 (가짜 데이터) · SEASON 1 {WEEKS}주차까지 · 오늘 = {TODAY} (금)\n\n")
-    fh.write(f"선생님 정태혁   teacher / {PW['teacher']}\n")
+    fh.write(f"선생님 정태혁   master / {PW['teacher']}\n")
     fh.write(f"조교 한지수     ta_hanjisu / {PW['ta']}\n")
     fh.write(f"조교 김도윤     ta_kimdoyun / {PW['ta2']}\n\n")
     for name, p in P.items():
