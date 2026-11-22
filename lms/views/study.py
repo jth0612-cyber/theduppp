@@ -299,7 +299,7 @@ def timetable_import():
     for r in rows:
         execute("INSERT INTO my_timetable (user_id, weekday, starts, ends, title, room, tone) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (uid, r["weekday"], r["starts"], r["ends"], r["title"], r["room"], r["tone"]))
-    flash(f"반 시간표 {len(rows)}칸을 가져왔어요. 이제 마음대로 고칠 수 있어요.", "ok")
+    flash(f"반 시간표 {len(rows)}칸을 가져왔어요.", "ok")
     return redirect(url_for("study.timetable"))
 
 

@@ -13,8 +13,8 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h2>시험 평가 <span class="small muted">학생이 이 회차를 열면 맨 위에 보입니다 (결과가 없는 학생도){% if mock.review_at and mock.review_by %} · {{ mock.review_by }} {{ mock.review_at[5:16] }}{% endif %}</span></h2>
   <div class="row">
-    <div class="field"><label for="ev-level">난이도</label><select id="ev-level" name="level"><option value="">—</option>{% for k, v in levels.items() %}<option value="{{ k }}" {{ 'selected' if mock.eval_level == k }}>{{ v }}</option>{% endfor %}</select></div>
-    <div class="field"><label for="ev-time">시간</label><select id="ev-time" name="time"><option value="">—</option>{% for t in times %}<option {{ 'selected' if mock.eval_time == t }}>{{ t }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="ev-level">난이도</label><select id="ev-level" name="level"><option value="">-</option>{% for k, v in levels.items() %}<option value="{{ k }}" {{ 'selected' if mock.eval_level == k }}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="ev-time">시간</label><select id="ev-time" name="time"><option value="">-</option>{% for t in times %}<option {{ 'selected' if mock.eval_time == t }}>{{ t }}</option>{% endfor %}</select></div>
     <div class="field"><label for="ev-killer">킬러 문항</label><input type="text" id="ev-killer" name="killer" value="{{ mock.eval_killer }}" placeholder="예: 14, 19, 20" inputmode="numeric"></div>
   </div>
   <div class="field"><label for="mk-review">총평</label>
@@ -36,7 +36,7 @@
     <button class="btn">빈 양식 받기</button><span class="small muted">재원생 명단 · 정답·배점 줄 · 문항정보 시트 포함</span>
   </form>
   {% if m.is_practice %}<p class="mt"><a class="btn" href="{{ url_for('books.practice_file', mid=mock.id) }}">연습용 예시 엑셀 받기</a>
-    <span class="small muted">실장 TEST반 가상 학생 50명의 답안 · 정답 · 문항정보가 채워져 있습니다. 그대로 올려 보세요.</span></p>{% endif %}
+    <span class="small muted">실장 TEST반 가상 학생 50명의 답안 · 정답 · 문항정보가 들어 있습니다.</span></p>{% endif %}
   {% if up %}
   <div class="omr-log mt">
     <p class="small"><b>마지막 반영</b> {{ up.created_at[5:16] }} · {{ up.display_name or ('정태혁 선생님' if up.role == 'teacher' else up.username) }} · {{ up.filename }}</p>
@@ -62,7 +62,7 @@
   <summary><b>문항정보</b> <span class="small muted">정답 · 배점 · 단원 · 형식 (엑셀 '문항정보' 시트로 바꿉니다)</span></summary>
   <div class="table-wrap mt"><table class="small">
     <thead><tr><th class="num">번</th><th>정답</th><th class="num">배점</th><th>단원</th><th>핵심개념</th><th>형식</th><th>보기함정·선지분석</th></tr></thead>
-    <tbody>{% for i in range(1, m.n_items + 1) %}{% set d = m.info.get(i, {}) %}<tr><td class="num">{{ i }}</td><td>{{ key_label(m.key[i - 1]) or '—' }}</td><td class="num">{{ fmt(m.pts[i - 1]) }}</td>
+    <tbody>{% for i in range(1, m.n_items + 1) %}{% set d = m.info.get(i, {}) %}<tr><td class="num">{{ i }}</td><td>{{ key_label(m.key[i - 1]) or '-' }}</td><td class="num">{{ fmt(m.pts[i - 1]) }}</td>
       <td>{{ d.unit or '' }}</td><td>{{ d.concept or '' }}</td><td>{{ d.format or '' }}</td><td class="muted">{{ (d.traps or d.distractors or '')[:60] }}</td></tr>{% endfor %}</tbody>
   </table></div>
 </details>

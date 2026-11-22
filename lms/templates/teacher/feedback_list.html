@@ -12,10 +12,10 @@
     <tr><th>학생</th><th>반</th><th>회차</th><th class="num">점수</th><th class="num">글</th><th class="num">{{ '요청' if status == 'wait' else '답변' }}</th></tr>
     {% for r in rows %}
     <tr>
-      <td><a href="{{ url_for('feedback.t_detail', tid=r.id) }}">{{ r.student_name or '—' }}</a><br><span class="small muted">{{ r.student_no or '' }}</span></td>
+      <td><a href="{{ url_for('feedback.t_detail', tid=r.id) }}">{{ r.student_name or '-' }}</a><br><span class="small muted">{{ r.student_no or '' }}</span></td>
       <td class="muted">{{ r.class_name or '' }}</td>
       <td>{{ r.book_title }} {{ r.round_no }}회{% if r.mock_title %} <span class="muted">{{ r.mock_title }}</span>{% endif %}</td>
-      <td class="num">{% if r.score is not none %}{{ fmt(r.score) }}<span class="muted">/{{ fmt(r.full_score) }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td class="num">{% if r.score is not none %}{{ fmt(r.score) }}<span class="muted">/{{ fmt(r.full_score) }}</span>{% else %}<span class="muted">-</span>{% endif %}</td>
       <td class="num muted">{{ r.n_msgs }}</td>
       <td class="small muted num">{{ r.updated_at[5:16] }}</td>
     </tr>

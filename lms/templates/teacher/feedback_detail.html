@@ -4,7 +4,7 @@
 <p class="small"><a href="{{ url_for('feedback.t_list', status=t.status) }}">1:1 첨삭</a> /</p>
 <header class="ed-head ed-head-split">
   <div>
-    <h1>{{ t.student_name or '—' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>
+    <h1>{{ t.student_name or '-' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>
     <p class="ed-lede">{{ t.class_name or '' }} · {{ t.book_title }} {{ t.round_no }}회{% if t.mock_title %} {{ t.mock_title }}{% endif %}</p>
   </div>
   {% if t.status == 'done' %}

@@ -494,7 +494,7 @@ export default {
             if (!E.walk(route(E.me.pos.x, E.me.pos.z, POOL.x + Math.cos(a) * r, POOL.z + Math.sin(a) * r), () => { E.face(POOL.x, POOL.z); setTimeout(() => { splash(E); E.share("splash"); }, 250); })) return;
             return;
           }
-          splash(E); E.share("splash"); E.whisper("찰방— 물방울이 김 속으로 흩어져요.");
+          splash(E); E.share("splash"); E.whisper("찰방, 물방울이 김 속으로 흩어져요.");
         },
       },
       remote: { splash: (E, av) => splash(E, av, false) },

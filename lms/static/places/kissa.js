@@ -406,7 +406,7 @@ export default {
         egg(E, o) { EGGS.tap(E, o); },
         window(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(windowSeat); s === null ? E.whisper("창가 자리가 다 찼어요. 바 자리는 남아 있어요.") : E.sit(s); },
         coffee(E) { E.me.gesture("sip", 3.6); E.share("coffee"); E.sfx("sip"); E.whisper(E.state === "free" ? "따뜻한 커피를 후- 불어 한 모금." : "커피 한 모금. 다시 한 줄만 더."); },
-        page(E) { E.sfx("page"); E.share("page"); E.whisper("사락— 다음 장으로."); },
+        page(E) { E.sfx("page"); E.share("page"); E.whisper("사락, 다음 장으로."); },
       },
       remote: { coffee: (E, av) => av.gesture("sip", 3.6), page: (E) => E.sfx("pageFar") },
       sounds: {

@@ -319,7 +319,7 @@ def write(place):
     if not body:
         return fail("한 줄을 적어 주세요.")
     if bad_word(body):
-        return fail("다른 친구들도 보는 곳이에요. 바른 말로 적어 주세요.")
+        return fail("쓸 수 없는 말이 들어 있어요.")
     if b["kind"] == "chat":
         me = query(f"""SELECT seat FROM room_presence WHERE user_id = ? AND place = ?
                        AND last_seen >= datetime('now', 'localtime', '-{PRESENT_SECONDS} seconds')""", (uid, place), one=True)
@@ -327,10 +327,10 @@ def write(place):
             return fail(b["need"])
         last = query("SELECT created_at FROM room_chat WHERE user_id = ? ORDER BY id DESC LIMIT 1", (uid,), one=True)
         if last and (datetime.now() - datetime.fromisoformat(last["created_at"])).total_seconds() < CHAT_GAP_SECONDS:
-            return fail("조금 천천히 적어 주세요.")
+            return fail("너무 빨라요. 잠시 뒤에 적어 주세요.")
         if query("""SELECT COUNT(*) AS n FROM room_chat WHERE user_id = ?
                     AND date(created_at) = date('now', 'localtime')""", (uid,), one=True)["n"] >= CHAT_DAY_MAX:
-            return fail("오늘은 충분히 적었어요. 내일 또 만나요.")
+            return fail("하루 다섯 줄을 다 썼어요.")
         execute("INSERT INTO room_chat (place, user_id, body, board) VALUES (?, ?, ?, ?)",
                 (place, uid, body, _board_of_seat(place, me["seat"])))
     else:

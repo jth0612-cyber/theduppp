@@ -36,7 +36,7 @@
 <section class="card">
   <div class="sec-head"><h2>자동 연동 (시트 → 웹)</h2><span class="small muted">{% if token_at %}열쇠 만든 때 {{ token_at }}{% else %}열쇠가 아직 없어요{% endif %}</span></div>
   <ol class="small steps-list">
-    <li>아래 <b>열쇠 만들기</b>를 누르고 나온 값을 시트의 스크립트 속성 <code>WEB_SYNC_TOKEN</code>에 넣어요. (강사 계정만)</li>
+    <li>아래 <b>열쇠 만들기</b>를 누르고 나온 값을 시트의 스크립트 속성 <code>WEB_SYNC_TOKEN</code>에 넣어요.</li>
     <li>시트의 Apps Script에 아래 코드를 새 파일로 붙여 넣고, <code>pushToWeb</code>를 한 번 실행해 권한을 허용해요.</li>
     <li>성적 반영이나 문자 생성 뒤에 <code>pushToWeb</code>가 돌게 하거나, 트리거로 1시간마다 돌게 해요.</li>
   </ol>

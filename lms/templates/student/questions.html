@@ -38,7 +38,7 @@
     </div>
     <fieldset class="field ta-pick" data-consult {{ '' if dq == '학습상담' else 'hidden' }}>
       <legend>상담 조교</legend>
-      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>가장 먼저 보는 조교가 답합니다</small></span></label>
+      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>먼저 본 조교가 답합니다</small></span></label>
       {% for t in tas %}
       <label class="ta-card"><input type="radio" name="assignee" value="{{ t.id }}"><span><b>{{ t.name }} 조교</b>
         {% if t.intro %}<small>{{ t.intro }}</small>{% endif %}

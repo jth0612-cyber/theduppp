@@ -200,6 +200,6 @@ def signup():
         user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)
         login_user(user)
         g.user = user
-        flash(f"가입했어요. {sc['class_name']}에 오신 걸 환영해요!", "ok")
+        flash(f"{sc['class_name']} 가입 완료.", "ok")
         return redirect(_home_for(user))
     return render_template("signup.html", form=form, gid=gid, errors={}, track=track)

@@ -20,7 +20,7 @@
 <section class="panel">
   {% if rows %}
   <ol class="rank-list">{% for r in rows %}{{ rank_row(r, me) }}{% endfor %}</ol>
-  {% else %}<p class="muted">{{ periods[period] }}에는 아직 아무도 기록하지 않았어요. 첫 터줏대감이 되어 보세요.</p>{% endif %}
+  {% else %}<p class="muted">{{ periods[period] }}에는 아직 기록이 없습니다.</p>{% endif %}
 </section>
 <p class="small mt"><a href="{{ url_for('rooms.room', place=place) }}">{{ places[place][0] }}에 들어가기 →</a></p>
 {% endblock %}

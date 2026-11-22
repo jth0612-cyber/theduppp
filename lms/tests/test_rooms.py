@@ -91,7 +91,7 @@ class RoomsTest(unittest.TestCase):
         self.assertTrue(kings[u0]); self.assertFalse(kings[u1])
         # 기간: 지난달 기록은 '이번 주'에 안 들어감
         self._log(2, "sento", 500, ago_days=40)
-        self.assertIn("아직 아무도", a.get("/s/rooms/rank?place=sento&period=week").data.decode())
+        self.assertIn("아직 기록이 없습니다", a.get("/s/rooms/rank?place=sento&period=week").data.decode())
         self.assertIn("닉2", a.get("/s/rooms/rank?place=sento&period=all").data.decode())
         self.assertEqual(a.get("/s/rooms/rank?place=nowhere").status_code, 404)
 
@@ -112,7 +112,7 @@ class RoomsTest(unittest.TestCase):
         with self.app.app_context():
             execute("UPDATE room_chat SET created_at = datetime('now', 'localtime', '-1 minute')")
         r = a.post("/s/rooms/sento/write", data={"body": "시1발 졸려"}).get_json()        # 욕설 거르기
-        self.assertFalse(r["ok"]); self.assertIn("바른 말", r["error"])
+        self.assertFalse(r["ok"]); self.assertIn("쓸 수 없는 말", r["error"])
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM room_chat", one=True)["n"], 1)
         # 같은 장소의 친구는 beat 로 칠판 글을 받는다
         board = b.post("/s/rooms/sento/beat", data={}).get_json()["board"]
