@@ -247,6 +247,14 @@ class AppTest(unittest.TestCase):
             del os.environ["CONTACT_EMAIL"]
         self.assertIn('href="mailto:lab@example.com"', page)
 
+    def test_openchat_link_for_lost_password(self):
+        self.assertNotIn("비밀번호 분실", self.app.test_client().get("/login").data.decode())
+        for url, shown in (("https://open.kakao.com/o/abc123", True), ("https://evil.example/o/x", False)):
+            with mock.patch.dict(os.environ, {"KAKAO_OPENCHAT_URL": url}):
+                page = self.app.test_client().get("/login").data.decode()
+            self.assertEqual("비밀번호 분실" in page, shown, url)
+            self.assertEqual(f'href="{url}"' in page, shown, url)
+
     def test_csv_formula_injection_neutralized(self):
         cid = self.setup_class_with_students()
         self.c.post(f"/t/classes/{cid}/students", data={"name": "=HYPERLINK(1)", "student_no": "B1"})

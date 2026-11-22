@@ -150,8 +150,9 @@ Google 로그인을 켜면 학생의 Google 이메일 주소가 저장됩니다.
 ```
 KAKAO_CHANNEL_URL=https://pf.kakao.com/채널주소
 CONTACT_NOTE=행정 문의는 평일 10시~18시에 답변합니다.
+KAKAO_OPENCHAT_URL=https://open.kakao.com/o/오픈채팅주소
 CONTACT_EMAIL=운영자 메일 주소
 CONTACT_PHONE=운영자 연락처
 ```
-`CONTACT_EMAIL`·`CONTACT_PHONE`은 화면 아래 '운영자 정태혁 · 개인정보 보호책임자 정태혁' 줄 밑에 나옵니다. 비워 두면 그 줄은 나오지 않습니다.
+`KAKAO_OPENCHAT_URL`(open.kakao.com 주소만)을 넣으면 로그인 화면에 '비밀번호 분실: 카카오톡 오픈채팅으로 문의'와 화면 아래 오픈채팅 링크가 나옵니다. `CONTACT_EMAIL`·`CONTACT_PHONE`은 화면 아래 '운영자 정태혁 · 개인정보 보호책임자 정태혁' 줄 밑에 나옵니다. 비워 두면 그 줄은 나오지 않습니다.
 바꾼 뒤 컨테이너를 **다시 시작**하세요.

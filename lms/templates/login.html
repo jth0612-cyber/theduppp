@@ -21,5 +21,7 @@
   <p class="small muted">Google 계정을 연결한 학생만</p>
   {% endif %}
   <p class="small mt"><a href="{{ url_for('auth.signup') }}">학생 회원가입</a> (선생님께 받은 개인 코드 필요)</p>
+  {% set oc = site_contact().openchat %}
+  {% if oc %}<p class="small">비밀번호 분실: <a href="{{ oc }}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>으로 문의</p>{% endif %}
 </div>
 {% endblock %}
