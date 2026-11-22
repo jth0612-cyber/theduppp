@@ -78,6 +78,19 @@ def _counts():
 
 # ---------- 학생 ----------
 
+@bp.route("/s/feedback")
+@student_required
+def s_list():
+    """내 첨삭 모아 보기: 1:1 첨삭과 시험지 첨삭 (지난 코멘트를 회차마다 열지 않고 찾게)."""
+    rows = query("""SELECT 'feedback' AS kind, t.mock_id, t.status, t.updated_at AS at, b.title AS book, m.round_no, t.unread
+                    FROM feedback_threads t JOIN mocks m ON m.id = t.mock_id JOIN books b ON b.id = m.book_id WHERE t.user_id = ?
+                    UNION ALL
+                    SELECT 'paper', p.mock_id, p.status, COALESCE(p.reviewed_at, p.submitted_at), b.title, m.round_no, 0
+                    FROM exam_papers p JOIN mocks m ON m.id = p.mock_id JOIN books b ON b.id = m.book_id WHERE p.student_id = ?
+                    ORDER BY at DESC""", (g.user["id"], g.user["student_id"]))
+    return render_template("student/feedback_list.html", rows=rows)
+
+
 @bp.route("/s/analysis/<int:mid>/feedback", methods=["POST"])
 @student_required
 def ask(mid):

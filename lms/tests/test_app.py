@@ -757,6 +757,12 @@ class FeatureTest(AppTest):
         self.assertIn("학부모 리포트에 나가는 코멘트", page)
         self.assertIn("반 시험 성적 추이", page)
 
+    def test_student_feedback_list(self):
+        _, s1, _ = self._students()
+        page = s1.get("/s/feedback").data.decode()
+        self.assertIn("내 첨삭", page)
+        self.assertIn("아직 요청한 첨삭이 없습니다", page)
+
     def test_greeting_password_frame_and_book_code_link(self):
         _, s1, _ = self._students()
         with self.app.app_context():

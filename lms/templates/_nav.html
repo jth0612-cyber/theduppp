@@ -68,7 +68,7 @@
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0),
     ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book' or ep.startswith('feedback.'), feedback_new or 0)]),
+    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book' or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
   ('수업', [
     ('care.s_lessons', '수업 기록', 'folder', ep == 'care.s_lessons', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0),
@@ -78,7 +78,8 @@
   ('공부', [
     ('games.hub', '수능 영단어', 'abc', vocab_ep, 0),
     ('games.sci_hub', '통과 Quiz', 'game', ep.startswith('games.') and not vocab_ep, 0),
-    ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0)]),
+    ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
+    ('feedback.s_list', '내 첨삭', 'pen', ep == 'feedback.s_list', feedback_new or 0)]),
   ('기록', [
     ('study.s_my', '내 공부', 'plan', ep == 'study.s_my', 0),
     ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
