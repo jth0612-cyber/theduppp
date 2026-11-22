@@ -2229,3 +2229,7 @@ body.parent-page { background: var(--frame); }
 
 /* 접는 표 제목: summary 안의 h2 는 한 줄로 */
 summary h2.inline { display: inline; margin: 0; }
+
+/* 사진 크게 보기 */
+.lightbox { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, .82); display: flex; align-items: center; justify-content: center; padding: 12px; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; background: #fff; }

@@ -338,3 +338,17 @@ document.addEventListener("click", function (e) {
     if (empty.length && !confirm("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장하시겠습니까?")) e.preventDefault();
   });
 })();
+// 사진 크게 보기: 첨부 사진 링크를 새 탭 대신 같은 화면 위에 연다 (누르거나 Esc 로 닫기)
+document.addEventListener("click", function (e) {
+  var a = e.target.closest && e.target.closest('a[target="_blank"]');
+  if (!a || !a.querySelector("img") || a.href.indexOf("/file/") < 0) return;
+  e.preventDefault();
+  var box = document.createElement("div");
+  box.className = "lightbox"; box.setAttribute("role", "dialog"); box.setAttribute("aria-label", "사진 크게 보기");
+  var img = document.createElement("img"); img.src = a.href; img.alt = (a.querySelector("img").alt || "사진");
+  box.appendChild(img);
+  var close = function () { box.remove(); document.removeEventListener("keydown", esc); };
+  var esc = function (k) { if (k.key === "Escape") close(); };
+  box.addEventListener("click", close); document.addEventListener("keydown", esc);
+  document.body.appendChild(box);
+});
