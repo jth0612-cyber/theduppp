@@ -208,6 +208,18 @@
     </div>
   </div>
   <div class="pre">{{ n.body }}</div>
+  <details class="mt"><summary class="small">수정</summary>
+    <form method="post" action="{{ url_for('teacher.notice_edit', nid=n.id) }}">
+      {{ csrf() }}
+      <div class="row">
+        <div class="field shrink"><label>말머리</label><select name="tag">{% for t in tags %}<option{{ ' selected' if t == n.tag }}>{{ t }}</option>{% endfor %}</select></div>
+        <div class="field wide"><label>제목</label><input type="text" name="title" value="{{ n.title }}" maxlength="120" required></div>
+        <div class="field"><label>교재명</label><input type="text" name="textbook" value="{{ n.textbook or '' }}" maxlength="60"></div>
+      </div>
+      <div class="field"><label>내용</label><textarea name="body" maxlength="5000" required>{{ n.body }}</textarea></div>
+      <button class="btn small primary">저장</button> <span class="small muted">학생에게 다시 알림은 가지 않음</span>
+    </form>
+  </details>
 </div>
 {% else %}<p class="muted">공지가 없습니다.</p>{% endfor %}
 

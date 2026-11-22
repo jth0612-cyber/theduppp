@@ -763,6 +763,26 @@ def notice_pin(nid):
     return redirect(url_for("teacher.class_detail", cid=n["class_id"], tab="notices"))
 
 
+@bp.route("/notices/<int:nid>/edit", methods=["POST"])
+@staff_required
+def notice_edit(nid):
+    """오타 고치기: 지우고 다시 쓰지 않아도 되게. 다시 알림은 보내지 않는다."""
+    n = query("SELECT * FROM notices WHERE id = ?", (nid,), one=True)
+    if n is None:
+        abort(404)
+    try:
+        title, body = _text("title", 120), _text("body", 5000)
+        textbook = _text("textbook", 60, required=False)
+    except ValueError as e:
+        flash(str(e), "error")
+    else:
+        tag = request.form.get("tag") if request.form.get("tag") in NOTICE_TAGS else n["tag"]
+        execute("UPDATE notices SET tag = ?, textbook = ?, title = ?, body = ? WHERE id = ?", (tag, textbook, title, body, nid))
+        audit("notice_edit", f"notice:{nid}")
+        flash("공지를 수정했습니다.", "ok")
+    return redirect(url_for("teacher.class_detail", cid=n["class_id"], tab="notices"))
+
+
 @bp.route("/notices/<int:nid>/delete", methods=["POST"])
 @staff_required
 def notice_delete(nid):
