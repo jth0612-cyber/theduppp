@@ -11,16 +11,21 @@
 - 학생 8명, 반마다 1명 (PERSONAS)  중심 인물은 박서윤 (대구 토요일 A반)
 
 진도·교재: SEASON 1 커리큘럼 (주차 = 토~금, 1주차 12.26~01.01, 14주차 03.27~04.02)
+시험: testfile/ 의 모의고사·복테 파일 한 벌을 1~14회로 복제 (문항정보는 demo_items.py)
+사진: make_demo.py 가 tools/demo_photos.py 를 띄워 두면 실제 교재·시험지에 학생 필기를 얹은 사진을 쓴다
 일정: 대구 토 12/26, 대치 일 12/27, 대치 목 12/31 개강 (재종 4반은 12/28 월).
 N주차가 끝난 금요일을 '오늘'로 보고, 요일을 지키며 실행일 직전 금요일로 당긴다.
 → 화면의 '오늘·이번 주·최근 7일'이 채워진다.
 모든 행동은 실제 화면 기능(폼 전송)으로 실행하고, 날짜만 나중에 맞춘다.
 """
 import io
+import json as _js
 import os
 import random
 import re
 import secrets
+import shutil
+import subprocess
 import sys
 from datetime import date, datetime, timedelta
 
@@ -67,64 +72,133 @@ def unit_of(title, w):   # 11주차는 진화(변화와 다양성)와 생태계(
 
 
 LOGIC_BUILD = {1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 8: 6, 10: 7, 12: 8}     # 주차 → LOGIC BUILD 호
-QUESTIONS = {  # 주차: [(제목, 내용, 조교 답변)]  · 2022 개정 통합과학 범위 안
-    1: [("[LINE UP I-24-3] 흡수 스펙트럼 선의 위치", "흡수선과 방출선 위치가 같다는 게 왜인지 모르겠습니다.",
-         "같은 원소는 같은 에너지 차이에서만 빛을 흡수하고 방출합니다. 그래서 흡수선과 방출선이 같은 파장에 생깁니다."),
-        ("[LINE UP I-18-2] 별의 진화 순서", "적색 거성 다음 단계가 질량에 따라 갈리는 기준을 모르겠습니다.",
-         "핵융합이 끝난 뒤 남은 질량이 기준입니다. 태양 정도면 백색 왜성, 훨씬 크면 초신성 폭발을 거칩니다.")],
-    2: [("[Squeeze 2호-7] 샤가프 법칙 비율", "A의 비율만 주어졌을 때 G+C 비율 구하는 순서가 헷갈립니다.",
-         "A=T 이므로 A+T 를 먼저 구하고, 100%에서 빼면 G+C 입니다. G=C 이므로 반으로 나누면 G 입니다."),
-        ("[FRAMING I-45-3] 전사할 때 염기", "주형 가닥에서 RNA 염기를 정하는 순서가 헷갈립니다.",
-         "주형 가닥 염기와 상보적인 염기를 쓰고 T 자리에 U를 씁니다. 교재 46p 표를 같이 보세요.")],
-    3: [("[LOGIC BUILD 3호-5] 카탈레이스 실험", "온도를 높였을 때 기포 발생이 줄어드는 이유가 궁금합니다.",
-         "카탈레이스는 단백질이라 온도가 너무 높으면 입체 구조가 변해 기능을 잃습니다."),
-        ("[Squeeze 3호-11] 지구 시스템 상호작용", "화산 폭발이 기권과 수권에 주는 영향을 같이 묻는 문제가 어렵습니다.",
-         "권역 하나씩 표로 적어 보세요. 화산재는 기권, 산성비는 수권으로 이어집니다.")],
-    4: [("[Squeeze 4호-12] 빗면 위 물체의 가속도", "빗면 기울기가 같으면 질량이 달라도 가속도가 같다는 부분이 헷갈립니다.",
-         "빗면 방향 힘이 질량에 비례하고, 가속도는 힘을 질량으로 나눈 값이라 질량이 지워집니다."),
-        ("[Squeeze 4호-9] 자유 낙하 거리", "1초, 2초 동안 떨어진 거리 비가 1:4인 이유를 다시 설명해 주세요.",
-         "속력이 시간에 비례해 커지므로 거리는 시간의 제곱에 비례합니다.")],
-    5: [("[Squeeze 5호-6] 충격량과 충돌 시간", "충돌 시간이 길어지면 힘이 줄어드는데 충격량은 같다는 부분이 헷갈립니다.",
-         "충격량은 운동량 변화량이라 처음과 나중 속도가 같으면 같습니다. 시간이 길면 같은 충격량을 작은 힘으로 받습니다."),
-        ("[LINE UP I-112-4] 반도체 도핑", "p형과 n형 반도체 차이를 그림으로 정리하고 싶습니다.",
-         "넣은 원소의 원자가 전자 수로 구분합니다. 3개면 p형, 5개면 n형입니다.")],
-    6: [("[LOGIC BUILD 5호-8] 공유 전자쌍 수", "N₂에서 공유 전자쌍이 3개인 걸 그림으로 어떻게 세나요?",
-         "원자가 전자 5개씩 그리고, 각자 8개를 채우려면 3쌍을 함께 써야 합니다."),
-        ("[FRAMING I-130-2] 이온 결합 화합물 녹는점", "이온 사이 거리가 짧을수록 녹는점이 높아지는 이유가 궁금합니다.",
-         "거리가 짧을수록 이온 사이 인력이 커서 떼어 내는 데 에너지가 더 듭니다.")],
-    7: [("[Squeeze 7호-4] 판의 경계", "발산형 경계에서 화산 활동이 있는 이유가 궁금합니다.",
-         "판이 벌어지면서 아래 맨틀이 올라와 압력이 줄고, 녹아서 마그마가 생깁니다."),
-        ("[LINE UP II-30-6] 지질시대 구분", "대멸종이 지질시대 경계가 되는 이유가 무엇인가요?",
-         "화석으로 보이는 생물 무리가 크게 바뀌는 지점이라 시대를 나누는 기준이 됩니다.")],
-    8: [("[LOGIC BUILD 6호-3] 산화 환원 판단", "산소를 얻는 것과 전자를 잃는 것이 같은 산화라는 게 헷갈립니다.",
-         "산소와 결합하면서 전자를 내주는 경우가 많아서 둘 다 산화로 봅니다. 교재 표를 기준으로 하나씩 대응시켜 보세요."),
-        ("[Squeeze 8호-10] 광합성과 호흡", "광합성이 환원이고 호흡이 산화인 이유를 다시 설명해 주세요.",
-         "이산화 탄소가 산소를 잃고 포도당이 되는 쪽이 환원, 포도당이 산소를 얻는 쪽이 산화입니다.")],
-    9: [("[Squeeze 9호-5] 중화 반응 이온 수", "혼합 용액의 전체 이온 수가 어떻게 변하는지 그래프가 헷갈립니다.",
-         "중화점 전에는 반응한 만큼 넣은 쪽 이온이 대신 들어옵니다. 이온을 하나씩 표로 세어 보세요."),
-        ("[FRAMING II-22-7] 중화점 찾기", "온도가 가장 높은 지점이 중화점인 이유가 궁금합니다.",
-         "중화 반응에서 열이 나오는데, 반응한 양이 가장 많은 지점에서 온도가 가장 높습니다.")],
-    10: [("[LOGIC BUILD 7호-6] 중화 반응 양적 관계", "몇 mL를 넣어야 완전히 중화되는지 구하는 비례식이 헷갈립니다.",
-          "H⁺ 수와 OH⁻ 수가 같아지는 부피를 찾습니다. 단위 부피당 이온 수부터 적으세요."),
-         ("[Squeeze 10호-3] 에너지 출입", "흡열 반응인데 주변 온도가 내려가는 이유가 궁금합니다.",
-          "반응이 주변에서 열을 가져가기 때문에 주변 온도가 내려갑니다.")],
-    11: [("[Squeeze 11호-8] 생태계 평형", "먹이 그물에서 한 종이 줄면 평형이 회복되는 과정이 헷갈립니다.",
-          "먹이가 줄면 포식자가 줄고, 그러면 다시 먹이가 늘어나는 순서로 회복됩니다."),
-         ("[LINE UP II-70-2] 자연 선택", "변이가 먼저인지 환경 변화가 먼저인지 헷갈립니다.",
-          "변이는 원래 있고, 환경이 그중 유리한 변이를 가진 개체를 더 많이 남기게 합니다.")],
-    12: [("[LOGIC BUILD 8호-4] 지구 열수지", "지구가 흡수하는 에너지와 방출하는 에너지가 같은 이유가 궁금합니다.",
-          "들어오는 양과 나가는 양이 같아야 평균 온도가 일정하게 유지됩니다."),
-         ("[Squeeze 12호-9] 엘니뇨 때 용승", "엘니뇨 때 동태평양 용승이 약해지는 이유를 다시 설명해 주세요.",
-          "무역풍이 약해져 표층 바닷물이 서쪽으로 덜 밀려나서 깊은 곳의 찬 물이 덜 올라옵니다.")],
-    13: [("[Squeeze 13호-7] 렌츠 법칙 방향", "자석을 멀리할 때 유도 전류 방향 정하는 법이 헷갈립니다.",
-          "코일은 변화를 방해하는 쪽으로 자기장을 만듭니다. 멀어지면 끌어당기는 방향입니다."),
-         ("[FRAMING II-98-5] 발전기 에너지 전환", "발전기에서 어떤 에너지가 어떤 에너지로 바뀌는지 정리하고 싶습니다.",
-          "회전하는 운동 에너지가 전자기 유도로 전기 에너지가 됩니다.")],
-    14: [("[예시문항 7번] 과학 기술과 사회", "예시문항 7번 보기 ㄷ이 왜 틀렸는지 궁금합니다.",
-          "보기 ㄷ은 자료에 없는 결론을 끌어냈습니다. 자료에서 확인되는 것만 고르세요."),
-         ("[Squeeze 14호-2] 6단원 정리", "6단원에서 꼭 외워야 할 것만 추려 주실 수 있나요?",
-          "필기노트 14호 마지막 장 정리표만 보면 충분합니다.")],
+QUESTIONS = {  # 주차: [(제목, 내용, 조교 답변, 사진)]  · 사진: ("item", 시험, 번호, 메모) 또는 ("page", 교재, 쪽, 찾을 글자, 메모)
+    1: [("[LINE UP 30p] 흡수 스펙트럼 선의 위치", "흡수선과 방출선 위치가 같다는 게 왜인지 모르겠습니다.",
+         "같은 원소는 같은 에너지 차이에서만 빛을 흡수하고 방출합니다. 그래서 흡수선과 방출선이 같은 파장에 생깁니다.",
+         ("page", "lineup", 30, "흡수 스펙트럼", "흡수선 = 방출선 위치?")),
+        ("[모의고사 1회 15번] 핵융합 전후 질량", "입자 수는 그대로인데 질량 총합이 줄어든다는 ㄱ이 이해가 안 됩니다.",
+         "헬륨-3 두 개가 헬륨-4 하나와 수소 두 개가 될 때 줄어든 질량만큼 에너지가 나옵니다(질량 결손). 입자 수가 아니라 질량을 비교하세요.",
+         ("item", "m", 15, "입자 수 같은데\n질량 왜 줄어?"))],
+    2: [("[모의고사 2회 24번] ㉠~㉣ 염기 정하기", "표에서 ㉠이 T인 걸 어떻게 아는지 모르겠습니다.",
+         "X₁과 X₂는 같은 열이 아니라 짝 염기끼리 수가 같습니다. ㉡=14, ㉣=18을 X₁의 빈칸과 맞춰 보면 ㉠-㉢, ㉡-㉣이 짝이고, T/(A+G)=4/5를 만족하는 경우는 ㉠=T(32개)뿐입니다.",
+         ("item", "m", 24, "㉠이 왜 T?\n상보 관계 먼저?")),
+        ("[FRAMING 77p] 전사할 때 염기", "주형 가닥에서 RNA 염기를 정하는 순서가 헷갈립니다.",
+         "주형 가닥 염기와 상보적인 염기를 쓰고 T 자리에 U를 씁니다.", ("page", "framing", 77, "전사", "주형 가닥 → ?"))],
+    3: [("[모의고사 3회 11번] T₂에서 효소 구조", "T₂에서 반응 속도가 0인데 단백질 구조가 같다는 ㄴ이 왜 틀렸나요?",
+         "효소는 단백질이라 온도가 너무 높으면 입체 구조가 바뀌어 기능을 잃습니다. T₂에서 속도가 0인 것은 구조가 변했기 때문이라 T₁과 같지 않습니다.",
+         ("item", "m", 11, "T2 구조\n같은 거 아님?")),
+        ("[복테 3회 3번] 산호와 탄소 이동", "산호가 골격을 만드는 게 왜 수권에서 생물권으로 가는 이동인지 궁금합니다.",
+         "바닷물(수권)에 녹은 탄소를 산호(생물권)가 몸으로 가져가니 D→C입니다. 골격이 쌓여 석회암이 되면 그때부터 지권입니다.",
+         ("item", "r", 3, "D→C 맞나?"))],
+    4: [("[LOGIC BUILD 14-1] 등가속도 공식 고르기", "s = v₀t + ½at²과 2as = v² − v₀² 중 어떤 걸 써야 하는지 헷갈립니다.",
+         "시간이 주어지면 앞의 식, 시간이 없고 속력과 거리만 있으면 뒤의 식을 씁니다. 모르는 값이 하나만 남는 식을 고르세요.",
+         ("page", "logic", 1, "공식", "언제 뭐 써??")),
+        ("[복테 4회 16번] h가 45m보다 큰지", "수평으로 던진 공 그래프에서 h를 구하는 방법을 모르겠습니다.",
+         "연직 방향만 보면 자유 낙하와 같습니다. 수면에 닿는 시간이 3초보다 짧으니 h = ½gt²은 45 m보다 작습니다.",
+         ("item", "r", 16, "h = 1/2 g t^2 ?"))],
+    5: [("[모의고사 5회 14번] t₁에서 운동량 비교", "t₁일 때 (나)가 힘이 제일 크니까 운동량도 제일 크다고 생각했습니다.",
+         "운동량은 그 순간의 힘이 아니라 처음 운동량에서 t₁까지 받은 충격량(그래프 넓이)을 뺀 값입니다. (나)는 t₁ 전에 충격량을 거의 다 받아 운동량이 가장 작습니다.",
+         ("item", "m", 14, "힘 크면\n운동량도 큰 거 아님?")),
+        ("[LINE UP 72p] 반도체 도핑", "p형과 n형 반도체 차이를 그림으로 정리하고 싶습니다.",
+         "넣은 원소의 원자가 전자 수로 구분합니다. 3개면 p형, 5개면 n형입니다.", ("page", "lineup", 72, "반도체", "p형 3족? n형 5족?"))],
+    6: [("[복테 6회 11번] AB 결합에 참여한 전자 껍질", "H와 F가 결합할 때 F는 어느 껍질 전자가 참여하나요?",
+         "F는 둘째 껍질(원자가 전자) 전자 하나가 H의 전자와 전자쌍을 이룹니다. 첫째 껍질 전자가 참여하는 건 H뿐이라 ㄴ은 틀립니다.",
+         ("item", "r", 11, "F도 첫째 껍질?")),
+        ("[FRAMING 47p] 이온 결합 화합물", "이온 사이 거리가 짧을수록 녹는점이 높아지는 이유가 궁금합니다.",
+         "거리가 짧을수록 이온 사이 인력이 커서 떼어 내는 데 에너지가 더 듭니다.", ("page", "framing", 47, "이온 결합", "거리 짧으면 왜 높음?"))],
+    7: [("[모의고사 7회 21번] A와 C 확장 방향", "A와 C가 둘 다 0° 왼쪽에 있어서 확장 방향이 같다고 골랐습니다.",
+         "경도가 아니라 해령을 기준으로 봐야 합니다. C가 있는 위도에서는 해령이 서쪽으로 꺾여 있어 C는 해령 동쪽입니다. 그래서 A는 서쪽, C는 동쪽으로 멀어집니다.",
+         ("item", "m", 21, "C도 서쪽 아님?")),
+        ("[복테 7회 12번] 대멸종 직전과 직후", "㉠ 직전 대멸종과 직후 대멸종 중 어느 쪽이 더 많이 줄었는지 그래프에서 어떻게 보나요?",
+         "㉠ 직전(고생대 말)에는 400 가까이에서 200 근처로 떨어집니다. ㉠ 직후(중생대 말)보다 감소 폭이 훨씬 커서 ㄷ은 틀립니다.",
+         ("item", "r", 12, "직전 vs 직후??"))],
+    8: [("[모의고사 8회 19번] b 구하기", "Ⅰ과 Ⅱ의 이온 수 비로 b가 3인 걸 구하는 과정이 막힙니다.",
+         "넣은 B 1 g당 생기는 Bᵇ⁺를 x라 두면 Ⅰ은 4x, Ⅱ는 6x입니다. 줄어든 A⁺는 그 b배라 Ⅰ: N−4bx, Ⅱ: N−6bx입니다. 비 1:3과 1:1을 넣으면 b=3, N=24x가 나옵니다.",
+         ("item", "m", 19, "b 어떻게 3?")),
+        ("[복테 8회 20번] (다)에 C를 더 넣으면", "ㄷ에서 C를 0.5N개 더 넣었을 때 이온 수 계산이 헷갈립니다.",
+         "앞에서 b=2, c=3, x=2가 정해집니다. 남은 A⁺ 3N개에 C 0.5N개가 반응하면 A⁺는 1.5N개 줄어 1.5N개, C³⁺는 N개에서 1.5N개가 되어 같아집니다.",
+         ("item", "r", 20, "A+ 1.5N 맞나?"))],
+    9: [("[모의고사 9회 25번] 최고 온도로 농도 비교", "t₁ > t₂ > t₃에서 HCl과 NaOH 농도 관계를 어떻게 세우나요?",
+         "부피가 모두 40 mL라 최고 온도는 생긴 물의 양에 비례합니다. (가)가 가장 높으려면 HCl 농도가 NaOH보다 작아야 하고, (나) > (다)에서 NaOH 농도는 HCl의 2배보다 작습니다.",
+         ("item", "m", 25, "온도 = 물 양?")),
+        ("[복테 9회 25번] V 구하기", "Ⅰ에서 Ⅱ로 갈 때 K⁺ 수가 늘어난 걸로 V를 구하는 건가요?",
+         "맞습니다. Ⅰ에서 H⁺:K⁺ = 4:2라 농도 비 HCl:KOH = 3:1이 나오고, K⁺가 3이 되도록 KOH V mL를 넣으면 V=20입니다.",
+         ("item", "r", 25, "K+로 V 구하기?"))],
+    10: [("[복테 10회 1번] 에너지를 흡수하면 화학 변화?", "학생 B 말이 왜 틀렸는지 예시를 알고 싶습니다.",
+          "얼음이 녹을 때처럼 물리 변화도 에너지를 흡수합니다. '항상'이 틀린 말입니다.", ("item", "r", 1, "얼음 녹는 건?")),
+         ("[모의고사 10회 10번] 질산 암모늄 용해", "용해도 흡열 반응이라고 볼 수 있나요? ㄷ이 왜 틀렸는지도 궁금합니다.",
+          "용해되면서 주변 열을 흡수하니 흡열입니다. 용해와 응결은 물질이 바뀌지 않아 둘 다 물리 변화라 ㄷ은 틀립니다.",
+          ("item", "m", 10, "용해 = 화학 변화?"))],
+    11: [("[모의고사 11회 16번] 피라미드 순서", "A, B, C가 Ⅰ~Ⅲ 중 무엇인지 정하는 기준이 궁금합니다.",
+          "2차 소비자가 줄어드는 중이니 Ⅰ→Ⅱ→Ⅲ 순서입니다. 1차 소비자가 늘고 생산자가 줄어 Ⅲ에서는 1차 소비자가 생산자보다 많아지니 B가 Ⅲ입니다.",
+          ("item", "m", 16, "B 왜 Ⅲ?")),
+         ("[복테 11회 9번] ⓐ+ⓑ 범위", "ⓑ의 최솟값을 정하는 방법을 모르겠습니다.",
+          "(바) 뒤 금속 공은 2ⓑ개가 되고 (사)에서 1개 이상 빠져 22개가 남으니 2ⓑ ≥ 23, ⓑ ≥ 12입니다. ⓐ=48이라 합은 60 이상입니다.",
+          ("item", "r", 9, "ⓑ 최소?"))],
+    12: [("[모의고사 12회 23번] A+B+C = D+E", "ㄴ 식이 왜 성립하는지 모르겠습니다.",
+          "지표에서 B+F=D, 대기에서 A+C=E+F입니다. 두 식을 더하면 F가 지워져 A+B+C=D+E가 됩니다.", ("item", "m", 23, "F는 어디로?")),
+         ("[복테 12회 22번] t₁이 B인 이유", "기압 편차로 엘니뇨와 라니냐를 어떻게 구분하나요?",
+          "서태평양 기압 편차가 +면 엘니뇨입니다. (가)에서 A 시기는 동태평양 수온약층이 깊어(밝은 색) 엘니뇨, B는 라니냐라 기압 편차가 −인 t₁이 B입니다.",
+          ("item", "r", 22, "기압 +면 엘니뇨?"))],
+    13: [("[복테 13회 13번] 코일이 자석에 작용하는 힘", "p를 지날 때와 q를 지날 때 힘 방향이 같은 이유가 궁금합니다.",
+          "가까워질 때는 밀고 멀어질 때는 당깁니다. 둘 다 자석 운동을 방해해 운동 반대 방향으로 같습니다.", ("item", "r", 13, "미는 거 vs 당기는 거")),
+         ("[모의고사 13회 20번] 발전기 효율", "ㄷ에서 효율을 어떻게 계산하나요?",
+          "효율은 생산된 에너지를 공급된 에너지로 나눈 값입니다. 1/20, 4/80, 9/180 모두 0.05입니다.", ("item", "m", 20, "효율 = 9/180?"))],
+    14: [("[모의고사 14회 7번] 스마트팜과 GMO", "GMO를 기를 때 윤리 요소를 고려해야 한다는 ㄴ이 자료 어디에 근거하나요?",
+          "자료는 GMO 육성이 가능하다고만 하지만, 과학 기술을 쓸 때 윤리를 고려해야 한다는 것은 6단원 핵심 내용입니다. 마지막 문장의 경각심도 같은 뜻입니다.",
+          ("item", "m", 7, "ㄴ 근거?")),
+         ("[복테 14회 21번] SI 접두어 비", "㉢/㉡ 계산을 어떻게 하나요?",
+          "n은 10⁻⁹, d는 10⁻¹이라 10⁻⁹ ÷ 10⁻¹ = 10⁻⁸입니다. 지수끼리 빼면 됩니다.", ("item", "r", 21, "10^-9 / 10^-1 = ?"))],
 }
+# 수업 기록 사진: 교재 쪽에 조교 필기, 교재에 없는 단원은 판서 노트 + 그 주 모의고사 문항 풀이
+LESSONS = {
+    1: [("page", "lineup", 30, "흡수 스펙트럼", "★ 흡수선 = 방출선"), ("page", "lineup", 38, "원소의 생성", "빅뱅 → H, He\n별 → 무거운 원소")],
+    2: [("page", "lineup", 66, "샤가프", "A=T, G=C\n→ 비율 계산"), ("page", "lineup", 103, "전사", "주형 가닥 → RNA\nT 대신 U")],
+    3: [("page", "lineup", 113, "카탈레이스", "고온 → 변성\n→ 기능 X"), ("page", "lineup", 76, "지구 시스템", "권역끼리 표로 정리")],
+    4: [("page", "logic", 1, None, "기울기 = 가속도\n넓이 = 변위"), ("page", "logic", 3, None, "공식 고르기:\n모르는 값 1개")],
+    5: [("page", "lineup", 98, "충격량", "충격량\n= 운동량 변화량"), ("page", "lineup", 70, "반도체", "p형 3족 / n형 5족")],
+    6: [("page", "lineup", 52, "이온 결합", "금속 + 비금속\n→ 이온 결합"), ("page", "lineup", 49, "원자가 전자", "결합에 쓰는 전자")],
+    7: [("page", "lineup", 84, "판의 경계", "발산 / 수렴 / 보존"), ("page", "lineup", 79, "화석", "화석 → 지질시대 구분")],
+    8: [("note", "8주차 산화와 환원", ["산화: 산소를 얻음 / 전자를 잃음", "환원: 산소를 잃음 / 전자를 얻음", "!산화와 환원은 항상 동시에",
+                                  "- 금속 + 금속 양이온", "  반응성 큰 금속이 전자를 줌", "- 전하량 보존:", "  줄어든 양이온 전하 = 늘어난 전하",
+                                  "예) A+ 2개 → B2+ 1개", "- 광합성: CO2 환원", "- 호흡: 포도당 산화"]), ("item", "m", 19, "전하량 보존\nb = 3")],
+    9: [("note", "9주차 중화 반응 1", ["중화 반응: H+ + OH- → H2O", "- 구경꾼 이온: Na+, Cl- 수 일정", "!중화점 = 온도 최고점",
+                                   "  (생긴 물의 양이 최대)", "- 혼합 용액 액성: 남은 이온으로", "- 페놀프탈레인: 염기성에서 붉은색",
+                                   "단위 부피당 이온 수", "  = 이온 수 ÷ 전체 부피"]), ("item", "m", 25, "물 양 ∝ 온도")],
+    10: [("note", "10주차 중화 반응 2 · 에너지 출입", ["넣은 부피 - 이온 수 그래프", "- H+: 중화점까지 감소 → 0", "- OH-: 중화점 뒤부터 증가",
+                                              "!산에 염기: 전체 이온 수 중화점 전 일정", "에너지 출입", "- 발열: 연소, 중화, 호흡",
+                                              "- 흡열: 광합성, 질산 암모늄 용해"]), ("item", "m", 10, "용해 = 흡열\n물리 변화")],
+    11: [("note", "11주차 진화 · 생태계", ["변이 → 자연 선택 → 진화", "!변이는 원래 있다 (환경이 고른다)", "- 유전적 다양성 ↑ → 환경 변화에 강함",
+                                     "생태계 구성 요소: 생물 / 비생물", "- 개체군 안 / 개체군 사이 / 생물↔비생물",
+                                     "생태 피라미드: 위로 갈수록 에너지 ↓", "- 평형: 먹이 ↓ → 포식자 ↓ → 먹이 ↑"]), ("item", "m", 16, "Ⅰ → Ⅱ → Ⅲ")],
+    12: [("note", "12주차 열수지 · 엘니뇨", ["복사 평형: 흡수 = 방출", "- 태양 100 = 반사 30 + 지구 복사 70", "- 대기 재복사 → 온실 효과",
+                                      "!수증기·CO2 ↑ → 지표로 오는 재복사 ↑", "엘니뇨: 무역풍 약화", "- 동태평양 수온 ↑, 용승 약화",
+                                      "- 서태평양 기압 ↑", "라니냐는 반대"]), ("item", "m", 23, "E = 58")],
+    13: [("note", "13주차 렌츠 법칙 · 에너지", ["전자기 유도: 자기장 변화 → 유도 전류", "!렌츠 법칙: 변화를 방해하는 방향",
+                                          "- 가까워질 때 밀고 멀어질 때 당김", "- 자석이 빠를수록, 감은 수가 많을수록 전류 ↑",
+                                          "에너지 전환", "- 발전기: 운동 → 전기", "- 효율 = 유용한 에너지 ÷ 공급 에너지"]), ("item", "r", 13, "방해하는 방향")],
+    14: [("note", "14주차 과학과 미래 사회", ["빅데이터: 수집 → 처리(오차) → 분석", "- 사물 인터넷: 사물끼리 정보 교환",
+                                        "- 스마트팜, 감염병 진단 키트", "!과학 기술의 양면성", "- 윤리·보안·환경 문제를 함께 고려",
+                                        "예시문항: 자료에 있는 것만 판단"]), ("item", "m", 7, "양면성")],
+}
+# 1:1 첨삭: 주차 → (복테 문항, 학생 풀이 줄, 조교 답변)
+SOLVES = {
+    2: (23, ["Y에 0개 → T (RNA엔 T 없음)", "X 염기 수 = Y의 2배", "X1: A+G = T+C - 30", "G+C : A+T = 1 : 2", "㉣=25 가 C? G? 여기서 막힘"],
+        "㉢은 X₁·X₂ 모두 0이라 U입니다. ㉣과 ㉤이 짝(C-G)이고 ㉡이 A입니다. 가닥 길이를 n으로 두고 X₁ 조건 식을 세우면 n=120, A=30·T=50·C=25·G=15가 나옵니다."),
+    4: (16, ["㉠ 처음 10 → B (수평 10m/s)", "수면 닿는 시간 3초?", "h = 1/2 x 10 x 3^2 = 45", "→ 45보다 큼??", "ㄷ 2초: 10 x 2 = 20m"],
+        "닿는 시간은 3초가 아니라 2.7초쯤입니다. 그래서 h는 ½·10·2.7² ≈ 36 m로 45 m보다 작습니다. 나머지 풀이는 맞습니다."),
+    6: (17, ["A, B 원자가 전자 합 5", "X, Y 껍질 합 6 → 둘 다 3주기", "X + Y = 11 → 4 + 7 (Si, Cl)", "Y = Cl → 전자 1개 얻으면 Ne?", "ㄷ CO2 vs Na ??"],
+        "Cl이 전자 1개를 얻으면 Ar 배치입니다. ㄷ은 Na(금속)가 CO₂보다 전기가 잘 통하니 틀립니다. A=C, B=Na, X=Si, Y=Cl은 맞게 찾았습니다."),
+    8: (20, ["(나) A+ 4N 감소 = b x N", "(다) A+ 6N → 1.5xN", "b=1, x=4 → 1.5x = 6 ??", "b=2, x=2 → c=3 ?", "ㄷ 계산이 안 맞음"],
+        "x는 그래프에서 xN < 6N이라 4보다 작아야 합니다. 그래서 b=2, x=2, c=3이고, ㄷ은 남은 A⁺ 3N개 중 1.5N개가 반응해 A⁺와 C³⁺가 1.5N개씩으로 같아집니다."),
+    10: (25, ["Ⅰ H+ 4, K+ 2", "HCl : KOH = 3 : 1", "Ⅱ에 KOH V → K+ 3", "4(10+V) = 3(20+V) → V = 20", "ⓐ = 0, ⓑ = ?"],
+         "V=20 맞습니다. Ⅱ는 중화점이라 ⓐ=0이고, Ⅲ의 K⁺는 상댓값 1.5라 ⓐ+ⓑ=1.5입니다. 그래서 ㄴ은 틀립니다."),
+    12: (22, ["A: 동쪽 밝음 → 수온약층 깊음", "→ 엘니뇨", "t2 기압 + → 엘니뇨 = A", "ㄴ P = 용승 세기? 라니냐 때 강함", "ㄷ 서/동 해수면 ?"],
+         "A가 엘니뇨, B가 라니냐까지 맞습니다. 동태평양 용승은 라니냐(t₁) 때 더 강한데 P는 t₁이 작으니 ㄴ은 틀립니다. 엘니뇨 때 서태평양 해수면이 낮아져 ㄷ은 맞습니다."),
+    14: (18, ["B: -p + 1.25p = 0.25p", "C와 충돌 후 0.25p - 0.125p", "= 0.125p (+x)", "ㄱ C가 -x여도 됨?"],
+         "맞습니다. B가 C보다 빨라서 C가 +x로 가도, −x로 와도 충돌합니다. 그래서 ㄱ도 옳고 답은 ⑤입니다."),
+}
+REVIEW_PAGE = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]     # 복테 문항 → 시험지 쪽
 
 # ---------------------------------------------------------------- 날짜
 TODAY = date.today() - timedelta(days=(date.today().weekday() - 4) % 7)   # 실행일 직전 금요일 = N주차 마지막 날
@@ -191,6 +265,31 @@ def img(name):
     return (io.BytesIO(png), name)
 
 
+SHOTS = os.path.join(BASE, "_shots")
+os.makedirs(SHOTS, exist_ok=True)
+_ph = None
+if all(os.environ.get(k) for k in ("DEMO_SYS_PY", "DEMO_PHOTOS", "DEMO_PDF")):
+    _ph = subprocess.Popen([os.environ["DEMO_SYS_PY"], "-X", "utf8", os.environ["DEMO_PHOTOS"], "serve", os.environ["DEMO_PDF"]],
+                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+_shot_n = [0]
+
+
+def shot(**req):
+    """사진 요청 → [(파일, 이름)]. 사진 도구가 없으면 빈 PNG 하나."""
+    if _ph is None:
+        return [img("photo.png")]
+    _shot_n[0] += 1
+    req.setdefault("seed", _shot_n[0])
+    req["out"] = os.path.join(SHOTS, f"{_shot_n[0]:04d}.jpg")
+    _ph.stdin.write(_js.dumps(req, ensure_ascii=False) + "\n")
+    _ph.stdin.flush()
+    res = _js.loads(_ph.stdout.readline())
+    if not res["files"]:
+        FAIL.append(f"사진 {req['op']}: {res.get('error')}")
+        return [img("photo.png")]
+    return [(io.BytesIO(open(f, "rb").read()), f"IMG_{20270100 + _shot_n[0]:08d}_{k}.jpg") for k, f in enumerate(res["files"])]
+
+
 def last_id(table):
     return q(f"SELECT MAX(id) AS id FROM {table}", one=True)["id"]
 
@@ -204,7 +303,8 @@ def at(table, row_id, **cols):
 
 
 # ---------------------------------------------------------------- 선생님 · 조교
-PW = {"teacher": secrets.token_urlsafe(8) + "!7", "ta": secrets.token_urlsafe(8) + "!7", "ta2": secrets.token_urlsafe(8) + "!7"}
+KEEP = _js.loads(os.environ.get("DEMO_KEEP_PW") or "{}")   # 다시 만들 때 이전 데모 비밀번호 유지 (make_demo.py)
+PW = {k: KEEP.get(k) or secrets.token_urlsafe(8) + "!7" for k in ("teacher", "ta", "ta2")}
 with app.app_context():
     from security import encrypt, hash_password
     x("INSERT INTO users (role, username, display_name, password_hash) VALUES ('teacher', 'master', '정태혁', ?)",
@@ -291,7 +391,7 @@ for name, c in cls.items():
     st = c["students"][0]
     SKILL[st["id"]] = PERSONAS[name]["skill"]
     WEAK[st["id"]] = PERSONAS[name]["weak"]
-    P[name] = {"st": st, "per": PERSONAS[name], "pw": secrets.token_urlsafe(8) + "!7", "c": c}
+    P[name] = {"st": st, "per": PERSONAS[name], "pw": KEEP.get(st["no"]) or secrets.token_urlsafe(8) + "!7", "c": c}
 
 
 def signup(c, st, pw, when):
@@ -349,51 +449,54 @@ BOOK_M = q("SELECT id FROM books WHERE title = '모의고사' AND is_practice = 
 
 
 # ---------------------------------------------------------------- OMR (복습 테스트 · 모의고사)
-def omr_workbook(n_items, key, pts, units, absent):
+import demo_items as DI  # noqa: E402
+
+EXAMS = {"r": DI.REVIEW, "m": DI.MOCK}                 # 복습 테스트 · 모의고사 (같은 파일을 1~14회로)
+NEAR = {k: DI.near_wrong(v) for k, v in EXAMS.items()}
+PHOTO_EXAM = {"r": "rev", "m": "mock"}
+KILLER = {"r": "20, 23, 25", "m": "19, 22, 24"}
+LEVEL_DROP = {"상": 0.2, "중": 0.05, "하": -0.12}
+
+
+def omr_workbook(kind, absent):
     from openpyxl import Workbook
+    its = EXAMS[kind]
     wb = Workbook()
     ws = wb.active
     ws.title = "OMR"
-    ws.append(["이름", "수험번호", "반"] + list(range(1, n_items + 1)))
-    ws.append(["정답", "", ""] + key)
-    ws.append(["배점", "", ""] + pts)
+    ws.append(["이름", "수험번호", "반"] + list(range(1, len(its) + 1)))
+    ws.append(["정답", "", ""] + [it[0] for it in its])
+    ws.append(["배점", "", ""] + [it[1] for it in its])
     for c_name, st in ALL_STUDENTS:
         if st["id"] in absent:
             continue
         row = []
-        for i, k in enumerate(key):
-            pr = SKILL[st["id"]] - (0.25 if i >= n_items * 2 // 3 else 0)
-            if WEAK.get(st["id"]) == units[i]:
-                pr -= 0.4
-            row.append(k if rng.random() < pr else rng.choice([v for v in range(1, 6) if v != k]))
+        for i, it in enumerate(its):
+            k = it[0]
+            if k == "*":                                      # 보기가 없는 문항: 아무거나 마킹
+                row.append(rng.randint(1, 5))
+                continue
+            pr = SKILL[st["id"]] - LEVEL_DROP[it[5]] - (0.35 if WEAK.get(st["id"]) == it[2] else 0)
+            if rng.random() < pr:
+                row.append(k)
+            elif rng.random() < 0.03:
+                row.append(None)                              # 무응답
+            elif NEAR[kind][i] and rng.random() < 0.75:      # 보기 하나만 다른 선지를 많이 고른다
+                row.append(rng.choice(NEAR[kind][i]))
+            else:
+                row.append(rng.choice([v for v in range(1, 6) if v != k]))
         ws.append([st["name"], st["parent8"], c_name] + row)
-    info = wb.create_sheet("문항정보")                    # 테스트반_연습파일 2_복습테스트_문항정보 양식
-    info.append(["문항번호", "정답", "배점", "단원", "핵심개념", "요구역량", "난이도", "문항형식", "선지구성", "보기함정", "선지분석", "검토완료"])
-    for i in range(n_items):
-        level = "상" if i >= n_items * 2 // 3 else ("중" if i >= n_items // 3 else "하")
-        skill = ["개념 이해", "자료·그래프 해석", "계산", "조건 독해"][i % 4]
-        if i % 5 == 4:                                    # 합답형: 보기함정으로 고른 답의 원인을 짚는다
-            right = {1: "ㄱ", 2: "ㄴ", 3: "ㄱㄷ", 4: "ㄴㄷ", 5: "ㄱㄴㄷ"}[key[i]]     # 정답 선지에 든 보기 = 옳은 진술
-            why = {"ㄱ": ("정의를 반대로 기억함", "개념 부족"), "ㄴ": ("그래프 축의 의미를 바꿔 읽음", "자료 해석"), "ㄷ": ("조건 하나를 놓침", "조건 독해")}
-            traps = " / ".join(
-                f"{b}(O): {why[b][0]}, 옳은 진술을 틀렸다고 판단한 경우입니다. [{why[b][1]}]" if b in right else
-                f"{b}(X): {why[b][0]}, 틀린 진술을 옳다고 본 경우입니다. [{why[b][1]}]" for b in "ㄱㄴㄷ")
-            info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 보기 판단", skill, level, "합답형", "①ㄱ ②ㄴ ③ㄱ,ㄷ ④ㄴ,ㄷ ⑤ㄱ,ㄴ,ㄷ",
-                         traps, None, "Y"])
-        else:
-            w1, w2 = (key[i] % 5) + 1, ((key[i] + 1) % 5) + 1
-            info.append([i + 1, key[i], pts[i], units[i], f"{units[i]} 핵심", skill, level, "일반", None, None,
-                         f"{w1}번: 정의를 반대로 기억함(개념 부족) / {w2}번: 조건 하나를 놓침(조건 독해)", "Y"])
+    info = wb.create_sheet("문항정보")
+    info.append(["문항번호", "정답", "배점", "단원", "핵심개념", "요구역량", "난이도", "문항형식", "선지구성", "보기함정", "선지분석"])
+    for r in DI.info_rows(its):
+        info.append(r)
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
 
 
-def make_round(book, rnd, n_items, full, when, weeks):
-    key = [rng.randint(1, 5) for _ in range(n_items)]
-    pts = [full // n_items] * n_items
-    pool = [u for w in weeks for u in CURRICULUM[w][1]]
-    units = [pool[(i * 3 + rnd) % len(pool)] for i in range(n_items)]
+def make_round(kind, rnd, when, week):
+    book = BOOK_R if kind == "r" else BOOK_M
     mid = q("SELECT id FROM mocks WHERE book_id = ? AND round_no = ?", (book, rnd), one=True)["id"]
     absent = {st["id"] for _, st in ALL_STUDENTS if rng.random() < 0.06}
     absent.discard(SEO["st"]["id"])
@@ -401,13 +504,12 @@ def make_round(book, rnd, n_items, full, when, weeks):
         absent.add(P["대치 일요일반"]["st"]["id"])                   # 최민서는 가끔 결석
     if rnd < P["대치 목요일반"]["per"]["late"]:
         absent.add(P["대치 목요일반"]["st"]["id"])                   # 정하준은 2주차부터
-    data = omr_workbook(n_items, key, pts, units, absent)
-    ok(f"OMR {book}-{rnd}", (TA if rnd % 2 else TA2).post(f"/t/mocks/{mid}/omr", data={"file": (io.BytesIO(data), f"{rnd}회_채점.xlsx")},
+    data = omr_workbook(kind, absent)
+    ok(f"OMR {kind}-{rnd}", (TA if rnd % 2 else TA2).post(f"/t/mocks/{mid}/omr", data={"file": (io.BytesIO(data), f"{rnd}회_채점.xlsx")},
                                                           content_type="multipart/form-data"))
-    ok(f"시험 평가 {book}-{rnd}", T.post(f"/t/mocks/{mid}/review", data={
-        "level": str(rng.choice([2, 3, 3, 4])), "time": rng.choice(["충분", "적당", "빠듯"]),
-        "killer": f"{n_items - 2}, {n_items}", "video": "",
-        "review": f"{CURRICULUM[weeks[-1]][0]} 범위. 킬러 문항은 자료 해석형입니다. 오답이 몰린 문항은 다음 수업 앞 10분에 다시 봅니다."}))
+    ok(f"시험 평가 {kind}-{rnd}", T.post(f"/t/mocks/{mid}/review", data={
+        "level": str(rng.choice([3, 3, 4])), "time": rng.choice(["적당", "빠듯"]), "killer": KILLER[kind], "video": "",
+        "review": f"{CURRICULUM[week][0]} 주간. 킬러 문항 {KILLER[kind]}번은 조건 독해·계산형입니다. 오답이 몰린 문항은 다음 수업 앞 10분에 다시 봅니다."}))
     x("UPDATE mocks SET exam_date = ? WHERE id = ?", (when.isoformat(), mid))
     at("mocks", mid, created_at=ts(when - timedelta(days=1), 20), review_at=ts(when + timedelta(days=1), 22))
     at("omr_uploads", last_id("omr_uploads"), created_at=ts(when + timedelta(days=1), 21))
@@ -418,10 +520,52 @@ def make_round(book, rnd, n_items, full, when, weeks):
     return mid
 
 
-def ask(cl, title, body, qtype, when, image=True, assignee=None, unit=""):
+def my_answers(kind, w, uid):
+    e = q("SELECT answers FROM mock_entries WHERE mock_id = ? AND user_id = ?", (MOCK[(kind, w)], uid), one=True) if uid else None
+    return (e["answers"] or "") if e else ""
+
+
+def wrong_why(kind, no, pick):
+    """고른 선지로 틀린 이유 (유형, 설명): 정답과 다른 보기의 함정."""
+    ans, _, _, _, _, _, opts, bogi = EXAMS[kind][no - 1]
+    if opts and ans != "*":
+        g = opts.split("|")
+        diff = [lab for lab in "ㄱㄴㄷ" if (lab in g[pick - 1]) != (lab in g[ans - 1])]
+        if diff:
+            t = bogi["ㄱㄴㄷ".index(diff[0])]
+            return t[2], f"보기 {diff[0]}: {t[1]}"
+    elif not opts and pick in bogi:
+        return bogi[pick][1], bogi[pick][0]
+    return "조건 독해", "조건을 놓침"
+
+
+def item_photo_req(kind, no, who, uid, w, note):
+    """질문 사진: 그 학생이 OMR에 고른 선지에 동그라미, 보기마다 자기 판단(O/X), 헷갈린 보기에 ?"""
+    ans, opts = EXAMS[kind][no - 1][0], EXAMS[kind][no - 1][6]
+    a = my_answers(kind, w, uid)
+    pick = int(a[no - 1]) if len(a) >= no and a[no - 1] in "12345" and a[no - 1] != str(ans) else None
+    if pick is None:
+        pick = rng.choice(NEAR[kind][no - 1] or [v for v in range(1, 6) if v != ans])
+    think = {}
+    if opts:
+        g = opts.split("|")
+        for lab in "ㄱㄴㄷ":
+            mine, right = lab in g[pick - 1], lab in g[ans - 1]
+            think[lab] = None if mine != right and rng.random() < 0.6 else mine
+    return shot(op="item", exam=PHOTO_EXAM[kind], no=no, who=who, pick=pick, think=think, note=note)
+
+
+def question_photo(src, who, uid, w):
+    if src[0] == "item":
+        return item_photo_req(src[1], src[2], who, uid, w, src[3])
+    _, key, page, find, note = src
+    return shot(op="page", key=key, page=page, find=find, who=who, note=note)
+
+
+def ask(cl, title, body, qtype, when, image=None, assignee=None, unit=""):
     data = {"title": title, "body": body, "qtype": qtype, "unit": unit}
     if image:
-        data["image"] = [img("question.png")]
+        data["image"] = image
     if assignee:
         data["assignee"] = str(assignee)
     ok(f"질문 {title}", cl.post("/s/questions", data=data, content_type="multipart/form-data"))
@@ -435,6 +579,28 @@ def answer(cl, qid, body, when):
     at("answers", last_id("answers"), created_at=ts(when, rng.randint(9, 23), rng.randint(0, 59)))
 
 
+_lesson_cache = {}
+
+
+def lesson_photos(w, track):
+    """그 주 판서 사진 (조교마다 한 벌 만들어 반마다 같이 올린다)."""
+    if (w, track) not in _lesson_cache:
+        who = "한지수" if track == "단과" else "김도윤"
+        out = []
+        for src in LESSONS[w]:
+            if src[0] == "page":
+                f = shot(op="page", key=src[1], page=src[2], find=src[3], who=who, note=src[4], pen="blue")
+            elif src[0] == "note":
+                f = shot(op="note", title=src[1], lines=src[2], who=who, pen="blue")
+            else:
+                its = EXAMS[src[1]][src[2] - 1]
+                think = {lab: lab in its[6].split("|")[its[0] - 1] for lab in "ㄱㄴㄷ"} if its[6] else {}
+                f = shot(op="item", exam=PHOTO_EXAM[src[1]], no=src[2], who=who, pick=its[0], think=think, note=src[3], pen="blue")
+            out += [(fh.getvalue(), n) for fh, n in f]
+        _lesson_cache[(w, track)] = out
+    return _lesson_cache[(w, track)]
+
+
 # ---------------------------------------------------------------- 시즌 시작 전 설정
 MOCK = {}
 CAST_VIDEO = "https://youtu.be/WEdAfYkqiZ8"         # 태혁쌤 영상 (cast·강의 영상 데모용)
@@ -442,7 +608,7 @@ ok("D-day", T.post("/t/timetable", data={"exam_day": "2027-11-18", "exam_label":
 for name, c in cls.items():
     ok(f"개강 공지 {name}", T.post(f"/t/classes/{c['id']}/notices", data={
         "tag": "공지", "pinned": "1", "title": "SEASON 1 개강 안내",
-        "body": "교재: LINE UP 개념서 2권 · FRAMING 문항편 2권 및 해설편 2권 · 매주 Squeeze · LOGIC BUILD · 필기노트 · 정태혁 모의고사 1회분\n"
+        "body": "교재: LINE UP 개념서 · FRAMING 문제편 및 해설편 · LOGIC BUILD 필기노트 · 정태혁 모의고사\n"
                 "질문: 질문 게시판에 [교재-페이지-번호] 형식으로 / 행정: 질문 게시판 행정문의"}))
     at("notices", last_id("notices"), created_at=ts(sess(c, 1) - timedelta(days=2), 21))
 for name, p in P.items():
@@ -455,15 +621,17 @@ for w in range(1, WEEKS + 1):
     topic, units = CURRICULUM[w]
     lb = f" · LOGIC BUILD {LOGIC_BUILD[w]}호" if w in LOGIC_BUILD else ""
     last_week = w == WEEKS
+    MOCK[("r", w)] = make_round("r", w, day(w, 5), w)
+    MOCK[("m", w)] = make_round("m", w, day(w, 6), w)
     for name, c in cls.items():
         d = sess(c, w)
         ok(f"과제 공지 {name} {w}", T.post(f"/t/classes/{c['id']}/notices", data={
-            "tag": "과제", "title": f"{w}주차 과제", "body": f"Squeeze {w}호{lb} · 필기노트 {w}호 복습 / 오답 노트에서 틀린 이유 고르기"}))
+            "tag": "과제", "title": f"{w}주차 과제", "body": f"FRAMING {topic} 범위{lb} · 필기노트 복습 / 오답 노트에서 틀린 이유 고르기"}))
         at("notices", last_id("notices"), created_at=ts(d, 22))
-        k = (w - 1) % 4 + 1
+        pics = lesson_photos(w, c["track"])
         ok(f"수업 기록 {name} {w}", (TA if c["track"] == "단과" else TA2).post("/t/lessons", data={
-            "class_id": str(c["id"]), "day": d.isoformat(), "title": f"{w}주차 {topic}", "body": f"필기노트 {w}호 판서 / 다음 시간 복습 테스트 범위",
-            "image": [img(f"lesson{k}_1.png"), img(f"lesson{k}_2.png")]}, content_type="multipart/form-data"))
+            "class_id": str(c["id"]), "day": d.isoformat(), "title": f"{w}주차 {topic}", "body": f"{w}주차 판서 / 다음 시간 복습 테스트 범위",
+            "image": [(io.BytesIO(b), n) for b, n in (pics if c["track"] == "단과" else pics[:1])]}, content_type="multipart/form-data"))
         at("lessons", last_id("lessons"), created_at=ts(d, 23))
         # 매주 시험은 복습 테스트(OMR)로만 올린다 (반 '시험·성적'에 따로 넣지 않는다)
         if w in (2, 6, 10):
@@ -474,8 +642,6 @@ for w in range(1, WEEKS + 1):
             ok("영상", T.post(f"/t/classes/{c['id']}/videos", data={"title": f"{w}주차 {topic} 보충", "url": CAST_VIDEO,
                                                                    "duration": "42:10", "expires_on": (TODAY + timedelta(days=60)).isoformat()}))
             at("videos", last_id("videos"), created_at=ts(day(w, 1), 21))
-    MOCK[("r", w)] = make_round(BOOK_R, w, 20, 40, day(w, 5), [w])
-    MOCK[("m", w)] = make_round(BOOK_M, w, 25, 50, day(w, 6), list(range(max(1, w - 2), w + 1)))
     if w in (3, 7, 11):
         ok(f"cast {w}", T.post("/cast/new", data={"title": f"{w}주차를 마치며", "body": f"{topic}까지 왔습니다. 오답 노트 이유 고르기를 빠뜨리지 마세요.", "video_url": CAST_VIDEO}))
         at("casts", last_id("casts"), created_at=ts(day(w, 6), 23), updated_at=ts(day(w, 6), 23))
@@ -491,8 +657,9 @@ for w in range(1, WEEKS + 1):
         for r in q("SELECT id FROM notices WHERE class_id = ? ORDER BY id DESC LIMIT 2", (p["c"]["id"],)):
             S.get(f"/s/notices/{r['id']}")
         if rng.random() < per["ask"]:
-            title, body, ans = QUESTIONS[w][rng.randint(0, 1)]
-            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit_of(title, w))
+            title, body, ans, src = QUESTIONS[w][rng.randint(0, 1)]
+            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit_of(title, w),
+                      image=question_photo(src, p["st"]["name"], p["uid"], w))
             if not (last_week and name in ("대구 토요일 A반", "대구 재종 1반")):      # 이 둘은 오늘 조교가 답할 질문
                 answer(TA if rng.random() < 0.6 else TA2, qid, ans, day(w, 3))
                 if rng.random() < 0.3:
@@ -501,45 +668,56 @@ for w in range(1, WEEKS + 1):
                     answer(TA, qid, "반대 경우는 조건만 뒤집어 같은 순서로 따라가면 됩니다. 교재 해당 쪽 예제 2번이 그 경우입니다.", day(w, 4))
         if (name == "대구 재종 1반" and w % 3 == 0) or (name == "대구 토요일 A반" and w in (3, 9)):
             qid = ask(S, f"{w}주차 공부 계획 상담", "복테 점수가 몇 주째 비슷합니다. 평일에 무엇을 먼저 해야 할지 모르겠습니다.", "학습상담",
-                      day(w, 1), image=False, assignee=TA_ID)
+                      day(w, 1), assignee=TA_ID)
             answer(TA, qid, f"평일 3일만 정해서 오답 노트 → 같은 단원 기출 10문항 순서로 돌려 보세요. {per['weak']} 문항이 계속 틀려서 그 부분부터 하면 됩니다.", day(w, 2))
             ok("상담 평점", S.post(f"/s/questions/{qid}/rate", data={"rating": str(rng.choice([4, 5, 5]))}))
         if name == "대치 재종 1반" and w in (1, 5):
             qid = ask(S, "교재 배송 문의" if w == 1 else "교재 환불 문의",
-                      "FRAMING 해설편 2권이 아직 안 왔습니다." if w == 1 else "Squeeze 5호가 두 권 왔습니다. 한 권 환불되나요?", "행정문의", day(w, 2), image=False)
+                      "FRAMING 해설편 2권이 아직 안 왔습니다." if w == 1 else "FRAMING 해설편이 두 권 왔습니다. 한 권 환불되나요?", "행정문의", day(w, 2))
             answer(T, qid, "이번 주 금요일에 발송됩니다." if w == 1 else "다음 수업 때 행정실에 반납하면 처리됩니다.", day(w, 3))
-        if name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0:            # 1:1 첨삭
-            ok("1:1 첨삭 요청", S.post(f"/s/analysis/{MOCK[('r', w)]}/feedback", data={"body": "틀린 문항 풀이에서 어디가 잘못됐는지 봐 주세요.",
-                                                                                      "image": [img("solve.png")]}, content_type="multipart/form-data"))
+        if (name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # 1:1 첨삭 (한승우는 악필)
+            sno, slines, sreply = SOLVES[w]
+            ok("1:1 첨삭 요청", S.post(f"/s/analysis/{MOCK[('r', w)]}/feedback", data={"body": f"{sno}번 풀이에서 어디가 잘못됐는지 봐 주세요.",
+                                                                                      "image": shot(op="solve", exam="rev", no=sno, who=p["st"]["name"], lines=slines)},
+                                    content_type="multipart/form-data"))
             tid = last_id("feedback_threads")
             at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 6), 21))
             if last_week:
                 at("feedback_threads", tid, created_at=ts(day(w, 6), 21), updated_at=ts(day(w, 6), 21))
             else:
-                ok("1:1 첨삭 답변", TA.post(f"/t/feedback/{tid}", data={"body": f"세 번째 줄에서 조건을 놓쳤습니다. {per['weak']} 개념 정의부터 다시 쓰고 같은 순서로 풀면 정답이 나옵니다."}))
+                ok("1:1 첨삭 답변", TA.post(f"/t/feedback/{tid}", data={"body": sreply}))
                 at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 0) + timedelta(days=7), 21))
                 at("feedback_threads", tid, created_at=ts(day(w, 6), 21), updated_at=ts(day(w, 0) + timedelta(days=7), 21))
         took = q("SELECT 1 FROM mock_entries WHERE mock_id = ? AND user_id = ?", (MOCK[("r", w)], p["uid"]), one=True)
         if took and name in ("대구 토요일 A반", "대구 재종 2반") and (w % 2 == 1 or last_week):  # 시험지 첨삭 (응시한 회차만)
-            ok("시험지 제출", S.post(f"/s/analysis/{MOCK[('r', w)]}/paper", data={"note": "틀린 문항 풀이 봐 주세요.", "image": [img("paper1.png"), img("paper2.png")]},
-                                   content_type="multipart/form-data"))
+            a = my_answers("r", w, p["uid"])
+            keys = [str(it[0]) for it in DI.REVIEW]
+            wrong = [i + 1 for i, k in enumerate(keys) if k != "*" and (i >= len(a) or a[i] != k)]
+            pages = sorted({REVIEW_PAGE[n - 1] - 1 for n in wrong})[:3] or [0]
+            ok("시험지 제출", S.post(f"/s/analysis/{MOCK[('r', w)]}/paper", data={
+                "note": f"{', '.join(map(str, wrong[:3]))}번 풀이 봐 주세요." if wrong else "검토 부탁드립니다.",
+                "image": shot(op="paper", exam="rev", answers=a, key=keys, who=p["st"]["name"], pages=pages)}, content_type="multipart/form-data"))
             pid = last_id("exam_papers")
             if last_week:
                 at("exam_papers", pid, submitted_at=ts(day(w, 6), 19))
             else:
-                ok("시험지 첨삭", TA.post(f"/t/papers/{pid}", data={"r5": "개념 부족", "m5": "정의를 반대로 씀", "r12": "조건 독해", "m12": "보기 ㄷ 조건을 읽지 않음",
-                                                                   "comment": f"{per['weak']}만 다시 잡으면 됩니다. 풀이 순서는 좋습니다."}))
+                marks = {}
+                for n in wrong[:3]:
+                    if n <= len(a) and a[n - 1] in "12345":
+                        tp, why = wrong_why("r", n, int(a[n - 1]))
+                        marks[f"r{n}"], marks[f"m{n}"] = tp, why
+                ok("시험지 첨삭", TA.post(f"/t/papers/{pid}", data={**marks, "comment": f"{per['weak']}만 다시 잡으면 됩니다. 풀이 순서는 좋습니다."}))
                 at("exam_papers", pid, submitted_at=ts(day(w, 6), 19), reviewed_at=ts(day(w, 0) + timedelta(days=7), 14))
         if rng.random() < (0.9 if name in ("대구 토요일 A반", "대구 재종 2반") else 0.4):   # 오답 노트
             for kind in ("r", "m"):
                 mid = MOCK[(kind, w)]
                 e = q("SELECT answers FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, p["uid"]), one=True)
-                key = [int(v) for v in re.findall(r"\d", q("SELECT answer_key FROM mocks WHERE id = ?", (mid,), one=True)["answer_key"])]
+                key = [str(v) for v in _js.loads(q("SELECT answer_key FROM mocks WHERE id = ?", (mid,), one=True)["answer_key"])]
                 picks = e["answers"] if e else ""
                 for i, k in enumerate(key):
-                    if i < len(picks) and picks[i] != str(k) and rng.random() < 0.7:
-                        S.post(f"/s/wrong/{mid}/{i + 1}", data={"reason": rng.choice(["개념 부족", "조건 독해", "계산 실수"]),
-                                                               "memo": "", "reviewed": "" if last_week else "1"})
+                    if k != "*" and i < len(picks) and picks[i] in "12345" and picks[i] != k and rng.random() < 0.7:
+                        tp = wrong_why(kind, i + 1, int(picks[i]))[0] if rng.random() < 0.6 else rng.choice(["개념 부족", "조건 독해", "계산 실수", "찍음"])
+                        S.post(f"/s/wrong/{mid}/{i + 1}", data={"reason": tp, "memo": "", "reviewed": "" if last_week else "1"})
         if name in ("대치 재종 2반", "대구 토요일 B반") or rng.random() < 0.3:         # 퀴즈
             st_ = S.post("/s/games/quiz/start", json={"topic": f"{min(34, w * 2):02d}"}).get_json(silent=True) or {}
             if st_.get("round_id"):
@@ -547,12 +725,13 @@ for w in range(1, WEEKS + 1):
                 when = day(w, rng.randint(0, 4))
                 at("game_rounds", st_["round_id"], started_at=ts(when, 22), finished_at=ts(when, 22, 10))
     for st, (user, pw, uid) in rng.sample(OTHERS, 3):                               # 다른 학생들 공개 질문
-        title, body, ans = QUESTIONS[w][rng.randint(0, 1)]
-        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)), unit=unit_of(title, w))
+        title, body, ans, src = QUESTIONS[w][rng.randint(0, 1)]
+        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)), unit=unit_of(title, w),
+                  image=question_photo(src, st["name"], uid, w))
         if not last_week or rng.random() < 0.5:
             answer(TA2 if rng.random() < 0.5 else TA, qid, ans, day(w, 4))
     if w == 2:
-        faq = q("SELECT id FROM questions WHERE title LIKE '%샤가프 법칙 비율%' ORDER BY id LIMIT 1", one=True)
+        faq = q("SELECT id FROM questions WHERE title LIKE '%염기 정하기%' ORDER BY id LIMIT 1", one=True)
         if faq:
             ok("자주 묻는 질문", TA.post(f"/t/questions/{faq['id']}/faq"))
 
@@ -608,6 +787,11 @@ with app.app_context():
                   (uid, rng.choice(["sento", "kissa", "eki"]), rng.choice([25, 30, 45, 50, 60, 80]), ts(d, rng.randint(19, 23), rng.randint(0, 59))))
             if rng.random() < rate + 0.2:
                 x("INSERT OR IGNORE INTO visits (user_id, day) VALUES (?, ?)", (uid, d.isoformat()))
+
+if _ph:
+    _ph.stdin.close()
+    _ph.wait()
+shutil.rmtree(SHOTS, ignore_errors=True)
 
 # ---------------------------------------------------------------- 날짜 맞추기
 with app.app_context():

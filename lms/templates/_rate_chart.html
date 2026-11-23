@@ -1,0 +1,29 @@
+{# 득점률 꺾은선: chart = views.care.rate_chart(...), label = 그림 이름. 말풍선은 CSS(:hover·:focus)로만 띄운다 (CSP) #}
+<figure class="rc">
+<svg class="rc-svg" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="{{ label }} 득점률: {% for p in chart.pts %}{{ p.lab }} {{ p.v }}%{{ ', ' if not loop.last }}{% endfor %}">
+  {% for t in chart.yticks %}
+  <line class="rc-grid{{ ' rc-axis' if t.v == 0 }}" x1="{{ chart.l }}" x2="{{ chart.r }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+  <text class="rc-ytick" x="{{ chart.l - 8 }}" y="{{ t.y + 4 }}">{{ t.v }}%</text>
+  {% endfor %}
+  <line class="rc-axis" x1="{{ chart.l }}" x2="{{ chart.l }}" y1="{{ chart.t }}" y2="{{ chart.b }}"></line>
+  <text class="rc-name" x="{{ chart.l - 8 }}" y="{{ chart.t - 12 }}">득점률</text>
+  {% for p in chart.pts %}{% if loop.index0 % chart.every == 0 or loop.last %}
+  <text class="rc-xtick" x="{{ p.x }}" y="{{ chart.b + 18 }}">{{ p.lab }}</text>
+  <text class="rc-xdate" x="{{ p.x }}" y="{{ chart.b + 33 }}">{{ p.date }}</text>
+  {% endif %}{% endfor %}
+  {% if chart.avg_poly %}<polyline class="rc-avg" points="{{ chart.avg_poly }}"></polyline>{% endif %}
+  <polyline class="rc-line" points="{{ chart.poly }}"></polyline>
+  {% for p in chart.pts %}
+  <g class="rc-pt" tabindex="0" aria-label="{{ p.title }} {{ fmt(p.score) }}점 / {{ fmt(p.full) }}점, 득점률 {{ p.v }}%{% if p.avg_score is not none %}, 반 평균 {{ fmt(p.avg_score) }}점{% endif %}">
+    <circle class="rc-hit" cx="{{ p.x }}" cy="{{ p.y }}" r="14"></circle>
+    <circle class="rc-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="5"></circle>
+    <g class="rc-tip">
+      <rect x="{{ p.tx - 76 }}" y="{{ p.ty }}" width="152" height="52" rx="6"></rect>
+      <text class="rc-tip-h" x="{{ p.tx }}" y="{{ p.ty + 20 }}">{{ p.lab }} · {{ fmt(p.score) }}/{{ fmt(p.full) }}점 ({{ p.v }}%)</text>
+      <text class="rc-tip-s" x="{{ p.tx }}" y="{{ p.ty + 39 }}">{% if p.avg_score is not none %}반 평균 {{ fmt(p.avg_score) }}점{% endif %}{% if p.date %} · {{ p.date }}{% endif %}</text>
+    </g>
+  </g>
+  {% endfor %}
+</svg>
+<figcaption class="rc-legend"><span class="rc-key rc-key-me"></span>득점률{% if chart.avg_poly %}<span class="rc-key rc-key-avg"></span>반 평균{% endif %}</figcaption>
+</figure>

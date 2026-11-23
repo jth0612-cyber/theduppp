@@ -33,12 +33,7 @@
 
   {% if chart.pts|length > 1 %}
   <section class="pr-card"><h2>득점률 변화</h2>
-    <svg class="pr-chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="최근 시험 득점률: {% for p in chart.pts %}{{ p.v }}%{{ ', ' if not loop.last }}{% endfor %}">
-      <line x1="10" x2="{{ chart.w - 10 }}" y1="{{ chart.base }}" y2="{{ chart.base }}" class="pr-axis"></line>
-      <polyline points="{{ chart.poly }}" class="pr-line"></polyline>
-      {% for p in chart.pts %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" class="pr-dot"></circle><text x="{{ p.x }}" y="{{ p.y - 9 }}" class="pr-val">{{ p.v }}%</text>{% endfor %}
-      {% for l in chart.labels %}<text x="{{ l.x }}" y="{{ chart.h - 6 }}" class="pr-lab">{{ l.t }}</text>{% endfor %}
-    </svg>
+    {% with label = "최근 시험" %}{% include "_rate_chart.html" %}{% endwith %}
   </section>
   {% endif %}
 

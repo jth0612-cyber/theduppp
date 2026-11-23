@@ -33,11 +33,7 @@
 <section class="card sys-scores" aria-label="{{ o.kind }} 성적">
   <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회 · 복테&모의 분석과 같은 점수</span></div>
   {% if o.chart.pts|length > 1 %}
-  <svg class="pr-chart" viewBox="0 0 {{ o.chart.w }} {{ o.chart.h }}" role="img" aria-label="{{ o.kind }} 득점률: {% for p in o.chart.pts %}{{ p.v }}%{{ ', ' if not loop.last }}{% endfor %}">
-    <line x1="10" x2="{{ o.chart.w - 10 }}" y1="{{ o.chart.base }}" y2="{{ o.chart.base }}" class="pr-axis"></line>
-    <polyline points="{{ o.chart.poly }}" class="pr-line"></polyline>
-    {% for p in o.chart.pts %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="3" class="pr-dot"></circle>{% endfor %}
-  </svg>
+  {% with chart = o.chart, label = o.kind %}{% include "_rate_chart.html" %}{% endwith %}
   {% endif %}
   <ul class="ss-list">
     {% for e in o.exams %}

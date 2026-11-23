@@ -340,16 +340,28 @@ def num_fmt(x):
 
 
 def rate_chart(exams_out):
-    """최근 시험 득점률 변화 (오래된 것부터)."""
+    """득점률 꺾은선 (오래된 것부터): 세로축 0~100%, 가로축 회차, 반 평균 점선, 점마다 말풍선."""
     seq = [e for e in reversed(exams_out) if e["rate"] is not None]
-    W, H, L, R, T, B = 320, 120, 28, 28, 22, 22
+    W, H, L, R, T, B = 640, 250, 46, 18, 26, 44
     if not seq:
         return {"pts": []}
-    x = lambda i: L + (W - L - R) * (i / max(1, len(seq) - 1)) if len(seq) > 1 else W / 2
-    y = lambda v: T + (H - T - B) * (1 - v / 100)
-    return {"w": W, "h": H, "pts": [{"x": round(x(i), 1), "y": round(y(e["rate"]), 1), "v": e["rate"]} for i, e in enumerate(seq)],
-            "poly": " ".join(f"{x(i):.1f},{y(e['rate']):.1f}" for i, e in enumerate(seq)),
-            "labels": [{"x": round(x(i), 1), "t": (e["date"] or "")[5:].replace("-", ".")} for i, e in enumerate(seq)], "base": H - B}
+    pw, ph = W - L - R, H - T - B
+    x = lambda i: L + pw * (i + 0.5) / len(seq)
+    y = lambda v: T + ph * (1 - v / 100)
+    pts = []
+    for i, e in enumerate(seq):
+        avg = round(100 * e["avg"] / e["full"]) if e.get("avg") is not None and e["full"] else None
+        m = re.search(r"(\d+)회", e["title"] or "")
+        tx = min(max(x(i), L + 78), W - R - 78)                 # 말풍선이 그림 밖으로 나가지 않게
+        pts.append({"x": round(x(i), 1), "y": round(y(e["rate"]), 1), "v": e["rate"], "avg": avg, "ay": round(y(avg), 1) if avg is not None else None,
+                    "lab": f"{m.group(1)}회" if m else str(i + 1), "title": e["title"], "date": (e["date"] or "")[5:].replace("-", "."),
+                    "score": e["score"], "full": e["full"], "avg_score": e.get("avg"), "tx": round(tx, 1),
+                    "ty": round(y(e["rate"]) - 64 if y(e["rate"]) - 64 > 2 else y(e["rate"]) + 14, 1)})
+    return {"w": W, "h": H, "l": L, "r": W - R, "t": T, "b": H - B, "pts": pts,
+            "poly": " ".join(f"{p['x']},{p['y']}" for p in pts),
+            "avg_poly": " ".join(f"{p['x']},{p['ay']}" for p in pts if p["ay"] is not None),
+            "yticks": [{"v": v, "y": round(y(v), 1)} for v in (0, 25, 50, 75, 100)],
+            "every": max(1, -(-len(pts) // 10))}                # 가로축 글자가 겹치지 않게 (점 10개 넘으면 건너뛰기)
 
 
 @bp.route("/p/<token>")
