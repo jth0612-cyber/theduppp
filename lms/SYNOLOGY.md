@@ -164,11 +164,16 @@ SEASON 1을 진행한 상황을 가짜 데이터로 채운 체험용 사이트�
 1. PC에서 데모 폴더 만들기: `python tools/make_demo.py 14` (14 = 14주차까지. 4를 넣으면 4주차까지)
    - `_deploy/demo/student-lms-demo/` 에 코드 사본 + 새 `instance`(데모 DB·비밀키·사진)가 생깁니다.
    - 로그인 정보는 같은 폴더의 `DEMO_CREDENTIALS.txt` 입니다. NAS에는 올리지 마세요.
-2. File Station에서 `docker` 안에 `student-lms-demo` 폴더를 만들고, `_deploy/student-lms-demo.zip`(로그인 정보 파일은 빠져 있음)을 올려 그 폴더에 압축을 풉니다.
+2. File Station에서 `docker` 안에 `student-lms-demo` 폴더를 만들고, `_deploy/student-lms-demo.zip`(로그인 정보 파일은 빠져 있음)을 그 폴더 안에 올려 '여기에 압축 풀기'로 풉니다. zip 안에는 폴더 없이 파일만 있습니다.
 3. `instance` 폴더 권한: 2장과 같이 `Everyone` 읽기·쓰기 허용.
 4. Container Manager → 프로젝트 → 생성 → 이름 `student-lms-demo`, 경로 `/docker/student-lms-demo`, 기존 docker-compose.yml 사용. (컨테이너 이름 `student-lms-demo`, 포트 8051)
 5. 주소: 제어판 → 외부 액세스 → DDNS 에서 `demo.jth4377.synology.me` 처럼 하위 주소를 쓸 수 있는지 확인 (와일드카드 사용 또는 호스트 추가). 제어판 → 보안 → 인증서 → 추가 → Let's Encrypt 로 그 주소 인증서를 받습니다.
 6. 리버스 프록시 (6장과 같은 방법): 소스 `HTTPS / demo.jth4377.synology.me / 443` → 대상 `HTTP / localhost / 8051`, 사용자 지정 머리글도 6장과 똑같이.
-7. 데모를 처음 상태로 되돌리려면 1번을 다시 하고 `instance` 폴더만 바꿔 올린 뒤 컨테이너를 다시 시작합니다.
+7. 데모를 새 버전으로 바꿀 때 (zip 안에는 폴더 없이 파일만 들어 있습니다)
+   1. Container Manager에서 `student-lms-demo` 프로젝트를 **정지**합니다.
+   2. File Station에서 `docker/student-lms-demo/instance` 폴더를 **지웁니다** (데모 DB는 새로 만든 것으로 통째로 바꿔야 합니다. 예전 DB의 `-wal`·`-shm` 파일이 남으면 새 DB와 섞여 깨질 수 있습니다).
+   3. 새 `student-lms-demo.zip` 을 `docker/student-lms-demo` 안에 올리고, 오른쪽 클릭 → 압축 풀기 → **여기에 압축 풀기**, 같은 이름은 **덮어쓰기**.
+   4. 새로 생긴 `instance` 폴더 권한을 3번과 같이 다시 줍니다 (하위 폴더 및 파일에 적용).
+   5. 프로젝트 **빌드** → **시작**. 데모 비밀번호는 PC의 `DEMO_CREDENTIALS.txt` 그대로입니다.
 
 실제 사이트를 업데이트할 때 데모는 따로 갱신해야 합니다 (1번부터 다시).
