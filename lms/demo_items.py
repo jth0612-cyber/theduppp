@@ -4,7 +4,7 @@
 문항: (정답, 배점, 단원, 핵심개념, 요구역량, 난이도, 선지, 보기)
 - 선지: 합답형은 '①'~'⑤'에 대응하는 보기 묶음 5개('ㄱ|ㄴ|ㄱㄴ|ㄱㄷ|ㄴㄷ'), 일반형은 None
 - 보기: 합답형은 [(O/X, 잘못 판단하는 이유, 오답 유형)] ㄱ·ㄴ·ㄷ 순서, 일반형은 {선지: (설명, 오답 유형)}
-정답 '*' 는 전원 정답 (복테 6번: 원본 파일에 보기·선지가 없음)
+정답 '-' 는 정답 없음: 전원 오답, 배점 0 (복테 6번: 원본 파일에 보기·선지가 없음)
 """
 
 O, X = True, False
@@ -106,7 +106,7 @@ REVIEW = [
     (3, 2, "전기적 성질과 반도체", "불순물 반도체와 지각 구성 원소", "개념 이해", "중", STD2,
      [(O, "격자 원자와 불순물 원자를 바꿔 봄", "자료 해석"), (X, "원자가 전자 3개 불순물이면 p형(양공)이라는 것을 놓침", "개념 부족"),
       (O, "지각 질량비 순서(산소 > 규소)를 바꿈", "개념 부족")]),
-    ("*", 2.5, "생명중심원리", "DNA 전사와 번역 (원본에 보기 없음)", "개념 이해", "중", None, {}),
+    ("-", 0, "생명중심원리", "DNA 전사와 번역 (원본에 보기 없음: 전원 오답, 0점)", "개념 이해", "중", None, {}),
     (3, 2, "과학과 미래 사회", "빅데이터 처리와 사막화 요인", "자료·그래프 해석", "하", STD2,
      [(O, "오차 처리를 데이터 조작으로 봄", "개념 부족"), (X, "'오직 인위적'이라는 단정을 옳다고 봄", "조건 독해"),
       (O, "편차가 음수인 것을 증가로 읽음", "자료 해석")]),
@@ -189,7 +189,7 @@ def near_wrong(items):
     """문항마다 학생이 많이 고를 오답: 정답과 보기 하나만 다른 선지 (일반형은 선지분석에 있는 선지)."""
     out = []
     for ans, _, _, _, _, _, opts, bogi in items:
-        if ans == "*":
+        if ans in ("*", "-"):
             out.append([])
         elif opts:
             g = [set(x) for x in opts.split("|")]
@@ -201,11 +201,11 @@ def near_wrong(items):
 
 
 def check():
-    for name, items, total in (("MOCK", MOCK, 50), ("REVIEW", REVIEW, 50)):
+    for name, items, total in (("MOCK", MOCK, 50), ("REVIEW", REVIEW, 47.5)):
         assert len(items) == 25, name
         assert abs(sum(i[1] for i in items) - total) < 1e-9, (name, sum(i[1] for i in items))
         for no, (ans, _, _, _, _, _, opts, bogi) in enumerate(items, 1):
-            if opts and ans != "*":
+            if opts and ans not in ("*", "-"):
                 g = opts.split("|")
                 right = "".join(lab for lab, b in zip("ㄱㄴㄷ", bogi) if b[0])
                 assert g[ans - 1] == right, (name, no, g[ans - 1], right)

@@ -473,7 +473,7 @@ def omr_workbook(kind, absent):
         row = []
         for i, it in enumerate(its):
             k = it[0]
-            if k == "*":                                      # 보기가 없는 문항: 아무거나 마킹
+            if k in ("*", "-"):                               # 보기가 없는 문항: 아무거나 마킹
                 row.append(rng.randint(1, 5))
                 continue
             pr = SKILL[st["id"]] - LEVEL_DROP[it[5]] - (0.35 if WEAK.get(st["id"]) == it[2] else 0)
@@ -528,7 +528,7 @@ def my_answers(kind, w, uid):
 def wrong_why(kind, no, pick):
     """고른 선지로 틀린 이유 (유형, 설명): 정답과 다른 보기의 함정."""
     ans, _, _, _, _, _, opts, bogi = EXAMS[kind][no - 1]
-    if opts and ans != "*":
+    if opts and ans not in ("*", "-"):
         g = opts.split("|")
         diff = [lab for lab in "ㄱㄴㄷ" if (lab in g[pick - 1]) != (lab in g[ans - 1])]
         if diff:

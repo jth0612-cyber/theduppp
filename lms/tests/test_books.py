@@ -131,6 +131,26 @@ class BooksTest(unittest.TestCase):
         return self.t.post(f"/t/mocks/{mid}/omr", data={"file": (buf, name)}, content_type="multipart/form-data",
                            follow_redirects=True)
 
+    def test_no_key_item_is_wrong_for_everyone(self):
+        """정답 '-' 는 전원 오답, 배점 0: 점수에 영향 없이 틀린 문항으로만 센다."""
+        import io as _io
+        from openpyxl import Workbook
+        with self.app.app_context():
+            mid = query("""SELECT m.id FROM mocks m JOIN books b ON b.id = m.book_id
+                           WHERE b.title = '복습 테스트' AND b.is_practice = 0 AND m.round_no = 1""", one=True)["id"]
+        wb = Workbook(); ws = wb.active
+        ws.append(["학생코드", "이름", "반", 1, 2, 3])
+        ws.append(["정답", "", "", 2, "-", 4])
+        ws.append(["배점", "", "", 2, 0, 3])
+        ws.append(["S000", "학생0", "A반", 2, 3, 4])
+        buf = _io.BytesIO(); wb.save(buf); buf.seek(0)
+        self.t.post(f"/t/mocks/{mid}/omr", data={"file": (buf, "o.xlsx")}, content_type="multipart/form-data")
+        with self.app.app_context():
+            self.assertEqual(query("SELECT full_score FROM mocks WHERE id = ?", (mid,), one=True)["full_score"], 5)
+            self.assertEqual(query("SELECT score FROM exam_results WHERE mock_id = ?", (mid,), one=True)["score"], 5)
+        page = self.student(0).get(f"/s/analysis?mock={mid}").data.decode()
+        self.assertIn("정답 없음", page)
+
     def test_25_items_with_mixed_points(self):
         r = self.t.post("/t/books", data={"title": "통합과학 실전", "subject": "통합과학", "expires_on": "2099-12-31"})
         bid = int(r.headers["Location"].rsplit("/", 1)[-1])

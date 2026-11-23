@@ -114,19 +114,26 @@ def score_answers(answers, key, points):
     return sum(p for a, k, p in zip(answers, key, points) if int(a) == k)
 
 
+NO_KEY = ("-", "없음", "오답")      # 정답 없음: 전원 오답 (문항 오류로 배점 0 처리할 때)
+
+
 def key_set(k):
-    """정답 한 칸 → 맞는 번호 집합. 3 / "2,4"·"2/4"(복수 정답) / "*"·"전원"(전원 정답, 빈 집합 대신 None)."""
+    """정답 한 칸 → 맞는 번호 집합. 3 / "2,4"·"2/4"(복수 정답) / "*"·"전원"(전원 정답, 빈 집합 대신 None) / "-"(정답 없음)."""
     if isinstance(k, int):
         return {str(k)}
     s = str(k).strip()
     if s in ("*", "전원"):
         return None
+    if s in NO_KEY:
+        return set()
     circled = {"①": "1", "②": "2", "③": "3", "④": "4", "⑤": "5"}
     return {circled.get(ch, ch) for ch in s if circled.get(ch, ch) in "12345"}
 
 
 def is_right(a, k):
     """답안 한 칸: '1'~'5' 고른 번호, 'R' 맞음(고른 번호 기록 없음), '0' 틀림(무응답·두 개 마킹·기록 없음)."""
+    if str(k).strip() in NO_KEY:
+        return False
     if a == "R":
         return True
     ks = key_set(k)
@@ -147,7 +154,7 @@ def score_omr(answers, key, points):
 
 def key_label(k):
     ks = key_set(k)
-    return "전원 정답" if ks is None else ",".join(sorted(ks))
+    return "전원 정답" if ks is None else (",".join(sorted(ks)) or "정답 없음")
 
 
 def _fmt(x):

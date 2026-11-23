@@ -152,6 +152,8 @@ def _key_cell(v):
     s = "".join(omr.CIRCLED.get(ch, ch) for ch in s)
     if s in ("*", "전원"):
         return "*"
+    if s in analysis.NO_KEY:
+        return "-"
     ds = re.findall(r"[1-5]", s)
     if len(ds) == 1:
         return int(ds[0])
