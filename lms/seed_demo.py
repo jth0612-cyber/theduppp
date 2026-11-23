@@ -62,7 +62,7 @@ CURRICULUM = {  # 주차: (진도, 단원 목록)
     11: ("진화, 생물 다양성, 생태계 요소, 평형", ["진화와 생물 다양성", "생태계와 평형"]),
     12: ("열수지, 엘니뇨", ["지구 열수지", "엘니뇨"]),
     13: ("렌츠, 에너지", ["전자기 유도", "에너지 전환"]),
-    14: ("6단원 + 예시문항 분석", ["과학과 미래 사회", "예시문항"]),
+    14: ("감염병과 과학윤리 + 예시문항 분석", ["과학과 미래 사회", "예시문항"]),
 }
 WEEK_UNIT = {1: "물질과 규칙성", 2: "물질과 규칙성", 3: "시스템과 상호작용", 4: "시스템과 상호작용", 5: "시스템과 상호작용",
              6: "물질과 규칙성", 7: "시스템과 상호작용", 8: "변화와 다양성", 9: "변화와 다양성", 10: "변화와 다양성",
@@ -208,12 +208,14 @@ REVIEW_PAGE = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6,
 
 # ---------------------------------------------------------------- 날짜
 TODAY = date.today() - timedelta(days=(date.today().weekday() - 4) % 7)   # 실행일 직전 금요일 = N주차 마지막 날
-W1 = TODAY - timedelta(days=WEEKS * 7 + 4)                                # 1주차가 걸친 달력 주의 월요일 (12/21)
+BREAK_AFTER = 6                                                           # 커리큘럼: 6주차(02.05) 뒤 한 주 설 연휴, 7주차는 02.13부터
+GAP = 7 if WEEKS > BREAK_AFTER else 0
+W1 = TODAY - timedelta(days=WEEKS * 7 + 4 + GAP)                          # 1주차가 걸친 달력 주의 월요일 (12/21)
 
 
 def day(week, weekday):
-    """커리큘럼 주차(토~금) week 의 요일. weekday 0=월 … 6=일. 토·일은 그 주의 시작."""
-    base = W1 + timedelta(days=(week - 1) * 7)
+    """커리큘럼 주차(토~금) week 의 요일. weekday 0=월 … 6=일. 토·일은 그 주의 시작. 7주차부터는 설 연휴 한 주 뒤."""
+    base = W1 + timedelta(days=(week - 1) * 7 + (7 if week > BREAK_AFTER else 0))
     return base + timedelta(days=weekday if weekday >= 5 else weekday + 7)
 
 
@@ -328,15 +330,16 @@ ok("조교 소개 2", TA2.post("/t/me/intro", data={"intro": "물리·지구과�
 TA_ID = q("SELECT id FROM users WHERE username = 'ta_hanjisu'", one=True)["id"]
 
 # ---------------------------------------------------------------- 반 8개 (단과 4 · 재종 4)
-CLASSES = [  # 이름, 구분, [(요일, 시작, 끝)]
-    ("대구 토요일 A반", "단과", [(5, "10:00", "13:00")]),
-    ("대구 토요일 B반", "단과", [(5, "14:00", "17:00")]),
-    ("대치 일요일반", "단과", [(6, "14:00", "17:00")]),
-    ("대치 목요일반", "단과", [(3, "19:00", "22:00")]),
-    ("대구 재종 1반", "재종", [(0, "09:00", "11:50"), (2, "09:00", "11:50"), (4, "09:00", "11:50")]),
-    ("대구 재종 2반", "재종", [(1, "13:00", "15:50"), (3, "13:00", "15:50")]),
-    ("대치 재종 1반", "재종", [(0, "13:00", "15:50"), (3, "13:00", "15:50")]),
-    ("대치 재종 2반", "재종", [(1, "09:00", "11:50"), (4, "09:00", "11:50")]),
+CLASSES = [  # 이름, 구분, [(요일, 시작, 끝, 교시, 관, 교실)]  단과 3시간 30분 1회 · 재종 100분 여러 번
+    ("대구 토요일 A반", "단과", [(5, "10:00", "13:30", "", "대구관", "301")]),
+    ("대구 토요일 B반", "단과", [(5, "14:30", "18:00", "", "대구관", "301")]),
+    ("대치 일요일반", "단과", [(6, "14:00", "17:30", "", "대치 M3관", "101")]),
+    ("대치 목요일반", "단과", [(3, "18:30", "22:00", "", "대치 M3관", "101")]),
+    ("대치 재종 3반", "재종", [(0, "10:30", "12:10", "2교시", "대치 N관", "L102"), (2, "10:30", "12:10", "2교시", "대치 N관", "L102"),
+                            (4, "10:30", "12:10", "2교시", "대치 N관", "L102")]),
+    ("대치 재종 4반", "재종", [(1, "13:20", "15:00", "3교시", "대치 N관", "L102"), (3, "13:20", "15:00", "3교시", "대치 N관", "L102")]),
+    ("대치 재종 1반", "재종", [(0, "13:20", "15:00", "3교시", "대치 W관", "801"), (3, "15:20", "17:00", "4교시", "대치 W관", "801")]),
+    ("대치 재종 2반", "재종", [(1, "08:30", "10:10", "1교시", "대치 W관", "801"), (4, "08:30", "10:10", "1교시", "대치 W관", "801")]),
 ]
 # 학생 페르소나: 반마다 1명. weak = 약한 단원, skill = 평균 정답률, ask = 주마다 질문할 확률
 PERSONAS = {
@@ -348,9 +351,9 @@ PERSONAS = {
                         skill=0.62, ask=0.35, note="학원 여러 곳 병행. 결석이 잦고 강의 영상·수업 기록으로 따라잡음"),
     "대치 목요일반": dict(name="정하준", no="0050772641", parent="010-3392-2641", target="성균관대 화학공학", weak="산화와 환원",
                         skill=0.58, ask=0.5, note="2주차에 늦게 합류. 1주차 자료를 찾아봄", late=2),
-    "대구 재종 1반": dict(name="김나연", no="kny2027", parent="010-5560-1183", target="경북대 수의예", weak="화학 결합",
+    "대치 재종 3반": dict(name="김나연", no="kny2027", parent="010-5560-1183", target="경북대 수의예", weak="화학 결합",
                         skill=0.66, ask=0.6, note="재수생. 소도시 명상 집중 기록이 가장 길고 학습상담을 자주 씀"),
-    "대구 재종 2반": dict(name="오준혁", no="ojh0412", parent="010-6014-0412", target="계명대 간호", weak="지구 열수지",
+    "대치 재종 4반": dict(name="오준혁", no="ojh0412", parent="010-6014-0412", target="계명대 간호", weak="지구 열수지",
                         skill=0.45, ask=0.55, note="하위권. 오답 노트 이유 고르기와 시험지 첨삭에 기대는 편"),
     "대치 재종 1반": dict(name="윤지아", no="yja2027", parent="010-8825-3071", target="이화여대 화학생명", weak="전기적 성질과 반도체",
                         skill=0.68, ask=0.3, note="아이폰 사용. 알림·홈 화면 설치를 씀. 교재 배송·환불 행정문의"),
@@ -365,9 +368,9 @@ for name, track, slots in CLASSES:
     ok(f"반 {name}", T.post("/t/classes", data={"name": name, "track": track, "description": f"{track} · 2028 수능 대비 SEASON 1"}))
     cid = q("SELECT id FROM classes WHERE name = ?", (name,), one=True)["id"]
     cls[name] = {"id": cid, "track": track, "slots": slots, "students": []}
-    for wd, s, e in slots:
-        x("INSERT INTO timetable (class_id, weekday, starts, ends, title, room) VALUES (?, ?, ?, ?, '통합과학', ?)",
-          (cid, wd, s, e, name.split()[0] + " 3관"))
+    for wd, s, e, per_, hall, room in slots:
+        x("INSERT INTO timetable (class_id, weekday, starts, ends, title, period, hall, room) VALUES (?, ?, ?, ?, '통합과학', ?, ?, ?)",
+          (cid, wd, s, e, per_, hall, room))
 
 n = 0
 with app.app_context():
@@ -422,7 +425,7 @@ for name, c in cls.items():
         accounts[st["id"]] = (st["no"], pw, signup(c, st, pw, sess(c, 1)))
 SEO = P["대구 토요일 A반"]
 STUDY = {"대구 토요일 A반": ("개념 다지기형", "해설 참고형"), "대구 토요일 B반": ("심화 도전형", ""), "대치 일요일반": ("벼락치기형", "미이행형"),
-         "대치 목요일반": ("미이행형", "개념 다지기형"), "대구 재종 1반": ("안정형", ""), "대구 재종 2반": ("불안·과소확신형", "해설 참고형"),
+         "대치 목요일반": ("미이행형", "개념 다지기형"), "대치 재종 3반": ("안정형", ""), "대치 재종 4반": ("불안·과소확신형", "해설 참고형"),
          "대치 재종 1반": ("마무리 다듬기형", ""), "대치 재종 2반": ("양치기형", "")}
 TYPE_POOL = ["안정형"] * 8 + ["개념 다지기형"] * 5 + ["마무리 다듬기형"] * 5 + ["심화 도전형"] * 5 + ["양치기형"] * 5 +             ["벼락치기형"] * 4 + ["해설 참고형"] * 5 + ["불안·과소확신형"] * 5 + ["미이행형"] * 4
 PRACTICE = {"개념 다지기형": "필기노트 복습 후 같은 단원 기출 10문항", "심화 도전형": "LOGIC BUILD 킬러 1문항 끝까지 혼자 풀기",
@@ -728,7 +731,7 @@ for name, c in cls.items():
                 "질문: 질문 게시판에 [교재-페이지-번호] 형식으로 / 행정: 질문 게시판 행정문의"}))
     at("notices", last_id("notices"), created_at=ts(sess(c, 1) - timedelta(days=2), 21))
 for name, p in P.items():
-    for wd, s_, e_ in p["c"]["slots"]:
+    for wd, s_, e_, *_ in p["c"]["slots"]:
         p["S"].post("/s/timetable", data={"weekday": str(wd), "starts": s_, "ends": e_, "title": "통합과학", "room": "", "tone": "1"})
     p["S"].post("/s/timetable", data={"weekday": str(rng.choice([0, 1, 2])), "starts": "19:00", "ends": "21:00", "title": "자습", "room": "", "tone": "2"})
 
@@ -777,13 +780,13 @@ for w in range(1, WEEKS + 1):
             title, body, ans, src, unit = picked
             qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit,
                       image=question_photo(src, p["st"]["name"], p["uid"], w))
-            if not (last_week and name in ("대구 토요일 A반", "대구 재종 1반")):      # 이 둘은 오늘 조교가 답할 질문
+            if not (last_week and name in ("대구 토요일 A반", "대치 재종 3반")):      # 이 둘은 오늘 조교가 답할 질문
                 answer(TA if rng.random() < 0.6 else TA2, qid, ans, day(w, 3))
                 if title in CURATED and rng.random() < 0.3:
                     ok("추가 질문", S.post(f"/s/questions/{qid}/followup", data={"body": "그럼 반대 경우에는 어떻게 되나요?"}))
                     at("followups", last_id("followups"), created_at=ts(day(w, 3), 22))
                     answer(TA, qid, "반대 경우는 조건만 뒤집어 같은 순서로 따라가면 됩니다. 보기마다 무엇이 바뀌는지 표로 적어 보세요.", day(w, 4))
-        if (name == "대구 재종 1반" and w % 3 == 0) or (name == "대구 토요일 A반" and w in (3, 9)):
+        if (name == "대치 재종 3반" and w % 3 == 0) or (name == "대구 토요일 A반" and w in (3, 9)):
             qid = ask(S, f"{w}주차 공부 계획 상담", "복테 점수가 몇 주째 비슷합니다. 평일에 무엇을 먼저 해야 할지 모르겠습니다.", "학습상담",
                       day(w, 1), assignee=TA_ID)
             answer(TA, qid, f"평일 3일만 정해서 오답 노트 → 같은 단원 기출 10문항 순서로 돌려 보세요. {per['weak']} 문항이 계속 틀려서 그 부분부터 하면 됩니다.", day(w, 2))
@@ -792,7 +795,7 @@ for w in range(1, WEEKS + 1):
             qid = ask(S, "교재 배송 문의" if w == 1 else "교재 환불 문의",
                       "FRAMING 해설편 2권이 아직 안 왔습니다." if w == 1 else "FRAMING 해설편이 두 권 왔습니다. 한 권 환불되나요?", "행정문의", day(w, 2))
             answer(T, qid, "이번 주 금요일에 발송됩니다." if w == 1 else "다음 수업 때 행정실에 반납하면 처리됩니다.", day(w, 3))
-        if (name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # Full 모의고사 피드백 (한승우는 악필)
+        if (name in ("대구 토요일 A반", "대치 재종 4반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # Full 모의고사 피드백 (한승우는 악필)
             a_m = my_answers("m", w, p["uid"])                # Full 모의고사 피드백: 그 학생이 실제로 틀린 문항으로 묻는다
             sw = next((k for k in [w] + sorted(FEEDBACK_M) if len(a_m) >= FEEDBACK_M[k][0] and a_m[FEEDBACK_M[k][0] - 1] != str(DI.MOCK[FEEDBACK_M[k][0] - 1][0])), w)
             sno, slines, sreply = FEEDBACK_M[sw]
@@ -808,7 +811,7 @@ for w in range(1, WEEKS + 1):
                 at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 0) + timedelta(days=7), 21))
                 at("feedback_threads", tid, created_at=ts(day(w, 6), 21), updated_at=ts(day(w, 0) + timedelta(days=7), 21))
         took = q("SELECT 1 FROM mock_entries WHERE mock_id = ? AND user_id = ?", (MOCK[("r", w)], p["uid"]), one=True)
-        if took and name in ("대구 토요일 A반", "대구 재종 2반") and (w % 2 == 1 or last_week):  # 시험지 첨삭 (응시한 회차만)
+        if took and name in ("대구 토요일 A반", "대치 재종 4반") and (w % 2 == 1 or last_week):  # 시험지 첨삭 (응시한 회차만)
             a = my_answers("r", w, p["uid"])
             keys = [str(it[0]) for it in DI.REVIEW]
             wrong = [i + 1 for i, k in enumerate(keys) if k not in ("*", "-") and (i >= len(a) or a[i] != k)]   # 보기 없는 6번은 첨삭 대상에서 뺀다
@@ -827,7 +830,7 @@ for w in range(1, WEEKS + 1):
                         marks[f"r{n}"], marks[f"m{n}"] = tp, why
                 ok("시험지 첨삭", TA.post(f"/t/papers/{pid}", data={**marks, "comment": f"{per['weak']}만 다시 잡으면 됩니다. 풀이 순서는 좋습니다."}))
                 at("exam_papers", pid, submitted_at=ts(day(w, 6), 19), reviewed_at=ts(day(w, 0) + timedelta(days=7), 14))
-        if rng.random() < (0.9 if name in ("대구 토요일 A반", "대구 재종 2반") else 0.4):   # 오답 노트
+        if rng.random() < (0.9 if name in ("대구 토요일 A반", "대치 재종 4반") else 0.4):   # 오답 노트
             for kind in ("r", "m"):
                 mid = MOCK[(kind, w)]
                 e = q("SELECT answers FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, p["uid"]), one=True)
@@ -898,7 +901,7 @@ first_notice = q("SELECT id FROM notices WHERE class_id = ? ORDER BY id LIMIT 1"
 SEO["S"].post(f"/s/notices/{first_notice}/like")
 
 # ---------------------------------------------------------------- 소도시 명상 집중 기록 · 접속 기록
-FOCUS = {"대구 재종 1반": 0.85, "대구 토요일 A반": 0.55, "대구 재종 2반": 0.4}
+FOCUS = {"대치 재종 3반": 0.85, "대구 토요일 A반": 0.55, "대치 재종 4반": 0.4}
 with app.app_context():
     users = [(p["uid"], FOCUS.get(name, 0.25)) for name, p in P.items()] + [(a[2], 0.2) for a in accounts.values() if a[2]]
     for uid, rate in [(u, r) for u, r in users if u]:
@@ -914,6 +917,69 @@ if _ph:
     _ph.stdin.close()
     _ph.wait()
 shutil.rmtree(SHOTS, ignore_errors=True)
+
+# ---------------------------------------------------------------- 수업 일정: 진도 그룹 2개(단과·재종) · 배부 교재 · 출석
+# 커리큘럼(SEASON 1, 14주): 1주차 개념서 2권 + 기출문제집 문항편·해설편 각 2권, 매주 주간지·모의고사+분석서·필기노트, 고난도 TOPIC 8권
+PLAN_WEEKS = WEEKS
+HANDOUT_LIST = (("라인업", ["LINE UP 통합과학I", "LINE UP 통합과학II"]),
+                ("프레이밍", ["FRAMING 통합과학I 문항편", "FRAMING 통합과학II 문항편", "FRAMING 통합과학I 해설편", "FRAMING 통합과학II 해설편"]),
+                ("스퀴즈", [f"Squeeze {k}호" for k in range(1, 15)]),
+                ("로직빌드", [f"LOGIC BUILD {k}호" for k in range(1, 9)]),
+                ("시퀀스", [f"Sequence {k}회" for k in range(1, 15)]),
+                ("기타", [f"정태혁 모의고사 {k}회" for k in range(1, 15)]),
+                ("필기노트", [f"필기노트 {k}호" for k in range(1, 15)]))
+for kind, titles in HANDOUT_LIST:
+    ok(f"배부 교재 {kind}", T.post("/t/handouts", data={"kind": kind, "title": ", ".join(titles)}))
+HID = {r["title"]: r["id"] for r in q("SELECT id, title FROM handouts")}
+
+
+def week_handouts_of(k):
+    hs = [f"Squeeze {k}호", f"정태혁 모의고사 {k}회", f"Sequence {k}회", f"필기노트 {k}호"]
+    if k == 1:
+        hs += HANDOUT_LIST[0][1] + HANDOUT_LIST[1][1]
+    if k in LOGIC_BUILD:
+        hs.append(f"LOGIC BUILD {LOGIC_BUILD[k]}호")
+    return hs
+
+
+for gname, track in (("2028 단과 SEASON 1", "단과"), ("2028 재종 SEASON 1", "재종")):
+    ok(f"진도 그룹 {gname}", T.post("/t/schedule", data={"name": gname, "track": track, "first": day(1, 5).isoformat(), "weeks": str(PLAN_WEEKS),
+                                                     "class_id": [str(c["id"]) for c in cls.values() if c["track"] == track]}))
+    gid = q("SELECT id FROM course_groups WHERE name = ?", (gname,), one=True)["id"]
+    for w in q("SELECT id, week_no FROM group_weeks WHERE group_id = ? ORDER BY week_no", (gid,)):
+        k = w["week_no"]
+        # 7주차부터는 설 연휴 한 주 뒤: 주차 날짜를 직접 바꾼다 (화면의 '고치기'와 같은 길)
+        note = "개강 · 교재 일괄 배부" if k == 1 else "설 연휴 뒤" if k == BREAK_AFTER + 1 else ""
+        ok(f"{gname} {k}주차", T.post(f"/t/schedule/weeks/{w['id']}", data={
+            "action": "save", "starts": day(k, 5).isoformat(), "ends": (day(k, 5) + timedelta(days=6)).isoformat(),
+            "topic": CURRICULUM[k][0], "review_round": str(k), "mock_round": str(k), "note": note,
+            "handout_id": [str(HID[h]) for h in week_handouts_of(k)]}))
+# 지난 수업 칸 출석: 대부분 출석, 가끔 지각·결석 (최민서는 결석이 잦다)
+by_id = {st["id"]: (c_name, st) for c_name, st in ALL_STUDENTS}
+for s in q("""SELECT s.id, s.class_id, s.day FROM sessions s JOIN group_weeks w ON w.id = s.week_id
+              WHERE s.day <= ? AND w.off = 0""", (TODAY.isoformat(),)):
+    for st in q("SELECT id FROM students WHERE class_id = ? AND active = 1", (s["class_id"],)):
+        miss = 0.3 if st["id"] == P["대치 일요일반"]["st"]["id"] else 0.04
+        r = rng.random()
+        state = "결석" if r < miss else "지각" if r < miss + 0.05 else "출석"
+        x("INSERT OR IGNORE INTO session_students (session_id, student_id, state) VALUES (?, ?, ?)", (s["id"], st["id"], state))   # 시트 출결로 채운 칸은 그대로
+# 마지막 주: 대구 토요일 B반 학생 한 명이 A반 수업을 들음 / 13주차 대치 목요일반은 Sequence 미입고로 빼고 14주차에 같이 배부
+a_cls, b_cls = cls["대구 토요일 A반"]["id"], cls["대구 토요일 B반"]["id"]
+dan = q("SELECT id FROM course_groups WHERE track = '단과'", one=True)["id"]
+wk = {r["week_no"]: r["id"] for r in q("SELECT id, week_no FROM group_weeks WHERE group_id = ?", (dan,))}
+sa = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS], a_cls), one=True)["id"]
+sb = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS], b_cls), one=True)["id"]
+mover = cls["대구 토요일 B반"]["students"][3]
+x("INSERT OR REPLACE INTO session_students (session_id, student_id, state, guest) VALUES (?, ?, '출석', 1)", (sa, mover["id"]))
+x("UPDATE session_students SET state = '다른 반' WHERE session_id = ? AND student_id = ?", (sb, mover["id"]))
+x("UPDATE sessions SET note = '대구 토요일 B반 1명 A반 수업 수강 (학교 일정)' WHERE id = ?", (sa,))
+if WEEKS >= 2:
+    thu = cls["대치 목요일반"]["id"]
+    s13 = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS - 1], thu), one=True)["id"]
+    s14 = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS], thu), one=True)["id"]
+    x("INSERT INTO session_handouts (session_id, handout_id, mode) VALUES (?, ?, 'drop')", (s13, HID[f"Sequence {WEEKS - 1}회"]))
+    x("UPDATE sessions SET note = 'Sequence 미입고 · 다음 주 배부' WHERE id = ?", (s13,))
+    x("INSERT INTO session_handouts (session_id, handout_id, mode) VALUES (?, ?, 'add')", (s14, HID[f"Sequence {WEEKS - 1}회"]))
 
 # ---------------------------------------------------------------- 날짜 맞추기
 with app.app_context():

@@ -31,7 +31,7 @@ body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f
 .flow-head h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.3; font-weight: 800; color: var(--head); text-wrap: balance; }
 .flow-head p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
 .flow-head .n { display: inline-block; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .06em; margin-bottom: 6px; }
-.card { position: absolute; width: 330px; background: var(--card); border: 1px solid var(--edge); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+.card { position: absolute; width: 440px; background: var(--card); border: 1px solid var(--edge); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
 .card header { display: flex; align-items: center; gap: 8px; padding: 9px 12px; font-size: 15px; font-weight: 800; }
 .chip { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .02em; flex: none; }
 .r-학생 header { background: var(--stu-bg); } .r-학생 .chip { color: var(--stu); border: 1px solid var(--stu); }
@@ -51,11 +51,11 @@ button:hover, select:hover { border-color: var(--line); }
 button:focus-visible, select:focus-visible, .shot:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
 #zoomv { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); }
 .legend { display: flex; gap: 6px; padding: 0 4px; }
-#lb { position: fixed; inset: 0; background: #0b1018e6; display: flex; align-items: center; justify-content: center; z-index: 10;
+#lb { position: fixed; inset: 0; background: #0b1018e6; display: flex; align-items: flex-start; justify-content: center; z-index: 10; overflow: auto;
   padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); cursor: zoom-out; }
-#lb figure { margin: 0; max-width: 100%; max-height: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-#lb img { max-width: min(1400px, 100%); max-height: calc(100vh - 110px); border-radius: 8px; box-shadow: 0 10px 40px #0008; }
-#lb figcaption { color: #F3F5F8; font-size: 16px; text-align: center; max-width: 70ch; line-height: 1.5; }
+#lb figure { margin: auto 0; max-width: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+#lb img { width: min(1600px, 100%); height: auto; border-radius: 8px; box-shadow: 0 10px 40px #0008; }
+#lb figcaption { order: -1; position: sticky; top: 0; background: #0b1018e6; padding: 8px 12px; border-radius: 8px; color: #F3F5F8; font-size: 16px; text-align: center; max-width: 70ch; line-height: 1.5; }
 @media (max-width: 640px) { .legend { display: none; } .panel h1 { font-size: 14px; } }
 @media (prefers-reduced-motion: reduce) { #world { transition: none !important; } }
 </style>
@@ -82,7 +82,7 @@ button:focus-visible, select:focus-visible, .shot:focus-visible { outline: 2px s
 
 <script>
 const DATA = /*DATA*/null;
-const CW = 330, GAP = 64, HEAD = 300, ROWGAP = 90, PAD = 80;
+const CW = 440, GAP = 64, HEAD = 300, ROWGAP = 90, PAD = 80;
 const world = document.getElementById("world"), view = document.getElementById("view"), svg = document.getElementById("links");
 const rows = [];
 const y = PAD; let maxX = 0;   // 줄 높이는 그린 뒤 layout()에서 잰다
@@ -90,34 +90,39 @@ DATA.forEach((f, i) => {
   const h = document.createElement("div"); h.className = "flow-head"; h.style.left = PAD + "px"; h.style.top = y + "px";
   h.innerHTML = `<span class="n">흐름 ${i + 1}</span><h2></h2><p></p>`;
   h.querySelector("h2").textContent = f.title; h.querySelector("p").textContent = f.sub; world.appendChild(h);
-  const cards = [];
+  const cards = [], col = [];
   f.steps.forEach((s, k) => {
+    const from = s.from == null ? k - 1 : s.from; col[k] = from < 0 ? 0 : col[from] + 1;
     const c = document.createElement("article"); c.className = "card r-" + s.role;
-    c.style.left = (PAD + HEAD + k * (CW + GAP)) + "px"; c.style.top = y + "px";
-    c.innerHTML = `<header><span class="chip"></span><span class="step">${k + 1}</span><span class="t"></span></header><img class="shot" tabindex="0" loading="lazy" alt=""><p></p>`;
+    c.style.left = (PAD + HEAD + col[k] * (CW + GAP)) + "px"; c.dataset.col = col[k]; c.dataset.from = from; c.style.top = y + "px";
+    c.innerHTML = `<header><span class="chip"></span><span class="step">${s.no || k + 1}</span><span class="t"></span></header><img class="shot" tabindex="0" loading="lazy" alt=""><p></p>`;
     c.querySelector(".chip").textContent = s.role; c.querySelector(".t").textContent = s.title; c.querySelector("p").textContent = s.desc;
-    const im = c.querySelector("img"); im.src = s.img; im.alt = `${s.role} 화면: ${s.title}`; im.dataset.cap = `${f.title} · ${k + 1}. ${s.title} (${s.role}) · ${s.desc}`;
+    const im = c.querySelector("img"); im.src = s.img; im.dataset.full = s.full || s.img; im.alt = `${s.role} 화면: ${s.title}`; im.dataset.cap = `${f.title} · ${s.no || k + 1}. ${s.title} (${s.role}) · ${s.desc}`;
     world.appendChild(c); cards.push(c);
   });
   rows.push({head: h, cards, top: y});
   const opt = document.createElement("option"); opt.value = i; opt.textContent = `${i + 1}. ${f.title}`; document.getElementById("jump").appendChild(opt);
-  maxX = Math.max(maxX, PAD + HEAD + f.steps.length * (CW + GAP));
+  maxX = Math.max(maxX, PAD + HEAD + (Math.max(...col) + 1) * (CW + GAP));
 });
 
 function layout() {
   let yy = PAD;
   rows.forEach(r => {
-    r.top = yy; r.head.style.top = yy + "px"; r.cards.forEach(c => { c.style.top = yy + "px"; });
-    const h = Math.max(r.head.offsetHeight, ...r.cards.map(c => c.offsetHeight)); r.h = h; yy += h + ROWGAP;
+    r.top = yy; r.head.style.top = yy + "px";
+    const fill = {};   // 열마다 쌓인 높이
+    r.cards.forEach(c => { const k = c.dataset.col, t = fill[k] || 0; c.style.top = (yy + t) + "px"; fill[k] = t + c.offsetHeight + 34; });
+    const h = Math.max(r.head.offsetHeight, ...Object.values(fill).map(v => v - 34)); r.h = h; yy += h + ROWGAP;
   });
   const W = maxX + PAD, H = yy - ROWGAP + PAD;
   world.style.width = W + "px"; world.style.height = H + "px";
   svg.setAttribute("width", W); svg.setAttribute("height", H);
   let d = "";
   rows.forEach(r => r.cards.forEach((c, k) => {
-    if (!k) return;
-    const a = r.cards[k - 1], x1 = a.offsetLeft + a.offsetWidth + 6, x2 = c.offsetLeft - 8, yy2 = a.offsetTop + 110;
-    d += `<path d="M${x1} ${yy2} L${x2 - 10} ${yy2}"/><path class="tip" d="M${x2} ${yy2} l-12 -6 v12 z"/>`;
+    const f = +c.dataset.from; if (f < 0) return;
+    const a = r.cards[f], x1 = a.offsetLeft + a.offsetWidth + 6, x2 = c.offsetLeft - 8, y1 = a.offsetTop + 160, y2 = c.offsetTop + 160;
+    const m = (x1 + x2) / 2;
+    d += y1 === y2 ? `<path d="M${x1} ${y1} L${x2 - 10} ${y2}"/>` : `<path d="M${x1} ${y1} C${m} ${y1} ${m} ${y2} ${x2 - 10} ${y2}"/>`;
+    d += `<path class="tip" d="M${x2} ${y2} l-12 -6 v12 z"/>`;
   }));
   svg.innerHTML = d;
   return {W, H};
@@ -157,7 +162,7 @@ const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!
 view.addEventListener("pointerup", up); view.addEventListener("pointercancel", up);
 
 const lb = document.getElementById("lb");
-function openShot(im) { lb.querySelector("img").src = im.src; lb.querySelector("img").alt = im.alt; lb.querySelector("figcaption").textContent = im.dataset.cap; lb.hidden = false; }
+function openShot(im) { lb.querySelector("img").src = im.dataset.full; lb.scrollTop = 0; lb.querySelector("img").alt = im.alt; lb.querySelector("figcaption").textContent = im.dataset.cap; lb.hidden = false; }
 world.addEventListener("click", e => { const im = e.target.closest(".shot"); if (im && moved < 6) openShot(im); });
 world.addEventListener("keydown", e => { const im = e.target.closest(".shot"); if (im && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openShot(im); } });
 lb.addEventListener("click", () => { lb.hidden = true; });
@@ -174,7 +179,7 @@ document.getElementById("zin").onclick = () => zoomAt(1.25, view.clientWidth / 2
 document.getElementById("zout").onclick = () => zoomAt(0.8, view.clientWidth / 2, view.clientHeight / 2, true);
 document.getElementById("fit").onclick = () => fitAll(true);
 document.getElementById("jump").onchange = e => { const r = rows[+e.target.value]; if (!r) return;
-  const last = r.cards[r.cards.length - 1]; fitTo(PAD - 20, r.top - 20, last.offsetLeft + last.offsetWidth - PAD + 40, r.h + 40, true, true); e.target.value = ""; };
+  const right = Math.max(...r.cards.map(c => c.offsetLeft + c.offsetWidth)); fitTo(PAD - 20, r.top - 20, right - PAD + 40, r.h + 40, true, true); e.target.value = ""; };
 
 function boot() { size = layout(); fitAll(false); }
 boot();

@@ -29,6 +29,9 @@ def sync():
     if sum(len(v) for v in tables.values() if isinstance(v, list)) > MAX_ROWS:
         return jsonify(ok=False, error="한 번에 보내는 줄이 너무 많습니다. 표를 나눠 보내 주세요."), 413
     done, unknown, codes = sysdata.store(tables, "시트 자동 연동")
+    if "출결" in done:                                   # 출결은 수업 일정의 수업 칸 출석으로도 채운다
+        from views.schedule import sync_sys_attendance
+        sync_sys_attendance()
     audit("sys_sync", ",".join(f"{k}:{v}" for k, v in done.items()), username="sheet")
     return jsonify(ok=True, saved=done, unknown=unknown, codes=codes, at=sysdata.now_kst())
 
@@ -90,6 +93,9 @@ def t_link_upload():
             continue
         tables[key] = grid
     done, _, codes = sysdata.store(tables, f"CSV 직접 올림 ({g.user['username']})")
+    if "출결" in done:                                   # 출결은 수업 일정의 수업 칸 출석으로도 채운다
+        from views.schedule import sync_sys_attendance
+        sync_sys_attendance()
     audit("sys_upload", ",".join(f"{k}:{v}" for k, v in done.items()))
     if done:
         flash("반영했어요: " + ", ".join(f"{k} {v}줄" for k, v in done.items()), "ok")

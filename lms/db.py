@@ -475,6 +475,69 @@ CREATE TABLE IF NOT EXISTS class_breaks (
     note        TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
+-- ---------- 수업 일정 ----------
+-- 진도 그룹: 진도를 같이 나가는 반 묶음 (단과 / 재종 따로). 한 반은 그룹 하나 (classes.group_id)
+CREATE TABLE IF NOT EXISTS course_groups (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    track       TEXT NOT NULL DEFAULT '재종',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+-- 주차: 기본 토~금. 날짜는 직접 바꿀 수 있다. off = 휴강 주 (단과 중간·기말)
+CREATE TABLE IF NOT EXISTS group_weeks (
+    id          INTEGER PRIMARY KEY,
+    group_id    INTEGER NOT NULL REFERENCES course_groups(id) ON DELETE CASCADE,
+    week_no     INTEGER NOT NULL,
+    starts      TEXT NOT NULL,
+    ends        TEXT NOT NULL,
+    topic       TEXT NOT NULL DEFAULT '',
+    note        TEXT NOT NULL DEFAULT '',
+    off         INTEGER NOT NULL DEFAULT 0,
+    review_round INTEGER,
+    mock_round  INTEGER,
+    UNIQUE (group_id, week_no)
+);
+-- 배부 교재 (라인업·프레이밍·로직빌드·스퀴즈·시퀀스·필기노트 …). 복테·모의고사(books)와 다르다
+CREATE TABLE IF NOT EXISTS handouts (
+    id          INTEGER PRIMARY KEY,
+    kind        TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (kind, title)
+);
+-- 교재 한 권은 기본으로 한 주차에 배정 (그 주 모든 수업에)
+CREATE TABLE IF NOT EXISTS week_handouts (
+    week_id     INTEGER NOT NULL REFERENCES group_weeks(id) ON DELETE CASCADE,
+    handout_id  INTEGER NOT NULL REFERENCES handouts(id) ON DELETE CASCADE,
+    PRIMARY KEY (week_id, handout_id)
+);
+-- 수업 칸 = 반 × 주차 × 시간표 칸. 날짜는 주차 안에서 그 요일
+CREATE TABLE IF NOT EXISTS sessions (
+    id          INTEGER PRIMARY KEY,
+    week_id     INTEGER NOT NULL REFERENCES group_weeks(id) ON DELETE CASCADE,
+    class_id    INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    slot_id     INTEGER NOT NULL REFERENCES timetable(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT '수업' CHECK (status IN ('수업', '휴강', '보강')),
+    note        TEXT NOT NULL DEFAULT '',
+    UNIQUE (week_id, slot_id)
+);
+-- 주차 교재에서 이 수업만 빼거나(drop) 이 수업에만 넣기(add)
+CREATE TABLE IF NOT EXISTS session_handouts (
+    session_id  INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    handout_id  INTEGER NOT NULL REFERENCES handouts(id) ON DELETE CASCADE,
+    mode        TEXT NOT NULL CHECK (mode IN ('add', 'drop')),
+    PRIMARY KEY (session_id, handout_id)
+);
+-- 수업 칸별 수강 명단·출석. 명단 = 그 반 재원생 + guest(다른 반에서 와서 들은 학생). 교재는 출석(지각·조퇴 포함)한 학생에게만 배부
+CREATE TABLE IF NOT EXISTS session_students (
+    session_id  INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    state       TEXT NOT NULL DEFAULT '' CHECK (state IN ('', '출석', '지각', '조퇴', '결석', '다른 반')),
+    guest       INTEGER NOT NULL DEFAULT 0,
+    src         TEXT NOT NULL DEFAULT '',          -- '시트' = 조교 시스템 출결에서 채운 값 (손으로 고치면 '')
+    PRIMARY KEY (session_id, student_id)
+);
 -- 학생이 직접 만드는 시간표 (에브리타임처럼, 한 사람에 하나)
 CREATE TABLE IF NOT EXISTS my_timetable (
     id          INTEGER PRIMARY KEY,
@@ -715,6 +778,9 @@ def init_db(path):
     _add_column(conn, "questions", "unit", "TEXT NOT NULL DEFAULT ''")   # 학습질문 대단원 (조교가 단원별로 거른다)
     _add_column(conn, "game_rounds", "picks", "TEXT")   # 객관식: 문제마다 바로 채점한 답 (한 번 고르면 고정)
     _add_column(conn, "timetable", "room", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "timetable", "period", "TEXT NOT NULL DEFAULT ''")      # 교시 (2교시, 1기 …)
+    _add_column(conn, "timetable", "hall", "TEXT NOT NULL DEFAULT ''")        # 관 (M3관, 목동관 …)
+    _add_column(conn, "classes", "group_id", "INTEGER REFERENCES course_groups(id) ON DELETE SET NULL")   # 진도 그룹
     # 3D 소도시 명상: 위치·자세·캐릭터 색
     _add_column(conn, "room_presence", "px", "REAL NOT NULL DEFAULT 0")
     _add_column(conn, "room_presence", "pz", "REAL NOT NULL DEFAULT 0")

@@ -1,89 +1,193 @@
-"""녹화 장면으로 앱 작동 흐름 캔버스(HTML)를 만든다: docs/ux/workflow/index.html + img/
+"""역할별 전 화면 캡처(wireflow/roles3, tools/wireflow_crawl.js)로 앱 작동 흐름 캔버스를 만든다: docs/ux/workflow/index.html + img/
 
-    python tools/make_workflow.py <장면 폴더>
+    python tools/make_workflow.py
+
+단계 = (역할, 주소, 제목, 설명, 보여 줄 버튼 글자 또는 높이(px), 앞 단계 번호). 앞 단계 번호를 주면 그 카드에서 갈라져 나온다 (-1 = 새 출발점).
+카드에는 버튼 글자가 있는 곳을 잘라 넣고, 누르면 화면 전체가 열린다.
 """
-import html
 import json
 import os
-import sys
+import re
+import shutil
 
 from PIL import Image
 
-SCENES = sys.argv[1]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SHOTS = os.path.join(ROOT, "wireflow", "roles3")
 OUT = os.path.join(ROOT, "docs", "ux", "workflow")
-os.makedirs(os.path.join(OUT, "img"), exist_ok=True)
+BOX = json.load(open(os.path.join(SHOTS, "boxes.json"), encoding="utf-8"))
+CAP = {"학생": "student", "조교": "assistant", "선생님": "teacher", "학부모": "parent"}
+P = "/p/PARENT"   # 학부모 리포트 (박서윤). 비밀 링크라 따로 찍어 boxes.json 의 parent 에 넣는다
+STU_DETAIL = "성적 추이 그래프(점에 마우스를 올리면 점수), 학부모 리포트 링크와 새 링크로 바꾸기, 계정 발급, 상담 메모"
 
-# 흐름마다 (장면, 역할, 제목, 설명)
 FLOWS = [
-    ("시험 결과가 학생에게 닿기까지", "복습 테스트 10문항 · 모의고사 25문항, 채점은 OMR 엑셀 한 번", [
-        ("ta_12", "조교", "회차 고르기", "복습 테스트·모의고사 1~50회. 결과가 올라온 회차에 응시 인원이 보입니다."),
-        ("ta_13", "조교", "OMR 엑셀 올리기 · 시험 평가", "채점기 엑셀(정답·배점·문항정보)을 올리고 난이도·킬러 문항·총평을 적습니다."),
-        ("student_10", "학생", "시험 분석", "복습 테스트 / 모의고사 탭. 내 답안, 원점수, 반 평균, 예상 등급"),
-        ("student_16", "학생", "오답 분석", "고른 선지로 틀린 이유를 짚습니다 (문항정보의 보기 함정)."),
-        ("student_20", "학생", "등급 기준표 · 문항 지도", "석차·백분위·점수대 분포는 학생에게 보이지 않습니다."),
-        ("student_27", "학생", "오답 노트", "틀린 문항마다 이유를 고르고 다시 풀어서 맞히면 표시"),
-        ("student_29", "학생", "내 성적", "득점률 그래프. 점에 마우스를 올리면 점수·반 평균"),
+    ("시작 화면", "로그인하면 역할마다 첫 화면이 다릅니다", [
+        ("학생", "/s/", "학생 홈", "새로 온 것(최근 7일 답변·첨삭), 공지, 질답 게시판 최근 글, 질문하기 바로가기", None, None),
+        ("학생", "/s/books/buy", "교재 구매", "교재마다 판매처로 갑니다. 구매·배송·환불은 판매처 담당", None, 0),
+        ("학생", "/password", "내 계정", "비밀번호 변경. 10자 이상, 영문·숫자·특수문자 중 2종류 이상", None, 0),
+        ("선생님", "/t/", "대시보드", "답변 대기 질문, Full 모의고사 피드백 대기, 복습 테스트 첨삭 대기 수와 최근 회차 응시·평균", None, -1),
+        ("조교", "/t/questions", "조교 첫 화면 = 질문답변", "조교는 답변 대기 질문 목록에서 시작합니다. 메뉴는 선생님과 같고 조교 계정 관리만 없습니다.", None, 3),
+    ]),
+    ("시험 결과 올리기", "조교·실장이 채점기 OMR 엑셀을 올리면 학생 화면과 학부모 리포트에 바로 반영됩니다. 수기 입력은 없습니다.", [
+        ("조교", "/t/books", "복테·모의고사", "복습 테스트 1~50회, 모의고사 1~50회. 회차마다 응시 인원. 회차는 시즌과 상관없이 이어집니다.", None, None),
+        ("조교", "/t/books/3", "교재(회차 묶음) 관리", "회차 추가·닫기·삭제. '열림' 회차 중 OMR 결과나 시험 평가가 있는 회차만 학생에게 보입니다.", "회차 추가", 0),
+        ("조교", "/t/mocks/64", "회차 · 시험 평가", "난이도, 시간, 킬러 문항, 총평, 해설 영상 주소. 학생이 이 회차를 열면 맨 위에 보입니다.", "평가 저장", 0),
+        ("조교", "/t/mocks/64", "회차 · OMR 엑셀 올리기", "정답·배점·문항정보가 든 채점기 엑셀. 정답 칸 *는 모두 정답, -는 모두 오답(정답 없음). 복테는 10문항 10점, 모의고사는 25문항 50점", "올리기", 2),
+        ("조교", "/t/mocks/64", "회차 · 학부모 문자", "올린 결과로 반별 학부모 문자 문안을 만듭니다(점수, 반 평균, 공부할 문항).", "학부모 문자", 3),
+    ]),
+    ("학생이 결과 보기", "시험 분석, 오답 노트, 내 성적 모두 복습 테스트 / 모의고사 탭이 따로 있습니다", [
+        ("학생", "/s/analysis", "시험 분석", "새 답변·첨삭이 있는 회차를 먼저 엽니다. '다른 회차 보기'로 1~14회", None, None),
+        ("학생", "/s/analysis?kind=review", "시험 분석 · 복습 테스트 탭", "10문항 10점. 시험 평가, 내 답안, 원점수, 반 평균, 예상 등급. 석차·백분위·점수대 분포는 학생에게 보이지 않습니다.", None, 0),
+        ("학생", "/s/analysis?kind=mock", "시험 분석 · 모의고사 탭", "25문항 50점. 고른 선지로 틀린 이유(보기 함정), 등급 기준표, 문항 지도", None, 0),
+        ("학생", "/s/wrong?kind=review", "오답 노트 · 복습 테스트", "틀린 문항마다 이유를 고르고, 다시 풀어서 맞히면 체크하고 저장. 이유는 학생 > 조교 > 자동 순으로 하나만 대표로", None, 1),
+        ("학생", "/s/wrong?kind=mock", "오답 노트 · 모의고사", "회차를 고르거나 전체 회차. 위에 이유별 문항 수와 비율", None, 2),
+        ("학생", "/s/scores?kind=review", "내 성적 · 복습 테스트", "득점률 그래프. 점에 마우스를 올리면 점수와 반 평균", None, 3),
+        ("학생", "/s/scores?kind=mock", "내 성적 · 모의고사", "회차별 원점수/50과 반 평균", None, 4),
+        ("학생", "/s/wrong?kind=mock&view=open", "오답 노트 · 복습 전만", "아직 다시 풀지 않은 문항만 남깁니다.", None, 4),
+        ("학생", "/s/report", "성적 리포트", "인쇄·PDF 저장용. 복습 테스트와 모의고사 칸을 나눕니다.", None, 5),
     ]),
     ("복습 테스트 첨삭", "1:1 관리 · 복습 테스트 회차에서만", [
-        ("student_12", "학생", "시험지 사진 올리기", "풀이가 적힌 시험지를 찍어 올립니다 (6장까지)."),
-        ("ta_08", "조교", "첨삭 대기 목록", "올라온 순서대로. 점수와 사진 장수가 함께 보입니다."),
-        ("ta_09", "조교", "문항별 첨삭", "OMR로 틀린 문항이 미리 표시됩니다. 오답 유형·메모·코멘트를 적고 저장"),
-        ("teacher_21", "학부모", "학부모 리포트에 반영", "조교 코멘트와 틀린 이유가 학부모 리포트로 나갑니다."),
+        ("학생", "/s/analysis?kind=review", "시험지 사진 올리기", "풀이가 적힌 시험지를 찍어 올립니다(6장까지). 진행 단계: 시험지 제출 → 선생님 검사 → 문항별 첨삭", "다시 올리기", None),
+        ("조교", "/t/papers", "첨삭 대기", "올라온 순서대로. 점수, 사진 장수, 제출 시각", None, 0),
+        ("조교", "/t/papers/15", "문항별 첨삭", "OMR로 틀린 문항이 미리 표시됩니다. 문항마다 반 오답률, 오답 유형, 메모. 저장하면 다음 시험지로", "첨삭 저장", 1),
+        ("조교", "/t/papers?status=done", "첨삭 완료", "끝난 첨삭 목록. 다시 열어 고칠 수 있습니다.", None, 2),
+        ("학생", "/s/feedback", "1:1 관리", "복테 첨삭과 모의고사 피드백을 회차별로 모아 봅니다. 누르면 그 회차 분석으로", None, 2),
+        ("학부모", P + "?kind=review", "학부모 리포트에 반영", "조교가 고른 틀린 이유와 코멘트가 학부모 리포트로 나갑니다.", None, 2),
     ]),
     ("Full 모의고사 피드백", "1:1 관리 · 모의고사 회차에서만", [
-        ("student_22", "학생", "모의고사 탭", "25문항 50점, 시험 평가와 내 답안"),
-        ("student_24", "학생", "피드백 요청", "몇 번에서 막혔는지 풀이 사진과 함께 1:1로 묻습니다."),
-        ("ta_10", "조교", "피드백 대기 목록", "학생·반·회차·점수"),
-        ("ta_11", "조교", "답변", "틀린 문항 요약과 학생 사진을 보고 글·사진으로 답합니다. 학생은 이어서 물을 수 있습니다."),
+        ("학생", "/s/analysis?kind=mock", "피드백 요청", "어느 문항에서 막혔는지 풀이 사진과 함께 1:1로 묻습니다.", 2900, None),
+        ("조교", "/t/feedback", "피드백 대기", "학생, 반, 회차, 점수, 요청 시각", None, 0),
+        ("조교", "/t/feedback/14", "답변", "틀린 문항 요약(배점, 정답, 고른 답)과 학생 사진을 보고 글·사진으로 답합니다. 학생은 이어서 물을 수 있습니다.", "답변 보내기", 1),
+        ("조교", "/t/feedback?status=done", "답변 완료", "답변한 요청 목록", None, 2),
+        ("학생", "/s/feedback", "1:1 관리에서 확인", "답변이 오면 홈 '새로 온 것'과 1:1 관리에 뜹니다.", None, 2),
     ]),
-    ("질문과 답변", "질답 게시판 · 학습질문은 닉네임으로 공개", [
-        ("student_06", "학생", "질답 게시판", "자주 묻는 질문, 유형별 목록, 내 질문"),
-        ("student_08", "학생", "질문 · 사진", "문제 사진에 직접 필기해서 올립니다. 맞혔지만 확신 없는 문항도 묻습니다."),
-        ("ta_02", "조교", "질문답변 목록", "유형·대단원 칩으로 거르기, 나를 지정한 상담"),
-        ("ta_06", "조교", "답변 쓰기", "사진을 보고 답하고, 좋은 질문은 자주 묻는 질문으로 고정"),
+    ("질문과 답변", "질답 게시판 · 학습질문은 닉네임으로 공개, 행정문의는 비공개", [
+        ("학생", "/s/questions", "질답 게시판", "이번 주 많이 본 질문, 선생님이 고른 자주 묻는 질문, 유형별 목록", None, None),
+        ("학생", "/s/questions", "질문 쓰기", "유형과 문항을 고르고 문제 사진에 바로 필기해서 올립니다. 맞혔지만 확신 없는 문항도 묻습니다.", None, 0),
+        ("학생", "/s/questions?view=mine", "내 질문", "내가 쓴 질문만", None, 0),
+        ("학생", "/s/questions?view=mine&status=open", "내 질문 · 답변 대기", "", None, 2),
+        ("학생", "/s/questions?view=mine&status=answered", "내 질문 · 답변 완료", "", None, 2),
+        ("학생", "/s/questions/93", "질문 상세", "답변을 보고 이어서 묻기(질문 횟수 3번까지), 삭제", None, 3),
+        ("조교", "/t/questions", "질문답변", "유형·단원 칩으로 거르기. 답변 대기 / 답변 완료 / 전체 / 자주 묻는 질문", None, -1),
+        ("조교", "/t/questions?status=answered", "답변 완료", "", None, 6),
+        ("조교", "/t/questions/93", "답변 쓰기", "답변 등록 후 다음 대기 질문으로. 좋은 질문은 자주 묻는 질문으로 고정", "답변 등록", 6),
     ]),
-    ("수업 · 공지 · 일정", "선생님과 조교가 올리면 그 반 학생 화면에 쌓입니다", [
-        ("teacher_11", "조교", "수업 기록 올리기", "반을 골라 판서 사진과 한 줄 정리"),
-        ("student_33", "학생", "수업 기록", "날짜별 판서 사진"),
-        ("teacher_17", "선생님", "공지 쓰기", "공지·과제·정오, 여러 반에 같이 올리기"),
-        ("student_04", "학생", "공지", "읽음 표시와 좋아요"),
-        ("teacher_25", "선생님", "주요 일정", "수능 D-day와 반별 휴강 기간"),
-        ("student_34", "학생", "시간표", "D-day, 휴강 3주 전부터 안내, 휴강 주는 요일 칸에 '휴강'"),
+    ("공지와 cast", "반 공지는 그 반 학생에게, cast는 모든 학생에게", [
+        ("조교", "/t/classes/1?tab=notices", "반 공지 쓰기", "말머리(공지·정오·일정·시험·자료), 맨 위 고정, 다른 반에도 올리기. '정오'는 학생 정오표 탭에 교재별로 모입니다.", "등록", None),
+        ("학생", "/s/notices", "공지", "말머리 탭, 검색, 읽음·공감 수", None, 0),
+        ("학생", "/s/notices/137", "공지 읽기", "열면 읽음으로 셉니다. 공감 누르기", None, 1),
+        ("선생님", "/cast/new", "cast 새 글", "제목, 유튜브 주소, 편지·안내 본문, 맨 위 고정", "올리기", -1),
+        ("선생님", "/cast/3", "cast 글", "", None, 3),
+        ("선생님", "/cast/3/edit", "글 고치기", "저장, 글 지우기", None, 4),
+        ("학생", "/cast", "학생 cast", "모든 반 학생이 봅니다.", None, 4),
     ]),
-    ("학생 관리 · 학부모", "학생 한 명의 기록을 한 화면에", [
-        ("teacher_20", "선생님", "학생 상세", "성적 추이(복테/모의 탭), 학부모 리포트 링크, 계정, 메모"),
-        ("teacher_21", "학부모", "학부모 리포트", "로그인 없이 링크로 열립니다. 점수·반 평균·단원·틀린 이유·코멘트·출결"),
-        ("teacher_23", "선생님", "성적 리포트", "인쇄·PDF용. 복습 테스트와 모의고사 칸을 나눔"),
+    ("수업 자료와 일정", "선생님·조교가 반을 골라 올리면 그 반 학생 화면에 쌓입니다", [
+        ("조교", "/t/lessons", "수업 기록 올리기", "반, 날짜, 주제, 노트 사진 10장까지. 사진이 없으면 한 줄 정리 필수", "올리기", None),
+        ("학생", "/s/lessons", "수업 기록", "주차별 판서·노트 사진", None, 0),
+        ("조교", "/t/classes/1?tab=materials", "반 자료실", "PDF·PPT·DOCX·HWP·이미지, 20MB까지", "올리기", -1),
+        ("학생", "/s/materials", "자료실", "", None, 2),
+        ("조교", "/t/classes/1?tab=videos", "강의 영상 등록", "유튜브 '일부 공개'나 구글 드라이브 링크. 만료일이 지나면 학생 화면에서 숨겨집니다.", "등록", -1),
+        ("학생", "/s/videos", "강의 영상", "", None, 4),
+        ("조교", "/t/timetable", "주요 일정", "수능 D-day, 반별 휴강 기간(시작·끝·사유)", "넣기", -1),
+        ("학생", "/s/timetable", "시간표", "D-day, 휴강 3주 전부터 위에 안내, 휴강 주에는 요일 칸에 '휴강'", None, 6),
+        ("조교", "/t/link", "조교 시스템 연동", "시트의 🌐앱_ 표를 받아 학생코드별로 성적, 오답, 리포트, 과제, 출결을 반영. 이름·연락처·학교는 저장하지 않습니다.", "반영하기", -1),
+        ("학생", "/s/attendance", "출결", "출석·지각·조퇴·결석과 도착 시각", None, 8),
     ]),
-    ("공부 습관", "학생이 스스로 쓰는 도구", [
-        ("student_40", "학생", "소도시 명상", "집중 타이머, 최근 4주 기록"),
-        ("student_39", "학생", "통과 Quiz", "TOPIC별 개념 퀴즈"),
-        ("student_38", "학생", "수능 영단어", "날마다 20단어, 게임 세 가지"),
-        ("student_42", "학생", "내 공부", "오늘 요약, 주간 순위, 일별 이용 시간"),
-        ("teacher_27", "선생님", "소도시 명상 현황", "반별 최근 7일 집중 시간"),
+    ("학생 관리와 학부모", "학생 한 명의 기록을 한 화면에서", [
+        ("조교", "/t/students", "학생 검색", "단과/재종, 이름·아이디·반·목표", None, None),
+        ("조교", "/t/students/10?kind=review", "학생 상세 · 복습 테스트 탭", STU_DETAIL, None, 0),
+        ("조교", "/t/students/10?kind=mock", "학생 상세 · 모의고사 탭", STU_DETAIL, None, 0),
+        ("조교", "/t/students/10/report", "성적 리포트", "인쇄·PDF 저장용", None, 1),
+        ("학부모", P + "?kind=review", "학부모 리포트 · 복습 테스트", "로그인 없이 링크로 엽니다. 점수, 반 평균, 지난 회차 대비 변화, 약한 단원, 틀린 이유, 코멘트, 출결", None, 1),
+        ("학부모", P + "?kind=mock", "학부모 리포트 · 모의고사", "", None, 2),
     ]),
-    ("반 · 계정 운영", "선생님 전용은 조교 계정 관리", [
-        ("teacher_15", "선생님", "반", "단과 4반 · 재종 4반"),
-        ("teacher_16", "조교", "가입 코드", "반마다 학생 개별 가입 코드, 계정 일괄 발급"),
-        ("teacher_28", "선생님", "가입 승인", "코드 없이 가입한 학생 확인"),
-        ("teacher_30", "선생님", "조교 계정", "조교 추가, 월별 답변·첨삭 건수"),
-        ("teacher_29", "선생님", "접근 기록", "누가 어떤 학생 정보를 봤는지"),
+    ("수업 일정 · 교재 배부 · 출석", "진도 그룹(단과·재종 따로) · 한 주차 = 토~금 · 교재는 주차에 배정하고 수업마다 넣고 빼기", [
+        ("조교", "/t/classes/1?tab=times", "반 수업 시간", "요일, 교시, 시작·끝, 관, 교실. 주차마다 이 시간에 수업 칸이 생깁니다. 단과 3시간 30분 1회, 재종 100분 여러 번", None, None),
+        ("조교", "/t/schedule", "진도 그룹", "진도를 같이 나가는 반 묶음. 단과·재종 따로, 한 반은 그룹 하나. 다른 그룹의 진도를 주차 번호대로 가져오기", None, 0),
+        ("조교", "/t/schedule/*", "주차 × 수업 표", "줄 = 주차(토~금), 열 = 반 수업 시간(토요일반이 먼저). 칸마다 출석/명단과 교재, 오른쪽 끝은 교재별 배부 수", None, 1),
+        ("조교", "/t/schedule/edit", "주차 고치기", "날짜 직접 바꾸기(설 연휴 뒤 7주차), 진도, 복테·모의 회차, 배부 교재. '휴강 주로'를 누르면 뒤 주차 진도가 한 주씩 밀립니다(단과 중간·기말).", None, 2),
+        ("조교", "/t/schedule/*?view=cal", "달력", "주차 한 줄을 토~금 칸으로 펼쳐 날짜별 수업과 출석 수", None, 2),
+        ("조교", "/t/schedule/sessions/*", "수업 칸 · 교재 넣기·빼기", "주차 교재를 이 수업만 빼거나 더 넣습니다 (예: Sequence 미입고 → 다음 주에 같이 배부). 배부 수 = 출석(지각·조퇴 포함)", 520, 2),
+        ("조교", "/t/schedule/sessions/*", "수업 칸 · 출석", "출석·지각·조퇴·결석·다른 반. 조교 시스템(시트) 출결이 들어오면 자동으로 채우고, 손으로 고친 칸은 그대로 둡니다. 리클래스 학생은 아이디로 넣기", 1150, 5),
+        ("조교", "/t/handouts", "배부 교재", "라인업·프레이밍·로직빌드·스퀴즈·시퀀스·필기노트. 복테·모의고사 회차와는 따로입니다.", None, -1),
+    ]),
+    ("반과 계정", "반을 만들고 가입 코드를 나눠 주면 학생이 직접 가입합니다", [
+        ("조교", "/t/classes", "반 관리", "단과·재종 반, 학생 수, 복테·모의 평균 득점률, 새 반 만들기, 보관된 반", "만들기", None),
+        ("조교", "/t/classes/1?tab=students", "반 · 학생과 가입 코드", "학생마다 다른 가입 코드(한 번만 사용). 행정 시스템 코드 붙여넣기, CSV로 받기", "등록", 0),
+        ("조교", "/t/signups", "가입 승인", "코드 없이 들어온 신청. 미리 등록한 명단과 아이디가 같으면 승인할 때 연결", None, 1),
+        ("선생님", "/t/staff", "조교 계정", "선생님 전용. 조교 추가(임시 비밀번호는 한 번만 표시), 비밀번호 초기화, 사용 중지, 월별 답변 수 엑셀", None, -1),
+        ("선생님", "/t/audit", "접근 기록", "로그인, 학생 정보 열람·수정, 다운로드, 내보내기", None, 3),
+    ]),
+    ("소도시 명상", "집중 타이머. 5분 이상 집중한 시간만 기록", [
+        ("학생", "/s/rooms", "장소 고르기", "오늘·이번 주·최근 4주 기록, 장소마다 이번 주 터줏대감", None, None),
+        ("학생", "/s/rooms/sento", "노천탕", "자리에 앉으면 집중 시작. 지금 같이 있는 사람 수", None, 0),
+        ("학생", "/s/rooms/eki", "바닷가 역", "3분마다 열차 통과, 역 노트", None, 0),
+        ("학생", "/s/rooms/kissa", "골목 찻집", "늘 비 오는 저녁 찻집", None, 0),
+        ("학생", "/s/rooms/rank", "터줏대감 순위", "장소별 이번 주·이번 달·전체", None, 0),
+        ("학생", "/s/my", "내 공부", "오늘 공부 시간, 주간 순위(명상 + 퀴즈), 최근 7일 이용 시간", None, 1),
+        ("선생님", "/t/rooms", "소도시 명상 현황", "지금 있는 학생, 최근 7일 집중 시간 순", None, -1),
+    ]),
+    ("수능 영단어", "평가원 빈출 단어, 하루 20개", [
+        ("학생", "/s/games/", "수능 영단어", "누적 단어, 복습 단어, 게임 세 가지", None, None),
+        ("학생", "/s/games/vocab", "오늘의 20단어", "카드를 눌러 뜻 확인. 틀린 단어는 복습으로", None, 0),
+        ("학생", "/s/games/vocab/review", "영단어 복습", "", None, 0),
+        ("학생", "/s/games/vocab/match", "짝 맞추기", "5쌍씩 4판. 뜻 칸에 짝 없는 뜻이 하나 섞입니다.", None, 0),
+        ("학생", "/s/games/speed/vocab_speed", "스피드 O/X", "60초, ← O · → X", None, 0),
+    ]),
+    ("통과 Quiz", "TOPIC 01~34 · 개념 문장 900여 개 · 한 판 10문제", [
+        ("학생", "/s/games/sci", "통과 Quiz", "TOPIC별 점수. 게임이 있는 TOPIC은 목록에 함께", None, None),
+        ("학생", "/s/games/mixed", "섞어 풀기", "O/X, ㄱㄴㄷ, 4지선다, 분류, 순서, 계산", None, 0),
+        ("학생", "/s/games/speed/sci_speed", "O/X 스피드", "60초 동안 개념 문장 O/X", None, 0),
+        ("학생", "/s/games/quiz", "TOPIC 퀴즈", "처음 보는 문제와 전에 틀린 문제 먼저", None, 0),
+        ("학생", "/s/games/play/shell", "전자 배치 (TOPIC 07)", "", None, 0),
+        ("학생", "/s/games/dna", "염기 짝 맞추기", "DNA 짝 / RNA 전사, 난이도 셋", None, 4),
+        ("학생", "/s/games/chargaff", "샤가프 법칙", "A=T, G=C, 전사된 RNA 문제 포함 5문제", None, 4),
+        ("학생", "/s/games/play/redox", "산화 환원 (TOPIC 23)", "", None, 4),
+        ("학생", "/s/games/play/neutral", "중화 반응 (TOPIC 24)", "", None, 4),
     ]),
 ]
 
-used = sorted({s for _, _, steps in FLOWS for s, *_ in steps})
-for s in used:
-    im = Image.open(os.path.join(SCENES, s + ".jpg")).convert("RGB")
-    im = im.crop((0, 0, im.width, im.height - 86))                 # 아래 자막 띠는 잘라 낸다 (카드에 설명이 있음)
-    im.save(os.path.join(OUT, "img", s + ".jpg"), quality=80, optimize=True)
+CARD_W, FULL_W = 1320, 1920          # 캡처는 2배율(2560px). 카드는 440px 칸에 3배, 전체 화면은 1920px
+if os.path.isdir(os.path.join(OUT, "img")):
+    shutil.rmtree(os.path.join(OUT, "img"))
+os.makedirs(os.path.join(OUT, "img"))
+made, data, miss = {}, [], []
+for t, sub, steps in FLOWS:
+    out = []
+    for k, (role, path, title, desc, focus, frm) in enumerate(steps):
+        pages = BOX[CAP[role]]
+        if "*" in path:                                    # 번호가 들어간 주소는 찍힌 것 중 첫 번째 (예: /t/schedule/sessions/*)
+            rx = re.escape(path).replace(r"\*", r"[^/?]+")
+            path = next(k for k in pages if re.fullmatch(rx, k))
+        info = pages[path]
+        full = Image.open(os.path.join(SHOTS, info["name"] + ".jpg")).convert("RGB")
+        W, H = full.size
+        top = 0
+        if isinstance(focus, int):         # 버튼이 링크가 아니면 잘라 낼 높이(px)를 바로 준다
+            top = min(H - W * 714 // 1280, round(focus * W / info["W"]))   # 높이는 화면(CSS) px
+        elif focus:
+            hit = [b for b in info["links"] + info["forms"] if b["text"].startswith(focus) and b["box"][0] > 18]
+            if hit:
+                top = max(0, min(H - W * 714 // 1280, int(hit[0]["box"][1] / 100 * H) - 220))
+            else:
+                miss.append((path, focus))
+        key = f'{info["name"]}_{top}'
+        if key not in made:
+            full.crop((0, top, W, top + W * 714 // 1280)).resize((CARD_W, CARD_W * 714 // 1280), Image.LANCZOS).save(
+                os.path.join(OUT, "img", key + ".webp"), quality=82, method=6)
+            fp = os.path.join(OUT, "img", info["name"] + "_full.webp")
+            if not os.path.exists(fp):
+                full.resize((FULL_W, round(H * FULL_W / W)), Image.LANCZOS).save(fp, quality=80, method=6)
+            made[key] = 1
+        out.append({"img": f"img/{key}.webp", "full": f'img/{info["name"]}_full.webp', "role": role, "title": title,
+                    "desc": desc, "from": frm})
+    data.append({"title": t, "sub": sub, "steps": out})
 
-data = [{"title": t, "sub": sub, "steps": [{"img": f"img/{s}.jpg", "role": r, "title": tt, "desc": d} for s, r, tt, d in steps]}
-        for t, sub, steps in FLOWS]
 tpl = open(os.path.join(ROOT, "tools", "workflow_template.html"), encoding="utf-8").read()
 page = tpl.replace("/*DATA*/null", json.dumps(data, ensure_ascii=False))
 open(os.path.join(OUT, "artifact.html"), "w", encoding="utf-8").write(page)          # 아티팩트용 (머리는 게시할 때 붙는다)
 HEAD = ('<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n')
 open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(HEAD + page + "\n</html>\n")   # PC에서 바로 여는 파일
-print("scenes", len(used), "->", OUT)
+print("flows", len(data), "cards", sum(len(f["steps"]) for f in data), "images", len(os.listdir(os.path.join(OUT, "img"))))
+print("focus not found:", miss)

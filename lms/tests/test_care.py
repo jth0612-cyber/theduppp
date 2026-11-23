@@ -181,6 +181,15 @@ class Care(unittest.TestCase):
         self.assertEqual(ws[3]["type"], exams.pick_reason("개념 부족", "계산 실수", ws[3]["auto_type"]))
         self.assertEqual(ws[4]["type"], exams.pick_reason("", "자료 해석", ws[4]["auto_type"]))
 
+    def test_staff_report_without_account(self):
+        """계정이 없는 학생도 OMR 결과가 성적 리포트에 나온다 (예전에는 계정 기준 표만 읽어 비었다)."""
+        with self.app.app_context():
+            execute("DELETE FROM users WHERE student_id = ?", (self.s1,))
+        self._exam()
+        page = self.ta.get(f"/t/students/{self.s1}/report").data.decode()
+        self.assertNotIn("기록된 시험 성적이 없습니다", page)
+        self.assertIn("복습 테스트 1회", page); self.assertIn("4 / 10", page)
+
     def test_parent_report_and_weak_unit(self):
         mid = self._exam()
         page = self.c1.get(f"/s/analysis?mock={mid}").data.decode()

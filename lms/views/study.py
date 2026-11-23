@@ -289,8 +289,10 @@ def timetable():
     upnext = next((s for s in today if s["starts"] > hm), None)
     class_has = bool(me["class_id"]) and bool(query("SELECT 1 FROM timetable WHERE class_id = ? LIMIT 1", (me["class_id"],), one=True))
     brks = breaks_for(me["class_id"])
+    from views.schedule import student_week
+    wk = student_week(g.user["student_id"]) if g.user["student_id"] else None   # 이번 주차 진도·받을 교재 (수업 일정)
     return render_template("study/timetable.html", grid=_tt_grid(slots, _week_off(brks)), dday=dday_info(), brks=brks, me=me, weekdays=WEEKDAYS,
-                           current=current, upnext=upnext, has_slots=bool(slots), class_has=class_has and not slots)
+                           current=current, upnext=upnext, has_slots=bool(slots), class_has=class_has and not slots, wk=wk)
 
 
 @bp.route("/s/timetable/<int:tid>", methods=["POST"])
@@ -386,22 +388,24 @@ def build_report(student_id):
     if s is None:
         abort(404)
     user = query("SELECT id FROM users WHERE student_id = ?", (student_id,), one=True)
-    mocks, reasons, focus = [], [], None
+    import exams
+    from collections import Counter
+    hist = exams.history(student_id)   # OMR 결과(exam_results, 학생 기준). 계정이 없는 학생도 나온다 (학생 상세·학부모 리포트와 같은 출처)
+    mocks, focus = [], None
+    for h in hist:
+        m = h["mock"]
+        if m["is_practice"]:
+            continue
+        st = _stats(m)
+        score = h["r"]["score"]
+        mocks.append({"title": f"{m['book_title']} {m['round_no']}회", "score": score, "full": m["full_score"],
+                      "grade": analysis.grade_for(score, st["cuts"]), "n": st["n"], "wrong": h["wrong"], "kind": m["kind"],
+                      "rate": round(100 * score / m["full_score"]) if m["full_score"] else None, "date": m["exam_date"] or "",
+                      "avg": h["st"]["avg"]})
+    reasons = [{"reason": t, "n": n} for t, n in Counter(   # 대표 이유: 학생 선택 > 조교 첨삭 > 자동 분석 (exams.pick_reason)
+        a["type"] for h in hist for a in h["wrongs"] if a["type"]).most_common()]
     if user:
         uid = user["id"]
-        for e in query("""SELECT e.*, m.round_no, m.full_score, m.answer_key, m.points, m.id AS mid, m.exam_date, b.title AS book_title, b.kind
-                          FROM mock_entries e JOIN mocks m ON m.id = e.mock_id JOIN books b ON b.id = m.book_id
-                          WHERE e.user_id = ? AND e.score IS NOT NULL ORDER BY m.book_id, m.round_no""", (uid,)):
-            st = _stats({**dict(e), "id": e["mid"]})
-            wrong = analysis.wrong_items(e["answers"], json.loads(e["answer_key"])) if e["mode"] == "answers" else []
-            mocks.append({"title": f"{e['book_title']} {e['round_no']}회", "score": e["score"], "full": e["full_score"],
-                          "grade": analysis.grade_for(e["score"], st["cuts"]), "n": st["n"], "wrong": wrong, "kind": e["kind"],
-                          "rate": round(100 * e["score"] / e["full_score"]) if e["full_score"] else None, "date": e["exam_date"] or "",
-                          "avg": st.get("avg")})
-        import exams
-        from collections import Counter
-        reasons = [{"reason": t, "n": n} for t, n in Counter(   # 대표 이유: 학생 선택 > 조교 첨삭 > 자동 분석 (exams.pick_reason)
-            a["type"] for h in exams.history(student_id) for a in h["wrongs"] if a["type"]).most_common()]
         focus = query("""SELECT COALESCE(SUM(minutes), 0) AS m, COUNT(*) AS n FROM focus_logs
                          WHERE user_id = ? AND ended_at >= date('now', 'localtime', '-27 days')""", (uid,), one=True)
     import sysdata

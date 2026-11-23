@@ -199,6 +199,10 @@ def class_detail(cid):
         ctx["materials"] = query("""SELECT m.*, f.original_name, f.size FROM materials m
                                     JOIN files f ON f.id = m.file_id
                                     WHERE m.class_id = ? ORDER BY m.created_at DESC""", (cid,))
+    elif tab == "times":                              # 수업 시간: 요일·교시·시간·관·교실 (수업 일정의 수업 칸이 여기서 만들어진다)
+        ctx["slots"] = query("SELECT * FROM timetable WHERE class_id = ? ORDER BY weekday, starts", (cid,))
+        ctx["group"] = query("SELECT * FROM course_groups WHERE id = ?", (cls["group_id"],), one=True) if cls["group_id"] else None
+        ctx["weekdays"] = "월화수목금토일"
     else:
         abort(404)
     return render_template("teacher/class_detail.html", **ctx)

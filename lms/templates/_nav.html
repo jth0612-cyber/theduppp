@@ -52,6 +52,7 @@
     ('care.t_papers', '복습 테스트 첨삭', 'task', ep in ('care.t_papers', 'care.t_paper'), paper_wait or 0),
     ('feedback.t_list', 'Full 모의고사 피드백', 'pen', ep.startswith('feedback.'), feedback_wait or 0)]),
   ('수업 운영', [
+    ('schedule.groups', '수업 일정', 'timetable', ep.startswith('schedule.'), 0),
     ('study.t_timetable', '주요 일정', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),

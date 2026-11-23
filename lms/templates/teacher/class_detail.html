@@ -29,6 +29,7 @@
   <a href="{{ url_for('teacher.class_detail', cid=cls.id, tab='notices') }}" class="{{ 'active' if tab == 'notices' }}">공지</a>
   <a href="{{ url_for('teacher.class_detail', cid=cls.id, tab='materials') }}" class="{{ 'active' if tab == 'materials' }}">자료실</a>
   <a href="{{ url_for('teacher.class_detail', cid=cls.id, tab='videos') }}" class="{{ 'active' if tab == 'videos' }}">강의 영상</a>
+  <a href="{{ url_for('teacher.class_detail', cid=cls.id, tab='times') }}" class="{{ 'active' if tab == 'times' }}">수업 시간</a>
 </nav>
 
 {% if tab == 'students' %}
@@ -258,5 +259,28 @@
   </table></div>
   {% else %}<p class="muted">등록된 영상이 없습니다.</p>{% endif %}
 </div>
+{% elif tab == 'times' %}
+<section class="card">
+  <h2>수업 시간</h2>
+  <p class="small muted">{% if group %}진도 그룹 <a href="{{ url_for('schedule.group', gid=group.id) }}">{{ group.name }}</a> · 주차마다 이 시간마다 수업 칸이 생깁니다.{% else %}진도 그룹이 없습니다. <a href="{{ url_for('schedule.groups') }}">수업 일정</a>에서 그룹에 넣으면 주차별 수업 칸이 생깁니다.{% endif %}</p>
+  <form method="post" action="{{ url_for('schedule.slots', cid=cls.id) }}" class="row">{{ csrf() }}
+    <div class="field shrink"><label for="sl-wd">요일</label><select id="sl-wd" name="weekday">{% for i in [5, 6, 0, 1, 2, 3, 4] %}<option value="{{ i }}">{{ weekdays[i] }}</option>{% endfor %}</select></div>
+    <div class="field shrink"><label for="sl-p">교시</label><input type="text" id="sl-p" name="period" maxlength="10" placeholder="2교시" size="6"></div>
+    <div class="field shrink"><label for="sl-s">시작</label><input type="time" id="sl-s" name="starts" required></div>
+    <div class="field shrink"><label for="sl-e">끝</label><input type="time" id="sl-e" name="ends" required></div>
+    <div class="field"><label for="sl-h">관</label><input type="text" id="sl-h" name="hall" maxlength="20" placeholder="M3관"></div>
+    <div class="field"><label for="sl-r">교실</label><input type="text" id="sl-r" name="room" maxlength="20" placeholder="101"></div>
+    <div class="field shrink"><button class="btn primary">넣기</button></div>
+  </form>
+  {% if slots %}
+  <div class="table-wrap"><table>
+    <tr><th>요일</th><th>교시</th><th>시간</th><th>관</th><th>교실</th><th></th></tr>
+    {% for t in slots %}
+    <tr><td>{{ weekdays[t.weekday] }}</td><td>{{ t.period or '–' }}</td><td class="nowrap">{{ t.starts }}–{{ t.ends }}</td><td>{{ t.hall or '–' }}</td><td>{{ t.room or '–' }}</td>
+      <td class="num"><form method="post" action="{{ url_for('schedule.slots', cid=cls.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ t.id }}"><button class="btn small danger" data-confirm="이 시간을 지우면 이 시간의 수업 칸과 출석 기록도 지워집니다. 지우시겠습니까?">삭제</button></form></td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="small muted">아직 수업 시간이 없습니다.</p>{% endif %}
+</section>
 {% endif %}
 {% endblock %}
