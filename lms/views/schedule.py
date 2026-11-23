@@ -274,7 +274,7 @@ def group(gid):
                 days.append({"day": d, "label": WEEKDAYS[(d0 + timedelta(days=k)).weekday()],
                              "sess": sorted([s for s in by_week.get(w["id"], []) if s["day"] == d], key=lambda s: s["starts"])})
             cal.append({"w": w, "days": days})
-    return render_template("schedule/group.html", g=g, weeks=weeks, slots=slots, cell=cell, wh=wh, week_tot=week_tot,
+    return render_template("schedule/group.html", grp=g, weeks=weeks, slots=slots, cell=cell, wh=wh, week_tot=week_tot,
                            members=members, others=others, classes=classes, view=view, cal=cal, weekdays=WEEKDAYS,
                            handouts=sorted(query("SELECT * FROM handouts"), key=hkey), kinds=HANDOUT_KINDS,
                            groups=query("SELECT id, name FROM course_groups WHERE id != ? ORDER BY name", (gid,)),
@@ -437,7 +437,7 @@ def session(sid):
     week_ids = {h["id"] for h in week_handouts([row["week_id"]]).get(row["week_id"], [])}
     allh = sorted(query("SELECT * FROM handouts"), key=hkey)
     have = week_ids | {h["id"] for h in s["handouts"]}
-    return render_template("schedule/session.html", s=s, roster=roster, states=STATES, weekdays=WEEKDAYS, g=_group(row["group_id"]),
+    return render_template("schedule/session.html", s=s, roster=roster, states=STATES, weekdays=WEEKDAYS, grp=_group(row["group_id"]),
                            dropped=[h for h in allh if h["id"] in s["dropped"]], extra=[h for h in allh if h["id"] not in have])
 
 

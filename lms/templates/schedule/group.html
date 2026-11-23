@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}{{ g.name }} · 수업 일정{% endblock %}
+{% block title %}{{ grp.name }} · 수업 일정{% endblock %}
 {% macro hchips(hs) %}{% for h in hs %}<span class="badge {{ 'type' if h.extra is not defined or not h.extra else 'open' }}" title="{{ h.kind }}">{{ h.title }}</span> {% endfor %}{% endmacro %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p>
-    <h1>{{ g.name }} <span class="badge gray">{{ g.track }}</span></h1>
+    <h1>{{ grp.name }} <span class="badge gray">{{ grp.track }}</span></h1>
     <p class="muted small">반 {{ members|length }}개 · 재원생 {{ total }}명 · {{ weeks|length }}주 · 한 주차 = 토~금 (토요일반이 먼저)</p>
   </div>
   <details>
     <summary class="small">그룹 관리</summary>
     <div class="card stack">
-      <form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="rename">
-        <div class="field"><label for="gn">이름</label><input type="text" id="gn" name="name" value="{{ g.name }}" maxlength="40"></div>
+      <form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="rename">
+        <div class="field"><label for="gn">이름</label><input type="text" id="gn" name="name" value="{{ grp.name }}" maxlength="40"></div>
         <div class="field shrink"><button class="btn">저장</button></div></form>
-      {% if others %}<form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="add_class">
+      {% if others %}<form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="add_class">
         <div class="field"><label for="ac">반 넣기</label><select id="ac" name="class_id">{% for c in others %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
         <div class="field shrink"><button class="btn">넣기</button></div></form>{% endif %}
-      <form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="add_weeks">
+      <form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="add_weeks">
         <div class="field shrink"><label for="aw">주차 더하기</label><input type="number" id="aw" name="n" min="1" max="20" value="1"></div>
         <div class="field shrink"><button class="btn">더하기</button></div></form>
-      {% if groups %}<form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="copy">
+      {% if groups %}<form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="row">{{ csrf() }}<input type="hidden" name="action" value="copy">
         <div class="field"><label for="cp">다른 그룹 진도 가져오기 (주차 번호대로, 교재 더하기)</label><select id="cp" name="src">{% for x in groups %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}</select></div>
         <div class="field shrink"><button class="btn">가져오기</button></div></form>{% endif %}
-      <form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}">{{ csrf() }}<input type="hidden" name="action" value="delete">
+      <form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}">{{ csrf() }}<input type="hidden" name="action" value="delete">
         <button class="btn small danger" data-confirm="그룹을 지우면 주차·수업 칸·출석 기록이 모두 지워집니다. 반과 학생은 그대로입니다. 지우시겠습니까?">그룹 지우기</button></form>
     </div>
   </details>
@@ -37,14 +37,14 @@
     {% for m in members %}
     <tr><td><a href="{{ url_for('teacher.class_detail', cid=m.id, tab='times') }}">{{ m.name }}</a></td><td class="num">{{ m.n }}명</td>
       <td class="small">{% for t in slots if t.class_id == m.id %}{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}–{{ t.ends }}{% if t.hall or t.room %} · {{ t.hall }} {{ t.room }}{% endif %}{{ ' / ' if not loop.last }}{% else %}<span class="muted">수업 시간 없음 · 수업 칸이 생기지 않습니다</span>{% endfor %}</td>
-      <td class="num"><form method="post" action="{{ url_for('schedule.group_edit', gid=g.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="remove_class"><input type="hidden" name="class_id" value="{{ m.id }}"><button class="btn small" data-confirm="이 반을 그룹에서 빼면 이 반의 수업 칸과 출석 기록이 지워집니다. 빼시겠습니까?">빼기</button></form></td></tr>
+      <td class="num"><form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="remove_class"><input type="hidden" name="class_id" value="{{ m.id }}"><button class="btn small" data-confirm="이 반을 그룹에서 빼면 이 반의 수업 칸과 출석 기록이 지워집니다. 빼시겠습니까?">빼기</button></form></td></tr>
     {% endfor %}
   </table></div>
 </section>
 
 <nav class="tabs">
-  <a href="{{ url_for('schedule.group', gid=g.id) }}" class="{{ 'active' if view == 'table' }}">주차 × 수업</a>
-  <a href="{{ url_for('schedule.group', gid=g.id, view='cal') }}" class="{{ 'active' if view == 'cal' }}">달력</a>
+  <a href="{{ url_for('schedule.group', gid=grp.id) }}" class="{{ 'active' if view == 'table' }}">주차 × 수업</a>
+  <a href="{{ url_for('schedule.group', gid=grp.id, view='cal') }}" class="{{ 'active' if view == 'cal' }}">달력</a>
 </nav>
 
 {% if view == 'table' %}

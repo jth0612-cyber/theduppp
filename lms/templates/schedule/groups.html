@@ -12,9 +12,9 @@
   <h2>진도 그룹</h2>
   <div class="table-wrap"><table>
     <tr><th>그룹</th><th>구분</th><th>반</th><th>재원생</th><th>주차</th><th>기간</th></tr>
-    {% for g in groups %}
-    <tr><td><a href="{{ url_for('schedule.group', gid=g.id) }}">{{ g.name }}</a></td><td>{{ g.track }}</td><td class="num">{{ g.n_class }}</td>
-      <td class="num">{{ g.n_student }}명</td><td class="num">{{ g.n_week }}주</td><td class="nowrap small">{{ g.first or '' }} ~ {{ g.last or '' }}</td></tr>
+    {% for x in groups %}
+    <tr><td><a href="{{ url_for('schedule.group', gid=x.id) }}">{{ x.name }}</a></td><td>{{ x.track }}</td><td class="num">{{ x.n_class }}</td>
+      <td class="num">{{ x.n_student }}명</td><td class="num">{{ x.n_week }}주</td><td class="nowrap small">{{ x.first or '' }} ~ {{ x.last or '' }}</td></tr>
     {% endfor %}
   </table></div>
 </section>
@@ -30,7 +30,7 @@
         <label><input type="radio" name="track" value="단과"><span>단과</span></label></div></div>
       <div class="field shrink"><label for="g-first">1주차 (그 주 토요일부터)</label><input type="date" id="g-first" name="first" value="{{ next_sat }}" required></div>
       <div class="field shrink"><label for="g-weeks">주 수</label><input type="number" id="g-weeks" name="weeks" min="1" max="60" value="20"></div>
-      {% if groups %}<div class="field"><label for="g-copy">진도 가져오기 (선택)</label><select id="g-copy" name="copy_from"><option value="">없음</option>{% for g in groups %}<option value="{{ g.id }}">{{ g.name }}</option>{% endfor %}</select></div>{% endif %}
+      {% if groups %}<div class="field"><label for="g-copy">진도 가져오기 (선택)</label><select id="g-copy" name="copy_from"><option value="">없음</option>{% for x in groups %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}</select></div>{% endif %}
     </div>
     <fieldset class="field"><legend>반 (구분이 같은 반만 들어갑니다)</legend>
       <div class="check-grid">

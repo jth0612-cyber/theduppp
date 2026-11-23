@@ -67,6 +67,9 @@ class Schedule(unittest.TestCase):
         self.assertEqual(self.sess(self.sat)["day"], self.first.isoformat())                                         # 토요일반이 주차 첫날
         self.assertEqual(self.sess(self.fri)["day"], (self.first + timedelta(days=6)).isoformat())                   # 금요일반이 마지막
         page = self.ta.get(f"/t/schedule/{self.gid}").data.decode()
+        self.assertIn("has-shell", page)                                                             # 메뉴가 보인다 (템플릿 변수 g 덮어쓰기 방지)
+        for u in ("/t/schedule", "/t/handouts", f"/t/schedule/sessions/{self.sess(self.sat)['id']}"):
+            self.assertIn("has-shell", self.ta.get(u).data.decode(), u)
         self.assertIn("1주차", page); self.assertIn("목동관 603", page)
         self.assertLess(page.index("토요일반</b>"), page.index("금요일반</b>"))                                       # 열 순서 = 토 → 금
         self.assertEqual(self.ta.get(f"/t/schedule/{self.gid}?view=cal").status_code, 200)
