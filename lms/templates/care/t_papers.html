@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}시험지 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}복습 테스트 첨삭 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>시험지 첨삭</h1><p class="muted small">학생이 복테 및 모의고사 결과 화면에서 시험지 사진을 올리면 여기에 쌓입니다. 틀린 문항은 OMR 결과로 미리 표시됩니다.</p></div>
+<div class="page-head"><div><h1>복습 테스트 첨삭</h1><p class="muted small">학생이 복습 테스트 결과 화면에서 시험지 사진을 올리면 여기에 쌓입니다. 틀린 문항은 OMR 결과로 미리 표시됩니다.</p></div>
   {% set first = rows|first %}{% if status == 'submitted' and first %}<a class="btn primary" href="{{ url_for('care.t_paper', pid=first.id) }}">첨삭 시작</a>{% endif %}</div>
 <nav class="tabs">
   <a href="{{ url_for('care.t_papers') }}" class="{{ 'active' if status == 'submitted' }}">첨삭 대기 {{ counts.get('submitted', 0) }}</a>

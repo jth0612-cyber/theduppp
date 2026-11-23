@@ -181,22 +181,28 @@ LESSONS = {
                                         "- 스마트팜, 감염병 진단 키트", "!과학 기술의 양면성", "- 윤리·보안·환경 문제를 함께 고려",
                                         "예시문항: 자료에 있는 것만 판단"]), ("item", "m", 7, "양면성")],
 }
-# 1:1 첨삭: 주차 → (복테 문항, 학생 풀이 줄, 조교 답변)
-SOLVES = {
-    2: (23, ["Y에 0개 → T (RNA엔 T 없음)", "X 염기 수 = Y의 2배", "X1: A+G = T+C - 30", "G+C : A+T = 1 : 2", "㉣=25 가 C? G? 여기서 막힘"],
-        "㉢은 X₁·X₂ 모두 0이라 U입니다. ㉣과 ㉤이 짝(C-G)이고 ㉡이 A입니다. 가닥 길이를 n으로 두고 X₁ 조건 식을 세우면 n=120, A=30·T=50·C=25·G=15가 나옵니다."),
-    4: (16, ["㉠ 처음 10 → B (수평 10m/s)", "수면 닿는 시간 3초?", "h = 1/2 x 10 x 3^2 = 45", "→ 45보다 큼??", "ㄷ 2초: 10 x 2 = 20m"],
-        "닿는 시간은 3초가 아니라 2.7초쯤입니다. 그래서 h는 ½·10·2.7² ≈ 36 m로 45 m보다 작습니다. 나머지 풀이는 맞습니다."),
-    6: (11, ["A2: H, AB: H-F ?", "B2 껍질 2개 → F", "ㄴ F도 첫째 껍질 전자 참여?", "ㄷ 비공유/공유: F2 6, HF 3, H2 0"],
-        "F는 둘째 껍질 전자만 결합에 참여합니다. 첫째 껍질 전자가 결합하는 건 H뿐이라 ㄴ은 틀리고, ㄷ은 6 > 3 > 0으로 맞아 답은 ②입니다."),
-    8: (20, ["(나) A+ 4N 감소 = b x N", "(다) A+ 6N → 1.5xN", "b=1, x=4 → 1.5x = 6 ??", "b=2, x=2 → c=3 ?", "ㄷ 계산이 안 맞음"],
-        "x는 그래프에서 xN < 6N이라 4보다 작아야 합니다. 그래서 b=2, x=2, c=3이고, ㄷ은 남은 A⁺ 3N개 중 1.5N개가 반응해 A⁺와 C³⁺가 1.5N개씩으로 같아집니다."),
-    10: (25, ["Ⅰ H+ 4, K+ 2", "HCl : KOH = 3 : 1", "Ⅱ에 KOH V → K+ 3", "4(10+V) = 3(20+V) → V = 20", "ⓐ = 0, ⓑ = ?"],
-         "V=20 맞습니다. Ⅱ는 중화점이라 ⓐ=0이고, Ⅲ의 K⁺는 상댓값 1.5라 ⓐ+ⓑ=1.5입니다. 그래서 ㄴ은 틀립니다."),
-    12: (22, ["A: 동쪽 밝음 → 수온약층 깊음", "→ 엘니뇨", "t2 기압 + → 엘니뇨 = A", "ㄴ P = 용승 세기? 라니냐 때 강함", "ㄷ 서/동 해수면 ?"],
-         "A가 엘니뇨, B가 라니냐까지 맞습니다. 동태평양 용승은 라니냐(t₁) 때 더 강한데 P는 t₁이 작으니 ㄴ은 틀립니다. 엘니뇨 때 서태평양 해수면이 낮아져 ㄷ은 맞습니다."),
-    14: (13, ["p: 가까워짐 → 밀어냄", "q: 멀어짐 → 당김", "→ 방향 다름?", "ㄷ A 감은 수 더 많음"],
-         "밀어내는 힘과 당기는 힘 모두 자석 운동과 반대 방향이라 p와 q에서 같습니다. 속력은 전기 에너지로 바뀌어 줄고, A가 감은 수가 많고 자석도 빨라 A쪽 전류가 더 큽니다. 답은 ①입니다."),
+# Full 모의고사 피드백(1:1): 주차 → (모의고사 문항, 학생 풀이 줄, 조교 답변)
+FEEDBACK_M = {
+    2: (24, ["X1, X2 상보 → 같은 열 아님?", "㉡ 14, ㉣ 18", "T/(A+G) = 4/5", "㉠ = T 인지 모르겠음"],
+        "X₁과 X₂는 같은 열이 아니라 짝 염기끼리 수가 같습니다. ㉡=14, ㉣=18을 X₁의 빈칸과 맞춰 보면 ㉠-㉢, ㉡-㉣이 짝이고, "
+        "T/(A+G)=4/5를 만족하는 경우는 ㉠=T(32개)뿐입니다. 한 가닥이 90개라 ㄴ은 틀리고 답은 ③입니다."),
+    4: (22, ["B → Ⅲ 0.1초, Ⅳ 0.2초", "0.5h = 0.1v1 + 0.05", "1.5h = 0.2v1 + 0.2", "v1 = 0.5, h = 0.2", "ㄷ v2 계산?"],
+        "v₁=0.5 m/s, h=0.2 m까지 맞습니다. (라)에서 Ⅳ→Ⅴ 0.2 m를 0.05초에 지나니 Ⅳ 속력이 3.75 m/s이고, "
+        "v₂² = 3.75² − 2·10·0.6이라 v₂ ≈ 1.44 m/s로 v₁의 4배(2 m/s)보다 작습니다. 답은 ⑤입니다."),
+    6: (3, ["X: 돌기 1 → 전자 1개 잃음", "Y: 홈 1 → 1개 얻음", "Z: 큰 블록, 돌기 2 → Mg?", "ㄴ Y2Z? YZ2?"],
+        "X=Li, Y=F, Z=Mg까지 맞습니다. Mg²⁺와 F⁻는 1:2로 결합하니 Y:Z = 2:1이라 ㄴ도 옳습니다. "
+        "ㄷ은 원자가 전자 수가 Li 1, F 7이라 틀립니다. 답은 ③입니다."),
+    8: (19, ["B 1g당 이온 x", "Ⅰ: 4x, Ⅱ: 6x", "A+ : N - 4bx ?", "비 1:3 → ㉠이 뭔지?"],
+        "㉠을 Bᵇ⁺로 두면 Ⅰ: 4x : (N−4bx) = 1:3, Ⅱ: 6x = N−6bx가 되어 b=3, N=24x가 나옵니다. ㉠을 A⁺로 두면 식이 성립하지 않습니다. "
+        "A⁺는 B 8 g에서 다 반응하니 Ⅲ에는 B가 2 g 남아 답은 ⑤입니다."),
+    10: (25, ["t1 > t2 > t3", "(가) 20:20 가장 높음", "HCl 농도 < NaOH?", "ㄷ 구경꾼 이온 비교 모르겠음"],
+         "부피가 모두 40 mL라 최고 온도는 생긴 물의 양에 비례합니다. HCl 농도 a, NaOH 농도 b로 두면 a < b < 2a입니다. "
+         "구경꾼 이온은 (나) 30a+10b, (다) 10a+30b라 (다)가 많아 ㄷ도 옳고 답은 ⑤입니다."),
+    12: (23, ["반사 4 + 26 = 30", "E = 100 - 30 - 12 = 58", "ㄴ A+B+C = D+E ?", "ㄷ 수증기 ↑ → F ↓ ?"],
+         "E=58 맞습니다. 지표 B+F=D, 대기 A+C=E+F를 더하면 ㄴ이 나옵니다. 수증기가 늘면 대기 재복사 F는 늘어서 ㄷ은 틀립니다. 답은 ③입니다."),
+    14: (14, ["(나) 에어백 없음 → 짧고 큼", "t1 운동량 = 힘 크기?", "ㄴ 평균 힘 (나) > (다) > (라)", "ㄷ 나일론이 더 오래"],
+         "운동량은 그 순간의 힘이 아니라 t₁까지 받은 충격량(넓이)을 뺀 값이라 (나)가 가장 작습니다. 그래서 ㄱ은 틀리고, "
+         "ㄴ·ㄷ은 맞아 답은 ④입니다."),
 }
 REVIEW_PAGE = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]     # 복테 파일 원본 문항 → 시험지 쪽
 
@@ -484,7 +490,6 @@ def _renumber(entries):
 QUESTIONS = {w: _renumber(v) for w, v in QUESTIONS.items()}
 CURATED = {x[0] for v in QUESTIONS.values() for x in v}        # 미리 쓴 질문 (추가 질문은 이것에만 붙인다)
 LESSONS = {w: _renumber(v) for w, v in LESSONS.items()}
-SOLVES = {w: (R_NEW[v[0]], *v[1:]) for w, v in SOLVES.items() if v[0] in R_NEW}
 KILLER = {"r": ", ".join(str(R_NEW[n]) for n in (20, 23, 25)), "m": "19, 22, 24"}
 LEVEL_DROP = {"상": 0.2, "중": 0.05, "하": -0.12}
 
@@ -787,19 +792,19 @@ for w in range(1, WEEKS + 1):
             qid = ask(S, "교재 배송 문의" if w == 1 else "교재 환불 문의",
                       "FRAMING 해설편 2권이 아직 안 왔습니다." if w == 1 else "FRAMING 해설편이 두 권 왔습니다. 한 권 환불되나요?", "행정문의", day(w, 2))
             answer(T, qid, "이번 주 금요일에 발송됩니다." if w == 1 else "다음 수업 때 행정실에 반납하면 처리됩니다.", day(w, 3))
-        if (name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # 1:1 첨삭 (한승우는 악필)
-            a_r = my_answers("r", w, p["uid"])                # 그 학생이 실제로 틀린 문항으로 묻는다
-            sw = next((k for k in [w] + sorted(SOLVES) if len(a_r) >= SOLVES[k][0] and a_r[SOLVES[k][0] - 1] != str(DI.REVIEW[SOLVES[k][0] - 1][0])), w)
-            sno, slines, sreply = SOLVES[sw]
-            ok("1:1 첨삭 요청", S.post(f"/s/analysis/{MOCK[('r', w)]}/feedback", data={"body": f"{sno}번 풀이에서 어디가 잘못됐는지 봐 주세요.",
-                                                                                      "image": shot(op="solve", exam="rev", no=pdf_no("r", sno), who=p["st"]["name"], lines=slines)},
+        if (name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # Full 모의고사 피드백 (한승우는 악필)
+            a_m = my_answers("m", w, p["uid"])                # Full 모의고사 피드백: 그 학생이 실제로 틀린 문항으로 묻는다
+            sw = next((k for k in [w] + sorted(FEEDBACK_M) if len(a_m) >= FEEDBACK_M[k][0] and a_m[FEEDBACK_M[k][0] - 1] != str(DI.MOCK[FEEDBACK_M[k][0] - 1][0])), w)
+            sno, slines, sreply = FEEDBACK_M[sw]
+            ok("모의고사 피드백 요청", S.post(f"/s/analysis/{MOCK[('m', w)]}/feedback", data={"body": f"{sno}번 풀이에서 어디가 잘못됐는지 봐 주세요.",
+                                                                                         "image": shot(op="solve", exam="mock", no=sno, who=p["st"]["name"], lines=slines)},
                                     content_type="multipart/form-data"))
             tid = last_id("feedback_threads")
             at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 6), 21))
             if last_week:
                 at("feedback_threads", tid, created_at=ts(day(w, 6), 21), updated_at=ts(day(w, 6), 21))
             else:
-                ok("1:1 첨삭 답변", TA.post(f"/t/feedback/{tid}", data={"body": sreply}))
+                ok("모의고사 피드백 답변", TA.post(f"/t/feedback/{tid}", data={"body": sreply}))
                 at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 0) + timedelta(days=7), 21))
                 at("feedback_threads", tid, created_at=ts(day(w, 6), 21), updated_at=ts(day(w, 0) + timedelta(days=7), 21))
         took = q("SELECT 1 FROM mock_entries WHERE mock_id = ? AND user_id = ?", (MOCK[("r", w)], p["uid"]), one=True)

@@ -100,7 +100,7 @@ def analysis_home():
     if mid not in ids:
         abort(404)
     mock = _mock_or_404(mid)
-    why_open = "새 1:1 첨삭 답변이 있는 회차" if unread and mid == unread["mock_id"] and "mock" not in request.args and not want else ""
+    why_open = "새 Full 모의고사 피드백 답변이 있는 회차" if unread and mid == unread["mock_id"] and "mock" not in request.args and not want else ""
     kind_counts = {k: sum(1 for m in mocks if m["kind"] == k) for k in KINDS}
     key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)

@@ -43,13 +43,14 @@
   (None, [
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), question_wait or 0),
-    ('feedback.t_list', '1:1 첨삭', 'pen', ep.startswith('feedback.'), feedback_wait or 0),
-    ('care.t_papers', '시험지 첨삭', 'task', ep in ('care.t_papers', 'care.t_paper'), paper_wait or 0),
     ('care.t_lessons', '수업 기록', 'folder', ep == 'care.t_lessons', 0),
     ('books.teacher_books', '복테·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
     ('teacher.classes', '반', 'users', ep.startswith('teacher.class'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
+  ('1:1 관리', [
+    ('care.t_papers', '복습 테스트 첨삭', 'task', ep in ('care.t_papers', 'care.t_paper'), paper_wait or 0),
+    ('feedback.t_list', 'Full 모의고사 피드백', 'pen', ep.startswith('feedback.'), feedback_wait or 0)]),
   ('수업 운영', [
     ('study.t_timetable', '주요 일정', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),

@@ -52,7 +52,7 @@ class Care(unittest.TestCase):
         self.tmp.cleanup()
 
     def _exam(self):
-        """모의고사 1회에 김하나 결과 반영: 3·4번(산과 염기) 틀림."""
+        """복습 테스트 1회에 김하나 결과 반영: 3·4번(산과 염기) 틀림. (시험지 첨삭은 복습 테스트만)"""
         from openpyxl import Workbook
         wb = Workbook(); ws = wb.active; ws.title = "OMR"
         ws.append(["이름", "수험번호", 1, 2, 3, 4]); ws.append(["정답", "", 1, 2, 3, 4]); ws.append(["배점", "", 2, 2, 3, 3])
@@ -62,7 +62,7 @@ class Care(unittest.TestCase):
             inf.append([i, u])
         buf = io.BytesIO(); wb.save(buf)
         with self.app.app_context():
-            mid = query("""SELECT m.id FROM mocks m JOIN books b ON b.id = m.book_id WHERE b.title = '모의고사' AND m.round_no = 1""", one=True)["id"]
+            mid = query("""SELECT m.id FROM mocks m JOIN books b ON b.id = m.book_id WHERE b.title = '복습 테스트' AND m.round_no = 1""", one=True)["id"]
         self.ta.post(f"/t/mocks/{mid}/omr", data={"file": (io.BytesIO(buf.getvalue()), "o.xlsx")}, content_type="multipart/form-data")
         return mid
 
@@ -92,6 +92,23 @@ class Care(unittest.TestCase):
             from views.care import paper_review_counts
             uid = query("SELECT id FROM users WHERE username = 'ta'", one=True)["id"]
             self.assertEqual(paper_review_counts(date.today().strftime("%Y-%m")), {uid: 1})
+
+    def test_one_to_one_split_by_kind(self):
+        """1:1 관리: 복습 테스트는 시험지 첨삭만, 모의고사는 1:1 피드백만."""
+        rmid = self._exam()
+        with self.app.app_context():
+            mmid = query("""SELECT m.id FROM mocks m JOIN books b ON b.id = m.book_id WHERE b.title = '모의고사' AND m.round_no = 1""", one=True)["id"]
+        self.c1.post(f"/s/analysis/{rmid}/feedback", data={"body": "봐 주세요"})
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM feedback_threads", one=True))         # 복테에는 1:1 피드백 없음
+            execute("INSERT INTO exam_results (mock_id, student_id, answers, score) VALUES (?, ?, '', 0)", (mmid, self.s1))
+        self.c1.post(f"/s/analysis/{mmid}/paper", data={"image": [(io.BytesIO(PNG), "a.png")]}, content_type="multipart/form-data")
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM exam_papers", one=True))              # 모의고사에는 시험지 첨삭 없음
+        page = self.c1.get(f"/s/analysis?mock={rmid}").data.decode()
+        self.assertIn('id="h-paper"', page); self.assertNotIn('id="h-fb"', page)       # 복테 회차: 시험지 첨삭 칸만
+        nav = self.ta.get("/t/").data.decode()
+        self.assertIn("1:1 관리", nav); self.assertIn("복습 테스트 첨삭", nav); self.assertIn("Full 모의고사 피드백", nav)
 
     def test_lessons_by_class(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "TOPIC 24 중화 반응", "day": "2026-11-20",
@@ -180,7 +197,7 @@ class Care(unittest.TestCase):
         resp = anon.get(f"/p/{tok}")
         self.assertEqual(resp.headers["Cache-Control"], "no-store")
         page = resp.data.decode()
-        for word in ("김하나", "득점률", "40", "자료 해석", "x축을 시간으로 읽음", "그래프 축부터 확인", "산과 염기", "모의고사 1회"):
+        for word in ("김하나", "득점률", "40", "자료 해석", "x축을 시간으로 읽음", "그래프 축부터 확인", "산과 염기", "복습 테스트 1회"):
             self.assertIn(word, page)
         self.assertIn("noindex", page)
         self.assertEqual(anon.get("/p/" + "x" * 24).status_code, 404)

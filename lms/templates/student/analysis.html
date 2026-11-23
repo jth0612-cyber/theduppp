@@ -79,8 +79,10 @@
   </section>
 </div>
 
+{# 1:1 관리: 복습 테스트는 시험지 첨삭, 모의고사는 1:1 피드백 (예전에 쌓인 것은 종류와 상관없이 보인다) #}
+{% if mock.kind == '복습 테스트' or paper %}
 <section class="paper-sec" id="paper" aria-labelledby="h-paper">
-  <div class="sec-head"><h2 id="h-paper">시험지 첨삭</h2><span>풀이가 적힌 시험지를 찍어 올리면 조교가 틀린 문항을 첨삭합니다</span></div>
+  <div class="sec-head"><h2 id="h-paper">복습 테스트 첨삭</h2><span>풀이가 적힌 시험지를 찍어 올리면 조교가 틀린 문항을 첨삭합니다</span></div>
   <ol class="hw-steps" aria-label="진행 상태">
     <li class="{{ 'on' if paper }}"><b>시험지 제출</b><span>{{ paper.submitted_at[5:16] if paper else '-' }}</span></li>
     <li class="{{ 'on' if paper }}{{ ' now' if paper and paper.status != 'done' }}"><b>선생님 검사</b><span>{% if paper and paper.status != 'done' %}검사 중{% elif paper %}완료{% else %}-{% endif %}</span></li>
@@ -98,6 +100,7 @@
   </form>
   {% endif %}
 </section>
+{% endif %}
 
 {% if rep and (rep.wrongs or prof) %}
 <section class="wa-sec" aria-labelledby="h-wa">
@@ -144,12 +147,14 @@
 </section>
 {% endif %}
 
+{% if mock.kind == '모의고사' or fb %}
 <section class="fb-sec" id="feedback" aria-labelledby="h-fb">
-  <div class="sec-head"><h2 id="h-fb">1:1 첨삭</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>
+  <div class="sec-head"><h2 id="h-fb">Full 모의고사 피드백</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>
   {% with msgs=fb_msgs, action=url_for('feedback.ask', mid=mock.id), me_staff=false,
           body_label=('이어서 묻기' if fb else '질문'), placeholder='몇 번 문항, 어디서 막혔는지',
-          submit_label=('보내기' if fb else '첨삭 요청') %}{% include "_feedback_thread.html" %}{% endwith %}
+          submit_label=('보내기' if fb else '피드백 요청') %}{% include "_feedback_thread.html" %}{% endwith %}
 </section>
+{% endif %}
 
 {% include "_analysis_stats.html" %}
 {% else %}

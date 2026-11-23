@@ -81,6 +81,10 @@ def s_paper(mid):
         abort(404)
     p = query("SELECT * FROM exam_papers WHERE mock_id = ? AND student_id = ?", (mid, me["id"]), one=True)
     back = url_for("books.analysis_home", mock=mid) + "#paper"
+    kind = query("SELECT b.kind FROM mocks m JOIN books b ON b.id = m.book_id WHERE m.id = ?", (mid,), one=True)
+    if not p and (not kind or kind["kind"] != "복습 테스트"):        # 시험지 첨삭은 복습 테스트만 (모의고사는 1:1 피드백)
+        flash("모의고사는 Full 모의고사 피드백으로 요청해 주세요.", "error")
+        return redirect(url_for("books.analysis_home", mock=mid) + "#feedback")
     if p and p["status"] == "done":
         flash("첨삭이 끝난 시험지는 다시 올릴 수 없습니다.", "error")
         return redirect(back)
@@ -145,9 +149,9 @@ def t_paper(pid):
                    WHERE id = ?""", (request.form.get("comment", "").strip()[:1500], g.user["id"], pid))
         audit("paper_review", f"paper:{pid}")
         from views.pwa import notify_student
-        notify_student(p["student_id"], "시험지 첨삭 완료", exams.exam_title(rep["mock"]),
+        notify_student(p["student_id"], "복습 테스트 첨삭 완료", exams.exam_title(rep["mock"]),
                        url_for("books.analysis_home", mock=p["mock_id"]) + "#paper")
-        flash(f"{p['name']} 학생 시험지 첨삭을 저장했습니다.", "ok")
+        flash(f"{p['name']} 학생 복습 테스트 첨삭을 저장했습니다.", "ok")
         nxt = query("SELECT id FROM exam_papers WHERE status = 'submitted' AND id != ? ORDER BY submitted_at LIMIT 1", (pid,), one=True)
         return redirect(url_for("care.t_paper", pid=nxt["id"]) if nxt else url_for("care.t_papers"))
     _, files, marks = paper_of(p["mock_id"], p["student_id"])
@@ -316,7 +320,7 @@ def parent_report(student_id, limit=6):
     prev = next((e for e in exams_out[1:] if e["kind"] == last["kind"]), None) if last else None   # 같은 종류끼리 비교
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
     comment = query("""SELECT x.text, x.at, x.src, x.mock_id FROM (
-                         SELECT comment AS text, reviewed_at AS at, '시험지 첨삭 코멘트' AS src, mock_id FROM exam_papers
+                         SELECT comment AS text, reviewed_at AS at, '복습 테스트 첨삭 코멘트' AS src, mock_id FROM exam_papers
                           WHERE student_id = ? AND comment != ''
                          UNION ALL SELECT ta_note, ta_at, '회차 화면의 학생 메모', mock_id FROM exam_results
                           WHERE student_id = ? AND ta_note != '') x

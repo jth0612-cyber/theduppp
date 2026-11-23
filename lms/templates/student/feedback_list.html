@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block title %}내 첨삭 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<header class="ed-head"><h1>내 첨삭</h1><p class="ed-lede">1:1 첨삭과 시험지 첨삭 / 회차를 누르면 그 회차 분석으로</p></header>
+<header class="ed-head"><h1>1:1 관리</h1><p class="ed-lede">복습 테스트 첨삭 및 Full 모의고사 피드백 / 회차를 누르면 그 회차 분석으로</p></header>
 {% if rows %}
 <div class="card"><div class="table-wrap"><table>
   <tr><th>회차</th><th>종류</th><th>상태</th><th class="num">날짜</th></tr>
   {% for r in rows %}
   <tr>
     <td><a href="{{ url_for('books.analysis_home', mock=r.mock_id) }}#{{ 'feedback' if r.kind == 'feedback' else 'paper' }}">{{ r.book }} {{ r.round_no }}회</a>{% if r.unread %} <span class="badge">새 답변</span>{% endif %}</td>
-    <td>{{ '1:1 첨삭' if r.kind == 'feedback' else '시험지 첨삭' }}</td>
+    <td>{{ 'Full 모의고사 피드백' if r.kind == 'feedback' else '복습 테스트 첨삭' }}</td>
     <td>{% if r.kind == 'feedback' %}{{ '답변 완료' if r.status == 'done' else '답변 대기' }}{% else %}{{ '첨삭 완료' if r.status == 'done' else '검사 중' }}{% endif %}</td>
     <td class="num small muted">{{ (r.at or '')[5:10] }}</td>
   </tr>

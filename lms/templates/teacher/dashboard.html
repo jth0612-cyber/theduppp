@@ -13,8 +13,8 @@
 
 <div class="todo-row" aria-label="처리할 일">
   <a class="todo{{ ' is-on' if stats.open_questions }}" href="{{ url_for('teacher.questions') }}"><b>{{ stats.open_questions }}</b><span>답변 대기 질문</span></a>
-  <a class="todo{{ ' is-on' if feedback_wait }}" href="{{ url_for('feedback.t_list') }}"><b>{{ feedback_wait or 0 }}</b><span>1:1 첨삭 대기</span></a>
-  <a class="todo{{ ' is-on' if paper_wait }}" href="{{ url_for('care.t_papers') }}"><b>{{ paper_wait or 0 }}</b><span>시험지 첨삭 대기</span></a>
+  <a class="todo{{ ' is-on' if feedback_wait }}" href="{{ url_for('feedback.t_list') }}"><b>{{ feedback_wait or 0 }}</b><span>Full 모의고사 피드백 대기</span></a>
+  <a class="todo{{ ' is-on' if paper_wait }}" href="{{ url_for('care.t_papers') }}"><b>{{ paper_wait or 0 }}</b><span>복습 테스트 첨삭 대기</span></a>
 </div>
 <p class="dash-sum">반 <b>{{ stats.classes }}</b> · 재원 학생 <b>{{ stats.students }}</b>명 · 결과가 올라온 회차 <b>{{ stats.exams }}</b>개</p>
 

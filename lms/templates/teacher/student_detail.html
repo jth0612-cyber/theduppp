@@ -74,7 +74,7 @@
   {% if rep.comment %}
   <p class="pre">{{ rep.comment.text }}</p>
   <p class="small muted">{{ rep.comment.src }} · {{ (rep.comment.at or '')[:16] }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
-  {% else %}<p class="small muted">없음 / 회차 화면의 학생 메모나 시험지 첨삭 코멘트 중 가장 최근 것이 나갑니다.</p>{% endif %}
+  {% else %}<p class="small muted">없음 / 회차 화면의 학생 메모나 복습 테스트 첨삭 코멘트 중 가장 최근 것이 나갑니다.</p>{% endif %}
 </div>
 
 <div class="card" id="notes">

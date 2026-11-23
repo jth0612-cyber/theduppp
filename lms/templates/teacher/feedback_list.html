@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}1:1 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}Full 모의고사 피드백 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><h1>1:1 첨삭</h1></div>
+<div class="page-head"><h1>Full 모의고사 피드백</h1></div>
 <nav class="tabs">
   <a href="{{ url_for('feedback.t_list', status='wait') }}" class="{{ 'active' if status == 'wait' }}">답변 대기 {{ counts.get('wait', 0) }}</a>
   <a href="{{ url_for('feedback.t_list', status='done') }}" class="{{ 'active' if status == 'done' }}">답변 완료 {{ counts.get('done', 0) }}</a>

@@ -804,7 +804,7 @@ def staff_answers_csv():
     cons = consult.consult_counts(month)
     from views.care import paper_review_counts
     hw = paper_review_counts(month)
-    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "질문 답변 합계", "학습상담(건)", "시험지 첨삭(건)"])
+    w.writerow(["월", "조교", "아이디", "Main 답변", "부가 답변", "질문 답변 합계", "학습상담(건)", "복습 테스트 첨삭(건)"])
     for a in query("SELECT * FROM users WHERE role = 'assistant' ORDER BY display_name"):
         c = counts.get(a["id"], {"main": 0, "extra": 0})
         w.writerow([month, a["display_name"], a["username"], c["main"], c["extra"], c["main"] + c["extra"], cons.get(a["id"], 0), hw.get(a["id"], 0)])

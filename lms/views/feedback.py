@@ -103,6 +103,10 @@ def ask(mid):
         flash(str(e), "error")
         return redirect(url_for("books.analysis_home", mock=mid) + "#feedback")
     t = query("SELECT id FROM feedback_threads WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
+    kind = query("SELECT b.kind FROM mocks m JOIN books b ON b.id = m.book_id WHERE m.id = ?", (mid,), one=True)
+    if t is None and kind["kind"] != "모의고사":                     # 1:1 피드백은 모의고사만 (복습 테스트는 시험지 첨삭)
+        flash("복습 테스트는 복습 테스트 첨삭(시험지 사진)으로 요청해 주세요.", "error")
+        return redirect(url_for("books.analysis_home", mock=mid) + "#paper")
     if t is None:
         tid = execute("INSERT INTO feedback_threads (mock_id, user_id) VALUES (?, ?)", (mid, g.user["id"]))
     else:
@@ -111,7 +115,7 @@ def ask(mid):
                 (tid,))
     _post(tid, body, photos)
     audit("feedback_ask", f"feedback:{tid}")
-    flash("첨삭 요청을 보냈습니다.", "ok")
+    flash("피드백 요청을 보냈습니다.", "ok")
     return redirect(url_for("books.analysis_home", mock=mid) + "#feedback")
 
 

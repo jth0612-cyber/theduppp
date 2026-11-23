@@ -104,9 +104,9 @@ class Update1114(unittest.TestCase):
             self.assertFalse(any(vocab._SENSE[x] & vocab._SENSE[w] for x in others))    # 정답이 둘이 되지 않게
 
     def test_feedback_flow(self):
-        """시험 분석 1:1 첨삭: 학생 요청 → 조교 답변 → 학생 알림·사진 권한."""
+        """Full 모의고사 피드백(1:1): 학생 요청 → 조교 답변 → 학생 알림·사진 권한."""
         with self.app.app_context():
-            bid = execute("INSERT INTO books (title, expires_on) VALUES ('주간 복테', '2099-12-31')")
+            bid = execute("INSERT INTO books (title, expires_on, kind) VALUES ('주간 모의', '2099-12-31', '모의고사')")
             mid = execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, 1, 3, 6, ?, ?)",
                           (bid, json.dumps([1, 2, 3]), json.dumps([2, 2, 2])))
             uid = query("SELECT id FROM users WHERE username = 'minsu'", one=True)["id"]
@@ -114,7 +114,7 @@ class Update1114(unittest.TestCase):
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta1', ?, '박조교')", (hash_password(PW),))
             execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', 'other', ?, NULL)", (hash_password("Other!2026xx"),))
         page = self.s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn("시험 분석", page); self.assertIn("1:1 첨삭", page)
+        self.assertIn("시험 분석", page); self.assertIn("Full 모의고사 피드백", page)
         # 빈 요청은 거절
         self.s.post(f"/s/analysis/{mid}/feedback", data={"body": ""})
         with self.app.app_context():
@@ -124,7 +124,7 @@ class Update1114(unittest.TestCase):
         self.assertEqual(r.status_code, 302)
         ta = self.app.test_client(); ta.post("/login", data={"username": "ta1", "password": PW})
         lst = ta.get("/t/feedback").data.decode()
-        self.assertIn("김민수", lst); self.assertIn("주간 복테 1회", lst)
+        self.assertIn("김민수", lst); self.assertIn("주간 모의 1회", lst)
         with self.app.app_context():
             tid = query("SELECT id FROM feedback_threads", one=True)["id"]
             fid = query("SELECT file_id FROM feedback_images", one=True)["file_id"]

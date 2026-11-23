@@ -61,6 +61,9 @@ h3 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav a { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 8px; color: var(--muted); white-space: nowrap; }
 .nav a .count { margin-left: auto; }
+.nav a .nav-label { min-width: 0; white-space: normal; line-height: 1.2; }   /* 긴 메뉴 이름은 두 줄로 (알림 숫자를 밀어내지 않게) */
+.nav a:has(.nav-label) { height: auto; min-height: 36px; padding-block: 6px; }
+.nav a .count { flex: none; }
 .ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .nav a:hover { background: color-mix(in srgb, var(--active) 60%, transparent); color: var(--ink); text-decoration: none; }
 .nav a.active { background: var(--active); color: var(--accent-ink); font-weight: 600; }

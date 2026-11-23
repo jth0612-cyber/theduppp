@@ -38,7 +38,7 @@
         {% if title and fold %}<details class="nav-fold"{{ ' open' if items|selectattr(3)|list }}><summary class="nav-group">{{ title }}</summary>
         {% elif title %}<p class="nav-group">{{ title }}</p>{% endif %}
         {% for endpoint, label, ic, active, count in items %}
-        <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active }}"{{ ' aria-current="page"'|safe if active }}>{{ nav.icon(ic) }}<span class="nav-label">{{ label }}</span>{% if count %}<span class="count">{{ count }}</span>{% endif %}</a>
+        <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active }}"{{ ' aria-current="page"'|safe if active }}>{{ nav.icon(ic) }}<span class="nav-label" title="{{ label }}">{{ label }}</span>{% if count %}<span class="count">{{ count }}</span>{% endif %}</a>
         {% endfor %}
         {% if title and fold %}</details>{% endif %}
       {% endfor %}
