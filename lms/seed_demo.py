@@ -482,6 +482,7 @@ def _renumber(entries):
 
 
 QUESTIONS = {w: _renumber(v) for w, v in QUESTIONS.items()}
+CURATED = {x[0] for v in QUESTIONS.values() for x in v}        # 미리 쓴 질문 (추가 질문은 이것에만 붙인다)
 LESSONS = {w: _renumber(v) for w, v in LESSONS.items()}
 SOLVES = {w: (R_NEW[v[0]], *v[1:]) for w, v in SOLVES.items() if v[0] in R_NEW}
 KILLER = {"r": ", ".join(str(R_NEW[n]) for n in (20, 23, 25)), "m": "19, 22, 24"}
@@ -569,9 +570,14 @@ def wrong_why(kind, no, pick):
     return "조건 독해", "조건을 놓침"
 
 
-def item_photo_req(kind, no, who, uid, w, note):
-    """질문 사진: 그 학생이 OMR에 고른 선지에 동그라미, 보기마다 자기 판단(O/X), 헷갈린 보기에 ?"""
+def item_photo_req(kind, no, who, uid, w, note, unsure=None):
+    """질문 사진: 그 학생이 OMR에 고른 선지에 동그라미, 보기마다 자기 판단(O/X), 헷갈린 보기에 ?
+    unsure: 맞혔지만 확신이 없던 보기 (정답에 동그라미, 그 보기에만 ?)"""
     ans, opts = EXAMS[kind][no - 1][0], EXAMS[kind][no - 1][6]
+    if unsure and opts:
+        right = opts.split("|")[ans - 1]
+        think = {lab: (None if lab == unsure else lab in right) for lab in "ㄱㄴㄷ"}
+        return shot(op="item", exam=PHOTO_EXAM[kind], no=pdf_no(kind, no), who=who, pick=ans, think=think, note=note)
     a = my_answers(kind, w, uid)
     pick = int(a[no - 1]) if len(a) >= no and a[no - 1] in "12345" and a[no - 1] != str(ans) else None
     if pick is None:
@@ -595,8 +601,37 @@ BIG_UNIT = {"측정 표준": "과학의 기초", "화학 결합": "물질과 규
 ASKED = set()
 
 
+def unsure_question(w, uid):
+    """맞혔지만 확신 없이 푼 문항: 그 학생이 맞힌 합답형 문항에서 감으로 판단한 보기 하나의 근거를 묻는다."""
+    for kind in rng.sample(["r", "m"], 2):
+        a = my_answers(kind, w, uid)
+        its = EXAMS[kind]
+        right = [i + 1 for i, it in enumerate(its) if it[6] and it[0] not in ("*", "-") and i < len(a) and a[i] == str(it[0])
+                 and it[5] != "하" and f"{kind}{w}-{i + 1}" not in ASKED]                 # 쉬운 문항은 묻지 않는다
+        if not right:
+            continue
+        no = rng.choice(right)
+        ASKED.add(f"{kind}{w}-{no}")
+        ans, _, unit, concept, _, _, opts, bogi = its[no - 1]
+        lab = rng.choice("ㄱㄴㄷ")
+        t, why, _ = bogi["ㄱㄴㄷ".index(lab)]
+        title = f"[{'복테' if kind == 'r' else '모의고사'} {w}회 {no}번] {concept} (맞혔지만 확신 없음)"
+        body = rng.choice([f"맞히긴 했는데 보기 {lab}은 감으로 골랐습니다. {'왜 옳은지' if t else '왜 틀린지'} 근거를 알고 싶습니다.",
+                           f"{ans}번으로 맞혔지만 보기 {lab} 판단에 확신이 없었습니다. 어떻게 확인하면 되나요?",
+                           f"시간이 없어 보기 {lab}을 대충 넘기고 맞혔습니다. 정확한 근거가 궁금합니다."])
+        reply = (f"판단은 맞았습니다. 보기 {lab}은 {'옳은' if t else '틀린'} 진술입니다. "
+                 f"'{why}' 쪽으로 헷갈리기 쉬운 보기라 근거를 한 줄로 적어 두세요. {concept}에서 같은 형태가 자주 나옵니다.")
+        return title, body, reply, ("item", kind, no, f"보기 {lab} 맞나?", lab), BIG_UNIT.get(unit, WEEK_UNIT[w])
+    return None
+
+
 def auto_question(w, uid):
-    """준비한 질문이 다 나간 주: 그 학생이 실제로 틀린 합답형 문항에서, 고른 답과 정답이 갈린 보기를 묻는다."""
+    """준비한 질문이 다 나간 주: 그 학생이 실제로 틀린 합답형 문항에서, 고른 답과 정답이 갈린 보기를 묻는다.
+    10번에 4번쯤은 맞혔지만 확신이 없던 문항을 묻는다."""
+    if rng.random() < 0.4:
+        q_ = unsure_question(w, uid)
+        if q_:
+            return q_
     for kind in rng.sample(["r", "m"], 2):
         a = my_answers(kind, w, uid)
         its = EXAMS[kind]
@@ -633,7 +668,7 @@ def pick_question(w, uid):
 
 def question_photo(src, who, uid, w):
     if src[0] == "item":
-        return item_photo_req(src[1], src[2], who, uid, w, src[3])
+        return item_photo_req(src[1], src[2], who, uid, w, src[3], src[4] if len(src) > 4 else None)
     _, key, page, find, note = src
     return shot(op="page", key=key, page=page, find=find, who=who, note=note)
 
@@ -739,10 +774,10 @@ for w in range(1, WEEKS + 1):
                       image=question_photo(src, p["st"]["name"], p["uid"], w))
             if not (last_week and name in ("대구 토요일 A반", "대구 재종 1반")):      # 이 둘은 오늘 조교가 답할 질문
                 answer(TA if rng.random() < 0.6 else TA2, qid, ans, day(w, 3))
-                if rng.random() < 0.3:
+                if title in CURATED and rng.random() < 0.3:
                     ok("추가 질문", S.post(f"/s/questions/{qid}/followup", data={"body": "그럼 반대 경우에는 어떻게 되나요?"}))
                     at("followups", last_id("followups"), created_at=ts(day(w, 3), 22))
-                    answer(TA, qid, "반대 경우는 조건만 뒤집어 같은 순서로 따라가면 됩니다. 교재 해당 쪽 예제 2번이 그 경우입니다.", day(w, 4))
+                    answer(TA, qid, "반대 경우는 조건만 뒤집어 같은 순서로 따라가면 됩니다. 보기마다 무엇이 바뀌는지 표로 적어 보세요.", day(w, 4))
         if (name == "대구 재종 1반" and w % 3 == 0) or (name == "대구 토요일 A반" and w in (3, 9)):
             qid = ask(S, f"{w}주차 공부 계획 상담", "복테 점수가 몇 주째 비슷합니다. 평일에 무엇을 먼저 해야 할지 모르겠습니다.", "학습상담",
                       day(w, 1), assignee=TA_ID)
