@@ -1,8 +1,7 @@
-"""교재 분석실: 교재 인증 코드, 가채점 채점, 예상 등급컷·점수 분포·문항별 오답률 계산.
+"""교재 분석실: 가채점 채점, 예상 등급컷·점수 분포·문항별 오답률 계산.
 정답과 배점은 서버에만 두고, 채점과 통계도 서버에서만 한다."""
 import json
 import math
-import secrets
 import time
 
 # 수능 9등급 누적 비율(%) — 1등급 4%, 2등급 11%, ... 8등급 96%, 나머지 9등급
@@ -14,31 +13,6 @@ CHOICES = 5
 DEFAULT_ITEMS = 25
 DEFAULT_FULL = 50
 BASE_POINT, HIGH_POINT, LOW_POINT = 2, 2.5, 1.5
-
-# 헷갈리는 글자(0/O, 1/I/L)를 뺀 대문자·숫자. 12자리면 약 7.9×10^17 가지
-_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-CODE_LEN = 12
-
-
-# ---------- 교재 코드 ----------
-
-def normalize_code(raw):
-    """사용자가 입력한 코드를 저장 형식(대문자 12자리, 구분자 없음)으로 바꾼다."""
-    s = "".join(ch for ch in (raw or "").upper() if ch.isalnum())
-    s = s.replace("O", "0").replace("I", "1").replace("L", "1")  # 흔한 오타는 아래 검사에서 걸러진다
-    return s if len(s) == CODE_LEN and all(ch in _ALPHABET for ch in s) else None
-
-
-def new_code(is_taken):
-    while True:
-        code = "".join(secrets.choice(_ALPHABET) for _ in range(CODE_LEN))
-        if not is_taken(code):
-            return code
-
-
-def format_code(code):
-    return "-".join(code[i:i + 4] for i in range(0, len(code), 4))
-
 
 # ---------- 시험(회차) 정답·배점 ----------
 

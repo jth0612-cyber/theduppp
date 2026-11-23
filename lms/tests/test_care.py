@@ -129,6 +129,41 @@ class Care(unittest.TestCase):
         page = self.c1.get("/s/rooms").data.decode()
         self.assertIn("최근 4주 기록", page); self.assertIn("1시간 15분", page)
 
+    def test_class_break_on_timetable(self):
+        from datetime import date, timedelta
+        today = date.today()
+        mon = today - timedelta(days=today.weekday())
+        self.ta.post("/t/timetable", data={"action": "break_add", "class_id": str(self.a), "starts": mon.isoformat(),
+                                           "ends": (mon + timedelta(days=13)).isoformat(), "note": "중간고사"})
+        self.ta.post("/t/timetable", data={"action": "break_add", "class_id": str(self.a), "starts": "2026-01-02", "ends": "2026-01-01"})
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) AS n FROM class_breaks", one=True)["n"], 1)   # 끝이 시작보다 앞이면 거부
+        page = self.c1.get("/s/timetable").data.decode()
+        self.assertIn("휴강 중", page); self.assertIn("중간고사", page); self.assertIn("<small>휴강</small>", page)
+        self.assertNotIn("중간고사", self.c2.get("/s/timetable").data.decode())   # 다른 반
+
+    def test_pick_reason_rule(self):
+        from exams import pick_reason
+        self.assertEqual(pick_reason("계산 실수", "자료 해석", "자료 해석"), "자료 해석")   # 과반
+        self.assertEqual(pick_reason("계산 실수", "자료 해석", "개념 부족"), "계산 실수")   # 모두 다름 → 학생
+        self.assertEqual(pick_reason("", "자료 해석", "개념 부족"), "자료 해석")           # 둘이 다름 → 조교
+        self.assertEqual(pick_reason("", "", "개념 부족"), "개념 부족")
+        self.assertEqual(pick_reason("", "", ""), "")
+
+    def test_report_uses_representative_reason(self):
+        mid = self._exam()
+        self.c1.get(f"/s/analysis?mock={mid}")                                    # 내 답안 가져오기
+        self.c1.post(f"/s/wrong/{mid}/3", data={"reason": "개념 부족"})
+        self.c1.post(f"/s/analysis/{mid}/paper", data={"image": [(io.BytesIO(PNG), "a.png")]}, content_type="multipart/form-data")
+        with self.app.app_context():
+            pid = query("SELECT id FROM exam_papers", one=True)["id"]
+        self.ta.post(f"/t/papers/{pid}", data={"r3": "계산 실수", "r4": "자료 해석"})
+        with self.app.test_request_context():
+            import exams
+            ws = {a["no"]: a for a in exams.student_report(mid, self.s1)["wrongs"]}
+        self.assertEqual(ws[3]["type"], exams.pick_reason("개념 부족", "계산 실수", ws[3]["auto_type"]))
+        self.assertEqual(ws[4]["type"], exams.pick_reason("", "자료 해석", ws[4]["auto_type"]))
+
     def test_parent_report_and_weak_unit(self):
         mid = self._exam()
         page = self.c1.get(f"/s/analysis?mock={mid}").data.decode()

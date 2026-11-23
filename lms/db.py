@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS exams (
     name        TEXT NOT NULL,
     subject     TEXT NOT NULL DEFAULT '',
     exam_date   TEXT NOT NULL,
-    max_score   REAL NOT NULL DEFAULT 100,
+    max_score   REAL NOT NULL DEFAULT 50,
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_exams_class ON exams(class_id);
@@ -465,6 +465,15 @@ CREATE TABLE IF NOT EXISTS vocab_marks (
     n_wrong     INTEGER NOT NULL DEFAULT 0,
     last        TEXT,
     PRIMARY KEY (user_id, word)
+);
+-- 휴강 기간. class_id 가 NULL 이면 모든 반
+CREATE TABLE IF NOT EXISTS class_breaks (
+    id          INTEGER PRIMARY KEY,
+    class_id    INTEGER REFERENCES classes(id) ON DELETE CASCADE,
+    starts      TEXT NOT NULL,
+    ends        TEXT NOT NULL,
+    note        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 -- 학생이 직접 만드는 시간표 (에브리타임처럼, 한 사람에 하나)
 CREATE TABLE IF NOT EXISTS my_timetable (

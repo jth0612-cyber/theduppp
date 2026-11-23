@@ -13,6 +13,9 @@
   </div>
 </header>
 
+{% for b in brks %}
+<p class="tt-break"><b>{{ '휴강 중' if b.now else '휴강 예정' }}</b>{{ b.starts[5:]|replace('-', '/') }}~{{ b.ends[5:]|replace('-', '/') }}{% if b.note %} · {{ b.note }}{% endif %}{% if b.now %} · 수업 재개 {{ b.back[5:]|replace('-', '/') }} (D-{{ b.back_left }}){% endif %}</p>
+{% endfor %}
 {% if class_has %}
 <form method="post" action="{{ url_for('study.timetable_import') }}" class="tt-import">
   {{ csrf() }}<span>반 시간표 있음</span><button class="btn small">반 시간표로 시작하기</button>
@@ -21,7 +24,7 @@
 
 <div class="tt-grid tt-cols-{{ grid.ncols }}" data-tt data-first="{{ grid.first }}" data-rows="{{ grid.rows }}">
   <div class="tt-corner" aria-hidden="true"></div>
-  {% for d in grid.days %}<div class="tt-dayhead tt-c{{ d.c }}{{ ' is-today' if d.today }}">{{ d.label }}</div>{% endfor %}
+  {% for d in grid.days %}<div class="tt-dayhead tt-c{{ d.c }}{{ ' is-today' if d.today }}{{ ' is-off' if d.off }}">{{ d.label }}{% if d.off %}<small>휴강</small>{% endif %}</div>{% endfor %}
   {% for h in grid.hours %}<div class="tt-hour tt-r{{ h.r }}" aria-hidden="true">{{ h.h }}</div>{% endfor %}
   {% for d in grid.days %}<button type="button" class="tt-col tt-c{{ d.c }} tt-r1 tt-sp{{ grid.rows }}{{ ' is-today' if d.today }}" data-tt-day="{{ d.i }}" aria-label="{{ d.label }}요일에 일정 추가"></button>{% endfor %}
   {% for b in grid.blocks %}

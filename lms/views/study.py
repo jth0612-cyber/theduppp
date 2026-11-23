@@ -3,7 +3,7 @@
 import json
 import os
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, abort, current_app, flash, g, jsonify, redirect, render_template, request, url_for
 
@@ -44,6 +44,28 @@ def dday_info():
         return None
     left = (d - date.today()).days
     return {"day": d.isoformat(), "left": left, "label": get_setting("exam_label", "수능")}
+
+
+BREAK_AHEAD = 21       # 휴강 예정은 시작 3주 전부터 알린다
+
+
+def breaks_for(class_id, ahead=BREAK_AHEAD):
+    """이 반(또는 모든 반) 휴강 중 아직 끝나지 않았고 ahead 일 안에 시작하는 것. 지금 휴강 중이면 now=True."""
+    today = date.today()
+    rows = query("""SELECT * FROM class_breaks WHERE (class_id IS NULL OR class_id = ?) AND ends >= ? AND starts <= ?
+                    ORDER BY starts""", (class_id, today.isoformat(), (today + timedelta(days=ahead)).isoformat()))
+    out = []
+    for r in rows:
+        back = date.fromisoformat(r["ends"]) + timedelta(days=1)
+        out.append(dict(r, now=r["starts"] <= today.isoformat(), back=back.isoformat(), back_left=(back - today).days))
+    return out
+
+
+def _week_off(brks):
+    """이번 주 요일(0~6) 중 휴강인 날."""
+    monday = date.today() - timedelta(days=date.today().weekday())
+    days = [(monday + timedelta(days=i)).isoformat() for i in range(7)]
+    return {i for i, d in enumerate(days) if any(b["starts"] <= d <= b["ends"] for b in brks)}
 
 
 TONE_ORDER = [2, 0, 1, 5, 4, 6, 3, 7]   # 하늘, 벚꽃, 말차, 귤, 등꽃, 청록, 유자, 벽돌
@@ -172,7 +194,7 @@ def _mins(t):
     return int(t[:2]) * 60 + int(t[3:])
 
 
-def _tt_grid(slots):
+def _tt_grid(slots, off=()):
     """에브리타임처럼 요일 × 시간 격자. 칸 위치는 CSS 클래스(tt-rN, tt-spN, tt-cN)로만 정한다(CSP: 인라인 style 금지)."""
     first = min([_mins(s["starts"]) // 60 for s in slots] + [9])
     last = max([-(-_mins(s["ends"]) // 60) for s in slots] + [22])
@@ -192,7 +214,7 @@ def _tt_grid(slots):
         span = max(3, -(-(en - st) // TT_STEP))
         blocks.append(dict(s, r=r0, sp=span, c=col[s["weekday"]], short=span < 6))
     hours = list(range(first, last))
-    return {"days": [{"i": d, "label": WEEKDAYS[d], "c": col[d], "today": d == date.today().weekday()} for d in days],
+    return {"days": [{"i": d, "label": WEEKDAYS[d], "c": col[d], "today": d == date.today().weekday(), "off": d in off} for d in days],
             "hours": [{"h": h, "r": (h - first) * 60 // TT_STEP + 1} for h in hours], "blocks": blocks,
             "rows": (last - first) * 60 // TT_STEP, "first": first, "ncols": len(days)}
 
@@ -260,7 +282,8 @@ def timetable():
     current = next((s for s in today if s["starts"] <= hm < s["ends"]), None)
     upnext = next((s for s in today if s["starts"] > hm), None)
     class_has = bool(me["class_id"]) and bool(query("SELECT 1 FROM timetable WHERE class_id = ? LIMIT 1", (me["class_id"],), one=True))
-    return render_template("study/timetable.html", grid=_tt_grid(slots), dday=dday_info(), me=me, weekdays=WEEKDAYS,
+    brks = breaks_for(me["class_id"])
+    return render_template("study/timetable.html", grid=_tt_grid(slots, _week_off(brks)), dday=dday_info(), brks=brks, me=me, weekdays=WEEKDAYS,
                            current=current, upnext=upnext, has_slots=bool(slots), class_has=class_has and not slots)
 
 
@@ -310,7 +333,24 @@ def timetable_import():
 @bp.route("/t/timetable", methods=["GET", "POST"])
 @staff_required
 def t_timetable():
-    """수능 D-day 설정 (시간표는 학생이 각자 만든다)."""
+    """수능 D-day 및 휴강 설정 (시간표는 학생이 각자 만든다)."""
+    if request.method == "POST" and request.form.get("action") == "break_del":
+        execute("DELETE FROM class_breaks WHERE id = ?", (request.form.get("id", type=int),))
+        flash("휴강을 삭제했습니다.", "ok")
+        return redirect(url_for("study.t_timetable"))
+    if request.method == "POST" and request.form.get("action") == "break_add":
+        s, e = _parse_day(request.form.get("starts")), _parse_day(request.form.get("ends"))
+        cid = request.form.get("class_id", type=int)
+        if cid and not query("SELECT 1 FROM classes WHERE id = ?", (cid,), one=True):
+            abort(404)
+        if s is None or e is None or e < s:
+            flash("휴강 시작일 및 끝나는 날을 확인하세요.", "error")
+        else:
+            execute("INSERT INTO class_breaks (class_id, starts, ends, note) VALUES (?, ?, ?, ?)",
+                    (cid or None, s.isoformat(), e.isoformat(), request.form.get("note", "").strip()[:40]))
+            audit("break_add", f"class:{cid or 'all'} {s}~{e}")
+            flash(f"{s.isoformat()}~{e.isoformat()} 휴강을 넣었습니다.", "ok")
+        return redirect(url_for("study.t_timetable"))
     if request.method == "POST":
         d = _parse_day(request.form.get("exam_day"))
         label = request.form.get("exam_label", "").strip()[:20] or "수능"
@@ -321,7 +361,11 @@ def t_timetable():
             set_setting("exam_label", label)
             flash(f"{label} 날짜를 {d.isoformat()}로 정했습니다.", "ok")
         return redirect(url_for("study.t_timetable"))
-    return render_template("study/t_timetable.html", cid=None, dday=dday_info(), exam_label=get_setting("exam_label", "수능"))
+    breaks = query("""SELECT b.*, c.name AS class_name FROM class_breaks b LEFT JOIN classes c ON c.id = b.class_id
+                      WHERE b.ends >= ? ORDER BY b.starts""", (date.today().isoformat(),))
+    classes = query("SELECT id, name FROM classes WHERE archived = 0 AND is_test = 0 ORDER BY track, name")
+    return render_template("study/t_timetable.html", cid=None, dday=dday_info(), exam_label=get_setting("exam_label", "수능"),
+                           breaks=breaks, classes=classes, today=date.today().isoformat())
 
 
 # =====================================================================
@@ -336,11 +380,6 @@ def build_report(student_id):
     if s is None:
         abort(404)
     user = query("SELECT id FROM users WHERE student_id = ?", (student_id,), one=True)
-    scores = query("""SELECT e.name, e.exam_date, e.max_score, sc.score, ROUND(sc.score * 100.0 / e.max_score, 1) AS pct,
-                             (SELECT ROUND(AVG(score) * 100.0 / e.max_score, 1) FROM scores WHERE exam_id = e.id) AS avg_pct
-                      FROM scores sc JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = ?
-                      ORDER BY e.exam_date, e.id""", (student_id,))
-    chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["exam_date"]} for r in scores])
     mocks, reasons, focus = [], [], None
     if user:
         uid = user["id"]
@@ -351,16 +390,19 @@ def build_report(student_id):
             wrong = analysis.wrong_items(e["answers"], json.loads(e["answer_key"])) if e["mode"] == "answers" else []
             mocks.append({"title": f"{e['book_title']} {e['round_no']}회", "score": e["score"], "full": e["full_score"],
                           "grade": analysis.grade_for(e["score"], st["cuts"]), "n": st["n"], "wrong": wrong})
-        reasons = query("""SELECT reason, COUNT(*) AS n FROM wrong_notes WHERE user_id = ? AND reason != ''
-                           GROUP BY reason ORDER BY n DESC""", (uid,))
+        import exams
+        from collections import Counter
+        reasons = [{"reason": t, "n": n} for t, n in Counter(   # 대표 이유: 학생 선택 > 조교 첨삭 > 자동 분석 (exams.pick_reason)
+            a["type"] for h in exams.history(student_id) for a in h["wrongs"] if a["type"]).most_common()]
         focus = query("""SELECT COALESCE(SUM(minutes), 0) AS m, COUNT(*) AS n FROM focus_logs
                          WHERE user_id = ? AND ended_at >= date('now', 'localtime', '-27 days')""", (uid,), one=True)
     import sysdata
     code = sysdata.code_of_student(student_id)
     sys_scores = sysdata.scores(code)
+    chart = _score_chart([{"pct": round(100 * m["score"] / m["full"], 1), "label": m["title"], "date": ""} for m in mocks if m["full"]])
     if sys_scores:                                   # 조교 시스템 성적이 있으면 그것으로 흐름을 그린다
         chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["day"]} for r in sys_scores if r["pct"] is not None])
-    return {"s": s, "scores": scores, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
+    return {"s": s, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
             "today": date.today().isoformat(), "code": code, "sys_scores": sys_scores,
             "units": sysdata.report(code), "learn": sysdata.learn_type(code), "study": sysdata.study_type(code),
             "sys_types": sysdata.type_counts(sysdata.wrong_notes(code)), "sfmt": sysdata.fmt}

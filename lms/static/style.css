@@ -335,6 +335,7 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 
 /* ---------- 통계 ---------- */
 .stats-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+.stats-grid.is-one { grid-template-columns: minmax(0, 1fr); }
 table.ledger th { border-bottom: 1px solid var(--ink); }
 table.ledger tr.mine td { background: var(--accent-soft); }
 .hbars { width: 100%; max-width: 520px; height: auto; display: block; font-variant-numeric: tabular-nums; }
@@ -1499,6 +1500,10 @@ body.entered .side .nav { animation: rail-in 520ms 160ms cubic-bezier(.2, .7, .2
 .tt-corner { grid-column: 1; grid-row: 1; border-bottom: 1px solid var(--edge); }
 .tt-dayhead { grid-row: 1; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--edge); border-left: 1px solid var(--rule); }
 .tt-dayhead.is-today { color: var(--accent-ink); background: var(--accent-soft); }
+.tt-dayhead.is-off { color: #B42318; }
+.tt-dayhead small { display: block; font-size: 10px; font-weight: 500; line-height: 1; }
+.tt-break { margin: 0 0 10px; padding: 8px 12px; border-left: 3px solid #D99A94; font-size: 14px; }
+.tt-break b { color: #B42318; margin-right: 8px; }
 .tt-hour { grid-column: 1; grid-row-end: span 6; font-size: 11px; color: var(--faint); text-align: right; padding: 2px 6px 0 0; font-variant-numeric: tabular-nums; border-top: 1px solid var(--rule); }
 .tt-col { z-index: 0; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--rule); cursor: cell; font: inherit;
   background: repeating-linear-gradient(to bottom, var(--rule) 0 1px, transparent 1px 24px, color-mix(in srgb, var(--rule) 55%, transparent) 24px 25px, transparent 25px 48px); }

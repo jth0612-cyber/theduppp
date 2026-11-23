@@ -107,18 +107,9 @@ class AppTest(unittest.TestCase):
             row = query("SELECT phone_enc FROM students WHERE student_no='A001'", one=True)
             self.assertNotIn("010", row["phone_enc"])  # 연락처는 암호화 저장
 
-        r = self.c.post(f"/t/classes/{cid}/exams",
-                        data={"name": "주간1", "exam_date": "2026-10-20", "max_score": "100"})
-        eid = int(r.headers["Location"].rsplit("/", 1)[-1])
         with self.app.app_context():
             ids = {s["student_no"]: s["id"] for s in query("SELECT id, student_no FROM students")}
-        self.c.post(f"/t/exams/{eid}", data={f"score_{ids['A001']}": "88", f"score_{ids['A002']}": "150"})
-        with self.app.app_context():
-            self.assertEqual(query("SELECT COUNT(*) n FROM scores", one=True)["n"], 1)  # 범위 밖 점수 거부
-
-        export = self.c.get(f"/t/exams/{eid}/export").data.decode("utf-8-sig")
-        self.assertIn("김민수", export)
-
+        self.assertEqual(self.c.post(f"/t/classes/{cid}/exams", data={"name": "주간1"}).status_code, 404)   # 수기 점수 입력 없음
         page = self.c.get(f"/t/students/{ids['A001']}").data.decode()
         self.assertIn("010-1111-2222", page)
 
@@ -130,7 +121,7 @@ class AppTest(unittest.TestCase):
         qid = self.ask(sc, "22번", "모르겠어요")
         self.c.post(f"/t/questions/{qid}", data={"body": "이렇게 풀어요"})
         self.assertIn("이렇게 풀어요", sc.get(f"/s/questions/{qid}").data.decode())
-        self.assertIn("88", sc.get("/s/scores").data.decode())
+        self.assertEqual(sc.get("/s/scores").status_code, 200)
 
     # ---------- 보안 ----------
 
@@ -259,9 +250,7 @@ class AppTest(unittest.TestCase):
     def test_csv_formula_injection_neutralized(self):
         cid = self.setup_class_with_students()
         self.c.post(f"/t/classes/{cid}/students", data={"name": "=HYPERLINK(1)", "student_no": "B1"})
-        r = self.c.post(f"/t/classes/{cid}/exams", data={"name": "e", "exam_date": "2026-10-20", "max_score": "10"})
-        eid = int(r.headers["Location"].rsplit("/", 1)[-1])
-        out = self.c.get(f"/t/exams/{eid}/export").data.decode("utf-8-sig")
+        out = self.c.post(f"/t/classes/{cid}/accounts").data.decode("utf-8-sig")
         self.assertIn("'=HYPERLINK(1)", out)
 
     def test_open_redirect_blocked(self):
@@ -756,7 +745,7 @@ class FeatureTest(AppTest):
         page = self.c.get(f"/t/students/{sid}").data.decode()
         self.assertIn("복테·모의고사", page)
         self.assertIn("학부모 리포트에 나가는 코멘트", page)
-        self.assertIn("반 시험 성적 추이", page)
+        self.assertIn("성적 추이", page)
 
     def test_student_feedback_list(self):
         _, s1, _ = self._students()
@@ -771,7 +760,7 @@ class FeatureTest(AppTest):
         self.assertIn("안녕하세요, 정태혁 선생님", self.c.get("/t/").data.decode())   # 아이디 대신 이름
         page = self.c.get("/password").data.decode()
         self.assertIn('class="sheet container"', page)                       # 앱 틀 안에서는 좁은 로그인 틀을 쓰지 않음
-        self.assertIn('href="/s/books/register"', s1.get("/s/analysis").data.decode())
+        self.assertNotIn('/s/books/register', s1.get("/s/analysis").data.decode())
 
     def test_assistant_disable_and_username_rules(self):
         self._students()

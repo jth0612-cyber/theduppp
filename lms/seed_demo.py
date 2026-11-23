@@ -341,14 +341,11 @@ with app.app_context():
     db_.commit()
 OTHERS = [(st, accounts[st["id"]]) for _, st in ALL_STUDENTS if st["id"] in accounts]
 
-# ---------------------------------------------------------------- 교재 · 인증 코드
+# ---------------------------------------------------------------- 교재
 # 앱이 미리 만들어 둔 '복습 테스트'·'모의고사' 1~50회에 결과를 올린다 (실제 운영 방식)
 BOOK_R = q("SELECT id FROM books WHERE title = '복습 테스트' AND is_practice = 0", one=True)["id"]
 BOOK_M = q("SELECT id FROM books WHERE title = '모의고사' AND is_practice = 0", one=True)["id"]
-ok("교재 코드", T.post(f"/t/books/{BOOK_M}/codes", data={"kind": "single", "count": "40"}))
-for name, p in P.items():
-    code = q("SELECT code FROM book_codes WHERE book_id = ? AND uses = 0 ORDER BY id LIMIT 1", (BOOK_M,), one=True)["code"]
-    ok(f"교재 등록 {p['st']['name']}", p["S"].post("/s/books/register", data={"code": code}))
+
 
 
 # ---------------------------------------------------------------- OMR (복습 테스트 · 모의고사)

@@ -1,15 +1,16 @@
 {# 회차 통계: 등급 기준표, 점수대 분포, 문항 지도, 선지 비율. 그림은 SVG 속성·CSS 클래스만 써서 CSP(style-src 'self')를 지킨다. #}
-<div class="stats-grid">
+{% set staff_view = g.user and g.user.role != 'student' %}{# 학생에게는 석차를 짐작할 백분위·점수대 분포를 보이지 않는다 #}
+<div class="stats-grid{{ '' if staff_view else ' is-one' }}">
   <section class="panel" aria-labelledby="h-cuts">
     <div class="sec-head"><h2 id="h-cuts">등급 기준표</h2><span>응시 {{ stats.n }}명 기준</span></div>
     {% if stats.cuts %}
     <div class="table-wrap"><table class="ledger">
-      <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th><th class="num">백분위</th><th class="num">오차 범위</th></tr></thead>
+      <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th>{% if staff_view %}<th class="num">백분위</th>{% endif %}<th class="num">오차 범위</th></tr></thead>
       <tbody>
       {% for r in stats.cuts %}
         <tr class="{{ 'mine' if my_grade == r.grade }}">
           <td class="grade-cell">{{ r.grade }}등급</td><td class="num"><b>{{ fmt(r.raw) }}</b></td><td class="num">{{ r.std }}</td>
-          <td class="num">{{ r.pct }}</td><td class="num muted">{% if r.lo == r.hi %}{{ fmt(r.lo) }}{% else %}{{ fmt(r.lo) }}~{{ fmt(r.hi) }}{% endif %}</td>
+          {% if staff_view %}<td class="num">{{ r.pct }}</td>{% endif %}<td class="num muted">{% if r.lo == r.hi %}{{ fmt(r.lo) }}{% else %}{{ fmt(r.lo) }}~{{ fmt(r.hi) }}{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -20,6 +21,7 @@
     {% endif %}
   </section>
 
+  {% if staff_view %}
   <section class="panel" aria-labelledby="h-dist">
     <div class="sec-head"><h2 id="h-dist">점수대 분포</h2><span>{{ stats.n }}명</span></div>
     {% if stats.dist %}
@@ -40,6 +42,7 @@
     <p class="muted">채점된 답안이 아직 없습니다.</p>
     {% endif %}
   </section>
+  {% endif %}
 </div>
 
 <section class="panel" id="items" aria-labelledby="h-items">

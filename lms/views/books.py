@@ -1,6 +1,6 @@
 """교재 분석실.
-학생: 교재 인증 코드 등록(내 교재) → 분석실(가채점 입력, 예상 등급컷, 점수 분포, 문항별 오답률, 선지별 선택 비율).
-강사: 교재·회차(정답·배점)·인증 코드 관리, 회차별 통계 보기.
+학생: 분석실(가채점 입력, 예상 등급컷, 점수 분포, 문항별 오답률, 선지별 선택 비율).
+강사: 교재·회차(정답·배점) 관리, 회차별 통계 보기.
 정답과 배점은 서버에만 있고, 학생 화면에는 채점 결과와 통계만 나간다."""
 import csv
 import io
@@ -17,7 +17,6 @@ from security import audit, decrypt, member_required, staff_required, student_re
 
 bp = Blueprint("books", __name__)
 
-MAX_CODE_FAILS_PER_HOUR = 10
 
 
 def _today():
@@ -74,45 +73,6 @@ def _accessible_mocks():
                           EXISTS (SELECT 1 FROM mock_entries e WHERE e.mock_id = m.id AND e.user_id = ?)
                           OR m.review != '' OR m.eval_level IS NOT NULL OR m.eval_video != '')
                     ORDER BY b.kind, m.round_no DESC""", (g.user["id"], g.user["id"]))
-
-
-@bp.route("/s/books/register", methods=["GET", "POST"])
-@student_required
-def register_book():
-    if request.method == "POST":
-        since = (datetime.now() - timedelta(hours=1)).isoformat(sep=" ", timespec="seconds")
-        fails = query("SELECT COUNT(*) AS n FROM audit_log WHERE user_id = ? AND action = 'book_code_failed' "
-                      "AND created_at >= ?", (g.user["id"], since), one=True)["n"]
-        if fails >= MAX_CODE_FAILS_PER_HOUR:
-            flash("코드 입력이 여러 번 맞지 않아 잠시 차단했습니다. 1시간 뒤에 다시 시도해 주세요.", "error")
-            return render_template("student/book_register.html", step=2), 429
-        code = analysis.normalize_code(request.form.get("code"))
-        row = query("SELECT c.*, b.title, b.expires_on FROM book_codes c JOIN books b ON b.id = c.book_id "
-                    "WHERE c.code = ?", (code,), one=True) if code else None
-        error = None
-        if row is None:
-            error = "일치하는 코드가 없습니다. 12자리를 다시 확인해 주세요. 코드에는 숫자 0 및 1과 영문 O·I·L이 포함되지 않습니다."
-        elif row["expires_on"] < _today():
-            error = "이용 기간이 지난 교재입니다."
-        elif query("SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",
-                   (g.user["id"], row["book_id"]), one=True):
-            flash("이미 등록한 교재입니다.", "ok")
-            return redirect(url_for("books.analysis_home"))
-        elif row["max_uses"] is not None and row["uses"] >= row["max_uses"]:
-            error = "이미 다른 계정에서 사용한 코드입니다. 착오라면 선생님께 알려 주세요."
-        if error:
-            audit("book_code_failed", f"code:{(code or '')[:4]}")
-            flash(error, "error")
-            return render_template("student/book_register.html", step=2)
-        execute("INSERT INTO user_books (user_id, book_id, code_id) VALUES (?, ?, ?)",
-                (g.user["id"], row["book_id"], row["id"]))
-        execute("UPDATE book_codes SET uses = uses + 1 WHERE id = ?", (row["id"],))
-        audit("book_registered", f"book:{row['book_id']}")
-        book = query("SELECT * FROM books WHERE id = ?", (row["book_id"],), one=True)
-        first = query("SELECT id FROM mocks WHERE book_id = ? AND open = 1 ORDER BY round_no LIMIT 1",
-                      (book["id"],), one=True)
-        return render_template("student/book_register.html", step=3, book=book, first_mock=first)
-    return render_template("student/book_register.html", step=2)
 
 
 @bp.route("/s/analysis")
@@ -244,8 +204,7 @@ def teacher_books():
                            1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], kind))
             audit("book_created", f"book:{bid}")
             return redirect(url_for("books.teacher_book", bid=bid))
-    books = query("""SELECT b.*, (SELECT COUNT(*) FROM user_books ub WHERE ub.book_id = b.id) AS users,
-                     (SELECT COUNT(*) FROM mocks m WHERE m.book_id = b.id) AS mocks
+    books = query("""SELECT b.*, (SELECT COUNT(*) FROM mocks m WHERE m.book_id = b.id) AS mocks
                      FROM books b ORDER BY b.created_at DESC""")
     rounds = {}
     for r in query("""SELECT m.id, m.round_no, m.n_items, m.exam_date, b.kind, b.is_practice,
@@ -270,12 +229,7 @@ def teacher_book(bid):
     book = _book_or_404(bid)
     mocks = query("""SELECT m.*, (SELECT COUNT(*) FROM mock_entries e WHERE e.mock_id = m.id AND e.score IS NOT NULL)
                      AS n FROM mocks m WHERE m.book_id = ? ORDER BY m.round_no""", (bid,))
-    shared = query("SELECT * FROM book_codes WHERE book_id = ? AND max_uses IS NULL ORDER BY id", (bid,))
-    single = query("SELECT COUNT(*) AS total, SUM(uses) AS used FROM book_codes WHERE book_id = ? "
-                   "AND max_uses IS NOT NULL", (bid,), one=True)
-    users = query("SELECT COUNT(*) AS n FROM user_books WHERE book_id = ?", (bid,), one=True)["n"]
-    return render_template("teacher/book_detail.html", book=book, mocks=mocks, shared=shared, single=single,
-                           users=users, fmt_code=analysis.format_code, fmt=analysis._fmt,
+    return render_template("teacher/book_detail.html", book=book, mocks=mocks, fmt=analysis._fmt,
                            next_round=(max([m["round_no"] for m in mocks]) + 1) if mocks else 1)
 
 
@@ -295,55 +249,6 @@ def edit_book(bid):
              expires_on, 1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], kind, bid))
     flash("교재 정보를 저장했습니다.", "ok")
     return redirect(url_for("books.teacher_book", bid=bid))
-
-
-def _code_taken(c):
-    return query("SELECT 1 FROM book_codes WHERE code = ?", (c,), one=True) is not None
-
-
-@bp.route("/t/books/<int:bid>/codes", methods=["POST"])
-@staff_required
-def make_codes(bid):
-    book = _book_or_404(bid)
-    kind = request.form.get("kind")
-    if kind == "shared":
-        code = analysis.new_code(_code_taken)
-        execute("INSERT INTO book_codes (book_id, code, max_uses) VALUES (?, ?, NULL)", (bid, code))
-        audit("book_codes_created", f"book:{bid} shared")
-        flash(f"배포 코드를 만들었습니다: {analysis.format_code(code)} (여러 명이 같은 코드를 씁니다)", "ok")
-        return redirect(url_for("books.teacher_book", bid=bid))
-    try:
-        count = int(request.form.get("count", "0"))
-    except ValueError:
-        count = 0
-    if not 1 <= count <= 2000:
-        flash("코드 개수는 1~2000 사이로 입력하세요.", "error")
-        return redirect(url_for("books.teacher_book", bid=bid))
-    codes = []
-    for _ in range(count):
-        c = analysis.new_code(_code_taken)
-        execute("INSERT INTO book_codes (book_id, code, max_uses) VALUES (?, ?, 1)", (bid, c))
-        codes.append(c)
-    audit("book_codes_created", f"book:{bid} single:{count}")
-    out = io.StringIO()
-    w = csv.writer(out)
-    w.writerow(["교재", "인증 코드"])
-    for c in codes:
-        w.writerow([book["title"], analysis.format_code(c)])
-    return Response("﻿" + out.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": f"attachment; filename=book{bid}_codes.csv"})
-
-
-@bp.route("/t/codes/<int:cid>/delete", methods=["POST"])
-@staff_required
-def delete_code(cid):
-    row = query("SELECT book_id FROM book_codes WHERE id = ?", (cid,), one=True)
-    if row is None:
-        abort(404)
-    execute("DELETE FROM book_codes WHERE id = ?", (cid,))
-    audit("book_code_deleted", f"code:{cid}")
-    flash("코드를 삭제했습니다. 이미 등록한 학생은 계속 사용할 수 있습니다.", "ok")
-    return redirect(url_for("books.teacher_book", bid=row["book_id"]))
 
 
 @bp.route("/t/books/<int:bid>/mocks", methods=["POST"])

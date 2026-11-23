@@ -3,11 +3,11 @@
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재·모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }} · {{ book.expires_on }}까지 · 인증 코드 등록 {{ users }}명{% if book.is_free %} · 배포본{% endif %}</p></div>
+  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }} · {{ book.expires_on }}까지{% if book.is_free %} · 배포본{% endif %}</p></div>
 </div>
-<p class="small muted">학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차 / 인증 코드 등록 여부와는 상관없음</p>
+<p class="small muted">학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>
 
-<div class="grid grid-2">
+<div>
   <section class="card" aria-labelledby="h-mocks">
     <h2 id="h-mocks">회차</h2>
     {% if mocks %}
@@ -30,25 +30,6 @@
     {% else %}<p class="muted">아직 회차가 없습니다.</p>{% endif %}
   </section>
 
-  <section class="card" aria-labelledby="h-codes">
-    <h2 id="h-codes">인증 코드</h2>
-    <p class="small">교재마다 한 번만 쓰는 개별 코드: <b>{{ single.total or 0 }}개</b> 발급, <b>{{ single.used or 0 }}개</b> 사용됨</p>
-    <form method="post" action="{{ url_for('books.make_codes', bid=book.id) }}" class="row">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="single">
-      <div class="field"><label for="count">개별 코드 개수</label><input type="number" id="count" name="count" min="1" max="2000" value="50"></div>
-      <div class="field shrink"><button class="btn" type="submit">만들고 CSV 받기</button></div>
-    </form>
-    <p class="small muted">CSV로 받은 코드를 교재 앞부속에 인쇄하세요. 다시 받을 수 없으니 잘 보관하세요.</p>
-    <h3 class="mt">배포 코드 (여러 명이 같이 쓰는 코드)</h3>
-    {% for c in shared %}
-      <div class="row code-row"><span class="join-code">{{ fmt_code(c.code) }}</span><span class="small muted">{{ c.uses }}명 사용</span>
-        <form method="post" action="{{ url_for('books.delete_code', cid=c.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="이 배포 코드를 삭제하시겠습니까? 이미 등록한 학생은 계속 사용할 수 있습니다.">삭제</button></form></div>
-    {% else %}<p class="small muted">없음</p>{% endfor %}
-    <form method="post" action="{{ url_for('books.make_codes', bid=book.id) }}" class="mt">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="shared">
-      <button class="btn" type="submit">배포 코드 만들기</button>
-    </form>
-  </section>
 </div>
 
 <section class="card" id="add-mock" aria-labelledby="h-add">

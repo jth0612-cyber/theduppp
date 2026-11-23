@@ -436,6 +436,27 @@ def analyze_item(no, mine, k, info):
     return res
 
 
+def pick_reason(student, ta, auto):
+    """틀린 이유 대표값. 우선순위 학생 선택 > 조교 첨삭 > 자동 분석.
+    둘 이상이 같으면 그 값, 모두 다르면 우선순위, 하나만 있으면 그 값, 없으면 빈칸."""
+    votes = [v for v in (student, ta, auto) if v]
+    for v in votes:
+        if votes.count(v) >= 2:
+            return v
+    return votes[0] if votes else ""
+
+
+def _reason_sources(mid, student_id):
+    """({문항: 학생이 오답 노트에서 고른 이유}, {문항: 조교 첨삭 유형})"""
+    mine = {r["item_no"]: r["reason"] for r in query(
+        """SELECT w.item_no, w.reason FROM wrong_notes w JOIN users u ON u.id = w.user_id
+           WHERE u.student_id = ? AND w.mock_id = ? AND w.reason != ''""", (student_id, mid))}
+    ta = {r["item_no"]: r["reason"] for r in query(
+        """SELECT k.item_no, k.reason FROM exam_paper_marks k JOIN exam_papers p ON p.id = k.paper_id
+           WHERE p.mock_id = ? AND p.student_id = ? AND p.status = 'done' AND k.reason != ''""", (mid, student_id))}
+    return mine, ta
+
+
 def student_report(mid, student_id, cs=None):
     """한 학생의 이번 시험 분석: 점수, 반 통계, 틀린 문항별 분석."""
     cs = cs or class_stats(mid)
@@ -447,6 +468,7 @@ def student_report(mid, student_id, cs=None):
     enough = st["n"] >= SET["min_n"]
     all_enough = cs["all"]["n"] >= SET["min_n"]
     wrong = analysis.wrong_items(r["answers"], m["key"])
+    mine_why, ta_why = _reason_sources(mid, student_id) if wrong else ({}, {})
     items = []
     for no in wrong:
         i = no - 1
@@ -460,6 +482,10 @@ def student_report(mid, student_id, cs=None):
         a["unit"] = m["info"].get(no, {}).get("unit", "")
         a["concept"] = m["info"].get(no, {}).get("concept", "")
         a["points"] = m["pts"][i]
+        a["auto_type"] = a["type"]
+        a["type"] = pick_reason(mine_why.get(no, ""), ta_why.get(no, ""), a["auto_type"])
+        if a["auto_type"] and a["type"] != a["auto_type"]:
+            a["analysis"] = a["analysis"].replace(f"{a['auto_type']} 오류로, ", f"{a['type']} 오류로, ", 1)
         items.append(a)
     return {"mock": m, "r": r, "cls": r["cls"], "st": st, "all": cs["all"], "enough": enough, "all_enough": all_enough,
             "wrong": wrong, "wrongs": items, "full": m["full_score"], "has_choice": cs["has_choice"]}

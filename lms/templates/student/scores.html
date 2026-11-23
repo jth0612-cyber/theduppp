@@ -50,21 +50,5 @@
 </section>
 {% endfor %}
 
-{% if scores %}
-<div class="card">
-  {% if sys_scores %}<h2 class="sec-title">웹에 입력된 성적</h2>{% endif %}
-  <div class="table-wrap"><table class="score-table">
-    <tr><th>날짜</th><th>시험</th><th class="st-subj">과목</th><th class="num">내 점수</th><th class="num">반 평균</th></tr>
-    {% for r in scores %}
-    <tr>
-      <td class="small"><time datetime="{{ r.exam_date }}">{{ r.exam_date[5:]|replace("-", ".") if r.exam_date else "" }}</time></td>
-      <td>{{ r.name }}</td>
-      <td class="muted st-subj">{{ r.subject }}</td>
-      <td class="num"><b>{{ '%g'|format(r.score) }}</b> / {{ '%g'|format(r.max_score) }}</td>
-      <td class="num">{{ r.class_avg }}</td>
-    </tr>
-    {% endfor %}
-  </table></div>
-</div>
-{% elif not sys_scores and not omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
+{% if not sys_scores and not omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
 {% endblock %}

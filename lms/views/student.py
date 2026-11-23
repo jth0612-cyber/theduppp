@@ -132,11 +132,6 @@ def videos():
 @student_required
 def scores():
     me = _me()
-    # 본인 점수와 반 평균만 보여준다 (다른 학생 점수/석차 비공개)
-    rows = query("""SELECT e.name, e.subject, e.exam_date, e.max_score, sc.score,
-                      (SELECT ROUND(AVG(score), 1) FROM scores WHERE exam_id = e.id) AS class_avg
-                    FROM scores sc JOIN exams e ON e.id = sc.exam_id
-                    WHERE sc.student_id = ? ORDER BY e.exam_date DESC, e.id DESC""", (me["id"],))
     import sysdata
     code = sysdata.code_of_student(me["id"])
     # 복테·모의고사 (OMR로 올라온 결과): 학부모 리포트와 같은 숫자
@@ -147,7 +142,7 @@ def scores():
         ex = [e for e in season if e["kind"] == kind]
         if ex:
             omr.append({"kind": kind, "exams": ex, "chart": rate_chart(ex)})
-    return render_template("student/scores.html", me=me, scores=rows, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt, omr=omr)
+    return render_template("student/scores.html", me=me, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt, omr=omr)
 
 
 # ---------- 질답 게시판 ----------

@@ -20,11 +20,6 @@ KEY = "14352534112431552143"  # 20문항
 
 
 class AnalysisMathTest(unittest.TestCase):
-    def test_code_normalize_and_format(self):
-        self.assertEqual(analysis.normalize_code("abcd-efgh-jkmn"), "ABCDEFGHJKMN")
-        self.assertIsNone(analysis.normalize_code("ABCD-EFGH-JKM"))     # 11자리
-        self.assertEqual(analysis.format_code("ABCDEFGHJKMN"), "ABCD-EFGH-JKMN")
-
     def test_points_must_sum_to_full(self):
         with self.assertRaises(ValueError):
             analysis.parse_points("", 20, 50)                           # 2.5점은 직접 입력해야 함
@@ -154,12 +149,8 @@ class BooksTest(unittest.TestCase):
         page = self.student(0).get(f"/s/analysis?mock={m['id']}").data.decode()
         self.assertIn("놓친 점수", page)
         self.assertIn("4점", page)
-        self.assertIn("45–50", page)
-
-    def shared_code(self, bid):
-        self.t.post(f"/t/books/{bid}/codes", data={"kind": "shared"})
-        with self.app.app_context():
-            return query("SELECT code FROM book_codes WHERE book_id = ? AND max_uses IS NULL", (bid,), one=True)["code"]
+        self.assertNotIn("점수대 분포", page)                          # 학생에게는 석차를 짐작할 분포·백분위 비공개
+        self.assertNotIn("백분위", page)
 
     def test_omr_upload_shows_to_students(self):
         """강사가 OMR 엑셀을 올리면 그 학생 화면에 바로 채점 결과가 보인다. 학생은 답을 적을 수 없다."""
@@ -228,24 +219,6 @@ class BooksTest(unittest.TestCase):
         bad = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(b"x"), "a.txt")},
                           content_type="multipart/form-data", follow_redirects=True)
         self.assertIn("엑셀(.xlsx) 또는 CSV", bad.data.decode())
-
-    def test_single_use_code_and_expired_book(self):
-        bid, _ = self.make_book()
-        r = self.t.post(f"/t/books/{bid}/codes", data={"kind": "single", "count": "2"})
-        codes = re.findall(r"[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}", r.data.decode("utf-8-sig"))
-        self.assertEqual(len(codes), 2)
-        a, b = self.student(0), self.student(1)
-        self.assertIn("교재 등록 완료", a.post("/s/books/register", data={"code": codes[0]}).data.decode())
-        self.assertIn("이미 다른 계정에서 사용한 코드", b.post("/s/books/register", data={"code": codes[0]}).data.decode())
-        bid2, _ = self.make_book(expires="2000-01-01")
-        old = self.shared_code(bid2)
-        self.assertIn("이용 기간이 지난", b.post("/s/books/register", data={"code": old}).data.decode())
-
-    def test_code_guessing_is_limited(self):
-        s = self.student(0)
-        for _ in range(10):
-            s.post("/s/books/register", data={"code": "ZZZZ-ZZZZ-ZZZZ"})
-        self.assertEqual(s.post("/s/books/register", data={"code": "ZZZZ-ZZZZ-ZZZZ"}).status_code, 429)
 
     def test_grade_cuts_and_item_stats_appear(self):
         bid, mid = self.make_book()

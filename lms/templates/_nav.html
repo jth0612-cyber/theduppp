@@ -47,11 +47,11 @@
     ('care.t_papers', '시험지 첨삭', 'task', ep in ('care.t_papers', 'care.t_paper'), paper_wait or 0),
     ('care.t_lessons', '수업 기록', 'folder', ep == 'care.t_lessons', 0),
     ('books.teacher_books', '복테·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
-    ('teacher.classes', '반·시험', 'users', ep.startswith('teacher.class') or ep.startswith('teacher.exam'), 0),
+    ('teacher.classes', '반', 'users', ep.startswith('teacher.class'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
-    ('study.t_timetable', '수능 D-day', 'calendar', ep == 'study.t_timetable', 0),
+    ('study.t_timetable', 'D-day 및 휴강', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] + ([
@@ -68,7 +68,7 @@
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0),
     ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or ep == 'books.register_book' or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
+    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
   ('수업', [
     ('care.s_lessons', '수업 기록', 'folder', ep == 'care.s_lessons', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0),

@@ -171,10 +171,8 @@ def class_detail(cid):
         ctx["students"] = query(f"""
             SELECT s.id, s.name, s.student_no, s.target, s.active,
                    u.id AS account_id, u.last_login_at,
-                   COALESCE((SELECT ROUND(AVG(r.score * 100.0 / m.full_score), 1) FROM exam_results r JOIN mocks m ON m.id = r.mock_id
-                               JOIN books b ON b.id = m.book_id WHERE r.student_id = s.id AND b.is_practice = 0 AND m.full_score > 0),
-                            (SELECT ROUND(AVG(sc.score * 100.0 / e.max_score), 1) FROM scores sc
-                               JOIN exams e ON e.id = sc.exam_id WHERE sc.student_id = s.id)) AS avg_pct,
+                   (SELECT ROUND(AVG(r.score * 100.0 / m.full_score), 1) FROM exam_results r JOIN mocks m ON m.id = r.mock_id
+                      JOIN books b ON b.id = m.book_id WHERE r.student_id = s.id AND b.is_practice = 0 AND m.full_score > 0) AS avg_pct,
                    (SELECT COUNT(*) FROM questions WHERE student_id = s.id AND status = 'open') AS open_q
             FROM students s LEFT JOIN users u ON u.student_id = s.id
             WHERE {where} ORDER BY s.active DESC, s.name LIMIT ? OFFSET ?""",
@@ -183,13 +181,6 @@ def class_detail(cid):
         ctx["codes"] = query("""SELECT c.*, s.name AS s_name, s.student_no AS s_no FROM student_codes c
                                 LEFT JOIN students s ON s.id = c.student_id
                                 WHERE c.class_id = ? ORDER BY c.student_id IS NOT NULL, c.id""", (cid,))
-    elif tab == "exams":
-        ctx["exams"] = query("""SELECT e.*, COUNT(sc.id) AS n, ROUND(AVG(sc.score), 1) AS avg,
-                                       MAX(sc.score) AS max, MIN(sc.score) AS min
-                                FROM exams e LEFT JOIN scores sc ON sc.exam_id = e.id
-                                WHERE e.class_id = ? GROUP BY e.id
-                                ORDER BY e.exam_date DESC, e.id DESC""", (cid,))
-        ctx["today"] = date.today().isoformat()
     elif tab == "notices":
         ctx["notices"] = query("""SELECT n.*, (SELECT COUNT(*) FROM notice_likes l WHERE l.notice_id = n.id) AS likes,
                                   (SELECT COUNT(*) FROM notice_reads r JOIN users u ON u.id = r.user_id
@@ -354,14 +345,6 @@ def students():
 def student_detail(sid):
     s = _get_student(sid)
     audit("student_view", f"student:{sid}")
-    scores = query("""SELECT e.id AS exam_id, e.name, e.subject, e.exam_date, e.max_score, sc.score,
-                        ROUND(sc.score * 100.0 / e.max_score, 1) AS pct,
-                        (SELECT ROUND(AVG(score), 1) FROM scores WHERE exam_id = e.id) AS class_avg,
-                        (SELECT COUNT(*) + 1 FROM scores x WHERE x.exam_id = e.id AND x.score > sc.score) AS rank,
-                        (SELECT COUNT(*) FROM scores WHERE exam_id = e.id) AS n
-                      FROM scores sc JOIN exams e ON e.id = sc.exam_id
-                      WHERE sc.student_id = ? ORDER BY e.exam_date, e.id""", (sid,))
-    chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["exam_date"]} for r in scores])
     notes = [dict(n, body=decrypt(n["body_enc"]))
              for n in query("SELECT * FROM notes WHERE student_id = ? ORDER BY created_at DESC", (sid,))]
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 20", (sid,))
@@ -374,8 +357,10 @@ def student_detail(sid):
     plink = (request.url_root.rstrip("/") + url_for("care.parent_page", token=s["parent_token"])) if s["parent_token"] else ""
     from views.care import parent_report
     rep = parent_report(sid, limit=200)          # 학부모 리포트와 같은 복테·모의고사·단원·코멘트 (시즌 전체)
+    chart = _score_chart([{"pct": e["rate"], "label": e["title"], "date": e["date"] or ""}
+                          for e in reversed(rep["exams"]) if e["rate"] is not None])
     return render_template("teacher/student_detail.html", rep=rep, s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]), plink=plink,
-                           memo=decrypt(s["memo_enc"]), scores=scores, chart=chart, notes=notes,
+                           memo=decrypt(s["memo_enc"]), chart=chart, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
                            note_categories=NOTE_CATEGORIES, engagement=engagement)
 
@@ -529,105 +514,6 @@ def class_accounts(cid):
             rows.append((s["name"], s["student_no"], "(발급 실패: 아이디 중복)"))
     audit("account_bulk_issue", f"class:{cid} count:{len(rows)}")
     return _csv_response(f"accounts_class{cls['id']}.csv", ["이름", "아이디", "임시비밀번호"], rows)
-
-
-# ---------- 시험 / 성적 ----------
-
-@bp.route("/classes/<int:cid>/exams", methods=["POST"])
-@staff_required
-def exam_create(cid):
-    _get_class(cid)
-    try:
-        name = _text("name", 80)
-        subject = _text("subject", 40, required=False)
-        exam_date = date.fromisoformat(request.form.get("exam_date", "")).isoformat()
-        max_score = float(request.form.get("max_score", "100"))
-        if not 0 < max_score <= 1000:
-            raise ValueError("만점은 0보다 크고 1000 이하여야 합니다.")
-    except ValueError as e:
-        flash(str(e) if "입력" in str(e) or "만점" in str(e) else "입력값을 확인하세요.", "error")
-        return redirect(url_for("teacher.class_detail", cid=cid, tab="exams"))
-    eid = execute("INSERT INTO exams (class_id, name, subject, exam_date, max_score) VALUES (?, ?, ?, ?, ?)",
-                  (cid, name, subject, exam_date, max_score))
-    audit("exam_create", f"exam:{eid}")
-    return redirect(url_for("teacher.exam_detail", eid=eid))
-
-
-def _get_exam(eid):
-    row = query("""SELECT e.*, c.name AS class_name FROM exams e JOIN classes c ON c.id = e.class_id
-                   WHERE e.id = ?""", (eid,), one=True)
-    if row is None:
-        abort(404)
-    return row
-
-
-@bp.route("/exams/<int:eid>", methods=["GET", "POST"])
-@staff_required
-def exam_detail(eid):
-    exam = _get_exam(eid)
-    students = query("""SELECT s.id, s.name, s.student_no, sc.score FROM students s
-                        LEFT JOIN scores sc ON sc.student_id = s.id AND sc.exam_id = ?
-                        WHERE s.class_id = ? AND s.active = 1 ORDER BY s.name""", (eid, exam["class_id"]))
-    if request.method == "POST":
-        db = get_db()
-        errors, saved = [], 0
-        for s in students:
-            raw = request.form.get(f"score_{s['id']}", "").strip()
-            if raw == "":
-                db.execute("DELETE FROM scores WHERE exam_id = ? AND student_id = ?", (eid, s["id"]))
-                continue
-            try:
-                val = float(raw)
-                if not 0 <= val <= exam["max_score"] or math.isnan(val):
-                    raise ValueError
-            except ValueError:
-                errors.append(s["name"])
-                continue
-            db.execute("""INSERT INTO scores (exam_id, student_id, score) VALUES (?, ?, ?)
-                          ON CONFLICT (exam_id, student_id) DO UPDATE SET score = excluded.score""",
-                       (eid, s["id"], val))
-            saved += 1
-        db.commit()
-        audit("scores_save", f"exam:{eid} count:{saved}")
-        if errors:
-            flash(f"0~{exam['max_score']:g} 범위가 아닌 값은 저장하지 않았습니다: {', '.join(errors[:10])}", "error")
-        else:
-            flash(f"{saved}명의 점수를 저장했습니다.", "ok")
-        return redirect(url_for("teacher.exam_detail", eid=eid))
-
-    vals = sorted((s["score"] for s in students if s["score"] is not None), reverse=True)
-    stats = None
-    if vals:
-        mean = sum(vals) / len(vals)
-        sd = math.sqrt(sum((v - mean) ** 2 for v in vals) / len(vals))
-        stats = {"n": len(vals), "avg": round(mean, 1), "max": vals[0], "min": vals[-1],
-                 "sd": round(sd, 1), "total": len(students)}
-    ranks = {v: vals.index(v) + 1 for v in set(vals)}
-    return render_template("teacher/exam_detail.html", exam=exam, students=students,
-                           stats=stats, ranks=ranks)
-
-
-@bp.route("/exams/<int:eid>/export")
-@staff_required
-def exam_export(eid):
-    exam = _get_exam(eid)
-    rows = query("""SELECT s.name, s.student_no, sc.score FROM students s
-                    LEFT JOIN scores sc ON sc.student_id = s.id AND sc.exam_id = ?
-                    WHERE s.class_id = ? AND s.active = 1 ORDER BY sc.score DESC, s.name""",
-                 (eid, exam["class_id"]))
-    audit("scores_export", f"exam:{eid}")
-    return _csv_response(f"exam{eid}.csv", ["이름", "아이디", f"점수(/{exam['max_score']:g})"],
-                         [(r["name"], r["student_no"], "" if r["score"] is None else r["score"]) for r in rows])
-
-
-@bp.route("/exams/<int:eid>/delete", methods=["POST"])
-@staff_required
-def exam_delete(eid):
-    exam = _get_exam(eid)
-    execute("DELETE FROM exams WHERE id = ?", (eid,))
-    audit("exam_delete", f"exam:{eid}")
-    flash(f"'{exam['name']}' 시험과 점수를 삭제했습니다.", "ok")
-    return redirect(url_for("teacher.class_detail", cid=exam["class_id"], tab="exams"))
 
 
 # ---------- 질문답변 ----------
