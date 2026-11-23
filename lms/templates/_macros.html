@@ -26,3 +26,8 @@
 {% macro status_badge(status) %}
 {% if status == 'open' %}<span class="badge open">답변 대기</span>{% else %}<span class="badge answered">답변 완료</span>{% endif %}
 {% endmacro %}
+
+{# 복습 테스트 / 모의고사 탭: 두 시험은 한 화면에 섞어 보이지 않는다. counts = {종류: 개수} #}
+{% macro kind_tabs(cur, endpoint, counts=none) -%}
+<nav class="tabs kind-tabs" aria-label="시험 종류">{% for key, name in (('review', '복습 테스트'), ('mock', '모의고사')) %}<a href="{{ url_for(endpoint, kind=key, **kwargs) }}" class="{{ 'active' if cur == name }}"{% if cur == name %} aria-current="page"{% endif %}>{{ name }}{% if counts is not none %} <span class="kind-n">{{ counts.get(name, 0) }}</span>{% endif %}</a>{% endfor %}</nav>
+{%- endmacro %}

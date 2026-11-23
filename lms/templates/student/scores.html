@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import kind_tabs %}
 {% block title %}내 성적 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head"><h1>내 성적</h1></div>
@@ -29,9 +30,10 @@
 <p class="small muted">세로선 = 반 평균</p>
 {% endif %}
 
+{% if has_omr %}{{ kind_tabs(kind, 'student.scores', kind_counts) }}{% if not omr %}<section class="card"><p class="muted">{{ kind }} 결과가 아직 없습니다.</p></section>{% endif %}{% endif %}
 {% for o in omr %}
 <section class="card sys-scores" aria-label="{{ o.kind }} 성적">
-  <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회 · 복테&모의 분석과 같은 점수</span></div>
+  <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회 · 시험 분석과 같은 점수</span></div>
   {% if o.chart.pts|length > 1 %}
   {% with chart = o.chart, label = o.kind %}{% include "_rate_chart.html" %}{% endwith %}
   {% endif %}
@@ -46,5 +48,5 @@
 </section>
 {% endfor %}
 
-{% if not sys_scores and not omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
+{% if not sys_scores and not has_omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
 {% endblock %}

@@ -313,7 +313,7 @@ def parent_report(student_id, limit=6):
                           "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
                           "n_wrong": len(rep["wrong"]), "n": rep["mock"]["n_items"], "whys": whys})
     last = exams_out[0] if exams_out else None
-    prev = exams_out[1] if len(exams_out) > 1 else None
+    prev = next((e for e in exams_out[1:] if e["kind"] == last["kind"]), None) if last else None   # 같은 종류끼리 비교
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
     comment = query("""SELECT x.text, x.at, x.src, x.mock_id FROM (
                          SELECT comment AS text, reviewed_at AS at, '시험지 첨삭 코멘트' AS src, mock_id FROM exam_papers
@@ -327,7 +327,7 @@ def parent_report(student_id, limit=6):
     if last:
         lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점입니다.")
         if delta:
-            lines.append(f"득점률이 이전 시험보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
+            lines.append(f"득점률이 이전 {last['kind'] or '시험'}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
     if weak:
         lines.append(f"최근 시험에서 득점률이 가장 낮은 단원은 {weak['unit']['unit']}({weak['unit']['pct']}%)입니다.")
     return {"s": s, "exams": exams_out, "last": last, "delta": delta, "comment": comment, "units": units[:6], "weak": weak,
@@ -349,12 +349,13 @@ def rate_chart(exams_out):
     x = lambda i: L + pw * (i + 0.5) / len(seq)
     y = lambda v: T + ph * (1 - v / 100)
     pts = []
+    mixed = len({e.get("kind") for e in seq}) > 1               # 학부모 리포트처럼 복테·모의고사가 섞이면 종류를 붙인다
     for i, e in enumerate(seq):
         avg = round(100 * e["avg"] / e["full"]) if e.get("avg") is not None and e["full"] else None
         m = re.search(r"(\d+)회", e["title"] or "")
-        tx = min(max(x(i), L + 78), W - R - 78)                 # 말풍선이 그림 밖으로 나가지 않게
+        tx = min(max(x(i), L + 100), W - R - 100)               # 말풍선이 그림 밖으로 나가지 않게
         pts.append({"x": round(x(i), 1), "y": round(y(e["rate"]), 1), "v": e["rate"], "avg": avg, "ay": round(y(avg), 1) if avg is not None else None,
-                    "lab": f"{m.group(1)}회" if m else str(i + 1), "title": e["title"], "date": (e["date"] or "")[5:].replace("-", "."),
+                    "lab": (("복테 " if e.get("kind") == "복습 테스트" else "모의 ") if mixed else "") + (f"{m.group(1)}회" if m else str(i + 1)), "title": e["title"], "date": (e["date"] or "")[5:].replace("-", "."),
                     "score": e["score"], "full": e["full"], "avg_score": e.get("avg"), "tx": round(tx, 1),
                     "ty": round(y(e["rate"]) - 64 if y(e["rate"]) - 64 > 2 else y(e["rate"]) + 14, 1)})
     return {"w": W, "h": H, "l": L, "r": W - R, "t": T, "b": H - B, "pts": pts,
@@ -364,14 +365,33 @@ def rate_chart(exams_out):
             "every": max(1, -(-len(pts) // 10))}                # 가로축 글자가 겹치지 않게 (점 10개 넘으면 건너뛰기)
 
 
+def kind_view(exams_out, kind, n=6):
+    """한 종류(복습 테스트 / 모의고사)만: 최근 n회, 맨 위 회차, 직전 같은 종류 대비 변화, 득점률 그래프."""
+    ex = [e for e in exams_out if e["kind"] == kind][:n]
+    last = ex[0] if ex else None
+    prev = ex[1] if len(ex) > 1 else None
+    delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
+    lines = []
+    if last:
+        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점입니다.")
+        if delta:
+            lines.append(f"득점률이 이전 {kind}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
+    return {"exams": ex, "last": last, "delta": delta, "chart": rate_chart(ex), "lines": lines}
+
+
 @bp.route("/p/<token>")
 def parent_page(token):
     """학부모 리포트 (로그인 없음, 비밀 링크). 검색 엔진에는 나오지 않는다(noindex)."""
     if len(token) < 16:
         abort(404)
     s = query("SELECT id FROM students WHERE parent_token = ? AND active = 1", (token,), one=True) or abort(404)
-    rep = parent_report(s["id"])
-    resp = make_response(render_template("care/parent.html", r=rep, chart=rate_chart(rep["exams"]), fmt=num_fmt))
+    rep = parent_report(s["id"], limit=12)
+    import analysis
+    kind = analysis.kind_arg(request.args.get("kind"), rep["last"]["kind"] if rep["last"] else "복습 테스트")
+    kv = kind_view(rep["exams"], kind)
+    kv["lines"] += [ln for ln in rep["lines"] if ln.startswith("최근 시험에서")]      # 요약도 그 종류만 (약한 단원 줄은 공통)
+    counts = {k: sum(1 for e in rep["exams"] if e["kind"] == k) for k in analysis.KIND_KEYS.values()}
+    resp = make_response(render_template("care/parent.html", r=rep, k=kv, kind=kind, kind_counts=counts, token=token, chart=kv["chart"], fmt=num_fmt))
     # 로그인 없는 화면이라 app.py 의 no-store 가 붙지 않는다. 성적·출결이 브라우저·프록시에 남지 않게 한다
     resp.headers["Cache-Control"] = "no-store"
     return resp

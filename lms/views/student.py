@@ -142,7 +142,11 @@ def scores():
         ex = [e for e in season if e["kind"] == kind]
         if ex:
             omr.append({"kind": kind, "exams": ex, "chart": rate_chart(ex)})
-    return render_template("student/scores.html", me=me, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt, omr=omr)
+    import analysis
+    kind = analysis.kind_arg(request.args.get("kind"), omr[0]["kind"] if omr else "복습 테스트")   # 탭: 복습 테스트 / 모의고사
+    counts = {o["kind"]: len(o["exams"]) for o in omr}
+    return render_template("student/scores.html", me=me, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt,
+                           omr=[o for o in omr if o["kind"] == kind], kind=kind, kind_counts=counts, has_omr=bool(omr))
 
 
 # ---------- 질답 게시판 ----------

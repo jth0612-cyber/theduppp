@@ -104,7 +104,7 @@ class Update1114(unittest.TestCase):
             self.assertFalse(any(vocab._SENSE[x] & vocab._SENSE[w] for x in others))    # 정답이 둘이 되지 않게
 
     def test_feedback_flow(self):
-        """복테&모의 분석 1:1 첨삭: 학생 요청 → 조교 답변 → 학생 알림·사진 권한."""
+        """시험 분석 1:1 첨삭: 학생 요청 → 조교 답변 → 학생 알림·사진 권한."""
         with self.app.app_context():
             bid = execute("INSERT INTO books (title, expires_on) VALUES ('주간 복테', '2099-12-31')")
             mid = execute("INSERT INTO mocks (book_id, round_no, n_items, full_score, answer_key, points) VALUES (?, 1, 3, 6, ?, ?)",
@@ -114,7 +114,7 @@ class Update1114(unittest.TestCase):
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta1', ?, '박조교')", (hash_password(PW),))
             execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', 'other', ?, NULL)", (hash_password("Other!2026xx"),))
         page = self.s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn("복테&모의 분석", page); self.assertIn("1:1 첨삭", page)
+        self.assertIn("시험 분석", page); self.assertIn("1:1 첨삭", page)
         # 빈 요청은 거절
         self.s.post(f"/s/analysis/{mid}/feedback", data={"body": ""})
         with self.app.app_context():
@@ -149,7 +149,7 @@ class Update1114(unittest.TestCase):
 
     def test_student_menu_folds(self):
         html = self.s.get("/s/notices").data.decode()
-        self.assertIn("복테&amp;모의 분석", html)
+        self.assertIn("시험 분석", html)
         self.assertIn('<details class="nav-fold"', html)
         self.assertIn("태혁쌤의 cast", html); self.assertNotIn("TH캐스트", html)
 

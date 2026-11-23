@@ -2,6 +2,7 @@
 데모에서는 같은 파일을 1~14회로 복제해 쓴다. 정답은 직접 풀어서 정했다.
 
 문항: (정답, 배점, 단원, 핵심개념, 요구역량, 난이도, 선지, 보기)
+복테: 10문항·문항당 1점 (REVIEW_SRC 로 파일 25문항 중 10문항을 골라 쓴다)
 - 선지: 합답형은 '①'~'⑤'에 대응하는 보기 묶음 5개('ㄱ|ㄴ|ㄱㄴ|ㄱㄷ|ㄴㄷ'), 일반형은 None
 - 보기: 합답형은 [(O/X, 잘못 판단하는 이유, 오답 유형)] ㄱ·ㄴ·ㄷ 순서, 일반형은 {선지: (설명, 오답 유형)}
 정답 '-' 는 정답 없음: 전원 오답, 배점 0 (복테 6번: 원본 파일에 보기·선지가 없음)
@@ -89,7 +90,7 @@ MOCK = [
       (O, "구경꾼 이온 수를 부피 비로만 비교함", "계산 실수")]),
 ]
 
-REVIEW = [
+REVIEW_ALL = [                      # 복테 데모 파일 25문항 전체 (원본 번호 순서)
     (3, 1.5, "에너지 출입", "물질 변화와 열의 출입", "개념 이해", "하", None,
      {1: ("에너지를 흡수하면 항상 화학 변화라는 B의 말을 옳다고 봄", "개념 부족"),
       2: ("물리 변화에서도 열이 출입함을 놓침", "개념 부족"),
@@ -166,6 +167,10 @@ REVIEW = [
       (O, "단위 부피당 이온 수를 양이온만 셈", "계산 실수")]),
 ]
 
+# 복테는 10문항·문항당 1점. 데모에서는 파일 25문항 중 10문항을 골라 1~10번으로 쓴다 (사진은 원본 번호)
+REVIEW_SRC = [1, 3, 9, 11, 13, 16, 20, 22, 23, 25]
+REVIEW = [(it[0], 1, *it[2:]) for it in (REVIEW_ALL[n - 1] for n in REVIEW_SRC)]
+
 CIRC = "①②③④⑤"
 
 
@@ -201,8 +206,8 @@ def near_wrong(items):
 
 
 def check():
-    for name, items, total in (("MOCK", MOCK, 50), ("REVIEW", REVIEW, 47.5)):
-        assert len(items) == 25, name
+    assert len(REVIEW_ALL) == 25 and len(REVIEW) == 10
+    for name, items, total in (("MOCK", MOCK, 50), ("REVIEW", REVIEW, 10)):
         assert abs(sum(i[1] for i in items) - total) < 1e-9, (name, sum(i[1] for i in items))
         for no, (ans, _, _, _, _, _, opts, bogi) in enumerate(items, 1):
             if opts and ans not in ("*", "-"):

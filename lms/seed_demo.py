@@ -187,18 +187,18 @@ SOLVES = {
         "㉢은 X₁·X₂ 모두 0이라 U입니다. ㉣과 ㉤이 짝(C-G)이고 ㉡이 A입니다. 가닥 길이를 n으로 두고 X₁ 조건 식을 세우면 n=120, A=30·T=50·C=25·G=15가 나옵니다."),
     4: (16, ["㉠ 처음 10 → B (수평 10m/s)", "수면 닿는 시간 3초?", "h = 1/2 x 10 x 3^2 = 45", "→ 45보다 큼??", "ㄷ 2초: 10 x 2 = 20m"],
         "닿는 시간은 3초가 아니라 2.7초쯤입니다. 그래서 h는 ½·10·2.7² ≈ 36 m로 45 m보다 작습니다. 나머지 풀이는 맞습니다."),
-    6: (17, ["A, B 원자가 전자 합 5", "X, Y 껍질 합 6 → 둘 다 3주기", "X + Y = 11 → 4 + 7 (Si, Cl)", "Y = Cl → 전자 1개 얻으면 Ne?", "ㄷ CO2 vs Na ??"],
-        "Cl이 전자 1개를 얻으면 Ar 배치입니다. ㄷ은 Na(금속)가 CO₂보다 전기가 잘 통하니 틀립니다. A=C, B=Na, X=Si, Y=Cl은 맞게 찾았습니다."),
+    6: (11, ["A2: H, AB: H-F ?", "B2 껍질 2개 → F", "ㄴ F도 첫째 껍질 전자 참여?", "ㄷ 비공유/공유: F2 6, HF 3, H2 0"],
+        "F는 둘째 껍질 전자만 결합에 참여합니다. 첫째 껍질 전자가 결합하는 건 H뿐이라 ㄴ은 틀리고, ㄷ은 6 > 3 > 0으로 맞아 답은 ②입니다."),
     8: (20, ["(나) A+ 4N 감소 = b x N", "(다) A+ 6N → 1.5xN", "b=1, x=4 → 1.5x = 6 ??", "b=2, x=2 → c=3 ?", "ㄷ 계산이 안 맞음"],
         "x는 그래프에서 xN < 6N이라 4보다 작아야 합니다. 그래서 b=2, x=2, c=3이고, ㄷ은 남은 A⁺ 3N개 중 1.5N개가 반응해 A⁺와 C³⁺가 1.5N개씩으로 같아집니다."),
     10: (25, ["Ⅰ H+ 4, K+ 2", "HCl : KOH = 3 : 1", "Ⅱ에 KOH V → K+ 3", "4(10+V) = 3(20+V) → V = 20", "ⓐ = 0, ⓑ = ?"],
          "V=20 맞습니다. Ⅱ는 중화점이라 ⓐ=0이고, Ⅲ의 K⁺는 상댓값 1.5라 ⓐ+ⓑ=1.5입니다. 그래서 ㄴ은 틀립니다."),
     12: (22, ["A: 동쪽 밝음 → 수온약층 깊음", "→ 엘니뇨", "t2 기압 + → 엘니뇨 = A", "ㄴ P = 용승 세기? 라니냐 때 강함", "ㄷ 서/동 해수면 ?"],
          "A가 엘니뇨, B가 라니냐까지 맞습니다. 동태평양 용승은 라니냐(t₁) 때 더 강한데 P는 t₁이 작으니 ㄴ은 틀립니다. 엘니뇨 때 서태평양 해수면이 낮아져 ㄷ은 맞습니다."),
-    14: (18, ["B: -p + 1.25p = 0.25p", "C와 충돌 후 0.25p - 0.125p", "= 0.125p (+x)", "ㄱ C가 -x여도 됨?"],
-         "맞습니다. B가 C보다 빨라서 C가 +x로 가도, −x로 와도 충돌합니다. 그래서 ㄱ도 옳고 답은 ⑤입니다."),
+    14: (13, ["p: 가까워짐 → 밀어냄", "q: 멀어짐 → 당김", "→ 방향 다름?", "ㄷ A 감은 수 더 많음"],
+         "밀어내는 힘과 당기는 힘 모두 자석 운동과 반대 방향이라 p와 q에서 같습니다. 속력은 전기 에너지로 바뀌어 줄고, A가 감은 수가 많고 자석도 빨라 A쪽 전류가 더 큽니다. 답은 ①입니다."),
 }
-REVIEW_PAGE = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]     # 복테 문항 → 시험지 쪽
+REVIEW_PAGE = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]     # 복테 파일 원본 문항 → 시험지 쪽
 
 # ---------------------------------------------------------------- 날짜
 TODAY = date.today() - timedelta(days=(date.today().weekday() - 4) % 7)   # 실행일 직전 금요일 = N주차 마지막 날
@@ -454,7 +454,37 @@ import demo_items as DI  # noqa: E402
 EXAMS = {"r": DI.REVIEW, "m": DI.MOCK}                 # 복습 테스트 · 모의고사 (같은 파일을 1~14회로)
 NEAR = {k: DI.near_wrong(v) for k, v in EXAMS.items()}
 PHOTO_EXAM = {"r": "rev", "m": "mock"}
-KILLER = {"r": "20, 23, 25", "m": "19, 22, 24"}
+R_NEW = {src: i + 1 for i, src in enumerate(DI.REVIEW_SRC)}   # 복테 파일 원본 번호 → 복테 1~10번
+
+
+def pdf_no(kind, no):
+    """OMR 번호 → 시험지 파일의 문항 번호 (사진용)."""
+    return DI.REVIEW_SRC[no - 1] if kind == "r" else no
+
+
+def _renumber(entries):
+    """질문·수업 기록 데이터는 복테 파일 원본 번호로 적어 두었다 → 복테 1~10번으로 바꾸고, 고르지 않은 문항은 뺀다."""
+    out = []
+    for e in entries:
+        is_q = len(e) == 4 and isinstance(e[3], tuple)          # 질문 (제목, 내용, 답변, 사진) / 수업 기록은 사진 하나
+        src = e[3] if is_q else e
+        if src[0] != "item" or src[1] != "r":
+            out.append(e)
+            continue
+        if src[2] not in R_NEW:
+            continue
+        new = (src[0], src[1], R_NEW[src[2]], *src[3:])
+        if is_q:
+            out.append((re.sub(r"(\[복테 \d+회 )\d+(번\])", lambda m: f"{m.group(1)}{R_NEW[src[2]]}{m.group(2)}", e[0]), e[1], e[2], new))
+        else:
+            out.append(new)
+    return out
+
+
+QUESTIONS = {w: _renumber(v) for w, v in QUESTIONS.items()}
+LESSONS = {w: _renumber(v) for w, v in LESSONS.items()}
+SOLVES = {w: (R_NEW[v[0]], *v[1:]) for w, v in SOLVES.items() if v[0] in R_NEW}
+KILLER = {"r": ", ".join(str(R_NEW[n]) for n in (20, 23, 25)), "m": "19, 22, 24"}
 LEVEL_DROP = {"상": 0.2, "중": 0.05, "하": -0.12}
 
 
@@ -552,7 +582,53 @@ def item_photo_req(kind, no, who, uid, w, note):
         for lab in "ㄱㄴㄷ":
             mine, right = lab in g[pick - 1], lab in g[ans - 1]
             think[lab] = None if mine != right and rng.random() < 0.6 else mine
-    return shot(op="item", exam=PHOTO_EXAM[kind], no=no, who=who, pick=pick, think=think, note=note)
+    return shot(op="item", exam=PHOTO_EXAM[kind], no=pdf_no(kind, no), who=who, pick=pick, think=think, note=note)
+
+
+BIG_UNIT = {"측정 표준": "과학의 기초", "화학 결합": "물질과 규칙성", "원소의 생성": "물질과 규칙성", "지구의 탄생과 진화": "물질과 규칙성",
+            "샤가프 법칙": "물질과 규칙성", "생명중심원리": "물질과 규칙성", "전기적 성질과 반도체": "물질과 규칙성",
+            "역학": "시스템과 상호작용", "운동량": "시스템과 상호작용", "지구 시스템과 상호작용": "시스템과 상호작용", "판구조론": "시스템과 상호작용",
+            "카탈레이스": "시스템과 상호작용", "세포막과 물질 이동": "시스템과 상호작용",
+            "산화와 환원": "변화와 다양성", "중화 반응": "변화와 다양성", "에너지 출입": "변화와 다양성", "지질시대와 생명체": "변화와 다양성",
+            "진화와 생물 다양성": "변화와 다양성", "생태계와 평형": "환경과 에너지", "지구 열수지": "환경과 에너지", "엘니뇨": "환경과 에너지",
+            "전자기 유도": "환경과 에너지", "에너지 전환": "환경과 에너지", "과학과 미래 사회": "과학과 미래사회"}
+ASKED = set()
+
+
+def auto_question(w, uid):
+    """준비한 질문이 다 나간 주: 그 학생이 실제로 틀린 합답형 문항에서, 고른 답과 정답이 갈린 보기를 묻는다."""
+    for kind in rng.sample(["r", "m"], 2):
+        a = my_answers(kind, w, uid)
+        its = EXAMS[kind]
+        wrong = [i + 1 for i, it in enumerate(its) if it[6] and it[0] not in ("*", "-") and i < len(a) and a[i] in "12345" and a[i] != str(it[0])]
+        wrong = [n for n in wrong if f"{kind}{w}-{n}" not in ASKED]
+        if not wrong:
+            continue
+        no = rng.choice(wrong)
+        ASKED.add(f"{kind}{w}-{no}")
+        pick = int(a[no - 1])
+        ans, _, unit, concept, _, _, opts, bogi = its[no - 1]
+        g = opts.split("|")
+        lab = next(x for x in "ㄱㄴㄷ" if (x in g[pick - 1]) != (x in g[ans - 1]))
+        t, why, _ = bogi["ㄱㄴㄷ".index(lab)]
+        title = f"[{'복테' if kind == 'r' else '모의고사'} {w}회 {no}번] {concept}"
+        body = rng.choice([f"보기 {lab}이 왜 {'맞는' if t else '틀린'} 건지 모르겠습니다.",
+                           f"{pick}번을 골랐는데 보기 {lab} 판단이 헷갈립니다.",
+                           f"보기 {lab}을 {'틀렸다고' if t else '맞다고'} 봤는데 어디서 잘못 생각했는지 궁금합니다."])
+        reply = (f"보기 {lab}은 {'옳은' if t else '틀린'} 진술입니다. 이 보기에서 많이 하는 실수가 '{why}'입니다. "
+                 f"{pick}번과 정답 {ans}번은 보기 {lab} 하나로 갈리니 {concept} 부분을 필기노트에서 다시 확인하세요.")
+        return title, body, reply, ("item", kind, no, f"보기 {lab} ?"), BIG_UNIT.get(unit, WEEK_UNIT[w])
+    return None
+
+
+def pick_question(w, uid):
+    """같은 질문을 여러 명이 똑같이 올리지 않게: 준비한 질문은 한 번씩, 그다음은 그 학생 오답에서."""
+    pool = [x for x in QUESTIONS[w] if x[0] not in ASKED]
+    if pool:
+        x = rng.choice(pool)
+        ASKED.add(x[0])
+        return (*x, unit_of(x[0], w))
+    return auto_question(w, uid)
 
 
 def question_photo(src, who, uid, w):
@@ -595,7 +671,7 @@ def lesson_photos(w, track):
             else:
                 its = EXAMS[src[1]][src[2] - 1]
                 think = {lab: lab in its[6].split("|")[its[0] - 1] for lab in "ㄱㄴㄷ"} if its[6] else {}
-                f = shot(op="item", exam=PHOTO_EXAM[src[1]], no=src[2], who=who, pick=its[0], think=think, note=src[3], pen="blue")
+                f = shot(op="item", exam=PHOTO_EXAM[src[1]], no=pdf_no(src[1], src[2]), who=who, pick=its[0], think=think, note=src[3], pen="blue")
             out += [(fh.getvalue(), n) for fh, n in f]
         _lesson_cache[(w, track)] = out
     return _lesson_cache[(w, track)]
@@ -656,9 +732,10 @@ for w in range(1, WEEKS + 1):
         S, per = p["S"], p["per"]
         for r in q("SELECT id FROM notices WHERE class_id = ? ORDER BY id DESC LIMIT 2", (p["c"]["id"],)):
             S.get(f"/s/notices/{r['id']}")
-        if rng.random() < per["ask"]:
-            title, body, ans, src = QUESTIONS[w][rng.randint(0, 1)]
-            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit_of(title, w),
+        picked = pick_question(w, p["uid"]) if rng.random() < per["ask"] else None
+        if picked:
+            title, body, ans, src, unit = picked
+            qid = ask(S, title, body, "학습질문", day(w, rng.choice([0, 1, 2])), unit=unit,
                       image=question_photo(src, p["st"]["name"], p["uid"], w))
             if not (last_week and name in ("대구 토요일 A반", "대구 재종 1반")):      # 이 둘은 오늘 조교가 답할 질문
                 answer(TA if rng.random() < 0.6 else TA2, qid, ans, day(w, 3))
@@ -676,9 +753,11 @@ for w in range(1, WEEKS + 1):
                       "FRAMING 해설편 2권이 아직 안 왔습니다." if w == 1 else "FRAMING 해설편이 두 권 왔습니다. 한 권 환불되나요?", "행정문의", day(w, 2))
             answer(T, qid, "이번 주 금요일에 발송됩니다." if w == 1 else "다음 수업 때 행정실에 반납하면 처리됩니다.", day(w, 3))
         if (name in ("대구 토요일 A반", "대구 재종 2반") and w % 2 == 0) or (name == "대치 재종 2반" and w == 6):   # 1:1 첨삭 (한승우는 악필)
-            sno, slines, sreply = SOLVES[w]
+            a_r = my_answers("r", w, p["uid"])                # 그 학생이 실제로 틀린 문항으로 묻는다
+            sw = next((k for k in [w] + sorted(SOLVES) if len(a_r) >= SOLVES[k][0] and a_r[SOLVES[k][0] - 1] != str(DI.REVIEW[SOLVES[k][0] - 1][0])), w)
+            sno, slines, sreply = SOLVES[sw]
             ok("1:1 첨삭 요청", S.post(f"/s/analysis/{MOCK[('r', w)]}/feedback", data={"body": f"{sno}번 풀이에서 어디가 잘못됐는지 봐 주세요.",
-                                                                                      "image": shot(op="solve", exam="rev", no=sno, who=p["st"]["name"], lines=slines)},
+                                                                                      "image": shot(op="solve", exam="rev", no=pdf_no("r", sno), who=p["st"]["name"], lines=slines)},
                                     content_type="multipart/form-data"))
             tid = last_id("feedback_threads")
             at("feedback_msgs", last_id("feedback_msgs"), created_at=ts(day(w, 6), 21))
@@ -692,11 +771,11 @@ for w in range(1, WEEKS + 1):
         if took and name in ("대구 토요일 A반", "대구 재종 2반") and (w % 2 == 1 or last_week):  # 시험지 첨삭 (응시한 회차만)
             a = my_answers("r", w, p["uid"])
             keys = [str(it[0]) for it in DI.REVIEW]
-            wrong = [i + 1 for i, k in enumerate(keys) if k != "*" and (i >= len(a) or a[i] != k)]
-            pages = sorted({REVIEW_PAGE[n - 1] - 1 for n in wrong})[:3] or [0]
+            wrong = [i + 1 for i, k in enumerate(keys) if k not in ("*", "-") and (i >= len(a) or a[i] != k)]   # 보기 없는 6번은 첨삭 대상에서 뺀다
+            pages = sorted({REVIEW_PAGE[pdf_no("r", n) - 1] - 1 for n in wrong})[:3] or [0]
             ok("시험지 제출", S.post(f"/s/analysis/{MOCK[('r', w)]}/paper", data={
                 "note": f"{', '.join(map(str, wrong[:3]))}번 풀이 봐 주세요." if wrong else "검토 부탁드립니다.",
-                "image": shot(op="paper", exam="rev", answers=a, key=keys, who=p["st"]["name"], pages=pages)}, content_type="multipart/form-data"))
+                "image": shot(op="paper", exam="rev", answers=a, key=keys, nos=DI.REVIEW_SRC, who=p["st"]["name"], pages=pages)}, content_type="multipart/form-data"))
             pid = last_id("exam_papers")
             if last_week:
                 at("exam_papers", pid, submitted_at=ts(day(w, 6), 19))
@@ -715,7 +794,7 @@ for w in range(1, WEEKS + 1):
                 key = [str(v) for v in _js.loads(q("SELECT answer_key FROM mocks WHERE id = ?", (mid,), one=True)["answer_key"])]
                 picks = e["answers"] if e else ""
                 for i, k in enumerate(key):
-                    if k != "*" and i < len(picks) and picks[i] in "12345" and picks[i] != k and rng.random() < 0.7:
+                    if k not in ("*", "-") and i < len(picks) and picks[i] in "12345" and picks[i] != k and rng.random() < 0.7:
                         tp = wrong_why(kind, i + 1, int(picks[i]))[0] if rng.random() < 0.6 else rng.choice(["개념 부족", "조건 독해", "계산 실수", "찍음"])
                         S.post(f"/s/wrong/{mid}/{i + 1}", data={"reason": tp, "memo": "", "reviewed": "" if last_week else "1"})
         if name in ("대치 재종 2반", "대구 토요일 B반") or rng.random() < 0.3:         # 퀴즈
@@ -725,8 +804,11 @@ for w in range(1, WEEKS + 1):
                 when = day(w, rng.randint(0, 4))
                 at("game_rounds", st_["round_id"], started_at=ts(when, 22), finished_at=ts(when, 22, 10))
     for st, (user, pw, uid) in rng.sample(OTHERS, 3):                               # 다른 학생들 공개 질문
-        title, body, ans, src = QUESTIONS[w][rng.randint(0, 1)]
-        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)), unit=unit_of(title, w),
+        picked = pick_question(w, uid)
+        if not picked:
+            continue
+        title, body, ans, src, unit = picked
+        qid = ask(login(user, pw), title, body, "학습질문", day(w, rng.randint(0, 6)), unit=unit,
                   image=question_photo(src, st["name"], uid, w))
         if not last_week or rng.random() < 0.5:
             answer(TA2 if rng.random() < 0.5 else TA, qid, ans, day(w, 4))

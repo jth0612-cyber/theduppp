@@ -378,18 +378,20 @@ def solve_photo(base, exam, no, who, rng, lines):
     return photo(img, rng)
 
 
-def paper_photos(base, exam, answers, key, who, rng, pages=None):
-    """학생 답안대로 고른 선지에 동그라미, 빨간 펜으로 채점 (틀린 문항 / 표시와 정답)."""
+def paper_photos(base, exam, answers, key, who, rng, pages=None, nos=None):
+    """학생 답안대로 고른 선지에 동그라미, 빨간 펜으로 채점 (틀린 문항 / 표시와 정답).
+    nos: 답안 순서대로의 시험지 문항 번호 (시험지 일부만 시험으로 쓸 때). 없으면 1번부터 차례로."""
+    order = {n: i for i, n in enumerate(nos or range(1, len(answers) + 1))}
     d = doc(base, exam)
     its = items(base, exam)
     out = []
     for pi in pages or range(len(d)):
         sh = Sheet(d[pi], d[pi].rect, dpi=130)
         for no, it in its.items():
-            if it["page"] != pi or no > len(answers):
+            if it["page"] != pi or no not in order or order[no] >= len(answers):
                 continue
-            a = answers[no - 1]
-            k = key[no - 1]
+            a = answers[order[no]]
+            k = key[order[no]]
             if a in "12345" and it["opts"][int(a) - 1]:
                 wobble_ellipse(sh.d, sh.box(it["opts"][int(a) - 1], 5), PENCIL, rng, width=2)
             nr = it["rect"]
@@ -427,7 +429,7 @@ def serve(base):
             elif op == "solve":
                 data = [solve_photo(base, r["exam"], r["no"], r["who"], rng, r["lines"])]
             elif op == "paper":
-                data = paper_photos(base, r["exam"], r["answers"], r["key"], r["who"], rng, r.get("pages"))
+                data = paper_photos(base, r["exam"], r["answers"], r["key"], r["who"], rng, r.get("pages"), r.get("nos"))
             files = []
             for i, b in enumerate(data, 1):
                 f = out if len(data) == 1 else out.replace(".jpg", f"_{i}.jpg")

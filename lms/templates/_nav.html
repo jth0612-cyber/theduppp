@@ -51,7 +51,7 @@
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
   ('수업 운영', [
-    ('study.t_timetable', 'D-day 및 휴강', 'calendar', ep == 'study.t_timetable', 0),
+    ('study.t_timetable', '주요 일정', 'calendar', ep == 'study.t_timetable', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('rooms.t_rooms', '소도시 명상 현황', 'chart', ep == 'rooms.t_rooms', 0),
     ('link.t_link', '조교 시스템 연동', 'link', ep == 'link.t_link', 0)])] + ([
@@ -68,7 +68,7 @@
     ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0),
     ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
-    ('books.analysis_home', '복테&모의 분석', 'chart', ep.startswith('books.analysis') or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
+    ('books.analysis_home', '시험 분석', 'chart', ep.startswith('books.analysis') or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
   ('수업', [
     ('care.s_lessons', '수업 기록', 'folder', ep == 'care.s_lessons', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0),

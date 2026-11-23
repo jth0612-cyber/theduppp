@@ -93,7 +93,7 @@ def today_classes(user_id):
 
 
 # =====================================================================
-# 2. 오답 노트 (복테&모의 분석에서 틀린 문항 자동 정리)
+# 2. 오답 노트 (시험 분석에서 틀린 문항 자동 정리)
 # =====================================================================
 
 def wrong_list(user_id, only_open=False):
@@ -103,7 +103,7 @@ def wrong_list(user_id, only_open=False):
     if u and u["student_id"]:
         exams.sync_entries(student_id=u["student_id"])
     entries = query("""SELECT e.*, m.round_no, m.title AS mtitle, m.answer_key, m.points, m.n_items, m.full_score,
-                              m.book_id, b.title AS book_title, m.id AS mid
+                              m.book_id, b.title AS book_title, b.kind, m.id AS mid
                        FROM mock_entries e JOIN mocks m ON m.id = e.mock_id JOIN books b ON b.id = m.book_id
                        WHERE e.user_id = ? AND e.mode = 'answers' AND e.score IS NOT NULL AND m.open = 1
                        ORDER BY e.updated_at DESC""", (user_id,))
@@ -125,7 +125,7 @@ def wrong_list(user_id, only_open=False):
             items.append({"no": no, "mine": e["answers"][no - 1], "points": points[no - 1],
                           "rate": rates.get(no), "reason": n["reason"] if n else "",
                           "memo": n["memo"] if n else "", "reviewed": reviewed})
-        groups.append({"mock_id": e["mid"], "title": f"{e['book_title']} {e['round_no']}회", "score": e["score"],
+        groups.append({"mock_id": e["mid"], "kind": e["kind"], "title": f"{e['book_title']} {e['round_no']}회", "score": e["score"],
                        "full": e["full_score"], "rows": items, "total": len(wrong),
                        "done": sum(1 for no in wrong if (e["mid"], no) in notes and notes[(e["mid"], no)]["reviewed_at"])})
     return groups
@@ -136,19 +136,23 @@ def wrong_list(user_id, only_open=False):
 def wrong_notes():
     only_open = request.args.get("view") == "open"
     groups = wrong_list(g.user["id"], only_open)
+    kind = analysis.kind_arg(request.args.get("kind"), groups[0]["kind"] if groups else "복습 테스트")   # 탭: 복습 테스트 / 모의고사
+    kind_counts = {k: sum(1 for gr in groups if gr["kind"] == k) for k in analysis.KIND_KEYS.values()}
+    groups = [gr for gr in groups if gr["kind"] == kind]
     rounds = [(gr["mock_id"], gr["title"]) for gr in groups]       # 회차 고르기 (한 회차만 정리할 때)
     pick = request.args.get("mock", type=int)
     if pick:
         groups = [gr for gr in groups if gr["mock_id"] == pick]
-    reasons = query("""SELECT reason, COUNT(*) AS n FROM wrong_notes WHERE user_id = ? AND reason != ''
-                       GROUP BY reason ORDER BY n DESC""", (g.user["id"],))
+    reasons = query("""SELECT w.reason, COUNT(*) AS n FROM wrong_notes w JOIN mocks m ON m.id = w.mock_id JOIN books b ON b.id = m.book_id
+                       WHERE w.user_id = ? AND w.reason != '' AND b.kind = ? GROUP BY w.reason ORDER BY n DESC""", (g.user["id"], kind))
     import sysdata
     code = sysdata.code_of_student(g.user["student_id"])
     sys_groups = sysdata.wrong_notes(code)
     if only_open:
         sys_groups = [dict(gr, items=[i for i in gr["items"] if i["redo"] != "맞힘"]) for gr in sys_groups]
         sys_groups = [gr for gr in sys_groups if gr["items"]]
-    return render_template("study/wrong.html", rounds=rounds, pick=pick, groups=groups, reasons=WRONG_REASONS, reason_counts=reasons,
+    return render_template("study/wrong.html", kind=kind, kind_key=next(k for k, v in analysis.KIND_KEYS.items() if v == kind),
+                           kind_counts=kind_counts, rounds=rounds, pick=pick, groups=groups, reasons=WRONG_REASONS, reason_counts=reasons,
                            only_open=only_open, fmt=analysis._fmt, code=code, sys_groups=sys_groups,
                            sys_types=sysdata.type_counts(sysdata.wrong_notes(code)), sfmt=sysdata.fmt)
 
@@ -171,7 +175,9 @@ def wrong_update(mid, no):
     if request.headers.get("X-Requested-With") == "fetch":
         return jsonify(ok=True)
     flash(f"{no}번을 저장했습니다.", "ok")
-    return redirect(url_for("study.wrong_notes", view=request.args.get("view"), mock=request.args.get("mock")) + f"#w-{mid}-{no}")
+    k = query("SELECT b.kind FROM mocks m JOIN books b ON b.id = m.book_id WHERE m.id = ?", (mid,), one=True)
+    kind = "mock" if k and k["kind"] == "모의고사" else "review"
+    return redirect(url_for("study.wrong_notes", view=request.args.get("view"), mock=request.args.get("mock"), kind=kind) + f"#w-{mid}-{no}")
 
 
 def _classes():
@@ -333,7 +339,7 @@ def timetable_import():
 @bp.route("/t/timetable", methods=["GET", "POST"])
 @staff_required
 def t_timetable():
-    """수능 D-day 및 휴강 설정 (시간표는 학생이 각자 만든다)."""
+    """주요 일정: 수능 D-day 및 휴강 설정 (시간표는 학생이 각자 만든다)."""
     if request.method == "POST" and request.form.get("action") == "break_del":
         execute("DELETE FROM class_breaks WHERE id = ?", (request.form.get("id", type=int),))
         flash("휴강을 삭제했습니다.", "ok")
@@ -383,13 +389,15 @@ def build_report(student_id):
     mocks, reasons, focus = [], [], None
     if user:
         uid = user["id"]
-        for e in query("""SELECT e.*, m.round_no, m.full_score, m.answer_key, m.points, m.id AS mid, b.title AS book_title
+        for e in query("""SELECT e.*, m.round_no, m.full_score, m.answer_key, m.points, m.id AS mid, m.exam_date, b.title AS book_title, b.kind
                           FROM mock_entries e JOIN mocks m ON m.id = e.mock_id JOIN books b ON b.id = m.book_id
                           WHERE e.user_id = ? AND e.score IS NOT NULL ORDER BY m.book_id, m.round_no""", (uid,)):
             st = _stats({**dict(e), "id": e["mid"]})
             wrong = analysis.wrong_items(e["answers"], json.loads(e["answer_key"])) if e["mode"] == "answers" else []
             mocks.append({"title": f"{e['book_title']} {e['round_no']}회", "score": e["score"], "full": e["full_score"],
-                          "grade": analysis.grade_for(e["score"], st["cuts"]), "n": st["n"], "wrong": wrong})
+                          "grade": analysis.grade_for(e["score"], st["cuts"]), "n": st["n"], "wrong": wrong, "kind": e["kind"],
+                          "rate": round(100 * e["score"] / e["full_score"]) if e["full_score"] else None, "date": e["exam_date"] or "",
+                          "avg": st.get("avg")})
         import exams
         from collections import Counter
         reasons = [{"reason": t, "n": n} for t, n in Counter(   # 대표 이유: 학생 선택 > 조교 첨삭 > 자동 분석 (exams.pick_reason)
@@ -402,7 +410,13 @@ def build_report(student_id):
     chart = _score_chart([{"pct": round(100 * m["score"] / m["full"], 1), "label": m["title"], "date": ""} for m in mocks if m["full"]])
     if sys_scores:                                   # 조교 시스템 성적이 있으면 그것으로 흐름을 그린다
         chart = _score_chart([{"pct": r["pct"], "label": r["name"], "date": r["day"]} for r in sys_scores if r["pct"] is not None])
-    return {"s": s, "chart": chart, "mocks": mocks, "reasons": reasons, "focus": focus,
+    from views.care import rate_chart
+    kinds = []                                       # 복습 테스트와 모의고사는 따로 (인쇄라 탭 대신 칸을 나눈다)
+    for k in analysis.KIND_KEYS.values():
+        rows = [m for m in mocks if m["kind"] == k]
+        if rows:
+            kinds.append({"kind": k, "rows": rows, "chart": rate_chart(list(reversed(rows)))})
+    return {"s": s, "chart": chart, "mocks": mocks, "kinds": kinds, "reasons": reasons, "focus": focus,
             "today": date.today().isoformat(), "code": code, "sys_scores": sys_scores,
             "units": sysdata.report(code), "learn": sysdata.learn_type(code), "study": sysdata.study_type(code),
             "sys_types": sysdata.type_counts(sysdata.wrong_notes(code)), "sfmt": sysdata.fmt}

@@ -18,9 +18,9 @@
     <circle class="rc-hit" cx="{{ p.x }}" cy="{{ p.y }}" r="14"></circle>
     <circle class="rc-dot" cx="{{ p.x }}" cy="{{ p.y }}" r="5"></circle>
     <g class="rc-tip">
-      <rect x="{{ p.tx - 76 }}" y="{{ p.ty }}" width="152" height="52" rx="6"></rect>
+      <rect x="{{ p.tx - 100 }}" y="{{ p.ty }}" width="200" height="52" rx="6"></rect>
       <text class="rc-tip-h" x="{{ p.tx }}" y="{{ p.ty + 20 }}">{{ p.lab }} · {{ fmt(p.score) }}/{{ fmt(p.full) }}점 ({{ p.v }}%)</text>
-      <text class="rc-tip-s" x="{{ p.tx }}" y="{{ p.ty + 39 }}">{% if p.avg_score is not none %}반 평균 {{ fmt(p.avg_score) }}점{% endif %}{% if p.date %} · {{ p.date }}{% endif %}</text>
+      <text class="rc-tip-s" x="{{ p.tx }}" y="{{ p.ty + 39 }}">{{ ((['반 평균 ' ~ fmt(p.avg_score) ~ '점'] if p.avg_score is not none else []) + ([p.date] if p.date else []))|join(' · ') }}</text>
     </g>
   </g>
   {% endfor %}

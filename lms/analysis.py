@@ -14,6 +14,15 @@ DEFAULT_ITEMS = 25
 DEFAULT_FULL = 50
 BASE_POINT, HIGH_POINT, LOW_POINT = 2, 2.5, 1.5
 
+# ---------- 시험 종류 탭 ----------
+KIND_KEYS = {"review": "복습 테스트", "mock": "모의고사"}
+
+
+def kind_arg(raw, default="복습 테스트"):
+    """?kind=review|mock → '복습 테스트'|'모의고사'"""
+    return KIND_KEYS.get(raw or "", default)
+
+
 # ---------- 시험(회차) 정답·배점 ----------
 
 def parse_key(raw, n_items):

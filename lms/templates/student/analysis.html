@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}복테&모의 분석 · 정태혁 통합과학 lab{% endblock %}
+{% from "_macros.html" import kind_tabs %}
+{% block title %}시험 분석 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if not mock %}
 <header class="ed-head">
-  <h1>복테&모의 분석</h1>
+  <h1>시험 분석</h1>
   <p class="ed-lede">복습 테스트 및 모의고사가 끝나면 OMR 채점 결과가 여기에 올라옵니다.</p>
 </header>
 <section class="quiet-box"><p>아직 올라온 결과가 없습니다.</p></section>
 {% else %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>복테&모의 분석</h1>
+    <h1>시험 분석</h1>
+    {{ kind_tabs(mock.kind, 'books.analysis_home', kind_counts) }}
     <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %}{% if mock.n_items %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if why_open %} · <b>{{ why_open }}</b>{% endif %}</p>
   </div>
   <form method="get" class="pick" data-autosubmit>
     <label for="mock">다른 회차 보기</label>
     <div class="pick-row">
       <select id="mock" name="mock">
-        {% for k in kinds %}{% set ms = mocks|selectattr('kind', 'equalto', k)|list %}{% if ms %}
-        <optgroup label="{{ k }}">{% for m in ms %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' · 미응시' if m.uploaded else ' · 평가만') }}</option>{% endfor %}</optgroup>
-        {% endif %}{% endfor %}
+        {% for m in mocks if m.kind == mock.kind %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' · 미응시' if m.uploaded else ' · 평가만') }}</option>{% endfor %}
       </select>
       <button class="btn small js-hide" type="submit">이동</button>
     </div>
@@ -136,7 +136,7 @@
     <p><b>{{ weak.unit.unit }}</b> {{ weak.unit.got|round(1)|replace('.0', '') }}/{{ weak.unit.total|round(1)|replace('.0', '') }}점 · {{ weak.unit.pct }}%</p>
     {% if weak.wrongs %}<p class="small">틀린 문항: {% for t, no in weak.wrongs[:8] %}{{ t }} {{ no }}번{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
     <div class="row">
-      <a class="btn small" href="{{ url_for('study.wrong_notes') }}">오답 노트</a>
+      <a class="btn small" href="{{ url_for('study.wrong_notes', kind='mock' if mock.kind == '모의고사' else 'review') }}">오답 노트</a>
       {% if weak.topic %}<a class="btn small primary" href="{{ url_for('games.quiz', topic=weak.topic.code) }}">TOPIC {{ weak.topic.code }} {{ weak.topic.title }} Quiz</a>{% endif %}
     </div>
   </div>

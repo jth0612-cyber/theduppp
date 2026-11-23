@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf, status_badge %}
+{% from "_macros.html" import csrf, status_badge, kind_tabs %}
 {% block title %}{{ s.name }} · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
@@ -14,19 +14,10 @@
 
 <div class="grid grid-2">
   <div class="card">
-    <h2>성적 추이 <span class="small muted">복테·모의고사 득점률</span></h2>
-    {% if chart %}
-    <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="성적 추이">
-      {% for pct in [0, 50, 100] %}
-        {% set y = chart.pad + (chart.h - 2 * chart.pad) * (1 - pct / 100) %}
-        <line class="grid-line" x1="{{ chart.pad }}" x2="{{ chart.w - chart.pad }}" y1="{{ y }}" y2="{{ y }}"></line>
-        <text x="2" y="{{ y + 4 }}">{{ pct }}</text>
-      {% endfor %}
-      <polyline class="line" points="{{ chart.polyline }}"></polyline>
-      {% for c in chart.coords %}
-        <circle class="dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"><title>{{ c.date }} {{ c.label }}: {{ c.pct }}%</title></circle>
-      {% endfor %}
-    </svg>
+    <h2>성적 추이 <span class="small muted">{{ kind }} 득점률</span></h2>
+    {{ kind_tabs(kind, 'teacher.student_detail', kind_counts, sid=s.id) }}
+    {% if chart.pts|length > 1 %}
+    {% with label = kind %}{% include "_rate_chart.html" %}{% endwith %}
     {% else %}<p class="muted">올라온 OMR 결과가 없습니다.</p>{% endif %}
   </div>
 
@@ -63,17 +54,18 @@
 </div>
 
 <div class="card" id="mocks">
-  <h2>복테·모의고사 <span class="small muted">학부모 리포트와 같은 내용</span></h2>
-  {% if rep.exams %}
+  <h2>{{ kind }} <span class="small muted">학부모 리포트와 같은 내용</span></h2>
+  {{ kind_tabs(kind, 'teacher.student_detail', kind_counts, sid=s.id, _anchor='mocks') }}
+  {% if k.exams %}
   <div class="table-wrap"><table>
     <tr><th>시험</th><th class="num">점수</th><th class="num">반 평균</th><th class="num">득점률</th><th class="num">틀린 문항</th></tr>
-    {% for e in rep.exams[:14] %}
+    {% for e in k.exams[:14] %}
     <tr><td>{{ e.title }}{% if e.date %}<br><span class="small muted">{{ e.date }}</span>{% endif %}</td>
       <td class="num">{{ '%g'|format(e.score) }} / {{ '%g'|format(e.full) }}</td><td class="num">{{ e.avg }}</td>
       <td class="num">{{ e.rate if e.rate is not none else '-' }}%</td><td class="num">{{ e.n_wrong }} / {{ e.n }}</td></tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="muted">올라온 복테 및 모의고사 결과가 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">올라온 {{ kind }} 결과가 없습니다.</p>{% endif %}
   {% if rep.units %}
   <h3 class="mt">단원별 성취도 <span class="small muted">최근 시험</span></h3>
   <p class="small">{% for u in rep.units %}<span class="{{ 'badge open' if u.pct < 80 else 'badge' }}">{{ u.unit }} {{ u.pct }}%</span> {% endfor %}</p>

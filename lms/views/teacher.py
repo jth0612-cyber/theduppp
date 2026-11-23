@@ -357,10 +357,13 @@ def student_detail(sid):
     plink = (request.url_root.rstrip("/") + url_for("care.parent_page", token=s["parent_token"])) if s["parent_token"] else ""
     from views.care import parent_report
     rep = parent_report(sid, limit=200)          # 학부모 리포트와 같은 복테·모의고사·단원·코멘트 (시즌 전체)
-    chart = _score_chart([{"pct": e["rate"], "label": e["title"], "date": e["date"] or ""}
-                          for e in reversed(rep["exams"]) if e["rate"] is not None])
+    import analysis
+    from views.care import kind_view, num_fmt
+    kind = analysis.kind_arg(request.args.get("kind"), rep["last"]["kind"] if rep["last"] else "복습 테스트")   # 탭: 복습 테스트 / 모의고사
+    kv = kind_view(rep["exams"], kind, n=200)
+    kind_counts = {k: sum(1 for e in rep["exams"] if e["kind"] == k) for k in analysis.KIND_KEYS.values()}
     return render_template("teacher/student_detail.html", rep=rep, s=s, phone=decrypt(s["phone_enc"]), parent_phone=decrypt(s["parent_phone_enc"]), plink=plink,
-                           memo=decrypt(s["memo_enc"]), chart=chart, notes=notes,
+                           memo=decrypt(s["memo_enc"]), k=kv, chart=kv["chart"], kind=kind, kind_counts=kind_counts, fmt=num_fmt, notes=notes,
                            questions=questions, account=account, all_classes=all_classes,
                            note_categories=NOTE_CATEGORIES, engagement=engagement)
 

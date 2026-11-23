@@ -78,7 +78,7 @@ def _accessible_mocks():
 @bp.route("/s/analysis")
 @student_required
 def analysis_home():
-    """복테&모의 분석: 강사·조교가 올린 OMR 결과로 채점된 내 답안·성적표·오답 분석·학습 유형·통계·총평·1:1 첨삭.
+    """시험 분석: 강사·조교가 올린 OMR 결과로 채점된 내 답안·성적표·오답 분석·학습 유형·통계·총평·1:1 첨삭.
     학생이 답을 적는 칸은 없다."""
     import exams
     if g.user["student_id"]:
@@ -90,6 +90,9 @@ def analysis_home():
     unread = query("SELECT mock_id FROM feedback_threads WHERE user_id = ? AND unread = 1 ORDER BY updated_at DESC LIMIT 1",
                    (g.user["id"],), one=True)
     default = unread["mock_id"] if unread and unread["mock_id"] in ids else mocks[0]["id"]
+    want = analysis.KIND_KEYS.get(request.args.get("kind", ""))       # 탭: 복습 테스트 / 모의고사
+    if want and "mock" not in request.args:
+        default = next((m["id"] for m in mocks if m["kind"] == want), default)
     try:
         mid = int(request.args.get("mock", default))
     except ValueError:
@@ -97,7 +100,8 @@ def analysis_home():
     if mid not in ids:
         abort(404)
     mock = _mock_or_404(mid)
-    why_open = "새 1:1 첨삭 답변이 있는 회차" if unread and mid == unread["mock_id"] and "mock" not in request.args else ""
+    why_open = "새 1:1 첨삭 답변이 있는 회차" if unread and mid == unread["mock_id"] and "mock" not in request.args and not want else ""
+    kind_counts = {k: sum(1 for m in mocks if m["kind"] == k) for k in KINDS}
     key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (mid, g.user["id"]), one=True)
     from content import youtube_id
@@ -105,7 +109,7 @@ def analysis_home():
     if entry is None:                                          # 내 결과가 없는 회차: 시험 평가만
         stats = _stats(mock) if mock["n_items"] else None
         absent = bool(query("SELECT 1 FROM omr_uploads WHERE mock_id = ? LIMIT 1", (mid,), one=True))   # OMR은 올라왔는데 내 답안이 없음 = 미응시
-        return render_template("student/analysis.html", absent=absent, why_open=why_open, mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
+        return render_template("student/analysis.html", kind_counts=kind_counts, absent=absent, why_open=why_open, mocks=mocks, mock=mock, entry=None, ev=ev, kinds=KINDS, stats=stats,
                                fmt=analysis._fmt)
     stats = _stats(mock)
     my_score = entry["score"]
@@ -114,13 +118,13 @@ def analysis_home():
     from views.feedback import thread_for
     fb, fb_msgs = thread_for(mid, g.user["id"], mark_seen=True)
     rep = exams.student_report(mid, g.user["student_id"]) if g.user["student_id"] else None
-    prof = exams.classify_profile(exams.history(g.user["student_id"])) if rep else None
+    prof = exams.classify_profile([h for h in exams.history(g.user["student_id"]) if h["mock"].get("kind") == mock["kind"]]) if rep else None   # 같은 종류끼리
     from views.care import paper_of, weak_card
     units, weak = weak_card(g.user["student_id"]) if g.user["student_id"] else ([], None)
     from views.care import unit_scores
     season_units = [u for u in unit_scores(g.user["student_id"], limit=500) if u["pct"] < 80][:5] if g.user["student_id"] else []
     paper, paper_files, paper_marks = paper_of(mid, g.user["student_id"]) if g.user["student_id"] else (None, [], {})
-    return render_template("student/analysis.html", why_open=why_open, mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
+    return render_template("student/analysis.html", kind_counts=kind_counts, why_open=why_open, mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
                            rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, season_units=season_units, weak=weak, paper=paper, paper_files=paper_files, paper_marks=paper_marks,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
                            my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,

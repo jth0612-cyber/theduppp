@@ -138,6 +138,7 @@ input.score { width: 90px; text-align: right; }
 .tabs a { padding: 8px 14px; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
 .tabs a.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
 .tabs a:hover { text-decoration: none; color: var(--text); }
+.kind-tabs .kind-n { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 2px; }
 
 .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
 .pagination a, .pagination span { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
@@ -290,7 +291,7 @@ details > summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; 
 .google-ok { padding: 10px 12px; border-radius: var(--radius); background: var(--ok-soft); color: var(--ink); margin: 10px 0 4px; overflow-wrap: anywhere; }
 .account-google { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--rule); display: grid; gap: 10px; justify-items: start; }
 
-/* ---------- 복테&모의 분석: 회차 선택 ---------- */
+/* ---------- 시험 분석: 회차 선택 ---------- */
 .pick { display: grid; gap: 4px; min-width: 0; }
 .pick label { font-size: 12px; color: var(--muted); margin: 0; font-weight: 400; }
 .pick-row { display: flex; gap: 8px; align-items: center; }
@@ -2093,7 +2094,7 @@ h1 .fb-state { font-size: 13px; margin-left: 6px; }
 @media (max-width: 560px) { .my-stats dd { font-size: 19px; } .prog td:first-child { width: auto; } .prog { font-size: 13.5px; } }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ico-time { background: #2c2740; color: #b7a5ea; } :root:not([data-theme="light"]) .ico-solve { background: #1f3326; color: #8fd0a2; } :root:not([data-theme="light"]) .ico-fire { background: #3a2220; color: #f09a8f; } }
 :root[data-theme="dark"] .ico-time { background: #2c2740; color: #b7a5ea; } :root[data-theme="dark"] .ico-solve { background: #1f3326; color: #8fd0a2; } :root[data-theme="dark"] .ico-fire { background: #3a2220; color: #f09a8f; }
-/* 복테&모의 분석: 강사가 올린 OMR 결과 (보기 전용) */
+/* 시험 분석: 강사가 올린 OMR 결과 (보기 전용) */
 .omr.is-view .omr-row { grid-template-columns: 34px repeat(5, 1fr); }
 .omr-row .legend { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); width: 34px; }
 .omr-row.is-wrong .legend { color: var(--danger); font-weight: 700; }

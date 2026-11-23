@@ -17,7 +17,10 @@
 
   <section class="rs-sec">
     <h2>시험 성적 흐름</h2>
-    {% if r.chart %}
+    {% if not r.sys_scores and r.kinds %}
+    {% for kd in r.kinds %}{% if kd.chart.pts|length > 1 %}<h3 class="rs-sub">{{ kd.kind }}</h3>
+    {% with chart = kd.chart, label = kd.kind %}{% include "_rate_chart.html" %}{% endwith %}{% endif %}{% endfor %}
+    {% elif r.chart %}
     {% set chart = r.chart %}
     <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="득점률 추이">
       {% for pct in [0, 50, 100] %}{% set y = chart.pad + (chart.h - 2 * chart.pad) * (1 - pct / 100) %}
@@ -69,10 +72,11 @@
 
   <section class="rs-sec">
     <h2>복테 및 모의고사</h2>
-    {% if r.mocks %}
+    {% for kd in r.kinds %}
+    <h3 class="rs-sub">{{ kd.kind }}</h3>
     <table class="ledger compact"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
-      <tbody>{% for m in r.mocks %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>
-    {% else %}<p class="muted">채점한 모의고사가 없습니다.</p>{% endif %}
+      <tbody>{% for m in kd.rows %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">채점한 복테 및 모의고사가 없습니다.</p>{% endfor %}
   </section>
 
   <div class="rs-cols">

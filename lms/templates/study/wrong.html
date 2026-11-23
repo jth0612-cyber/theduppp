@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf %}
+{% from "_macros.html" import csrf, kind_tabs %}
 {% block title %}오답 노트 · 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
@@ -8,13 +8,14 @@
     <p class="ed-lede">시험 및 모의고사에서 틀린 문항</p>
   </div>
   <nav class="seg" aria-label="보기">
-    <a href="{{ url_for('study.wrong_notes') }}" class="{{ 'is-on' if not only_open }}">전체</a>
-    <a href="{{ url_for('study.wrong_notes', view='open') }}" class="{{ 'is-on' if only_open }}">복습 전만</a>
+    <a href="{{ url_for('study.wrong_notes', kind=kind_key) }}" class="{{ 'is-on' if not only_open }}">전체</a>
+    <a href="{{ url_for('study.wrong_notes', view='open', kind=kind_key) }}" class="{{ 'is-on' if only_open }}">복습 전만</a>
   </nav>
 </header>
+{% if only_open %}{{ kind_tabs(kind, 'study.wrong_notes', kind_counts, view='open') }}{% else %}{{ kind_tabs(kind, 'study.wrong_notes', kind_counts) }}{% endif %}
 {% if rounds|length > 1 %}
 <form method="get" class="pick" data-autosubmit>
-  {% if only_open %}<input type="hidden" name="view" value="open">{% endif %}
+  {% if only_open %}<input type="hidden" name="view" value="open">{% endif %}<input type="hidden" name="kind" value="{{ kind_key }}">
   <label for="wr-mock">회차</label>
   <select id="wr-mock" name="mock"><option value="">전체 회차</option>{% for mid, t in rounds %}<option value="{{ mid }}"{{ ' selected' if pick == mid }}>{{ t }}</option>{% endfor %}</select>
   <button class="btn small js-hide" type="submit">보기</button>
@@ -29,7 +30,7 @@
   {% set total = reason_counts|sum(attribute='n') %}
   {% for r in reason_counts %}<span><b>{{ r.reason }}</b> {{ r.n }}문항 · {{ (100 * r.n / total)|round|int }}%</span>{% endfor %}
 </section>
-<p class="small muted">내가 고른 이유 기준 / 복테&모의 분석의 학습 유형은 문항정보로 자동 분류한 결과라 숫자가 다를 수 있음</p>
+<p class="small muted">내가 고른 이유 기준 / 시험 분석의 학습 유형은 문항정보로 자동 분류한 결과라 숫자가 다를 수 있음</p>
 {% endif %}
 
 {% for gr in groups %}
@@ -64,8 +65,8 @@
 {% else %}{% if not sys_groups %}
 <div class="quiet-box">
   <p>아직 모인 오답이 없습니다.</p>
-  <p class="muted small">복테&모의 분석에서 채점하면 쌓입니다.</p>
-  <a class="btn" href="{{ url_for('books.analysis_home') }}">복테&모의 분석으로</a>
+  <p class="muted small">시험 분석에서 채점하면 쌓입니다.</p>
+  <a class="btn" href="{{ url_for('books.analysis_home') }}">시험 분석으로</a>
 </div>
 {% endif %}{% endfor %}
 {% endblock %}
