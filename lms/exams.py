@@ -728,7 +728,7 @@ def study_block(st, rep, hist):
         elif perfect:
             s = "이번 시험은 고난도 문항까지 모두 맞혔습니다."
         elif not easy:
-            s = f"기본 문항은 모두 맞혔고, 틀린 {nums(rep['items'])}번은 반 전체가 어려워한 문항이라 같은 모습이 확인됩니다."
+            s = f"기본 문항은 모두 맞혔고, 틀린 {nums(rep['wrongs'])}번은 반 전체가 어려워한 문항이라 같은 모습이 확인됩니다."
         else:
             s = f"이번에는 반 학생 대부분이 맞힌 {nums(easy)}번도 놓쳐, 기본 문항 점검을 함께 하겠습니다."
     elif main.startswith("마무리 다듬기형"):

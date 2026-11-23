@@ -134,6 +134,10 @@ class Pure(unittest.TestCase):
                                          "이번 주 실천: 과제 중 가장 어려운 3문항을 시간을 재고 풀기"])
         st["main"] = "미이행형"
         self.assertNotIn("확인됩니다", exams.study_block(st, rep, [rep]))     # 시험으로 확인할 수 없음 → 잇는 문장 없음
+        st["main"] = "심화 도전형"                                     # 어려운 문항만 틀렸을 때 (예전에는 KeyError로 학부모 문자 화면이 500)
+        for w in rep["wrongs"]:
+            w["rate"] = 90
+        self.assertIn("기본 문항은 모두 맞혔고", exams.study_block(st, rep, [rep]))
 
     def test_profile_rules(self):
         def h(rate, wrongs, enough=True, n=10):
