@@ -80,7 +80,7 @@
     ('games.hub', '수능 영단어', 'abc', vocab_ep, 0),
     ('games.sci_hub', '통과 Quiz', 'game', ep.startswith('games.') and not vocab_ep, 0),
     ('study.wrong_notes', '오답 노트', 'wrong', ep == 'study.wrong_notes', 0),
-    ('feedback.s_list', '내 첨삭', 'pen', ep == 'feedback.s_list', feedback_new or 0)]),
+    ('feedback.s_list', '1:1 관리', 'pen', ep == 'feedback.s_list', feedback_new or 0)]),
   ('기록', [
     ('study.s_my', '내 공부', 'plan', ep == 'study.s_my', 0),
     ('student.scores', '내 성적', 'score', ep == 'student.scores', 0),
