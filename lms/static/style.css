@@ -2584,3 +2584,5 @@ body.pub, body.no-shell { background: var(--frame); }
 @media (max-width: 900px) {
   form > button.btn.primary:last-of-type, form > p:last-child > .btn.primary:only-child { width: 100%; min-height: 52px; font-size: 16px; }
 }
+/* 토스 글(라디오 vs 체크박스): 작은 원만이 아니라 글자를 포함한 줄 전체를 누를 수 있게 (표 안은 빼고) */
+form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
