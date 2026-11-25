@@ -325,8 +325,8 @@ with app.app_context():
     x("UPDATE users SET password_hash = ?, must_change_pw = 0 WHERE username = 'ta_kimdoyun'", (hash_password(PW["ta2"]),))
 TA = login("ta_hanjisu", PW["ta"])
 TA2 = login("ta_kimdoyun", PW["ta2"])
-ok("조교 소개", TA.post("/t/me/intro", data={"intro": "생명·화학 담당. 오답 원인부터 같이 봅니다."}))
-ok("조교 소개 2", TA2.post("/t/me/intro", data={"intro": "물리·지구과학 담당. 계산 문항 풀이 순서를 잡아 드립니다."}))
+ok("조교 소개", TA.post("/t/me/intro", data={"intro": "생명과 화학 담당이에요. 오답 원인부터 같이 봐요."}))
+ok("조교 소개 2", TA2.post("/t/me/intro", data={"intro": "물리와 지구과학 담당이에요. 계산 문항 풀이 순서를 잡아 드려요."}))
 TA_ID = q("SELECT id FROM users WHERE username = 'ta_hanjisu'", one=True)["id"]
 
 # ---------------------------------------------------------------- 반 8개 (단과 4 · 재종 4)

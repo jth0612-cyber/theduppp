@@ -5,12 +5,12 @@
   <div>
     <p class="crumb"><a href="{{ url_for('games.hub') }}">수능 영단어</a> /</p>
     <h1>짝 맞추기</h1>
-    <p class="muted small">20단어를 5쌍씩 4판 (오늘 단어<span class="sep" aria-hidden="true"></span>복습<span class="sep" aria-hidden="true"></span>지난 단어<span class="sep" aria-hidden="true"></span>다음 단어). 뜻 칸에는 짝 없는 뜻이 하나 섞여 있어요.</p>
   </div>
 </div>
 <div class="card game mt-game" id="match-game" data-start="{{ url_for('games.vocab_match_start') }}">
-  <div data-role="start">
-    {% if best %}<p class="small muted">최고 {{ best.top }}/20<span class="sep" aria-hidden="true"></span>{{ best.plays }}판</p>{% endif %}
+  <div data-role="start" class="g-start">
+    <p class="g-intro">단어와 뜻을 짝지어요. 뜻 칸에는 짝 없는 뜻이 하나 섞여 있어요.</p>
+    <p class="g-meta">5쌍씩 4판{% if best %}<span class="sep" aria-hidden="true"></span>최고 {{ best.top }}/20{% endif %}</p>
     <button type="button" class="btn primary big" data-role="begin">시작</button>
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>

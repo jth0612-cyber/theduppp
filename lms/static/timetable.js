@@ -16,7 +16,7 @@
     editing = !!opts.id; lastFocus = document.activeElement;
     form.action = editing ? form.dataset.edit.replace(/\/0$/, "/" + opts.id) : form.dataset.new;
     title.textContent = editing ? "일정 고치기" : "일정 추가";
-    save.textContent = editing ? "저장" : "넣기";
+    save.textContent = editing ? "저장" : "추가하기";
     del.hidden = !editing;
     form.elements.title.value = opts.title || "";
     form.elements.room.value = opts.room || "";

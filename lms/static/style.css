@@ -2770,3 +2770,11 @@ main.sheet > .colophon { padding-top: 40px; }
 .chip-links-sm a { min-height: 32px; padding: 0 12px; font-size: 13px; }
 .card .chip-links a { background: var(--raised); box-shadow: none; }
 .find-wide { margin: 0 0 16px; } .find-wide input { width: 100%; }
+/* 확인 시트: 굵은 제목 + 회색 설명 */
+.sheet-dlg p { margin: 0 0 8px; }
+.sheet-dlg .sd-sub { display: block; margin: 0 0 20px; color: var(--muted); font-size: 15px; line-height: 1.5; word-break: keep-all; }
+.sheet-dlg p:last-of-type:not(:has(+ .sd-sub)) { margin-bottom: 20px; }
+/* type 을 안 쓴 입력칸도 같은 모양 */
+input:not([type]) { min-height: 48px; padding: 12px 14px; border: 1.5px solid var(--edge); border-radius: 14px; background-color: var(--sheet); font: inherit; color: var(--ink); width: 100%; }
+:is(.card, .panel, dialog, details) input:not([type]) { background-color: var(--raised); border-color: transparent; }
+input:not([type]):focus { outline: none; background-color: var(--sheet); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }

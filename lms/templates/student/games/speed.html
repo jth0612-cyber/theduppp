@@ -3,14 +3,14 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
+    <p class="crumb">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
     <h1>{{ title }}</h1>
-    <p class="muted small">{{ intro }} 키보드 ← O, → X.</p>
   </div>
 </div>
 <div class="card game sp-game" id="speed-game" data-start="{{ url_for('games.speed_start', kind=kind) }}" data-kind="{{ kind }}">
-  <div data-role="start" class="sp-start">
-    {% if best %}<p class="small muted">최고 {{ best.top }}개</p>{% endif %}
+  <div data-role="start" class="sp-start g-start">
+    <p class="g-intro">{{ intro }}</p>
+    <p class="g-meta">키보드는 ←가 O, →가 X{% if best %}<span class="sep" aria-hidden="true"></span>최고 {{ best.top }}개{% endif %}</p>
     <button type="button" class="btn primary big" data-role="begin">시작</button>
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>

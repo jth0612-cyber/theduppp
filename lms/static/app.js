@@ -14,7 +14,13 @@ function askSheet(msg, ok, danger) {
   var d = document.createElement("dialog");
   d.className = "sheet-dlg" + (danger ? " is-danger" : "");
   d.innerHTML = '<div class="sd-box"><p></p><div class="sd-act"><button type="button" class="btn" value="no">취소</button><button type="button" class="btn primary" value="yes">확인</button></div></div>';
-  d.querySelector("p").textContent = msg;
+  var cut = msg.search(/[?.]\s/);                      // 첫 문장은 제목, 나머지는 회색 설명 (토스 확인 시트)
+  var p = d.querySelector("p");
+  if (cut > 0 && cut < msg.length - 2) {
+    p.textContent = msg.slice(0, cut + 1);
+    var sub = document.createElement("span"); sub.className = "sd-sub"; sub.textContent = msg.slice(cut + 1).trim();
+    p.insertAdjacentElement("afterend", sub);
+  } else p.textContent = msg;
   document.body.appendChild(d);
   var close = function () { d.close(); d.remove(); };
   d.addEventListener("click", function (e) {

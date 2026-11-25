@@ -5,12 +5,12 @@
   <div>
     <p class="crumb"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> / <a href="{{ url_for('games.quiz', topic=info.topic) }}">TOPIC {{ info.topic }} {{ topic_title }}</a> /</p>
     <h1>{{ info.title }}</h1>
-    <p class="muted small">{{ info.intro }} {{ stages }}판</p>
   </div>
 </div>
 <div class="card game pl-game" id="play-game" data-game="{{ game }}" data-start="{{ url_for('games.play_start', game=game) }}">
-  <div data-role="start">
-    {% if best %}<p class="small muted">최고 {{ best.top }}/{{ stages }}<span class="sep" aria-hidden="true"></span>{{ best.plays }}판</p>{% endif %}
+  <div data-role="start" class="g-start">
+    <p class="g-intro">{{ info.intro }}</p>
+    <p class="g-meta">{{ stages }}판{% if best %}<span class="sep" aria-hidden="true"></span>최고 {{ best.top }}/{{ stages }}{% endif %}</p>
     <button type="button" class="btn primary big" data-role="begin">시작</button>
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>

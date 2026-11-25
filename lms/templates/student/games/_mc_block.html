@@ -1,6 +1,7 @@
 {# 객관식 한 판 (통합과학 퀴즈 · 샤가프 · 영단어가 함께 쓴다). 한 문제씩 바로 채점: static/games.js #}
 <div class="card game" id="mc-game" data-game="{{ game }}" data-start="{{ url_for('games.' ~ game ~ '_start') }}">
-  <div data-role="start">
+  <div data-role="start" class="g-start">
+    {% if intro %}<p class="g-intro">{{ intro }}</p>{% endif %}
     {% if topics %}
     <div class="field"><label for="mc-topic">{{ topic_label or "단원" }}</label>
       <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
