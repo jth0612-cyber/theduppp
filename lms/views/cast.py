@@ -20,7 +20,7 @@ def _form():
     elif not body and not video:
         err = "본문이나 영상 주소 중 하나는 넣어 주세요."
     elif video and not youtube_id(video):
-        err = "유튜브 주소만 넣을 수 있습니다."
+        err = "유튜브 주소만 넣을 수 있어요."
     return title, body, video, err
 
 
@@ -63,7 +63,7 @@ def cast_edit(cid):
         if request.form.get("action") == "delete":
             execute("DELETE FROM casts WHERE id = ?", (cid,))
             audit("cast_delete", f"cast:{cid}")
-            flash("글을 지웠습니다.", "ok")
+            flash("글을 지웠어요.", "ok")
             return redirect(url_for("cast.cast_list"))
         title, body, video, err = _form()
         if err:

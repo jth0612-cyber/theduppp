@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf, status_badge, qtype_badge %}
 {% block title %}{{ q.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('teacher.questions') }}">질문답변</a> /</p>
-    <h1>{{ q.title }}</h1>
+    <h1>{{ q.title }}{% call help('공개 범위') %}<p>{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개돼요.{% else %}행정문의는 이 학생과 선생님 및 조교만 볼 수 있어요.{% endif %}</p>{% endcall %}</h1>
     <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
       <span class="muted"><a href="{{ url_for('teacher.student_detail', sid=q.sid) }}">{{ q.name }}</a> (게시판 닉네임: {{ q.nickname or '없음' }})<span class="sep" aria-hidden="true"></span>{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.created_at[:16] }}{% if q.qtype == '학습상담' %}<span class="sep" aria-hidden="true"></span>상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구나' }}{% if q.rating %}<span class="sep" aria-hidden="true"></span>학생 평가 {{ q.rating }}점{% endif %}{% endif %}</span></p>
   </div>
@@ -18,7 +19,6 @@
   {% endif %}
   </div>
 </div>
-<p class="small muted">{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개됩니다.{% else %}행정문의는 이 학생과 선생님 및 조교만 볼 수 있습니다.{% endif %}</p>
 <div class="card">
   <div class="pre">{{ q.body }}</div>
   {% set photos = question_photos(q) %}{% if photos %}
@@ -38,7 +38,7 @@
   {% if q.status == 'answered' %}<details><summary><b>추가 답변 쓰기</b> <span class="small muted">답변 완료된 질문</span></summary>{% else %}<h2>답변 작성</h2>{% endif %}
   <form method="post">
     {{ csrf() }}
-    {% if g.user.role == 'assistant' %}{% set tpl = "안녕하세요 :) " ~ shown_name(g.user) ~ " 조교입니다.\n\n질문 남겨주셔서 감사합니다.\n\n\n\n혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!\n\n감사합니다 :)" %}{% endif %}
+    {% if g.user.role == 'assistant' %}{% set tpl = "안녕하세요 :) " ~ shown_name(g.user) ~ " 조교예요.\n\n질문 남겨주셔서 고마워요.\n\n\n\n혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!\n\n고마워요 :)" %}{% endif %}
     <div class="field"><textarea name="body" maxlength="5000" required rows="{{ 13 if tpl else 6 }}"{% if tpl %} data-answer-tpl{% endif %}>{{ tpl or '' }}</textarea></div>
     <div class="row">
       <button class="btn primary">답변 등록</button>

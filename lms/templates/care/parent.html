@@ -28,7 +28,7 @@
       <div><dt>오답</dt><dd>{{ k.last.n_wrong }}/{{ k.last.n }}</dd></div>
     </dl>
   </section>
-  {% else %}<section class="pr-card"><p>아직 올라온 {{ kind }} 결과가 없습니다.</p></section>{% endif %}
+  {% else %}<section class="pr-card"><p>아직 올라온 {{ kind }} 결과가 없어요.</p></section>{% endif %}
 
   {% if k.lines %}<section class="pr-card"><h2>요약</h2>{% for l in k.lines %}<p>{{ l }}</p>{% endfor %}</section>{% endif %}
 

@@ -21,13 +21,13 @@ MAX_ROWS = 60000           # 한 번에 받는 줄 수 (반 2개 × 100명 × �
 @api.route("/api/sync", methods=["POST"])
 def sync():
     if not sysdata.token_ok(request.headers.get("Authorization")):
-        return jsonify(ok=False, error="열쇠(토큰)가 일치하지 않습니다."), 401
+        return jsonify(ok=False, error="열쇠(토큰)가 일치하지 않아요."), 401
     body = request.get_json(silent=True) or {}
     tables = body.get("tables")
     if not isinstance(tables, dict) or not tables:
-        return jsonify(ok=False, error="tables 가 비어 있습니다."), 400
+        return jsonify(ok=False, error="tables 가 비어 있어요."), 400
     if sum(len(v) for v in tables.values() if isinstance(v, list)) > MAX_ROWS:
-        return jsonify(ok=False, error="한 번에 보내는 줄이 너무 많습니다. 표를 나눠 보내 주세요."), 413
+        return jsonify(ok=False, error="한 번에 보내는 줄이 너무 많아요. 표를 나눠 보내 주세요."), 413
     done, unknown, codes = sysdata.store(tables, "시트 자동 연동")
     if "출결" in done:                                   # 출결은 수업 일정의 수업 칸 출석으로도 채운다
         from views.schedule import sync_sys_attendance
@@ -39,7 +39,7 @@ def sync():
 @api.route("/api/sync/redo")
 def sync_redo():
     if not sysdata.token_ok(request.headers.get("Authorization")):
-        return jsonify(ok=False, error="열쇠(토큰)가 일치하지 않습니다."), 401
+        return jsonify(ok=False, error="열쇠(토큰)가 일치하지 않아요."), 401
     rows = [["학생코드", "시험명", "문항번호", "다시풀기", "기록시각"]] + \
            [[r["code"], r["exam"], r["item_no"], r["result"], r["at"]] for r in query("SELECT * FROM sys_redo ORDER BY at")]
     return jsonify(ok=True, rows=rows)
@@ -66,7 +66,7 @@ def t_link():
 def t_link_token():
     token = sysdata.new_token()
     audit("sys_token_new")
-    flash("새 열쇠를 생성했습니다. 이 화면을 벗어나면 다시 볼 수 없으니 지금 시트에 붙여 넣으세요. 이전 열쇠는 더 이상 사용할 수 없습니다.", "ok")
+    flash("새 열쇠를 생성했어요. 이 화면을 벗어나면 다시 볼 수 없으니 지금 시트에 붙여 넣으세요. 이전 열쇠는 더 이상 사용할 수 없어요.", "ok")
     return _page(new_token=token)
 
 
@@ -89,7 +89,7 @@ def t_link_upload():
             continue
         key = sysdata.table_key(f.filename) or sysdata.guess_table([h.strip() for h in grid[0]])
         if key is None:
-            skipped.append(f"{f.filename}: 어떤 표인지 알 수 없습니다 (파일 이름이나 머리글을 확인해 주세요)")
+            skipped.append(f"{f.filename}: 어떤 표인지 알 수 없어요 (파일 이름이나 머리글을 확인해 주세요)")
             continue
         tables[key] = grid
     done, _, codes = sysdata.store(tables, f"CSV 직접 올림 ({g.user['username']})")
@@ -113,20 +113,20 @@ def s_link():
     """이미 가입한 학생이 학생코드를 넣어 시스템 기록과 잇는다 (코드는 한 사람만 쓸 수 있다)."""
     sid = g.user["student_id"]
     if sysdata.code_of_student(sid):
-        flash("이미 학생코드가 연결되어 있습니다.", "ok")
+        flash("이미 학생코드가 연결되어 있어요.", "ok")
         return redirect(request.referrer or url_for("student.scores"))
     code = normalize_student_code(request.form.get("code", ""))
     me = query("SELECT class_id FROM students WHERE id = ?", (sid,), one=True)
     sc = query("SELECT * FROM student_codes WHERE code = ?", (code,), one=True) if code else None
     if sc is None or sc["student_id"]:
         audit("sys_link_failed", f"code:{code[:4]}")
-        flash("학생코드가 맞지 않거나 이미 사용된 코드입니다. 조교 선생님께 확인해 주세요.", "error")
+        flash("학생코드가 맞지 않거나 이미 사용된 코드예요. 조교 선생님께 확인해 주세요.", "error")
     elif sc["class_id"] != me["class_id"]:
-        flash("다른 반의 학생코드입니다. 조교 선생님께 확인해 주세요.", "error")
+        flash("다른 반의 학생코드예요. 조교 선생님께 확인해 주세요.", "error")
     else:
         execute("UPDATE student_codes SET student_id = ?, used_at = datetime('now', 'localtime') WHERE id = ?", (sid, sc["id"]))
         audit("sys_link", f"student:{sid}")
-        flash("학생코드를 연결했습니다.", "ok")
+        flash("학생코드를 연결했어요.", "ok")
     return redirect(request.referrer or url_for("student.scores"))
 
 

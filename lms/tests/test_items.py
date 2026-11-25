@@ -56,7 +56,7 @@ class Items(unittest.TestCase):
 
     def test_upload_view_watermark_and_question_prefill(self):
         r = self.up(self.mid, "01.png", "q02.png", "표지.png")
-        self.assertIn("2장을 올렸습니다", r.data.decode()); self.assertIn("표지.png", r.data.decode())
+        self.assertIn("2장을 올렸어요", r.data.decode()); self.assertIn("표지.png", r.data.decode())
         self.up(self.other, "01.png")
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) AS n FROM mock_item_images WHERE mock_id = ?", (self.mid,), one=True)["n"], 2)
@@ -69,7 +69,7 @@ class Items(unittest.TestCase):
         self.assertNotEqual(Image.open(io.BytesIO(img.data)).convert("RGB").getextrema(), ((255, 255), (255, 255), (255, 255)))   # 워터마크가 새겨짐
         self.assertEqual(self.s.get(f"/items/{self.other}/1.png").status_code, 404)    # 내 결과·평가가 없는 회차는 못 본다
         page = self.s.get(f"/s/analysis?mock={self.mid}").data.decode()
-        self.assertIn(f"/s/analysis/{self.mid}/items/2", page); self.assertIn("번호를 누르면 문항", page)
+        self.assertIn(f"/s/analysis/{self.mid}/items/2", page); self.assertIn("번호를 누르면 그 문항을 볼 수 있어요", page)
         view = self.s.get(f"/s/analysis/{self.mid}/items/2").data.decode()
         self.assertIn("모의고사 1회 2번", view); self.assertIn("이 문항에 필기해서 질문", view)
         q = self.s.get(f"/s/questions?ask=1&mock={self.mid}&item=2").data.decode()

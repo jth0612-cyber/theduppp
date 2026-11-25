@@ -39,22 +39,22 @@ def _sheets(raw, filename):
             except UnicodeDecodeError:
                 continue
         else:
-            raise OmrError("CSV 글자를 읽지 못했습니다. UTF-8 로 저장해 주세요.")
+            raise OmrError("CSV 글자를 읽지 못했어요. UTF-8 로 저장해 주세요.")
         return [list(r) for r in csv.reader(io.StringIO(text))], None
     if name.endswith((".xlsx", ".xlsm")):
         from openpyxl import load_workbook
         try:
             wb = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
         except Exception:
-            raise OmrError("엑셀 파일을 열지 못했습니다. .xlsx 로 다시 저장해 올려 주세요.")
+            raise OmrError("엑셀 파일을 열지 못했어요. .xlsx 로 다시 저장해 올려 주세요.")
         val = lambda ws: [["" if v is None else v for v in r] for r in ws.iter_rows(values_only=True)]
         main = val(wb.worksheets[0])
         info = next((val(ws) for ws in wb.worksheets[1:] if _norm(ws.title) == "문항정보"), None)
         wb.close()
         return main, info
     if name.endswith(".xls"):
-        raise OmrError(".xls 는 읽지 않습니다. 엑셀에서 .xlsx 로 다시 저장해 올려 주세요.")
-    raise OmrError("엑셀(.xlsx) 또는 CSV 파일만 올릴 수 있습니다.")
+        raise OmrError(".xls 는 읽지 않아요. 엑셀에서 .xlsx 로 다시 저장해 올려 주세요.")
+    raise OmrError("엑셀(.xlsx) 또는 CSV 파일만 올릴 수 있어요.")
 
 
 def item_no(v):
@@ -95,7 +95,7 @@ def _header(rows):
         if sc > best and (nos or kws):
             best, best_i = sc, i
     if best_i is None:
-        raise OmrError("머리글 줄을 찾지 못했습니다. 첫 줄에 이름, 수험번호, 문항 번호(1, 2, 3 …)를 적어 주세요.")
+        raise OmrError("머리글 줄을 찾지 못했어요. 첫 줄에 이름, 수험번호, 문항 번호(1, 2, 3 …)를 적어 주세요.")
     return best_i
 
 
@@ -115,7 +115,7 @@ def read(raw, filename):
     """파일을 읽어 표 구조만 돌려준다 (채점은 grade)."""
     rows, info_rows = _sheets(raw, filename)
     if not rows:
-        raise OmrError("빈 파일입니다.")
+        raise OmrError("빈 파일이에요.")
     hi = _header(rows)
     head = rows[hi]
     cols, items = {}, {}
@@ -174,7 +174,7 @@ def read(raw, filename):
                     "cls": get(r, "cls"), "score": get(r, "score"), "wrong": get(r, "wrong"),
                     "cells": cells if cells is not None else {no: (r[c] if c < len(r) else "") for no, c in items.items()}})
     if not out:
-        raise OmrError("학생 줄이 없습니다.")
+        raise OmrError("학생 줄이 없어요.")
     n = max(items) if items else 0
     key = {no: _txt(key_row[c]) for no, c in items.items() if c < len(key_row) and _txt(key_row[c])} if key_row else (pre_key or {})
     points = {}
@@ -218,7 +218,7 @@ def mode_of(parsed, has_key):
     if not parsed["has_items"]:
         if parsed["has_wrong"]:
             return "wrong"
-        raise OmrError("문항 칸(1, 2, 3 …)이나 '틀린문항' 칸이 없습니다.")
+        raise OmrError("문항 칸(1, 2, 3 …)이나 '틀린문항' 칸이 없어요.")
     vals = [_norm(v) for r in parsed["rows"] for v in r["cells"].values() if _txt(v)]
     if any(v in ("o", "○", "◯") for v in vals):
         return "ox"
@@ -242,10 +242,10 @@ def parse_wrong(text, n):
             continue
         m = re.fullmatch(r"(\d{1,3})(?:\((\d)\)|:(\d))?", part)
         if not m:
-            raise OmrError(f"틀린문항 '{t}'을 읽지 못했습니다.")
+            raise OmrError(f"틀린문항 '{t}'을 읽지 못했어요.")
         no = int(m.group(1))
         if not 1 <= no <= n:
-            raise OmrError(f"틀린문항 {no}번은 문항 범위(1~{n}) 밖입니다.")
+            raise OmrError(f"틀린문항 {no}번은 문항 범위(1~{n}) 밖이에요.")
         out.setdefault(no, m.group(2) or m.group(3) or "")
     return out
 
@@ -320,14 +320,14 @@ def template(n, students, info=None):
     ex = wb.create_sheet("작성 예시")
     for line in (
         ["OMR 시트"],
-        ["1. 채점기 엑셀을 그대로 붙여 넣어도 됩니다. 이름과 수험번호 칸, 문항 번호 칸(1, 1번, 문1, Q1)을 알아서 찾습니다."],
-        ["2. 문항 칸에는 학생이 마킹한 번호(1~5)를 적습니다. 빈칸, 두 개 마킹, *는 무응답(오답)입니다. O/X 나 1/0 으로 적어도 됩니다."],
-        ["3. '정답' 줄에 정답을 적습니다. 복수 정답은 2,4  전원 정답은 *  정답 없음(전원 오답)은 -. 정답 줄이 없으면 문항정보 시트의 정답을 씁니다."],
-        ["4. '배점' 줄이 비면 문항정보 시트의 배점, 그것도 비면 1점입니다. 점수 = 맞힌 문항 배점의 합."],
-        ["5. 수험번호 = 학부모 휴대폰 번호에서 010을 뺀 8자리. 없으면 학생코드, 그것도 없으면 이름으로 찾습니다."],
-        ["6. 문항 칸이 모두 빈 줄(시험을 안 본 학생)은 건너뜁니다. 같은 회차를 다시 올리면 그 학생 결과는 새 내용으로 바뀝니다."],
+        ["1. 채점기 엑셀을 그대로 붙여 넣어도 돼요. 이름과 수험번호 칸, 문항 번호 칸(1, 1번, 문1, Q1)을 알아서 찾아요."],
+        ["2. 문항 칸에는 학생이 마킹한 번호(1~5)를 적어요. 빈칸, 두 개 마킹, *는 무응답(오답)이에요. O/X 나 1/0 으로 적어도 돼요."],
+        ["3. '정답' 줄에 정답을 적어요. 복수 정답은 2,4  전원 정답은 *  정답 없음(전원 오답)은 -. 정답 줄이 없으면 문항정보 시트의 정답을 써요."],
+        ["4. '배점' 줄이 비면 문항정보 시트의 배점, 그것도 비면 1점이에요. 점수 = 맞힌 문항 배점의 합."],
+        ["5. 수험번호 = 학부모 휴대폰 번호에서 010을 뺀 8자리. 없으면 학생코드, 그것도 없으면 이름으로 찾아요."],
+        ["6. 문항 칸이 모두 빈 줄(시험을 안 본 학생)은 건너뛰어요. 같은 회차를 다시 올리면 그 학생 결과는 새 내용으로 바뀌어요."],
         [],
-        ["문항정보 시트 (선택. 채우면 오답 유형 분석과 학부모 문자가 자세해집니다)"],
+        ["문항정보 시트 (선택. 채우면 오답 유형 분석과 학부모 문자가 자세해져요)"],
         ["문항형식: 합답형 / 일반"],
         ["선지구성(합답형): ①ㄱ ②ㄴ ③ㄱ,ㄷ ④ㄴ,ㄷ ⑤ㄱ,ㄴ,ㄷ"],
         ["보기함정(합답형): ㄱ(O): 반대로 판단하게 되는 이유 [개념 부족] / ㄴ(X): 이유 [자료 해석]"],

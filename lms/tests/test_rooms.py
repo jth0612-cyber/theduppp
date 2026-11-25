@@ -91,7 +91,7 @@ class RoomsTest(unittest.TestCase):
         self.assertTrue(kings[u0]); self.assertFalse(kings[u1])
         # 기간: 지난달 기록은 '이번 주'에 안 들어감
         self._log(2, "sento", 500, ago_days=40)
-        self.assertIn("아직 기록이 없습니다", a.get("/s/rooms/rank?place=sento&period=week").data.decode())
+        self.assertIn("아직 기록이 없어요", a.get("/s/rooms/rank?place=sento&period=week").data.decode())
         self.assertIn("닉2", a.get("/s/rooms/rank?place=sento&period=all").data.decode())
         self.assertEqual(a.get("/s/rooms/rank?place=nowhere").status_code, 404)
 

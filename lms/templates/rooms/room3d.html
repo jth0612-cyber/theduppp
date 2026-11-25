@@ -11,7 +11,7 @@
      data-status="{{ me.status }}" data-elapsed="{{ elapsed }}" data-plan="{{ me.plan_min }}" data-seat="{{ me.seat if me.seat is not none else '' }}"
      data-color="{{ my_color }}" data-me-name="{{ shown_name(g.user) }}" data-me-cap="{{ role_caption(g.user) or '' }}"{% if board_on %} data-write="{{ url_for('rooms.write', place=key) }}"{% endif %} data-colors="{{ colors|join(',') }}" data-today="{{ today }}">
   <div class="w3-stage" data-stage>
-    <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉습니다." role="img"></canvas>
+    <canvas class="w3-canvas" data-canvas aria-label="{{ info[0] }}. 바닥을 누르면 걸어가고, 자리를 누르면 앉아요." role="img"></canvas>
     <div class="w3-vignette" aria-hidden="true"></div>
 
     <div class="w3-top">
@@ -53,7 +53,7 @@
         <p class="fine">소리 있음</p>
       </div>
     </div>
-    <noscript><p class="w3-fallback">자바스크립트를 켜야 보입니다. <a href="{{ url_for('rooms.room', place=key, flat=1) }}">그림 버전으로 보기</a></p></noscript>
+    <noscript><p class="w3-fallback">자바스크립트를 켜야 보여요. <a href="{{ url_for('rooms.room', place=key, flat=1) }}">그림 버전으로 보기</a></p></noscript>
   </div>
 
   <div class="room-cols w3-below">

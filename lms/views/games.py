@@ -472,7 +472,7 @@ def vocab_review():
     n = len(vocab.review_words(g.user["id"], limit=999))
     return render_template("student/games/mc.html", game="vocab_review", title="영단어 복습", topics=None, empty=n == 0, parent="vocab",
                            intro=f"틀린 단어 {n}개 중 최근 {min(n, vocab.DAILY)}개 / 맞히면 목록에서 제외"
-                           if n else "복습할 단어가 없습니다.")
+                           if n else "복습할 단어가 없어요.")
 
 
 @bp.route("/vocab/review/start", methods=["POST"])

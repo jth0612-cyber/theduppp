@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf %}
 {% block title %}{{ grp.name }} | 수업 일정{% endblock %}
 {% macro hchips(hs) %}{% for h in hs %}<span class="badge {{ 'type' if h.extra is not defined or not h.extra else 'open' }}" title="{{ h.kind }}">{{ h.title }}</span> {% endfor %}{% endmacro %}
@@ -25,7 +26,7 @@
         <div class="field"><label for="cp">다른 그룹 진도 가져오기 (주차 번호대로, 교재 더하기)</label><select id="cp" name="src">{% for x in groups %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}</select></div>
         <div class="field shrink"><button class="btn">가져오기</button></div></form>{% endif %}
       <form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}">{{ csrf() }}<input type="hidden" name="action" value="delete">
-        <button class="btn small danger" data-confirm="그룹을 지우면 주차, 수업 칸, 출석 기록이 모두 지워집니다. 반과 학생은 그대로입니다. 지우시겠습니까?">그룹 지우기</button></form>
+        <button class="btn small danger" data-confirm="그룹을 지우면 주차, 수업 칸, 출석 기록이 모두 지워져요. 반과 학생은 그대로예요. 지울까요?">그룹 지우기</button></form>
     </div>
   </details>
 </div>
@@ -36,8 +37,8 @@
     <tr><th>반</th><th>재원생</th><th>수업 시간</th><th></th></tr>
     {% for m in members %}
     <tr><td><a href="{{ url_for('teacher.class_detail', cid=m.id, tab='times') }}">{{ m.name }}</a></td><td class="num">{{ m.n }}명</td>
-      <td class="small">{% for t in slots if t.class_id == m.id %}{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}–{{ t.ends }}{% if t.hall or t.room %}<span class="sep" aria-hidden="true"></span>{{ t.hall }} {{ t.room }}{% endif %}{{ ' / ' if not loop.last }}{% else %}<span class="muted">수업 시간 없음<span class="sep" aria-hidden="true"></span>수업 칸이 생기지 않습니다</span>{% endfor %}</td>
-      <td class="num"><form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="remove_class"><input type="hidden" name="class_id" value="{{ m.id }}"><button class="btn small" data-confirm="이 반을 그룹에서 빼면 이 반의 수업 칸과 출석 기록이 지워집니다. 빼시겠습니까?">빼기</button></form></td></tr>
+      <td class="small">{% for t in slots if t.class_id == m.id %}{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}–{{ t.ends }}{% if t.hall or t.room %}<span class="sep" aria-hidden="true"></span>{{ t.hall }} {{ t.room }}{% endif %}{{ ' / ' if not loop.last }}{% else %}<span class="muted">수업 시간 없음<span class="sep" aria-hidden="true"></span>수업 칸이 생기지 않아요</span>{% endfor %}</td>
+      <td class="num"><form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="remove_class"><input type="hidden" name="class_id" value="{{ m.id }}"><button class="btn small" data-confirm="이 반을 그룹에서 빼면 이 반의 수업 칸과 출석 기록이 지워져요. 뺄까요?">빼기</button></form></td></tr>
     {% endfor %}
   </table></div>
 </section>
@@ -48,7 +49,7 @@
 </nav>
 
 {% if view == 'table' %}
-<p class="small muted">칸을 누르면 그 수업의 교재 넣고 빼기, 출석 (조교 시스템 출결은 자동으로 채움). 칸 숫자 = 출석/명단, 교재 <span class="badge open">주황</span> = 이 수업에만 더 넣은 교재</p>
+<div class="help-inline">표 읽는 법{% call help('표 읽는 법') %}<p>칸을 누르면 그 수업의 교재 넣고 빼기, 출석 (조교 시스템 출결은 자동으로 채움). 칸 숫자 = 출석/명단, 교재 <span class="badge open">주황</span> = 이 수업에만 더 넣은 교재</p>{% endcall %}</div>
 <div class="table-wrap sched-wrap"><table class="sched">
   <thead><tr><th class="sched-week">주차</th>
     {% for t in slots %}<th class="sched-col"><b>{{ t.class_name }}</b><br><span class="small">{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}</span>{% if t.hall or t.room %}<br><span class="small muted">{{ t.hall }} {{ t.room }}</span>{% endif %}</th>{% endfor %}
@@ -70,12 +71,12 @@
           <div class="row"><div class="field"><label>복테 회차</label><input type="number" name="review_round" min="1" max="50" value="{{ w.review_round or '' }}"></div>
             <div class="field"><label>모의고사 회차</label><input type="number" name="mock_round" min="1" max="50" value="{{ w.mock_round or '' }}"></div></div>
           <fieldset class="field"><legend>배부 교재</legend><div class="check-list">{% set mine = wh.get(w.id, [])|map(attribute='id')|list %}
-            {% for h in handouts %}<label><input type="checkbox" name="handout_id" value="{{ h.id }}" {{ 'checked' if h.id in mine }}> <span class="muted">{{ h.kind }}</span> {{ h.title }}</label>{% else %}<span class="muted">배부 교재가 없습니다. <a href="{{ url_for('schedule.handouts') }}">배부 교재</a>에서 먼저 넣으세요.</span>{% endfor %}</div></fieldset>
+            {% for h in handouts %}<label><input type="checkbox" name="handout_id" value="{{ h.id }}" {{ 'checked' if h.id in mine }}> <span class="muted">{{ h.kind }}</span> {{ h.title }}</label>{% else %}<span class="muted">배부 교재가 없어요. <a href="{{ url_for('schedule.handouts') }}">배부 교재</a>에서 먼저 넣으세요.</span>{% endfor %}</div></fieldset>
           {% endif %}
           <div class="field"><label>메모</label><input type="text" name="note" value="{{ w.note }}" maxlength="200"></div>
           <div class="row"><button class="btn primary small" name="action" value="save">저장</button>
-            {% if w.off %}<button class="btn small" name="action" value="on" data-confirm="휴강을 풀면 뒤 주차 진도가 한 주씩 앞으로 당겨집니다.">휴강 풀기</button>
-            {% else %}<button class="btn small" name="action" value="off" data-confirm="이 주를 휴강 주로 바꾸면 이 주부터 진도, 교재, 회차가 한 주씩 뒤로 밀립니다.">휴강 주로 (진도 밀기)</button>{% endif %}</div>
+            {% if w.off %}<button class="btn small" name="action" value="on" data-confirm="휴강을 풀면 뒤 주차 진도가 한 주씩 앞으로 당겨져요.">휴강 풀기</button>
+            {% else %}<button class="btn small" name="action" value="off" data-confirm="이 주를 휴강 주로 바꾸면 이 주부터 진도, 교재, 회차가 한 주씩 뒤로 밀려요.">휴강 주로 (진도 밀기)</button>{% endif %}</div>
         </form>
       </details>
     </th>

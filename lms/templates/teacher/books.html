@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}교재/모의고사 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>복테/모의고사</h1><p class="muted small">회차를 눌러 채점기 엑셀을 올리면 학생 화면과 학부모 문자에 바로 반영됩니다.</p></div>
+  <div><h1>복테/모의고사{% call help('복테/모의고사') %}<p>회차를 눌러 채점기 엑셀을 올리면 학생 화면과 학부모 문자에 바로 반영돼요.</p>{% endcall %}</h1></div>
 </div>
 {% for k in kinds %}{% if rounds.get(k) %}
 <section class="card round-grid-card" aria-labelledby="h-{{ loop.index }}">
@@ -30,13 +31,12 @@
     </tbody>
   </table></div>
   {% else %}
-  <p class="muted">아직 교재가 없습니다. 아래에서 첫 교재를 만드세요.</p>
+  <p class="muted">아직 교재가 없어요. 아래에서 첫 교재를 만드세요.</p>
   {% endif %}
 </div>
 
 <div class="card" id="shop">
-  <h2>교재 구매 링크</h2>
-  <p class="muted small"><a href="{{ url_for('books.shop') }}">교재 구매</a> 화면의 링크 / 비워 두면 '준비 중' 표시</p>
+  <h2>교재 구매 링크{% call help('교재 구매 링크') %}<p><a href="{{ url_for('books.shop') }}">교재 구매</a> 화면의 링크 / 비워 두면 '준비 중' 표시</p>{% endcall %}</h2>
   <form method="post" action="{{ url_for('books.shop_save') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for key, name, sub in shop %}
@@ -58,7 +58,7 @@
       <div class="field"><label for="subject">과목(표지 글자)</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
       <div class="field"><label for="expires_on">이용 기간 (마지막 날)</label><input type="date" id="expires_on" name="expires_on" required></div>
     </div>
-    <div class="field"><label for="notice">학생 화면 알림 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 12월 31일까지 열람할 수 있습니다."></div>
+    <div class="field"><label for="notice">학생 화면 알림 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 12월 31일까지 열람할 수 있어요."></div>
     <label class="consent"><input type="checkbox" name="is_free" value="1"> 배포본 (학생 화면에 '배포본'으로 표시)</label>
     <button class="btn primary mt" type="submit">만들기</button>
   </form>

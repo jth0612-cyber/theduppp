@@ -55,7 +55,7 @@ def _read_form():
     from views.student import _upload_images
     body = request.form.get("body", "").strip()
     if len(body) > MAX_BODY:
-        raise ValueError(f"내용은 {MAX_BODY}자까지 적을 수 있습니다.")
+        raise ValueError(f"내용은 {MAX_BODY}자까지 적을 수 있어요.")
     has_photo = any(f and f.filename for f in request.files.getlist("image"))
     if not body and not has_photo:
         raise ValueError("내용이나 사진 중 하나는 넣어 주세요.")
@@ -115,7 +115,7 @@ def ask(mid):
                 (tid,))
     _post(tid, body, photos)
     audit("feedback_ask", f"feedback:{tid}")
-    flash("피드백 요청을 보냈습니다.", "ok")
+    flash("피드백 요청을 보냈어요.", "ok")
     return redirect(url_for("books.analysis_home", mock=mid) + "#feedback")
 
 
@@ -164,7 +164,7 @@ def t_detail(tid):
         execute("""UPDATE feedback_threads SET status = 'done', unread = 1, staff_id = ?, updated_at = datetime('now', 'localtime')
                    WHERE id = ?""", (g.user["id"], tid))
         audit("feedback_reply", f"feedback:{tid}")
-        flash("답변을 보냈습니다.", "ok")
+        flash("답변을 보냈어요.", "ok")
         nxt = query("SELECT id FROM feedback_threads WHERE status = 'wait' AND id != ? ORDER BY updated_at LIMIT 1", (tid,), one=True)
         return redirect(url_for("feedback.t_detail", tid=nxt["id"]) if nxt else url_for("feedback.t_list"))
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (t["mock_id"], t["user_id"]), one=True)

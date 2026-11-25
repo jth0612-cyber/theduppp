@@ -176,7 +176,7 @@ class BooksTest(unittest.TestCase):
         """강사가 OMR 엑셀을 올리면 그 학생 화면에 바로 채점 결과가 보인다. 학생은 답을 적을 수 없다."""
         bid, mid = self.make_book()
         s0, s1 = self.student(0), self.student(1)
-        self.assertIn("아직 올라온 결과가 없습니다", s0.get("/s/analysis").data.decode())
+        self.assertIn("아직 올라온 결과가 없어요", s0.get("/s/analysis").data.decode())
         self.assertEqual(s0.post(f"/s/analysis/{mid}/submit", data={"mode": "answers", "quick": KEY}).status_code, 404)
         # 마지막 두 문항(3점짜리) 오답 → 44점, 7번 무응답(2점) → 42점
         wrong = KEY[:18] + ("2" if KEY[18] != "2" else "3") + ("2" if KEY[19] != "2" else "3")
@@ -213,7 +213,7 @@ class BooksTest(unittest.TestCase):
         # 빈 양식 그대로(문항 칸이 빈 학생) 올리면 건너뛴다
         r = self.t.post(f"/t/mocks/{mid}/omr", data={"file": (_io.BytesIO(form.data), "omr.xlsx")},
                         content_type="multipart/form-data", follow_redirects=True)
-        self.assertIn("반영된 학생이 없습니다", r.data.decode())             # 정답 줄을 비워 두면 학생 줄은 모두 미응시로 건너뜀
+        self.assertIn("반영된 학생이 없어요", r.data.decode())             # 정답 줄을 비워 두면 학생 줄은 모두 미응시로 건너뜀
         # 조교도 올릴 수 있고, 학생은 올릴 수 없다
         with self.app.app_context():
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta', ?, '조교')",

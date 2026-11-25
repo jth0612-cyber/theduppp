@@ -180,7 +180,7 @@ def shop_save():
     if bad:
         flash("주소 모양이 아니라 저장하지 못했어요: " + ", ".join(bad), "error")
     else:
-        flash("구매 링크를 저장했습니다.", "ok")
+        flash("구매 링크를 저장했어요.", "ok")
     return redirect(url_for("books.teacher_books") + "#shop")
 
 
@@ -247,13 +247,13 @@ def edit_book(bid):
     try:
         date.fromisoformat(expires_on)
     except ValueError:
-        flash("이용 기간 날짜가 올바르지 않습니다.", "error")
+        flash("이용 기간 날짜가 올바르지 않아요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid))
     kind = request.form.get("kind") if request.form.get("kind") in KINDS else _book_or_404(bid)["kind"]
     execute("UPDATE books SET title = ?, subject = ?, expires_on = ?, is_free = ?, notice = ?, kind = ? WHERE id = ?",
             (request.form.get("title", "").strip()[:100] or "제목 없음", request.form.get("subject", "").strip()[:40],
              expires_on, 1 if request.form.get("is_free") else 0, request.form.get("notice", "").strip()[:300], kind, bid))
-    flash("교재 정보를 저장했습니다.", "ok")
+    flash("교재 정보를 저장했어요.", "ok")
     return redirect(url_for("books.teacher_book", bid=bid))
 
 
@@ -279,14 +279,14 @@ def add_mock(bid):
         flash(str(e) if str(e) and not str(e).startswith("invalid literal") else "숫자를 확인하세요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid) + "#add-mock")
     if query("SELECT 1 FROM mocks WHERE book_id = ? AND round_no = ?", (bid, round_no), one=True):
-        flash(f"{round_no}회는 이미 있습니다.", "error")
+        flash(f"{round_no}회는 이미 있어요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid) + "#add-mock")
     mid = execute("""INSERT INTO mocks (book_id, round_no, title, n_items, full_score, answer_key, points)
                      VALUES (?, ?, ?, ?, ?, ?, ?)""",
                   (bid, round_no, request.form.get("title", "").strip()[:60], n_items, full,
                    json.dumps(key), json.dumps(points)))
     audit("mock_created", f"mock:{mid}")
-    flash(f"{round_no}회를 추가했습니다.", "ok")
+    flash(f"{round_no}회를 추가했어요.", "ok")
     return redirect(url_for("books.teacher_book", bid=bid))
 
 
@@ -307,7 +307,7 @@ def delete_mock(mid):
     execute("DELETE FROM mocks WHERE id = ?", (mid,))
     analysis.invalidate(mid)
     audit("mock_deleted", f"mock:{mid}")
-    flash(f"{m['round_no']}회와 그 가채점 기록을 삭제했습니다.", "ok")
+    flash(f"{m['round_no']}회와 그 가채점 기록을 삭제했어요.", "ok")
     return redirect(url_for("books.teacher_book", bid=m["book_id"]))
 
 
@@ -316,7 +316,7 @@ def delete_mock(mid):
 def delete_book(bid):
     book = _book_or_404(bid)
     if request.form.get("confirm_title", "").strip() != book["title"]:
-        flash("교재 이름을 정확히 입력해야 삭제됩니다.", "error")
+        flash("교재 이름을 정확히 입력해야 삭제돼요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid))
     from views.feedback import delete_mock_files
     for m in query("SELECT id FROM mocks WHERE book_id = ?", (bid,)):
@@ -324,7 +324,7 @@ def delete_book(bid):
         delete_mock_files(m["id"])
     execute("DELETE FROM books WHERE id = ?", (bid,))
     audit("book_deleted", f"book:{bid}")
-    flash("교재와 회차, 코드, 가채점 기록을 모두 삭제했습니다.", "ok")
+    flash("교재와 회차, 코드, 가채점 기록을 모두 삭제했어요.", "ok")
     return redirect(url_for("books.teacher_books"))
 
 
@@ -346,7 +346,7 @@ def mock_review(mid):
     killer = ", ".join(re.findall(r"\d{1,2}", request.form.get("killer", "")))[:80]
     video = request.form.get("video", "").strip()[:500]
     if video and not youtube_id(video):
-        flash("해설 영상은 유튜브 주소만 넣을 수 있습니다.", "error")
+        flash("해설 영상은 유튜브 주소만 넣을 수 있어요.", "error")
         return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
     filled = bool(text or level or tm or killer or video)
     who = (g.user["display_name"] or g.user["username"]) if g.user["role"] == "assistant" else "정태혁 선생님"
@@ -354,7 +354,7 @@ def mock_review(mid):
                review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?""",
             (text, level, tm, killer, video, who if filled else "", mid))
     audit("mock_review", f"mock:{mid}")
-    flash("시험 분석을 저장했습니다. 학생 화면에 바로 보입니다." if filled else "시험 분석을 지웠습니다.", "ok")
+    flash("시험 분석을 저장했어요. 학생 화면에 바로 보여요." if filled else "시험 분석을 지웠어요.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
 
 
@@ -393,7 +393,7 @@ def omr_upload(mid):
         return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
     data = f.read(10 * 1024 * 1024 + 1)
     if len(data) > 10 * 1024 * 1024:
-        flash("파일이 10MB를 넘습니다.", "error")
+        flash("파일이 10MB를 넘어요.", "error")
         return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
     try:
         res = exams.apply_upload(mid, data, f.filename, g.user["id"])
@@ -401,7 +401,7 @@ def omr_upload(mid):
         flash(str(e), "error")
         return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
     audit("omr_upload", f"mock:{mid} rows:{res['ok']}")
-    flash(f"{res['summary']}. 학생 화면에 바로 보입니다." if res["ok"] else "반영된 학생이 없습니다. 아래 줄별 결과를 확인해 주세요.",
+    flash(f"{res['summary']}. 학생 화면에 바로 보여요." if res["ok"] else "반영된 학생이 없어요. 아래 줄별 결과를 확인해 주세요.",
           "ok" if res["ok"] else "error")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
 
@@ -431,7 +431,7 @@ def omr_clear(mid):
     execute("DELETE FROM mock_entries WHERE mock_id = ?", (mid,))
     analysis.invalidate(mid)
     audit("omr_clear", f"mock:{mid}")
-    flash("이 회차의 학생 결과를 모두 지웠습니다.", "ok")
+    flash("이 회차의 학생 결과를 모두 지웠어요.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
 
 
@@ -490,7 +490,7 @@ def ta_note(mid, sid):
     execute("UPDATE exam_results SET ta_note = ?, ta_by = ?, ta_at = datetime('now', 'localtime') WHERE mock_id = ? AND student_id = ?",
             (text, g.user["id"], mid, sid))
     audit("ta_note", f"mock:{mid} student:{sid}")
-    flash("피드백을 저장했습니다. 문자에 바로 들어갑니다." if text else "피드백을 지웠습니다.", "ok")
+    flash("피드백을 저장했어요. 문자에 바로 들어가요." if text else "피드백을 지웠어요.", "ok")
     return redirect(url_for("books.mock_sms", mid=mid) + f"#s{sid}")
 
 

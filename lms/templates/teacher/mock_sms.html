@@ -16,7 +16,7 @@
     <pre class="sms-text" id="sms-{{ x.r.student_id }}">{{ x.text }}</pre>
     <form method="post" action="{{ url_for('books.ta_note', mid=m.id, sid=x.r.student_id) }}" class="ta-note">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label class="small" for="n{{ x.r.student_id }}">조교 피드백 <span class="muted">문자 총평 자리에 들어갑니다{% if x.r.ta_at %}<span class="sep" aria-hidden="true"></span>{{ x.r.ta_at[5:16] }} 저장{% endif %}</span></label>
+      <label class="small" for="n{{ x.r.student_id }}">조교 피드백 <span class="muted">문자 총평 자리에 들어가요{% if x.r.ta_at %}<span class="sep" aria-hidden="true"></span>{{ x.r.ta_at[5:16] }} 저장{% endif %}</span></label>
       <textarea id="n{{ x.r.student_id }}" name="note" rows="2" maxlength="1500">{{ x.r.ta_note }}</textarea>
       <button class="btn small">저장</button>
     </form>

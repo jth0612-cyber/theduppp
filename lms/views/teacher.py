@@ -47,7 +47,7 @@ def _text(name, max_len=200, required=True):
     if required and not value:
         raise ValueError("필수 항목을 입력하세요.")
     if len(value) > max_len:
-        raise ValueError(f"입력이 너무 깁니다. (최대 {max_len}자)")
+        raise ValueError(f"입력이 너무 길어요. (최대 {max_len}자)")
     return value
 
 
@@ -136,7 +136,7 @@ def classes():
             cid = execute("INSERT INTO classes (name, description, join_code, track) VALUES (?, ?, ?, ?)",
                           (name, desc, new_join_code(join_code_taken), track))
             audit("class_create", f"class:{cid}")
-            flash(f"'{name}' 반을 만들었습니다.", "ok")
+            flash(f"'{name}' 반을 만들었어요.", "ok")
             return redirect(url_for("teacher.class_detail", cid=cid))
     show_archived = request.args.get("archived") == "1"
     track = request.args.get("track") if request.args.get("track") in ("단과", "재종") else ""
@@ -223,7 +223,7 @@ def class_edit(cid):
         execute("UPDATE classes SET name = ?, description = ?, archived = ?, track = COALESCE(?, track) WHERE id = ?",
                 (name, desc, archived, track, cid))
         audit("class_edit", f"class:{cid}")
-        flash("반 정보를 저장했습니다.", "ok")
+        flash("반 정보를 저장했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="students"))
 
 
@@ -251,14 +251,14 @@ def student_create(cid):
         flash(str(e), "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     if query("SELECT 1 FROM students WHERE student_no = ?", (f["student_no"],), one=True):
-        flash("이미 등록된 아이디입니다.", "error")
+        flash("이미 등록된 아이디예요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     sid = execute("""INSERT INTO students (class_id, name, student_no, target, phone_enc, memo_enc, parent_phone_enc, sms_ok)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                   (cid, f["name"], f["student_no"], f["target"], encrypt(f["phone"]), encrypt(f["memo"]),
                    encrypt(f["parent_phone"]), f["sms_ok"]))
     audit("student_create", f"student:{sid}")
-    flash(f"{f['name']} 학생을 등록했습니다.", "ok")
+    flash(f"{f['name']} 학생을 등록했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid))
 
 
@@ -273,7 +273,7 @@ def student_import(cid):
         return redirect(url_for("teacher.class_detail", cid=cid))
     raw = upload.read(5 * 1024 * 1024 + 1)
     if len(raw) > 5 * 1024 * 1024:
-        flash("CSV 파일이 너무 큽니다. (최대 5MB)", "error")
+        flash("CSV 파일이 너무 커요. (최대 5MB)", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     for enc in ("utf-8-sig", "cp949"):
         try:
@@ -282,12 +282,12 @@ def student_import(cid):
         except UnicodeDecodeError:
             continue
     else:
-        flash("파일 인코딩을 읽을 수 없습니다. UTF-8 또는 CP949(엑셀 기본)로 저장하세요.", "error")
+        flash("파일 인코딩을 읽을 수 없어요. UTF-8 또는 CP949(엑셀 기본)로 저장하세요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     reader = csv.DictReader(io.StringIO(text))
     if not reader.fieldnames or "이름" not in reader.fieldnames or not ({"아이디", "수험번호"} & set(reader.fieldnames)):
-        flash("첫 줄에 '이름,아이디' 열 제목이 있어야 합니다.", "error")
+        flash("첫 줄에 '이름,아이디' 열 제목이 있어야 해요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     db = get_db()
@@ -314,7 +314,7 @@ def student_import(cid):
             break
     db.commit()
     audit("student_import", f"class:{cid} added:{added}")
-    flash(f"{added}명을 등록했습니다." + (f" 건너뜀: {', '.join(skipped[:10])}" +
+    flash(f"{added}명을 등록했어요." + (f" 건너뜀: {', '.join(skipped[:10])}" +
           (f" 외 {len(skipped) - 10}건" if len(skipped) > 10 else "") if skipped else ""),
           "ok" if added else "error")
     return redirect(url_for("teacher.class_detail", cid=cid))
@@ -387,7 +387,7 @@ def student_edit(sid):
     dup = dup or query("SELECT 1 FROM users WHERE username = ? AND (student_id IS NULL OR student_id != ?)",
                        (f["student_no"], sid), one=True)
     if dup:
-        flash("이미 등록된 아이디입니다.", "error")
+        flash("이미 등록된 아이디예요.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     active = 1 if request.form.get("active") == "1" else 0
     execute("""UPDATE students SET class_id = ?, name = ?, student_no = ?, target = ?,
@@ -401,7 +401,7 @@ def student_edit(sid):
         # 학생 아이디는 수험번호와 같게 유지
         execute("UPDATE users SET username = ? WHERE student_id = ?", (f["student_no"], sid))
     audit("student_edit", f"student:{sid}")
-    flash("학생 정보를 저장했습니다.", "ok")
+    flash("학생 정보를 저장했어요.", "ok")
     return redirect(url_for("teacher.student_detail", sid=sid))
 
 
@@ -424,7 +424,7 @@ def student_delete(sid):
     for file_id in file_ids:
         delete_file(file_id)
     audit("student_delete", f"student:{sid} no:{s['student_no']}")
-    flash(f"{s['name']} 학생과 관련 기록을 모두 삭제했습니다.", "ok")
+    flash(f"{s['name']} 학생과 관련 기록을 모두 삭제했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=s["class_id"]))
 
 
@@ -468,7 +468,7 @@ def _issue_account(student):
                 (hash_password(temp), student["student_no"], existing["id"]))
     else:
         if query("SELECT 1 FROM users WHERE username = ?", (student["student_no"],), one=True):
-            raise ValueError(f"아이디 {student['student_no']} 가 이미 사용 중입니다.")
+            raise ValueError(f"아이디 {student['student_no']} 가 이미 사용 중이에요.")
         # 닉네임은 가입 시 자동으로 정해진다 (질답 게시판에서 실명 대신 표시)
         execute("""INSERT INTO users (role, username, nickname, password_hash, student_id, must_change_pw)
                    VALUES ('student', ?, ?, ?, ?, 1)""",
@@ -481,7 +481,7 @@ def _issue_account(student):
 def student_account(sid):
     s = _get_student(sid)
     if not s["active"]:
-        flash("비활성 학생에게는 계정을 발급할 수 없습니다.", "error")
+        flash("비활성 학생에게는 계정을 발급할 수 없어요.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     try:
         temp = _issue_account(s)
@@ -499,7 +499,7 @@ def student_account_delete(sid):
     _get_student(sid)
     execute("DELETE FROM users WHERE student_id = ?", (sid,))
     audit("account_delete", f"student:{sid}")
-    flash("학생 계정을 삭제했습니다. 학습 기록은 유지됩니다.", "ok")
+    flash("학생 계정을 삭제했어요. 학습 기록은 유지돼요.", "ok")
     return redirect(url_for("teacher.student_detail", sid=sid))
 
 
@@ -511,7 +511,7 @@ def class_accounts(cid):
     targets = query("""SELECT s.* FROM students s LEFT JOIN users u ON u.student_id = s.id
                        WHERE s.class_id = ? AND s.active = 1 AND u.id IS NULL ORDER BY s.name""", (cid,))
     if not targets:
-        flash("새로 발급할 학생이 없습니다. (이미 모두 계정이 있음)", "ok")
+        flash("새로 발급할 학생이 없어요. (이미 모두 계정이 있음)", "ok")
         return redirect(url_for("teacher.class_detail", cid=cid))
     rows = []
     for s in targets:
@@ -578,7 +578,7 @@ def questions():
 def my_intro():
     """조교 소개 한 줄: 학생이 학습상담 조교를 고를 때 보인다."""
     execute("UPDATE users SET ta_intro = ? WHERE id = ?", (request.form.get("intro", "").strip()[:80], g.user["id"]))
-    flash("소개를 저장했습니다.", "ok")
+    flash("소개를 저장했어요.", "ok")
     return redirect(url_for("teacher.questions"))
 
 
@@ -606,9 +606,9 @@ def question_detail(qid):
                     (qid, g.user["id"], body))
             execute("UPDATE questions SET status = 'answered' WHERE id = ?", (qid,))
             audit("question_answer", f"question:{qid}")
-            flash("답변을 등록했습니다.", "ok")
+            flash("답변을 등록했어요.", "ok")
             from views.pwa import notify_student
-            notify_student(q["sid"], "질문에 답변이 달렸습니다", q["title"], url_for("student.question_detail", qid=qid))
+            notify_student(q["sid"], "질문에 답변이 달렸어요", q["title"], url_for("student.question_detail", qid=qid))
             nxt = query("""SELECT id FROM questions WHERE status = 'open' AND NOT (? = 'assistant' AND qtype = '학습상담'
                            AND assignee_id IS NOT NULL AND assignee_id != ?) ORDER BY created_at LIMIT 1""",
                         (g.user["role"], g.user["id"]), one=True)
@@ -651,7 +651,7 @@ def notice_create(cid):
                           (target, tag, textbook, title, body, 1 if request.form.get("pinned") else 0))
             audit("notice_create", f"notice:{nid}")
             notify_class(target, f"새 {tag}", title, url_for("student.notice_detail", nid=nid))
-        flash("공지를 등록했습니다." if len(targets) == 1 else f"공지를 {len(targets)}개 반에 등록했습니다.", "ok")
+        flash("공지를 등록했어요." if len(targets) == 1 else f"공지를 {len(targets)}개 반에 등록했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="notices"))
 
 
@@ -687,7 +687,7 @@ def notice_edit(nid):
         for i in ids:
             execute("UPDATE notices SET tag = ?, textbook = ?, title = ?, body = ? WHERE id = ?", (tag, textbook, title, body, i))
             audit("notice_edit", f"notice:{i}")
-        flash("공지를 수정했습니다." if len(ids) == 1 else f"공지를 {len(ids)}개 반에서 수정했습니다.", "ok")
+        flash("공지를 수정했어요." if len(ids) == 1 else f"공지를 {len(ids)}개 반에서 수정했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=n["class_id"], tab="notices"))
 
 
@@ -714,7 +714,7 @@ def material_create(cid):
     else:
         mid = execute("INSERT INTO materials (class_id, title, file_id) VALUES (?, ?, ?)", (cid, title, file_id))
         audit("material_upload", f"material:{mid}")
-        flash("자료를 올렸습니다.", "ok")
+        flash("자료를 올렸어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="materials"))
 
 
@@ -749,7 +749,7 @@ def video_create(cid):
         vid = execute("INSERT INTO videos (class_id, title, url, duration, expires_on) VALUES (?, ?, ?, ?, ?)",
                       (cid, title, url, duration, expires))
         audit("video_create", f"video:{vid}")
-        flash("강의 영상을 등록했습니다.", "ok")
+        flash("강의 영상을 등록했어요.", "ok")
     return redirect(url_for("teacher.class_detail", cid=cid, tab="videos"))
 
 
@@ -828,9 +828,9 @@ def staff():
             flash(str(e), "error")
             return redirect(url_for("teacher.staff"))
         if not _USERNAME.match(username):
-            flash("아이디는 영문, 숫자, _ . - 로 3~30자입니다. (예: ta_kim)", "error")
+            flash("아이디는 영문, 숫자, _ . - 로 3~30자예요. (예: ta_kim)", "error")
         elif query("SELECT 1 FROM users WHERE username = ?", (username,), one=True) or                 query("SELECT 1 FROM students WHERE student_no = ?", (username,), one=True):
-            flash("이미 쓰이고 있는 아이디입니다. (학생 아이디와도 겹치면 안 됩니다)", "error")
+            flash("이미 쓰이고 있는 아이디예요. (학생 아이디와도 겹치면 안 돼요)", "error")
         else:
             temp = generate_temp_password()
             uid = execute("""INSERT INTO users (role, username, display_name, password_hash, must_change_pw)
@@ -870,7 +870,7 @@ def staff_toggle(uid):
     disabled = 0 if a["disabled"] else 1
     execute("UPDATE users SET disabled = ? WHERE id = ?", (disabled, uid))
     audit("assistant_disable" if disabled else "assistant_enable", f"user:{uid}")
-    flash(f"{a['display_name']} 조교 계정을 {'사용 중지' if disabled else '다시 사용'}했습니다.", "ok")
+    flash(f"{a['display_name']} 조교 계정을 {'사용 중지' if disabled else '다시 사용'}했어요.", "ok")
     return redirect(url_for("teacher.staff"))
 
 
@@ -911,19 +911,19 @@ def class_codes(cid):
             added += 1
         audit("student_codes_add", f"class:{cid} n:{added}")
         if added:
-            flash(f"코드 {added}개를 등록했습니다.", "ok")
+            flash(f"코드 {added}개를 등록했어요.", "ok")
         if dup:
             flash(f"이미 등록된 코드 {len(dup)}개는 건너뛰었어요: {', '.join(dup[:5])}{' …' if len(dup) > 5 else ''}", "error")
         if bad:
             flash(f"영문 및 숫자 4~32자가 아닌 줄 {len(bad)}개는 건너뛰었어요: {', '.join(bad[:5])}", "error")
         if not (added or dup or bad):
-            flash("붙여넣은 코드가 없습니다.", "error")
+            flash("붙여넣은 코드가 없어요.", "error")
     elif action == "generate":
         n = max(1, min(200, request.form.get("count", type=int) or 0))
         for _ in range(n):
             execute("INSERT INTO student_codes (class_id, code) VALUES (?, ?)", (cid, new_student_code()))
         audit("student_codes_generate", f"class:{cid} n:{n}")
-        flash(f"코드 {n}개를 생성했습니다. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
+        flash(f"코드 {n}개를 생성했어요. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
     elif action == "delete":
         ids = [int(x) for x in request.form.getlist("ids") if x.isdigit()]
         n = 0
@@ -931,7 +931,7 @@ def class_codes(cid):
             n += get_db().execute("DELETE FROM student_codes WHERE id = ? AND class_id = ? AND student_id IS NULL", (i, cid)).rowcount
         get_db().commit()
         audit("student_codes_delete", f"class:{cid} n:{n}")
-        flash(f"쓰지 않은 코드 {n}개를 삭제했습니다.", "ok")
+        flash(f"쓰지 않은 코드 {n}개를 삭제했어요.", "ok")
     return back
 
 
@@ -952,10 +952,10 @@ def class_joincode(cid):
     action = request.form.get("action")
     if action == "regen":
         execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(join_code_taken), cid))
-        flash("새 가입 코드를 만들었습니다. 예전 코드는 더 이상 사용할 수 없습니다.", "ok")
+        flash("새 가입 코드를 만들었어요. 예전 코드는 더 이상 사용할 수 없어요.", "ok")
     elif action in ("open", "close"):
         execute("UPDATE classes SET join_open = ? WHERE id = ?", (1 if action == "open" else 0, cid))
-        flash("가입을 받습니다." if action == "open" else "가입 받기를 멈췄습니다.", "ok")
+        flash("가입을 받아요." if action == "open" else "가입 받기를 멈췄어요.", "ok")
     audit("joincode_" + (action or "unknown"), f"class:{cid}")
     return redirect(url_for("teacher.class_detail", cid=cid))
 
@@ -963,15 +963,15 @@ def class_joincode(cid):
 def _approve(req):
     """가입 신청 1건 승인. 성공하면 None, 실패하면 사유 문자열."""
     if query("SELECT 1 FROM users WHERE username = ?", (req["student_no"],), one=True):
-        return f"{req['name']}({req['student_no']}): 이미 같은 아이디의 계정이 있습니다."
+        return f"{req['name']}({req['student_no']}): 이미 같은 아이디의 계정이 있어요."
     if req["google_sub"] and query("SELECT 1 FROM users WHERE google_sub = ?", (req["google_sub"],), one=True):
-        return f"{req['name']}({req['student_no']}): 이 Google 계정은 이미 다른 계정에 연결되어 있습니다."
+        return f"{req['name']}({req['student_no']}): 이 Google 계정은 이미 다른 계정에 연결되어 있어요."
     student = query("SELECT * FROM students WHERE student_no = ?", (req["student_no"],), one=True)
     if student is None:
         sid = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, ?, ?)",
                       (req["class_id"], req["name"], req["student_no"]))
     elif not student["active"]:
-        return f"{req['name']}({req['student_no']}): 퇴원 처리된 학생입니다. 학생 정보에서 재원으로 바꾼 뒤 승인하세요."
+        return f"{req['name']}({req['student_no']}): 퇴원 처리된 학생이에요. 학생 정보에서 재원으로 바꾼 뒤 승인하세요."
     else:
         sid = student["id"]  # 선생님이 미리 등록해 둔 명단과 연결 (반·이름은 명단 기준)
     execute("""INSERT INTO users (role, username, nickname, password_hash, student_id, google_sub, google_email)
@@ -997,14 +997,14 @@ def signups():
             errors = [e for e in (_approve(r) for r in reqs) if e]
             done = len(reqs) - len(errors)
             if done:
-                flash(f"{done}명을 승인했습니다.", "ok")
+                flash(f"{done}명을 승인했어요.", "ok")
             for e in errors[:10]:
                 flash(e, "error")
         elif action == "reject":
             for r in reqs:
                 execute("DELETE FROM signup_requests WHERE id = ?", (r["id"],))
                 audit("signup_reject", f"request:{r['id']} no:{r['student_no']}")
-            flash(f"{len(reqs)}건을 거절했습니다. 신청 정보는 삭제했습니다.", "ok")
+            flash(f"{len(reqs)}건을 거절했어요. 신청 정보는 삭제했어요.", "ok")
         return redirect(url_for("teacher.signups"))
     rows = query("""SELECT r.*, c.name AS class_name, s.name AS roster_name, s.class_id AS roster_class_id,
                            rc.name AS roster_class_name

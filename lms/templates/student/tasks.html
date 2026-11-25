@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-head"><h1>과제</h1>{% if rows %}<p class="muted small">안 낸 과제 {{ left }}개</p>{% endif %}</div>
 {% if not code %}{% include "sys/_link_box.html" %}
-{% elif not rows %}<div class="card"><p class="muted">아직 과제 기록이 없습니다.</p></div>
+{% elif not rows %}<div class="card"><p class="muted">아직 과제 기록이 없어요.</p></div>
 {% else %}
 <div class="card"><ul class="task-list">
   {% for r in rows %}{% set ok = r.submit in ('O', 'o', '제출', '완료', '1') %}

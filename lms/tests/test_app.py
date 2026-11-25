@@ -214,7 +214,7 @@ class AppTest(unittest.TestCase):
         for _ in range(5):
             self.login(bad, "A002", "wrong-password")
         r = self.login(bad, "A002", accounts["A002"])
-        self.assertIn("잠겼습니다", r.data.decode())
+        self.assertIn("잠겼어요", r.data.decode())
 
     def test_xss_escaped_and_headers(self):
         self.login(self.c, "teacher", TEACHER_PW)
@@ -279,7 +279,7 @@ class FeatureTest(AppTest):
         self.assertEqual(r.status_code, 400)
         self.assertIn('value="개념서 42p 3번"', page)
         self.assertIn("보기 ㄴ에서 막혔어요</textarea>", page)
-        self.assertIn("작성한 내용은 그대로 남아 있습니다", page)
+        self.assertIn("작성한 내용은 그대로 남아 있어요", page)
         self.assertIn('value="학습질문" required data-qtype checked', page)                   # 질문 유형 칩(라디오)이 골라진 채로
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM questions", one=True)["n"], 0)
@@ -673,7 +673,7 @@ class FeatureTest(AppTest):
         self.assertEqual(ta.get(f"/t/questions/{admin_q}").status_code, 200)
         self.assertEqual(ta.get(f"/s/file/{fid}").status_code, 200)
         page = ta.get(f"/t/questions/{qid}").data.decode()
-        self.assertIn("안녕하세요 :) 김조교 조교입니다.", page)                      # 조교 답변 기본 인사말
+        self.assertIn("안녕하세요 :) 김조교 조교예요.", page)                      # 조교 답변 기본 인사말
         self.assertIn("혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!", page)
         self.assertNotIn("조교입니다.", self.c.get(f"/t/questions/{qid}").data.decode())   # 선생님 칸은 비어 있음
         ta.post(f"/t/questions/{qid}", data={"body": "조교가 설명할게요"})
@@ -751,7 +751,7 @@ class FeatureTest(AppTest):
         _, s1, _ = self._students()
         page = s1.get("/s/feedback").data.decode()
         self.assertIn("1:1 관리", page)
-        self.assertIn("아직 요청한 첨삭이 없습니다", page)
+        self.assertIn("아직 요청한 첨삭이 없어요", page)
 
     def test_greeting_password_frame_and_book_code_link(self):
         _, s1, _ = self._students()

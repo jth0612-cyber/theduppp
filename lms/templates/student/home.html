@@ -29,7 +29,7 @@
     <ul class="mini-list">
       {% for n in notices %}
         <li>{{ tag_badge(n.tag) }}<a href="{{ url_for('student.notice_detail', nid=n.id) }}">{{ n.title }}</a><time>{{ n.created_at[5:10] }}</time></li>
-      {% else %}<li class="empty">새 공지가 없습니다.</li>{% endfor %}
+      {% else %}<li class="empty">새 공지가 없어요.</li>{% endfor %}
     </ul>
   </section>
   <section class="panel" aria-labelledby="h-q">
@@ -37,7 +37,7 @@
     <ul class="mini-list">
       {% for q in questions %}
         <li><a href="{{ url_for('student.question_detail', qid=q.id) }}">{{ q.title }}</a>{{ status_badge(q.status) }}</li>
-      {% else %}<li class="empty">아직 질문하지 않았습니다.</li>{% endfor %}
+      {% else %}<li class="empty">아직 질문하지 않았어요.</li>{% endfor %}
     </ul>
   </section>
 </div>

@@ -26,8 +26,8 @@ SENTO_HEARTH = set(range(8, 20))
 # 3D 장소 안 판(칠판·역 노트)에 학생 글을 띄우는 곳
 #  chat : 정해진 자리에 앉은 학생만 짧게 쓰는 칠판 (노천탕 화롯가 방석 8~19번, 찻집 다다미 8~13번)
 #  notes: 그 장소에 남기는 글(하루 5줄)을 판에 보여 준다
-BOARDS = {"sento": {"kind": "chat", "seats": SENTO_HEARTH, "max": 40, "need": "화롯가 방석에 앉은 사람만 칠판에 작성할 수 있습니다."},
-          "kissa": {"kind": "chat", "seats": set(range(8, 14)), "max": 40, "need": "다다미방 보라색 방석에 앉은 사람만 메모판에 작성할 수 있습니다."},
+BOARDS = {"sento": {"kind": "chat", "seats": SENTO_HEARTH, "max": 40, "need": "화롯가 방석에 앉은 사람만 칠판에 작성할 수 있어요."},
+          "kissa": {"kind": "chat", "seats": set(range(8, 14)), "max": 40, "need": "다다미방 보라색 방석에 앉은 사람만 메모판에 작성할 수 있어요."},
           "eki": {"kind": "notes", "max": 40}}
 BOARD_LINES = 5
 CHAT_GAP_SECONDS = 4
@@ -328,7 +328,7 @@ def write(place):
     if not body:
         return fail("한 줄을 적어 주세요.")
     if bad_word(body):
-        return fail("사용할 수 없는 말이 포함되어 있습니다.")
+        return fail("사용할 수 없는 말이 포함되어 있어요.")
     if b["kind"] == "chat":
         me = query(f"""SELECT seat FROM room_presence WHERE user_id = ? AND place = ?
                        AND last_seen >= datetime('now', 'localtime', '-{PRESENT_SECONDS} seconds')""", (uid, place), one=True)
@@ -336,16 +336,16 @@ def write(place):
             return fail(b["need"])
         last = query("SELECT created_at FROM room_chat WHERE user_id = ? ORDER BY id DESC LIMIT 1", (uid,), one=True)
         if last and (datetime.now() - datetime.fromisoformat(last["created_at"])).total_seconds() < CHAT_GAP_SECONDS:
-            return fail("너무 빠릅니다. 잠시 뒤에 작성해 주세요.")
+            return fail("너무 빨라요. 잠시 뒤에 작성해 주세요.")
         if query("""SELECT COUNT(*) AS n FROM room_chat WHERE user_id = ?
                     AND date(created_at) = date('now', 'localtime')""", (uid,), one=True)["n"] >= CHAT_DAY_MAX:
-            return fail("하루 다섯 줄 제한을 모두 사용했습니다.")
+            return fail("하루 다섯 줄 제한을 모두 사용했어요.")
         execute("INSERT INTO room_chat (place, user_id, body, board) VALUES (?, ?, ?, ?)",
                 (place, uid, body, _board_of_seat(place, me["seat"])))
     else:
         if query("""SELECT COUNT(*) AS n FROM room_notes WHERE user_id = ?
                     AND created_at >= datetime('now', 'localtime', '-1 day')""", (uid,), one=True)["n"] >= 5:
-            return fail("하루에 다섯 줄까지 남길 수 있습니다.")
+            return fail("하루에 다섯 줄까지 남길 수 있어요.")
         execute("INSERT INTO room_notes (place, user_id, body) VALUES (?, ?, ?)", (place, uid, body))
     return jsonify(ok=True, board=_board(place))
 
@@ -373,7 +373,7 @@ def t_rooms():
 def t_chat_delete(cid):
     execute("DELETE FROM room_chat WHERE id = ?", (cid,))
     audit("room_chat_delete", f"chat:{cid}")
-    flash("칠판 글을 지웠습니다.", "ok")
+    flash("칠판 글을 지웠어요.", "ok")
     return redirect(url_for("rooms.t_rooms"))
 
 
@@ -382,5 +382,5 @@ def t_chat_delete(cid):
 def t_note_delete(nid):
     execute("DELETE FROM room_notes WHERE id = ?", (nid,))
     audit("room_note_deleted", f"note:{nid}")
-    flash("글을 지웠습니다.", "ok")
+    flash("글을 지웠어요.", "ok")
     return redirect(url_for("rooms.t_rooms"))

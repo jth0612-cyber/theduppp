@@ -10,7 +10,7 @@
   </ol>
   <p class="muted small">Google 계정으로 본인 확인 / 받는 정보: <b>이메일 주소</b>만</p>
   <a class="btn primary google-btn" href="{{ url_for('google.start', mode='signup') }}">Google 계정으로 시작하기</a>
-  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있습니다 → 로그인</a></p>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% elif not track %}
   <div class="track-pick" role="list">
@@ -19,10 +19,10 @@
     <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='재종') }}">
       <b>재종</b><span>재수종합반 학생</span><em>원하는 아이디로 가입</em></a>
   </div>
-  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있습니다 → 로그인</a></p>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% else %}
-  <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디입니다.' if track == '단과' else '원하는 아이디로 가입합니다.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
+  <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디예요.' if track == '단과' else '원하는 아이디로 가입해요.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
   {% if gid %}
   <p class="google-ok small">Google 계정 확인됨<span class="sep" aria-hidden="true"></span><b>{{ gid.email }}</b></p>
   {% endif %}
@@ -75,16 +75,16 @@
       <ul>
         <li>수집 항목: 이름, 아이디, {% if gid %}Google 계정 이메일, {% endif %}학습 기록(성적 및 질문 등)</li>
         <li>이용 목적: 수업 학습 관리, 질문 답변</li>
-        <li>보관 기간: 수강이 끝나면 선생님이 파기합니다</li>
-        <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개됩니다.</li>
+        <li>보관 기간: 수강이 끝나면 선생님이 파기해요</li>
+        <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개돼요.</li>
       </ul>
-      <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> 위 내용에 동의합니다</label>
+      <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> 위 내용에 동의해요</label>
       {{ err('consent') }}
     </div>
     <button class="btn primary" type="submit">가입하기</button>
   </form>
   <script src="{{ url_for('static', filename='signup.js') }}" defer></script>
-  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있습니다 → 로그인</a></p>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% endif %}
 {% endblock %}

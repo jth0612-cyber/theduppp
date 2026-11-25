@@ -30,7 +30,7 @@
 <p class="small muted">세로선 = 반 평균</p>
 {% endif %}
 
-{% if has_omr %}{{ kind_tabs(kind, 'student.scores', kind_counts) }}{% if not omr %}<section class="card"><p class="muted">{{ kind }} 결과가 아직 없습니다.</p></section>{% endif %}{% endif %}
+{% if has_omr %}{{ kind_tabs(kind, 'student.scores', kind_counts) }}{% if not omr %}<section class="card"><p class="muted">{{ kind }} 결과가 아직 없어요.</p></section>{% endif %}{% endif %}
 {% for o in omr %}
 <section class="card sys-scores" aria-label="{{ o.kind }} 성적">
   <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회</span></div>
@@ -48,5 +48,5 @@
 </section>
 {% endfor %}
 
-{% if not sys_scores and not has_omr %}<div class="card"><p class="muted">아직 성적이 없습니다.</p></div>{% endif %}
+{% if not sys_scores and not has_omr %}<div class="card"><p class="muted">아직 성적이 없어요.</p></div>{% endif %}
 {% endblock %}

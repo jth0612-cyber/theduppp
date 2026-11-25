@@ -1,12 +1,12 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "rooms/_social.html" import rank_row %}
 {% block title %}터줏대감 순위 | 소도시 명상{% endblock %}
 {% block content %}
 {% set here = request.full_path.rstrip('?') %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>{{ places[place][0] }}의 터줏대감</h1>
-    <p class="ed-lede">집중 시간 순 / 5분 미만 제외</p>
+    <h1>{{ places[place][0] }}의 터줏대감{% call help('터줏대감 순위') %}<p>집중 시간 순 / 5분 미만 제외</p>{% endcall %}</h1>
   </div>
   <dl class="my-mins"><div><dt>내 순위<span class="sep" aria-hidden="true"></span>{{ periods[period] }}</dt><dd>{% if my_rank.rank %}{{ my_rank.rank }}<small>위</small>{% else %}–{% endif %}</dd></div>
     <div><dt>내 시간</dt><dd class="dd-text">{{ my_rank.m|hm }}</dd></div></dl>
@@ -20,7 +20,7 @@
 <section class="panel">
   {% if rows %}
   <ol class="rank-list">{% for r in rows %}{{ rank_row(r, me) }}{% endfor %}</ol>
-  {% else %}<p class="muted">{{ periods[period] }}에는 아직 기록이 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">{{ periods[period] }}에는 아직 기록이 없어요.</p>{% endif %}
 </section>
 <p class="small mt"><a href="{{ url_for('rooms.room', place=place) }}">{{ places[place][0] }}에 들어가기 →</a></p>
 {% endblock %}

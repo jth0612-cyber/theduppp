@@ -210,7 +210,7 @@ def groups():
             _copy_plan(src, gid)
         sync_group(gid)
         audit("group_create", f"group:{gid}")
-        flash(f"'{name}' 진도 그룹을 만들었습니다 ({n}주).", "ok")
+        flash(f"'{name}' 진도 그룹을 만들었어요 ({n}주).", "ok")
         return redirect(url_for("schedule.group", gid=gid))
     rows = query("""SELECT g.*, (SELECT COUNT(*) FROM classes c WHERE c.group_id = g.id) AS n_class,
                            (SELECT COUNT(*) FROM students s JOIN classes c ON c.id = s.class_id WHERE c.group_id = g.id AND s.active = 1) AS n_student,
@@ -311,7 +311,7 @@ def group_edit(gid):
         db.execute("DELETE FROM course_groups WHERE id = ?", (gid,))
         db.commit()
         audit("group_delete", f"group:{gid}")
-        flash("진도 그룹을 지웠습니다. 반은 그대로 있습니다.", "ok")
+        flash("진도 그룹을 지웠어요. 반은 그대로 있어요.", "ok")
         return redirect(url_for("schedule.groups"))
     db.commit()
     sync_group(gid)
@@ -331,7 +331,7 @@ def week_edit(wid):
         except ValueError:
             st = en = None
         if not st or en < st or (en - st).days > 13:
-            flash("주차 날짜를 확인하세요 (끝이 시작보다 앞이거나 2주를 넘습니다).", "error")
+            flash("주차 날짜를 확인하세요 (끝이 시작보다 앞이거나 2주를 넘어요).", "error")
         else:
             db.execute("""UPDATE group_weeks SET starts = ?, ends = ?, topic = ?, note = ?, review_round = ?, mock_round = ?
                           WHERE id = ?""", (st.isoformat(), en.isoformat(), request.form.get("topic", "").strip()[:80],
@@ -371,7 +371,7 @@ def _shift(w, push):
             db.execute("INSERT OR IGNORE INTO week_handouts (week_id, handout_id) VALUES (?, ?)", (r["id"], h))
     lost = [p for p in plans[len(targets):] if p[0] or p[3]]
     if lost:
-        flash(f"마지막 {len(lost)}주 진도가 넘쳐 지워졌습니다. 주차를 더 만든 뒤 휴강을 다시 넣으세요.", "error")
+        flash(f"마지막 {len(lost)}주 진도가 넘쳐 지워졌어요. 주차를 더 만든 뒤 휴강을 다시 넣으세요.", "error")
 
 
 # ---------------------------------------------------------------- 수업 칸: 교재 넣기·빼기, 명단·출석
@@ -410,16 +410,16 @@ def session(sid):
             st = (query("SELECT id, class_id, name FROM students WHERE active = 1 AND student_no = ?", (key,))
                   or query("SELECT id, class_id, name FROM students WHERE active = 1 AND name = ?", (key,))) if key else []
             if len(st) != 1:
-                flash("같은 이름이 여럿입니다. 아이디(출결 번호)로 찾으세요." if st else "학생을 찾지 못했습니다.", "error")
+                flash("같은 이름이 여럿이에요. 아이디(출결 번호)로 찾으세요." if st else "학생을 찾지 못했어요.", "error")
             elif st[0]["class_id"] == row["class_id"]:
-                flash(f"{st[0]['name']} 학생은 이 반 학생입니다.", "error")
+                flash(f"{st[0]['name']} 학생은 이 반 학생이에요.", "error")
             else:
                 db.execute("""INSERT INTO session_students (session_id, student_id, state, guest) VALUES (?, ?, '출석', 1)
                               ON CONFLICT (session_id, student_id) DO UPDATE SET guest = 1""", (sid, st[0]["id"]))
-                flash(f"{st[0]['name']} 학생을 이 수업 명단에 넣었습니다.", "ok")
+                flash(f"{st[0]['name']} 학생을 이 수업 명단에 넣었어요.", "ok")
         elif act == "sys":
             n = sync_sys_attendance(row["group_id"])
-            flash(f"조교 시스템 출결로 {n}칸을 채웠습니다." if n else "가져올 조교 시스템 출결이 없습니다.", "ok" if n else "error")
+            flash(f"조교 시스템 출결로 {n}칸을 채웠어요." if n else "가져올 조교 시스템 출결이 없어요.", "ok" if n else "error")
         elif act == "unguest":
             db.execute("DELETE FROM session_students WHERE session_id = ? AND student_id = ? AND guest = 1",
                        (sid, _int(request.form.get("student_id"))))
@@ -454,7 +454,7 @@ def handouts():
             for t in titles:
                 execute("INSERT OR IGNORE INTO handouts (kind, title) VALUES (?, ?)", (kind, t))
             if titles:
-                flash(f"{kind} {len(titles)}권을 넣었습니다.", "ok")
+                flash(f"{kind} {len(titles)}권을 넣었어요.", "ok")
         return redirect(url_for("schedule.handouts"))
     rows = sorted(query("""SELECT h.*, (SELECT COUNT(*) FROM week_handouts w WHERE w.handout_id = h.id) AS n_week
                            FROM handouts h"""), key=hkey)

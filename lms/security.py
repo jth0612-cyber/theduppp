@@ -39,7 +39,7 @@ _DUMMY_HASH = _ph.hash(secrets.token_urlsafe(16))
 def password_problem(pw):
     """비밀번호 정책 위반 사유를 반환 (없으면 None)."""
     if len(pw) < MIN_PASSWORD_LEN:
-        return f"비밀번호는 {MIN_PASSWORD_LEN}자 이상이어야 합니다."
+        return f"비밀번호는 {MIN_PASSWORD_LEN}자 이상이어야 해요."
     kinds = sum([
         any(c.isalpha() for c in pw),
         any(c.isdigit() for c in pw),
@@ -63,11 +63,11 @@ def authenticate(username, password):
     user = query("SELECT * FROM users WHERE username = ?", (username,), one=True)
     if user is None:
         verify_password(_DUMMY_HASH, password)
-        return None, "아이디 또는 비밀번호가 올바르지 않습니다."
+        return None, "아이디 또는 비밀번호가 올바르지 않아요."
 
     now = datetime.now()
     if user["locked_until"] and datetime.fromisoformat(user["locked_until"]) > now:
-        return None, f"로그인 시도가 너무 많아 잠겼습니다. {LOCK_MINUTES}분 후 다시 시도하세요."
+        return None, f"로그인 시도가 너무 많아 잠겼어요. {LOCK_MINUTES}분 후 다시 시도하세요."
 
     if not verify_password(user["password_hash"], password):
         attempts = user["failed_attempts"] + 1
@@ -78,11 +78,11 @@ def authenticate(username, password):
         execute("UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
                 (attempts, locked, user["id"]))
         audit("login_failed", f"user:{username}", user_id=user["id"], username=username)
-        return None, "아이디 또는 비밀번호가 올바르지 않습니다."
+        return None, "아이디 또는 비밀번호가 올바르지 않아요."
 
     if user["disabled"]:
         audit("login_disabled", f"user:{username}", user_id=user["id"], username=username)
-        return None, "사용이 중지된 계정입니다. 선생님께 문의하세요."
+        return None, "사용이 중지된 계정이에요. 선생님께 문의하세요."
 
     if _ph.check_needs_rehash(user["password_hash"]):
         execute("UPDATE users SET password_hash = ? WHERE id = ?",
@@ -225,16 +225,16 @@ def save_upload(file_storage, allowed_exts):
         raise ValueError("파일을 선택하세요.")
     ext = original.rsplit(".", 1)[-1].lower() if "." in original else ""
     if ext not in allowed_exts or ext not in ALLOWED_UPLOADS:
-        raise ValueError(f"허용되지 않는 파일 형식입니다. ({', '.join(sorted(allowed_exts))})")
+        raise ValueError(f"허용되지 않는 파일 형식이에요. ({', '.join(sorted(allowed_exts))})")
 
     data = file_storage.read(current_app.config["MAX_CONTENT_LENGTH"] + 1)
     if len(data) > current_app.config["MAX_CONTENT_LENGTH"]:
-        raise ValueError("파일이 너무 큽니다.")
+        raise ValueError("파일이 너무 커요.")
     if not data:
-        raise ValueError("빈 파일입니다.")
+        raise ValueError("빈 파일이에요.")
     mime, signatures = ALLOWED_UPLOADS[ext]
     if not any(data.startswith(sig) for sig in signatures):
-        raise ValueError("파일 내용이 확장자와 일치하지 않습니다.")
+        raise ValueError("파일 내용이 확장자와 일치하지 않아요.")
 
     stored = secrets.token_hex(16)
     path = os.path.join(current_app.config["UPLOAD_DIR"], stored)

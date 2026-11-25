@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import kind_tabs %}
 {% block title %}시험 분석 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
@@ -6,7 +7,7 @@
 <header class="ed-head">
   <h1>시험 분석</h1>
 </header>
-<section class="quiet-box"><p>아직 올라온 결과가 없습니다.</p></section>
+<section class="quiet-box"><p>아직 올라온 결과가 없어요.</p></section>
 {% else %}
 <header class="ed-head ed-head-split">
   <div>
@@ -46,8 +47,8 @@
 {% if entry %}
 <div class="sheet-grid">
   <section class="omr is-view" aria-labelledby="h-omr">
-    <div class="sec-head"><h2 id="h-omr">내 답안</h2></div>
-    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 <span class="omr-legend-pt">빨간 번호 틀림<span class="sep" aria-hidden="true"></span>번호 밑 숫자 배점{% if item_nos %}<span class="sep" aria-hidden="true"></span>번호를 누르면 문항{% endif %}</span></p>
+    <div class="sec-head"><h2 id="h-omr">내 답안{% call help('내 답안') %}<p>검은 원은 내가 고른 답, 빨간 테두리는 틀린 문항의 정답이에요.</p><p>번호가 빨가면 틀린 문항이고, 번호 밑 숫자는 배점이에요(2점이 아닌 문항만).</p>{% if item_nos %}<p>번호를 누르면 그 문항을 볼 수 있어요.</p>{% endif %}{% endcall %}</h2></div>
+    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 </p>
     <div class="omr-cols">
       {% for i in range(1, mock.n_items + 1) %}{% set mine = marks[i - 1] %}
       <div class="omr-row{{ ' is-wrong' if i in my_wrong }}" role="group" aria-label="{{ i }}번 {{ fmt(points[i - 1]) }}점, 내 답 {{ mine if mine != '0' else '무응답' }}, 정답 {{ key[i - 1] }}{{ ', 오답' if i in my_wrong }}">
@@ -95,7 +96,7 @@
   <form method="post" action="{{ url_for('care.s_paper', mid=mock.id) }}" enctype="multipart/form-data" class="card mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field"><input type="file" id="pp-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="drop-input">
-      <label for="pp-image" class="drop"><b>시험지 사진 올리기</b><span>PNG, JPG 6장까지{% if paper %}<span class="sep" aria-hidden="true"></span>다시 올리면 이전 사진은 지워집니다{% endif %}</span></label></div>
+      <label for="pp-image" class="drop"><b>시험지 사진 올리기</b><span>PNG, JPG 6장까지{% if paper %}<span class="sep" aria-hidden="true"></span>다시 올리면 이전 사진은 지워져요{% endif %}</span></label></div>
     <div class="field"><label for="pp-note">조교에게 한 줄</label><input type="text" id="pp-note" name="note" maxlength="1000" placeholder="선택" value="{{ paper.note if paper else '' }}"></div>
     <button class="btn primary">{{ '다시 올리기' if paper else '시험지 올리기' }}</button>
   </form>
@@ -105,7 +106,7 @@
 
 {% if rep and (rep.wrongs or prof) %}
 <section class="wa-sec" aria-labelledby="h-wa">
-  <div class="sec-head"><h2 id="h-wa">오답 분석</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% else %}반 응시 {{ rep.st.n }}명이라 반 오답률은 표시하지 않음{% endif %}</span></div>
+  <div class="sec-head"><h2 id="h-wa">오답 분석{% if not rep.enough %}{% call help('오답 분석') %}<p>반 응시가 {{ rep.st.n }}명뿐이라 반 오답률은 보여 주지 않아요.</p>{% endcall %}{% endif %}</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% endif %}</span></div>
   {% if prof and prof.type != '판단 보류' %}
   <div class="learn-card"><h2>누적 학습 유형<span class="sep" aria-hidden="true"></span>{{ prof.type }}</h2><p class="muted">{{ prof.basis }}</p></div>
   {% endif %}
@@ -122,7 +123,7 @@
     </li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">틀린 문항이 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">틀린 문항이 없어요.</p>{% endif %}
 </section>
 {% endif %}
 
@@ -147,7 +148,7 @@
 
 {% if mock.kind == '모의고사' or fb %}
 <section class="fb-sec" id="feedback" aria-labelledby="h-fb">
-  <div class="sec-head"><h2 id="h-fb">Full 모의고사 피드백</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답합니다</span>{% endif %}</div>
+  <div class="sec-head"><h2 id="h-fb">Full 모의고사 피드백</h2>{% if fb %}<span class="fb-state is-{{ fb.status }}">{{ '답변 대기' if fb.status == 'wait' else '답변 완료' }}</span>{% else %}<span>풀이 사진을 올리면 조교가 답해요</span>{% endif %}</div>
   {% with msgs=fb_msgs, action=url_for('feedback.ask', mid=mock.id), me_staff=false,
           body_label=('이어서 묻기' if fb else '질문'), placeholder='몇 번 문항, 어디서 막혔는지',
           submit_label=('보내기' if fb else '피드백 요청') %}{% include "_feedback_thread.html" %}{% endwith %}
@@ -156,7 +157,7 @@
 
 {% include "_analysis_stats.html" %}
 {% else %}
-<section class="quiet-box"><p>{% if absent %}미응시 / 이 회차 OMR에 내 답안이 없음. 시험지는 질문 게시판 행정문의로 요청{% else %}이 회차의 내 결과는 아직 올라오지 않았습니다.{% endif %}</p></section>
+<section class="quiet-box"><p>{% if absent %}미응시 / 이 회차 OMR에 내 답안이 없음. 시험지는 질문 게시판 행정문의로 요청{% else %}이 회차의 내 결과는 아직 올라오지 않았어요.{% endif %}</p></section>
 {% endif %}
 {% endif %}
 <script src="{{ url_for('static', filename='analysis.js') }}" defer></script>

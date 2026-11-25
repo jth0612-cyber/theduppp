@@ -1,11 +1,11 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}{{ book.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재/모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}</h1><p class="muted small">{{ book.kind }}<span class="sep" aria-hidden="true"></span>{{ book.expires_on }}까지{% if book.is_free %}<span class="sep" aria-hidden="true"></span>배포본{% endif %}</p></div>
+  <div><h1>{{ book.title }}{% call help('학생 화면에 보이는 회차') %}<p>학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>{% endcall %}</h1><p class="muted small">{{ book.kind }}<span class="sep" aria-hidden="true"></span>{{ book.expires_on }}까지{% if book.is_free %}<span class="sep" aria-hidden="true"></span>배포본{% endif %}</p></div>
 </div>
-<p class="small muted">학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>
 
 <div>
   <section class="card" aria-labelledby="h-mocks">
@@ -21,13 +21,13 @@
           <td class="num">{{ m.n }}명</td>
           <td class="num">
             <form method="post" action="{{ url_for('books.toggle_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small">{{ '닫기' if m.open else '열기' }}</button></form>
-            <form method="post" action="{{ url_for('books.delete_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="{{ m.round_no }}회와 학생 결과를 모두 삭제하시겠습니까?">삭제</button></form>
+            <form method="post" action="{{ url_for('books.delete_mock', mid=m.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger" data-confirm="{{ m.round_no }}회와 학생 결과를 모두 삭제할까요?">삭제</button></form>
           </td>
         </tr>
       {% endfor %}
       </tbody>
     </table></div>
-    {% else %}<p class="muted">아직 회차가 없습니다.</p>{% endif %}
+    {% else %}<p class="muted">아직 회차가 없어요.</p>{% endif %}
   </section>
 
 </div>
@@ -44,14 +44,14 @@
     </div>
     <div class="field"><label for="answer_key">정답 (1~5, 문항 순서대로)</label>
       <input type="text" id="answer_key" name="answer_key" class="answer-input" inputmode="numeric" required autocomplete="off" placeholder="예: 14352 53411 24315 52143 31524" aria-describedby="key-help">
-      <p class="small muted" id="key-help">정답은 서버에만 저장되고 학생 화면에는 표시되지 않습니다.</p></div>
+      <p class="small muted" id="key-help">정답은 서버에만 저장되고 학생 화면에는 표시되지 않아요.</p></div>
     <fieldset class="points-box" aria-describedby="pt-help">
       <legend>배점 <span class="muted small">적지 않은 문항은 2점</span></legend>
       <div class="row">
         <div class="field"><label for="high_items">2.5점 문항 번호</label><input type="text" id="high_items" name="high_items" autocomplete="off" inputmode="numeric" placeholder="예: 8, 12, 17, 20, 25"></div>
         <div class="field"><label for="low_items">1.5점 문항 번호</label><input type="text" id="low_items" name="low_items" autocomplete="off" inputmode="numeric" placeholder="예: 1, 2, 3, 5, 9"></div>
       </div>
-      <p class="small muted" id="pt-help">25문항 50점이면 2.5점 문항과 1.5점 문항의 개수가 같아야 합계가 일치합니다. 쉼표나 띄어쓰기로 구분하고, 3-5처럼 범위로 적어도 됩니다.</p>
+      <p class="small muted" id="pt-help">25문항 50점이면 2.5점 문항과 1.5점 문항의 개수가 같아야 합계가 일치해요. 쉼표나 띄어쓰기로 구분하고, 3-5처럼 범위로 적어도 돼요.</p>
       <details class="mt">
         <summary class="small">배점을 문항마다 직접 적기</summary>
         <div class="field"><label for="points">배점 (쉼표로 문항 수만큼)</label>

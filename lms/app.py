@@ -24,7 +24,7 @@ def _ensure_secrets():
     if not os.path.exists(ENV_PATH):
         with open(ENV_PATH, "w", encoding="utf-8") as fh:
             fh.write("# 이 파일은 절대 공유하거나 git 에 올리지 마세요.\n")
-            fh.write("# FIELD_ENCRYPTION_KEY 를 잃어버리면 암호화된 연락처/메모를 복구할 수 없습니다. 따로 안전하게 보관하세요.\n")
+            fh.write("# FIELD_ENCRYPTION_KEY 를 잃어버리면 암호화된 연락처/메모를 복구할 수 없어요. 따로 안전하게 보관하세요.\n")
             fh.write(f"SECRET_KEY={secrets.token_hex(32)}\n")
             fh.write(f"FIELD_ENCRYPTION_KEY={Fernet.generate_key().decode()}\n")
             fh.write("# HTTPS 로 배포할 때 1 로 바꾸세요\n")
@@ -149,25 +149,25 @@ def create_app(test_config=None):
     @app.errorhandler(CSRFError)
     def csrf_error(_e):
         return render_template("error.html", code=400,
-                               message="요청이 만료되었습니다. 페이지를 새로고침한 뒤 다시 시도하세요."), 400
+                               message="요청이 만료되었어요. 페이지를 새로고침한 뒤 다시 시도하세요."), 400
 
     @app.errorhandler(403)
     def forbidden(_e):
         from flask import flash, g, redirect, request
         # 조교가 선생님 전용 버튼(삭제·계정 등)을 누른 경우: 오류 화면 대신 원래 화면으로 돌려보낸다
         if request.method == "POST" and getattr(g, "user", None) is not None and g.user["role"] == "assistant":
-            flash("이 작업은 선생님만 할 수 있습니다.", "error")
+            flash("이 작업은 선생님만 할 수 있어요.", "error")
             ref = request.referrer or ""
             return redirect(ref if ref.startswith(request.host_url) else "/t/questions")
-        return render_template("error.html", code=403, message="접근 권한이 없습니다."), 403
+        return render_template("error.html", code=403, message="접근 권한이 없어요."), 403
 
     @app.errorhandler(404)
     def not_found(_e):
-        return render_template("error.html", code=404, message="페이지를 찾을 수 없습니다."), 404
+        return render_template("error.html", code=404, message="페이지를 찾을 수 없어요."), 404
 
     @app.errorhandler(413)
     def too_large(_e):
-        return render_template("error.html", code=413, message="파일이 너무 큽니다. (최대 20MB)"), 413
+        return render_template("error.html", code=413, message="파일이 너무 커요. (최대 20MB)"), 413
 
     if not app.config.get("TESTING"):
         from views import notices_job

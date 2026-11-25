@@ -31,3 +31,9 @@
 {% macro kind_tabs(cur, endpoint, counts=none) -%}
 <nav class="tabs kind-tabs" aria-label="시험 종류">{% for key, name in (('review', '복습 테스트'), ('mock', '모의고사')) %}<a href="{{ url_for(endpoint, kind=key, **kwargs) }}" class="{{ 'active' if cur == name }}"{% if cur == name %} aria-current="page"{% endif %}>{{ name }}{% if counts is not none %} <span class="kind-n">{{ counts.get(name, 0) }}</span>{% endif %}</a>{% endfor %}</nav>
 {%- endmacro %}
+
+{# 설명 버튼: 원 안 물음표. 누르면 설명이 아래에서 올라온다 (static/app.js [data-help]). 화면에는 버튼만 보인다.
+   쓰는 법: {% call help('등급 기준표') %}<p>설명</p>{% endcall %} — 제목(h1·h2) 바로 뒤에 둔다. #}
+{% macro help(title) -%}
+<button type="button" class="help-btn" data-help aria-label="{{ title }} 설명" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.9v.4"/><circle class="dot" cx="12" cy="17" r="1.1"/></svg></button><template data-help-title="{{ title }}">{{ caller() }}</template>
+{%- endmacro %}

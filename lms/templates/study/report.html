@@ -32,7 +32,7 @@
     <table class="ledger compact"><thead><tr><th>시험</th><th>날짜</th><th class="num">점수</th><th class="num">반 평균</th><th class="num">평균 대비</th></tr></thead>
       <tbody>{% for x in r.sys_scores %}<tr><td>{{ x.name }}</td><td class="nowrap">{{ x.day[2:]|replace('-', '.') }}</td><td class="num nowrap">{{ r.sfmt(x.score) }}{% if x.full %} / {{ r.sfmt(x.full) }}{% endif %}</td><td class="num">{{ r.sfmt(x.avg) }}</td><td class="num">{% if x.vs is not none %}{{ '+' if x.vs > 0 }}{{ r.sfmt(x.vs) }}{% endif %}</td></tr>{% endfor %}</tbody></table>
     {% endif %}
-    {% else %}<p class="muted">기록된 시험 성적이 없습니다.</p>{% endif %}
+    {% else %}<p class="muted">기록된 시험 성적이 없어요.</p>{% endif %}
   </section>
 
   {% if r.units %}
@@ -75,7 +75,7 @@
     <h3 class="rs-sub">{{ kd.kind }}</h3>
     <table class="ledger compact"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
       <tbody>{% for m in kd.rows %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>
-    {% else %}<p class="muted">채점한 복테 및 모의고사가 없습니다.</p>{% endfor %}
+    {% else %}<p class="muted">채점한 복테 및 모의고사가 없어요.</p>{% endfor %}
   </section>
 
   <div class="rs-cols">
@@ -87,7 +87,7 @@
       {% elif r.reasons %}{% set total = r.reasons|sum(attribute='n') %}
       <ul class="rs-bars">{% for x in r.reasons %}{% set p = (100 * x.n / total)|round|int %}
         <li><span>{{ x.reason }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}"></span></span><b>{{ x.n }}</b></li>{% endfor %}</ul>
-      {% else %}<p class="muted small">틀린 이유가 정해진 문항이 없습니다.</p>{% endif %}
+      {% else %}<p class="muted small">틀린 이유가 정해진 문항이 없어요.</p>{% endif %}
     </section>
     <section class="rs-sec">
       <h2>학습 습관</h2>

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}소도시 명상 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>소도시 명상</h1>
-    <p class="ed-lede">5분 이상 집중한 시간만 기록됩니다.</p>
+    <h1>소도시 명상{% call help('소도시 명상') %}<p>5분 이상 집중한 시간만 기록돼요.</p>{% endcall %}</h1>
   </div>
   <div class="rooms-side">
   <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>

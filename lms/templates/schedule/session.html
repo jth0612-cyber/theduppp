@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf %}
 {% block title %}{{ s.class_name }} {{ s.week_no }}주차 | 수업 일정{% endblock %}
 {% block content %}
@@ -27,8 +28,7 @@
 </section>
 
 <section class="card">
-  <h2>배부 교재</h2>
-  <p class="small muted">주차에 배정한 교재가 기본으로 이 수업에 들어갑니다. 이 수업만 빼거나 더 넣을 수 있습니다. 출석한 학생 수만큼 셉니다.</p>
+  <h2>배부 교재{% call help('배부 교재') %}<p>주차에 배정한 교재가 기본으로 이 수업에 들어가요. 이 수업만 빼거나 더 넣을 수 있어요. 출석한 학생 수만큼 세어요.</p>{% endcall %}</h2>
   <div class="table-wrap"><table>
     <tr><th>교재</th><th>구분</th><th>배부</th><th></th></tr>
     {% for h in s.handouts %}
@@ -48,8 +48,7 @@
 </section>
 
 <section class="card">
-  <h2>출석</h2>
-  <p class="small muted">조교 시스템(시트) 출결이 들어오면 같은 날 이 반 수업 칸에 자동으로 채웁니다 <span class="badge gray">시트</span>. 손으로 고친 칸은 시트가 바꾸지 않습니다.</p>
+  <h2>출석{% call help('출석') %}<p>조교 시스템(시트) 출결이 들어오면 같은 날 이 반 수업 칸에 자동으로 채워요 <span class="badge gray">시트</span>. 손으로 고친 칸은 시트가 바꾸지 않아요.</p>{% endcall %}</h2>
   <div class="row">
     <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="all_present"><button class="btn small">체크 안 한 학생 모두 출석</button></form>
     <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="sys"><button class="btn small">조교 시스템 출결 다시 가져오기</button></form>
@@ -67,7 +66,7 @@
     <button class="btn primary">출석 저장</button>
   </form>
   {% for r in roster if r.guest %}<form id="ug-{{ r.id }}" method="post">{{ csrf() }}<input type="hidden" name="action" value="unguest"><input type="hidden" name="student_id" value="{{ r.id }}"></form>{% endfor %}
-  <p class="small muted">'다른 반' = 이번 주는 다른 반 수업을 들음 (명단에서 빠지고 교재는 들은 반에서 셉니다)</p>
+  <div class="help-inline">다른 반{% call help('다른 반') %}<p>'다른 반' = 이번 주는 다른 반 수업을 들음 (명단에서 빠지고 교재는 들은 반에서 세어요)</p>{% endcall %}</div>
   <form method="post" class="row">{{ csrf() }}<input type="hidden" name="action" value="guest">
     <div class="field"><label for="gq">다른 반 학생 넣기 (리클래스, 반 바꿔 듣기)</label><input type="text" id="gq" name="q" maxlength="40" placeholder="아이디(출결 번호) 또는 이름"></div>
     <div class="field shrink"><button class="btn">넣기</button></div></form>

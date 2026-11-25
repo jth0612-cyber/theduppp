@@ -11,6 +11,6 @@
     {% if yt %}<img class="cast-thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">{% else %}<span class="cast-thumb cast-letter" aria-hidden="true">편지</span>{% endif %}
     <span class="cast-meta"><b>{% if c.pinned %}<span class="badge">고정</span> {% endif %}{{ c.title }}</b><time>{{ c.created_at[:10] }}</time>{% if c.body %}<span class="cast-sum">{{ c.body[:80] }}{{ '…' if c.body|length > 80 }}</span>{% endif %}</span>
   </a></li>
-  {% else %}<li class="empty">아직 글이 없습니다.</li>{% endfor %}
+  {% else %}<li class="empty">아직 글이 없어요.</li>{% endfor %}
 </ul>
 {% endblock %}

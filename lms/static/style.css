@@ -2677,3 +2677,15 @@ form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display:
 .todo.is-on { border-color: transparent; }
 .wrong-form input[name=memo] { width: 100%; min-height: 44px; padding: 10px 12px; border: 1.5px solid transparent; border-radius: 12px; background: var(--raised); }
 .wrong-form input[name=memo]:focus { background: var(--sheet); border-color: var(--accent); }
+
+/* 설명 버튼 (원 안 물음표) */
+.help-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--faint); vertical-align: middle; cursor: pointer; transition: color 150ms ease, background-color 150ms ease; }
+.help-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.help-btn svg .dot { fill: currentColor; stroke: none; }
+.help-btn:hover, .help-btn:focus-visible { color: var(--accent); background: var(--accent-soft); }
+.help-dlg h2 { margin: 0 0 10px; font-size: 18px; font-weight: 800; }
+.help-dlg .help-body { margin: 0 0 20px; color: var(--muted); font-size: 15px; line-height: 1.6; word-break: keep-all; }
+.help-dlg .help-body p { margin: 0 0 8px; }
+.help-dlg .help-body ul { margin: 0 0 8px; padding-left: 18px; }
+.help-dlg .btn.primary { width: 100%; min-height: 52px; }
+.help-inline { display: flex; align-items: center; gap: 2px; margin: 6px 0; font-size: 13px; color: var(--faint); }

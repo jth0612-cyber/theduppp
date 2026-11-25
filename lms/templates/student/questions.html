@@ -16,10 +16,10 @@
   <form method="post" enctype="multipart/form-data" data-qform data-draft-key="q-draft-{{ g.user.id }}"{% if draft %} data-has-draft{% endif %}>
     {{ csrf() }}
     {# 안내는 칸 밖에 따로 두지 않고 칸 안(흐린 글씨)에 넣는다 (2026-11-25). 유형마다 내용 칸·사진 칸 글이 바뀐다 (app.js) #}
-    {% set body_ph = {'': '어디서 막혔는지 적어 주세요. 이름과 연락처는 쓰지 않습니다',
-                      '학습질문': '어디서 막혔는지 적어 주세요. 닉네임 ' ~ g.user.nickname ~ '(으)로 공개, 이름과 연락처는 쓰지 않습니다',
-                      '학습상담': '공부 방법과 계획 상담 내용. 나와 고른 조교만 봅니다',
-                      '행정문의': '문의 내용. 비공개로 접수됩니다'} %}
+    {% set body_ph = {'': '어디서 막혔는지 적어 주세요. 이름과 연락처는 쓰지 않아요',
+                      '학습질문': '어디서 막혔는지 적어 주세요. 닉네임 ' ~ g.user.nickname ~ '(으)로 공개, 이름과 연락처는 쓰지 않아요',
+                      '학습상담': '공부 방법과 계획 상담 내용. 나와 고른 조교만 봐요',
+                      '행정문의': '문의 내용. 비공개로 접수돼요'} %}
     {% set photo_ph = {'학습질문': '문제 사진 필수 (해설 질문이면 해설 사진도), PNG, JPG 3장까지'} %}
     <fieldset class="field qtype-pick{{ ' has-err' if fe == 'qtype' }}">
       <legend>질문 유형</legend>
@@ -38,7 +38,7 @@
     </div>
     <fieldset class="field ta-pick" data-consult {{ '' if dq == '학습상담' else 'hidden' }}>
       <legend>상담 조교</legend>
-      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>먼저 본 조교가 답합니다</small></span></label>
+      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>먼저 본 조교가 답해요</small></span></label>
       {% for t in tas %}
       <label class="ta-card"><input type="radio" name="assignee" value="{{ t.id }}"><span><b>{{ t.name }} 조교</b>
         {% if t.intro %}<small>{{ t.intro }}</small>{% endif %}
@@ -68,11 +68,11 @@
     <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
       <input type="file" id="q-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="drop-input">
       <label for="q-image" class="drop"><b>사진 올리기</b><span data-photo-need data-ph='{{ photo_ph|tojson }}'>{{ photo_ph.get(dq, 'PNG, JPG 3장까지, 한 장 20MB 이하') }}</span></label>
-      <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 작성한 내용은 그대로 있습니다.{% endif %}</p>
+      <p class="field-err" data-photo-err {{ '' if fe == 'image' else 'hidden' }}>{% if fe == 'image' %}사진을 붙여 주세요. 작성한 내용은 그대로 있어요.{% endif %}</p>
       <div class="photo-preview" data-photo-preview hidden><div class="photo-thumbs" data-photo-thumbs></div><span></span><button type="button" class="btn small" data-photo-clear>모두 빼기</button></div>
     </div>
     <button class="btn primary">질문 등록</button>
-    <p class="small muted draft-note" data-draft-note hidden>작성하던 내용을 불러왔습니다.</p>
+    <p class="small muted draft-note" data-draft-note hidden>작성하던 내용을 불러왔어요.</p>
   </form>
 </details>
 
@@ -131,7 +131,7 @@
     {% endfor %}
   </table></div>
   {{ pagination(page, pages, 'student.questions', view=view if view == 'mine' else None, qtype=qtype or None, q=q or None) }}
-  {% else %}<p class="muted">{{ '검색 결과가 없습니다.' if q else '아직 질문이 없습니다.' }}</p>{% endif %}
+  {% else %}<p class="muted">{{ '검색 결과가 없어요.' if q else '아직 질문이 없어요.' }}</p>{% endif %}
 </div>
 <script src="{{ url_for('static', filename='ink.js') }}" defer></script>
 {% endblock %}

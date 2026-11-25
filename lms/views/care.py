@@ -24,7 +24,7 @@ ERR_TYPES = ("개념 부족", "자료 해석", "조건 독해", "계산 실수",
 def _photos(field, limit):
     imgs = [f for f in request.files.getlist(field) if f and f.filename]
     if len(imgs) > limit:
-        raise ValueError(f"사진은 {limit}장까지 올릴 수 있습니다.")
+        raise ValueError(f"사진은 {limit}장까지 올릴 수 있어요.")
     saved = []
     try:
         for f in imgs:
@@ -86,7 +86,7 @@ def s_paper(mid):
         flash("모의고사는 Full 모의고사 피드백으로 요청해 주세요.", "error")
         return redirect(url_for("books.analysis_home", mock=mid) + "#feedback")
     if p and p["status"] == "done":
-        flash("첨삭이 끝난 시험지는 다시 올릴 수 없습니다.", "error")
+        flash("첨삭이 끝난 시험지는 다시 올릴 수 없어요.", "error")
         return redirect(back)
     try:
         photos = _photos("image", MAX_PAPER_PHOTOS)
@@ -108,7 +108,7 @@ def s_paper(mid):
     for pos, fid in enumerate(photos, start=1):
         execute("INSERT INTO exam_paper_files (paper_id, file_id, pos) VALUES (?, ?, ?)", (pid, fid, pos))
     audit("paper_submit", f"mock:{mid}")
-    flash("시험지를 올렸습니다.", "ok")
+    flash("시험지를 올렸어요.", "ok")
     return redirect(back)
 
 
@@ -151,7 +151,7 @@ def t_paper(pid):
         from views.pwa import notify_student
         notify_student(p["student_id"], "복습 테스트 첨삭 완료", exams.exam_title(rep["mock"]),
                        url_for("books.analysis_home", mock=p["mock_id"]) + "#paper")
-        flash(f"{p['name']} 학생 복습 테스트 첨삭을 저장했습니다.", "ok")
+        flash(f"{p['name']} 학생 복습 테스트 첨삭을 저장했어요.", "ok")
         nxt = query("SELECT id FROM exam_papers WHERE status = 'submitted' AND id != ? ORDER BY submitted_at LIMIT 1", (pid,), one=True)
         return redirect(url_for("care.t_paper", pid=nxt["id"]) if nxt else url_for("care.t_papers"))
     _, files, marks = paper_of(p["mock_id"], p["student_id"])
@@ -215,7 +215,7 @@ def t_lessons():
         uids = [r["id"] for r in query("SELECT u.id FROM users u JOIN students s ON s.id = u.student_id WHERE s.class_id = ? AND s.active = 1", (cid,))]
         if uids:
             notify_users(uids, "수업 기록", f"{title}, 노트 {len(photos)}장" if photos else title, url_for("care.s_lessons"))
-        flash("수업 기록을 올렸습니다.", "ok")
+        flash("수업 기록을 올렸어요.", "ok")
         return redirect(url_for("care.t_lessons", c=cid))
     rows = query("""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
                     FROM lessons l JOIN classes c ON c.id = l.class_id ORDER BY l.day DESC, l.id DESC LIMIT 200""")
@@ -230,7 +230,7 @@ def t_lesson_delete(lid):
     for r in query("SELECT file_id FROM lesson_files WHERE lesson_id = ?", (lid,)):
         delete_file(r["file_id"])
     execute("DELETE FROM lessons WHERE id = ?", (lid,))
-    flash("수업 기록을 지웠습니다.", "ok")
+    flash("수업 기록을 지웠어요.", "ok")
     return redirect(url_for("care.t_lessons"))
 
 
@@ -329,11 +329,11 @@ def parent_report(student_id, limit=6):
     att = sysdata.attendance(sysdata.code_of_student(student_id))
     lines = []                                                 # 요약: 숫자로만
     if last:
-        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점입니다.")
+        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점이에요.")
         if delta:
-            lines.append(f"득점률이 이전 {last['kind'] or '시험'}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
+            lines.append(f"득점률이 이전 {last['kind'] or '시험'}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}어요.")
     if weak:
-        lines.append(f"최근 시험에서 득점률이 가장 낮은 단원은 {weak['unit']['unit']}({weak['unit']['pct']}%)입니다.")
+        lines.append(f"최근 시험에서 득점률이 가장 낮은 단원은 {weak['unit']['unit']}({weak['unit']['pct']}%)예요.")
     return {"s": s, "exams": exams_out, "last": last, "delta": delta, "comment": comment, "units": units[:6], "weak": weak,
             "att": att, "lines": lines}
 
@@ -377,9 +377,9 @@ def kind_view(exams_out, kind, n=6):
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
     lines = []
     if last:
-        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점입니다.")
+        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점이에요.")
         if delta:
-            lines.append(f"득점률이 이전 {kind}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}습니다.")
+            lines.append(f"득점률이 이전 {kind}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}어요.")
     return {"exams": ex, "last": last, "delta": delta, "chart": rate_chart(ex), "lines": lines}
 
 
@@ -408,5 +408,5 @@ def t_parent_link(sid):
         abort(404)
     parent_token(sid, renew=request.form.get("renew") == "1")
     audit("parent_link", f"student:{sid}")
-    flash("학부모 리포트 링크를 새로 만들었습니다. 이전 링크는 더 이상 열리지 않습니다." if request.form.get("renew") == "1" else "학부모 리포트 링크를 만들었습니다.", "ok")
+    flash("학부모 리포트 링크를 새로 만들었어요. 이전 링크는 더 이상 열리지 않아요." if request.form.get("renew") == "1" else "학부모 리포트 링크를 만들었어요.", "ok")
     return redirect(url_for("teacher.student_detail", sid=sid) + "#parent")

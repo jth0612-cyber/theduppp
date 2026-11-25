@@ -6,10 +6,10 @@
   <div>
     <h1>가입 승인 <span class="muted small">{{ requests|length }}건 대기</span></h1>
     <p class="muted small">반 가입 코드로 들어온 신청
-      미리 등록해 둔 명단에 같은 아이디가 있으면, 승인할 때 그 학생 정보에 계정이 연결됩니다.</p>
+      미리 등록해 둔 명단에 같은 아이디가 있으면, 승인할 때 그 학생 정보에 계정이 연결돼요.</p>
   </div>
   {% if requests %}
-  <form method="post" data-confirm="대기 중인 {{ requests|length }}건을 모두 승인하시겠습니까?">
+  <form method="post" data-confirm="대기 중인 {{ requests|length }}건을 모두 승인할까요?">
     {{ csrf() }}<input type="hidden" name="action" value="approve_all">
     <button class="btn">전체 승인</button>
   </form>
@@ -43,6 +43,6 @@
       <button class="btn danger" name="action" value="reject">선택 거절</button>
     </div>
   </form>
-  {% else %}<p class="muted">대기 중인 가입 신청이 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">대기 중인 가입 신청이 없어요.</p>{% endif %}
 </div>
 {% endblock %}

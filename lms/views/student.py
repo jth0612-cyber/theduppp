@@ -248,7 +248,7 @@ def _upload_images(required):
             raise ValueError("학습질문은 문제(와 해설) 사진을 꼭 첨부해 주세요.")
         return []
     if len(imgs) > MAX_PHOTOS:
-        raise ValueError(f"사진은 {MAX_PHOTOS}장까지 올릴 수 있습니다.")
+        raise ValueError(f"사진은 {MAX_PHOTOS}장까지 올릴 수 있어요.")
     saved = []
     try:
         for f in imgs:
@@ -287,7 +287,7 @@ def questions():
             try:
                 photos = _upload_images(required=qtype == "학습질문")
             except ValueError as e:
-                form_err = ("image", str(e) + " 작성한 내용은 그대로 남아 있습니다.")
+                form_err = ("image", str(e) + " 작성한 내용은 그대로 남아 있어요.")
             else:
                 assignee = request.form.get("assignee", type=int) if qtype == "학습상담" else None
                 qid = execute("INSERT INTO questions (student_id, title, body, image_id, qtype, assignee_id, unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -295,7 +295,7 @@ def questions():
                 for pos, fid in enumerate(photos[1:], start=2):
                     execute("INSERT INTO question_images (question_id, file_id, pos) VALUES (?, ?, ?)", (qid, fid, pos))
                 audit("question_create", f"question:{qid}")
-                flash("질문을 등록했습니다.", "ok")
+                flash("질문을 등록했어요.", "ok")
                 return redirect(url_for("student.question_detail", qid=qid, posted=1))
     view = "mine" if request.args.get("view") == "mine" else "all"
     qtype = request.args.get("qtype", "")
@@ -385,9 +385,9 @@ def question_followup(qid):
     if not q["is_mine"]:
         abort(404)
     if q["answer_count"] == 0:
-        flash("선생님 답변이 달린 뒤에 추가 질문을 할 수 있습니다.", "error")
+        flash("선생님 답변이 달린 뒤에 추가 질문을 할 수 있어요.", "error")
     elif q["followup_count"] >= MAX_FOLLOWUPS:
-        flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 가능합니다. 새 질문으로 올려 주세요.", "error")
+        flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 가능해요. 새 질문으로 올려 주세요.", "error")
     else:
         body = request.form.get("body", "").strip()
         err = None
@@ -397,7 +397,7 @@ def question_followup(qid):
             try:
                 image_id = _upload_image(required=False)
             except ValueError as e:
-                err = str(e) + " 작성한 내용은 그대로 남아 있습니다."
+                err = str(e) + " 작성한 내용은 그대로 남아 있어요."
         if err:   # 적은 내용을 날리지 않고 같은 화면에 그대로 돌려준다
             can_follow_up = q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
             return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),
@@ -406,7 +406,7 @@ def question_followup(qid):
         execute("INSERT INTO followups (question_id, body, image_id) VALUES (?, ?, ?)", (qid, body, image_id))
         execute("UPDATE questions SET status = 'open' WHERE id = ?", (qid,))
         audit("question_followup", f"question:{qid}")
-        flash("추가 질문을 보냈습니다.", "ok")
+        flash("추가 질문을 보냈어요.", "ok")
         return redirect(url_for("student.question_detail", qid=qid, posted=1) + "#thread")
     return redirect(url_for("student.question_detail", qid=qid) + "#thread")
 
@@ -422,7 +422,7 @@ def question_rate(qid):
         abort(400)
     execute("UPDATE questions SET rating = ? WHERE id = ?", (score, qid))
     audit("consult_rate", f"question:{qid}")
-    flash("평가를 남겼습니다.", "ok")
+    flash("평가를 남겼어요.", "ok")
     return redirect(url_for("student.question_detail", qid=qid) + "#thread")
 
 
@@ -438,7 +438,7 @@ def question_delete(qid):
     execute("DELETE FROM questions WHERE id = ?", (qid,))
     for fid in ([q["image_id"]] if q["image_id"] else []) + extra:
         delete_file(fid)
-    flash("질문을 삭제했습니다.", "ok")
+    flash("질문을 삭제했어요.", "ok")
     return redirect(url_for("student.questions"))
 
 

@@ -64,9 +64,9 @@ def upload(mid):
         done.append(no)
     audit("mock_items", f"mock:{mid}:{len(done)}")
     if done:
-        flash(f"문항 그림 {len(done)}장을 올렸습니다 ({', '.join(str(n) for n in sorted(done))}번).", "ok")
+        flash(f"문항 그림 {len(done)}장을 올렸어요 ({', '.join(str(n) for n in sorted(done))}번).", "ok")
     if bad:
-        flash("파일 이름에서 문항 번호를 읽지 못했거나 그림이 아닙니다: " + ", ".join(bad[:5]), "error")
+        flash("파일 이름에서 문항 번호를 읽지 못했거나 그림이 아니에요: " + ", ".join(bad[:5]), "error")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#items")
 
 

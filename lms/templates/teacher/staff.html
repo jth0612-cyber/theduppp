@@ -1,11 +1,11 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf %}
 {% block title %}조교 계정 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
-    <h1>조교 계정</h1>
-    <p class="muted small">조교 및 실장은 강사와 권한이 같습니다. 학생 영구 삭제, 교재 삭제, 조교 계정 관리만 강사 전용입니다.</p>
+    <h1>조교 계정{% call help('조교 계정') %}<p>조교 및 실장은 강사와 권한이 같아요. 학생 영구 삭제, 교재 삭제, 조교 계정 관리만 강사 전용이에요.</p>{% endcall %}</h1>
   </div>
 </div>
 <div class="card">
@@ -16,14 +16,13 @@
     <div class="field"><label>로그인 아이디</label><input type="text" name="username" maxlength="30" required placeholder="예: ta_kim" pattern="[A-Za-z0-9_.\-]{3,30}"></div>
     <div class="field shrink"><button class="btn primary">만들기</button></div>
   </form>
-  <p class="small muted">만들면 임시 비밀번호가 한 번만 표시됩니다. 조교는 첫 로그인 때 비밀번호를 변경해야 합니다.</p>
+  <p class="small muted">만들면 임시 비밀번호가 한 번만 표시돼요. 조교는 첫 로그인 때 비밀번호를 변경해야 해요.</p>
 </div>
 <div class="card" id="pay">
-  <div class="sec-head"><h2>월별 질문 답변 수</h2>
+  <div class="sec-head"><h2>월별 질문 답변 수{% call help('월별 질문 답변 수') %}<p>질문마다 처음 달린 답변 = Main, 같은 질문에 이어 단 답변(재질문 답 등) = 부가 / 학습상담은 첫 답변을 단 조교에게 1건, 복습 테스트 첨삭은 학생 1명 시험지 1건 / 답변을 단 날짜의 달 기준</p>{% endcall %}</h2>
     <form method="get" class="row"><label class="sr-only" for="month">월</label><input type="month" id="month" name="month" value="{{ month }}">
       <button class="btn small">보기</button>
       <a class="btn small" href="{{ url_for('teacher.staff_answers_csv', month=month) }}">엑셀로 받기</a></form></div>
-  <p class="small muted">질문마다 처음 달린 답변 = Main, 같은 질문에 이어 단 답변(재질문 답 등) = 부가 / 학습상담은 첫 답변을 단 조교에게 1건, 복습 테스트 첨삭은 학생 1명 시험지 1건 / 답변을 단 날짜의 달 기준</p>
   {% if staff %}
   <div class="table-wrap"><table>
     <tr><th>조교</th><th class="num">Main 답변</th><th class="num">부가 답변</th><th class="num">질문 합계</th><th class="num">학습상담(건)</th><th class="num">복습 테스트 첨삭(건)</th></tr>
@@ -44,16 +43,16 @@
       <td class="small muted">{{ a.last_login_at[:16] if a.last_login_at else '-' }}</td>
       <td>{% if a.disabled %}<span class="badge gray">사용 중지</span>{% elif a.must_change_pw %}<span class="badge open">임시 비밀번호</span>{% else %}<span class="badge answered">사용 중</span>{% endif %}</td>
       <td><div class="row">
-        <form method="post" action="{{ url_for('teacher.staff_reset', uid=a.id) }}" data-confirm="{{ a.display_name }} 조교의 비밀번호를 초기화하시겠습니까?">
+        <form method="post" action="{{ url_for('teacher.staff_reset', uid=a.id) }}" data-confirm="{{ a.display_name }} 조교의 비밀번호를 초기화할까요?">
           {{ csrf() }}<button class="btn small">비밀번호 초기화</button></form>
         <form method="post" action="{{ url_for('teacher.staff_toggle', uid=a.id) }}"
-              {% if not a.disabled %}data-confirm="{{ a.display_name }} 조교가 더 이상 로그인할 수 없게 됩니다. 계속하시겠습니까?"{% endif %}>
+              {% if not a.disabled %}data-confirm="{{ a.display_name }} 조교가 더 이상 로그인할 수 없게 돼요. 계속할까요?"{% endif %}>
           {{ csrf() }}<button class="btn small {{ '' if a.disabled else 'danger' }}">{{ '다시 사용' if a.disabled else '사용 중지' }}</button></form>
       </div></td>
     </tr>
     {% endfor %}
   </table></div>
-  <p class="small muted">그만둔 조교는 '사용 중지'하세요. 이미 단 답변은 그대로 남습니다.</p>
-  {% else %}<p class="muted">아직 조교 계정이 없습니다.</p>{% endif %}
+  <p class="small muted">그만둔 조교는 '사용 중지'하세요. 이미 단 답변은 그대로 남아요.</p>
+  {% else %}<p class="muted">아직 조교 계정이 없어요.</p>{% endif %}
 </div>
 {% endblock %}

@@ -68,7 +68,7 @@ class TrackTest(unittest.TestCase):
 
     def test_track_must_match_code(self):
         _, r = self.signup("재종", "DANCODE01", "minsu01")
-        self.assertIn("단과 반 코드입니다", r.data.decode())
+        self.assertIn("단과 반 코드예요", r.data.decode())
         _, r = self.signup("재종", "JAECODE01", "minsu01")
         self.assertEqual(r.status_code, 302)
 

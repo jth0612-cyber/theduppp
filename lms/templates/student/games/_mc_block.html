@@ -6,7 +6,7 @@
       <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
     {% endif %}
     {% if resume %}
-    <p class="mc-resume">풀던 문제가 있습니다: {{ resume.done }} / {{ resume.total }}<span class="sep" aria-hidden="true"></span>맞힘 {{ resume.score }}</p>
+    <p class="mc-resume">풀던 문제가 있어요: {{ resume.done }} / {{ resume.total }}<span class="sep" aria-hidden="true"></span>맞힘 {{ resume.score }}</p>
     <div class="mc-resume-btns"><button type="button" class="btn primary" data-role="resume">이어서 풀기</button><button type="button" class="btn" data-role="begin">처음부터</button></div>
     {% elif not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}
   </div>

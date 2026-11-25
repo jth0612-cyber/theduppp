@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf, status_badge, kind_tabs %}
 {% block title %}{{ s.name }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
@@ -18,7 +19,7 @@
     {{ kind_tabs(kind, 'teacher.student_detail', kind_counts, sid=s.id) }}
     {% if chart.pts|length > 1 %}
     {% with label = kind %}{% include "_rate_chart.html" %}{% endwith %}
-    {% else %}<p class="muted">올라온 OMR 결과가 없습니다.</p>{% endif %}
+    {% else %}<p class="muted">올라온 OMR 결과가 없어요.</p>{% endif %}
   </div>
 
   <div class="card">
@@ -27,7 +28,7 @@
     <p><span class="muted small">학부모 연락처 (OMR 수험번호 = 뒤 8자리)</span><br>{{ parent_phone or '-' }}{% if not s.sms_ok %} <span class="badge gray">문자 수신 거부</span>{% endif %}</p>
     <div id="parent" class="mt"><span class="muted small">학부모 리포트 링크 (로그인 없이 열림, 학부모 문자 끝에 붙음)</span>
       {% if plink %}<p class="small"><a href="{{ plink }}" target="_blank" rel="noopener" id="plink">{{ plink }}</a> <button type="button" class="btn small" data-copy="plink">복사</button></p>{% endif %}
-      <form method="post" action="{{ url_for('care.t_parent_link', sid=s.id) }}" class="inline-form"{% if plink %} data-confirm="새 링크를 만들면 이전 링크는 열리지 않습니다."{% endif %}>
+      <form method="post" action="{{ url_for('care.t_parent_link', sid=s.id) }}" class="inline-form"{% if plink %} data-confirm="새 링크를 만들면 이전 링크는 열리지 않아요."{% endif %}>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if plink %}<input type="hidden" name="renew" value="1">{% endif %}
         <button class="btn small">{{ '새 링크로 바꾸기' if plink else '링크 만들기' }}</button></form></div>
     <p><span class="muted small">메모</span><br><span class="pre">{{ memo or '-' }}</span></p>
@@ -37,15 +38,15 @@
         {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '아직 접속 안 함' }}
         {% if account.must_change_pw %}<span class="sep" aria-hidden="true"></span><span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
       <div class="row">
-        <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급하시겠습니까?">
+        <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급할까요?">
           {{ csrf() }}<button class="btn small">비밀번호 초기화</button></form>
-        <form method="post" action="{{ url_for('teacher.student_account_delete', sid=s.id) }}" data-confirm="계정을 삭제하면 학생이 로그인할 수 없습니다. 계속하시겠습니까?">
+        <form method="post" action="{{ url_for('teacher.student_account_delete', sid=s.id) }}" data-confirm="계정을 삭제하면 학생이 로그인할 수 없어요. 계속할까요?">
           {{ csrf() }}<button class="btn small danger">계정 삭제</button></form>
       </div>
     {% elif s.active %}
       <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}">
         {{ csrf() }}<button class="btn small">계정 발급</button></form>
-    {% else %}<p class="small muted">퇴원 학생은 계정이 없습니다.</p>{% endif %}
+    {% else %}<p class="small muted">퇴원 학생은 계정이 없어요.</p>{% endif %}
     {% if engagement %}
     <h3 class="mt">학습 활동</h3>
     <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b><span class="sep" aria-hidden="true"></span>연속 {{ engagement.streak.streak }}일</p>
@@ -65,7 +66,7 @@
       <td class="num">{{ e.rate if e.rate is not none else '-' }}%</td><td class="num">{{ e.n_wrong }} / {{ e.n }}</td></tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="muted">올라온 {{ kind }} 결과가 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">올라온 {{ kind }} 결과가 없어요.</p>{% endif %}
   {% if rep.units %}
   <h3 class="mt">단원별 성취도 <span class="small muted">최근 시험</span></h3>
   <p class="small">{% for u in rep.units %}<span class="{{ 'badge open' if u.pct < 80 else 'badge' }}">{{ u.unit }} {{ u.pct }}%</span> {% endfor %}</p>
@@ -74,7 +75,7 @@
   {% if rep.comment %}
   <p class="pre">{{ rep.comment.text }}</p>
   <p class="small muted">{{ rep.comment.src }}<span class="sep" aria-hidden="true"></span>{{ (rep.comment.at or '')[:16] }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
-  {% else %}<p class="small muted">없음 / 회차 화면의 학생 메모나 복습 테스트 첨삭 코멘트 중 가장 최근 것이 나갑니다.</p>{% endif %}
+  {% else %}<div class="help-inline">아직 없음{% call help('학부모 리포트 코멘트') %}<p>회차 화면의 학생 메모나 복습 테스트 첨삭 코멘트 중 가장 최근 것이 나가요.</p>{% endcall %}</div>{% endif %}
 </div>
 
 <div class="card" id="notes">
@@ -93,12 +94,12 @@
     <div class="note">
       <div class="page-head">
         <span class="small"><span class="badge">{{ n.category }}</span> <span class="muted">{{ n.created_at[:16] }}</span></span>
-        <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제하시겠습니까?">
+        <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제할까요?">
           {{ csrf() }}<button class="btn link small">삭제</button></form>
       </div>
       <div class="pre">{{ n.body }}</div>
     </div>
-  {% else %}<p class="muted">메모가 없습니다.</p>{% endfor %}
+  {% else %}<p class="muted">메모가 없어요.</p>{% endfor %}
   </div>
 </div>
 
@@ -114,7 +115,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="muted">질문 기록이 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">질문 기록이 없어요.</p>{% endif %}
 </div>
 
 <details class="card">
@@ -134,14 +135,14 @@
     </div>
     <div class="field"><label><input type="checkbox" name="sms_off" value="1" {{ 'checked' if not s.sms_ok }}> 학부모 문자 수신 거부</label></div>
     <div class="field"><label>메모</label><textarea name="memo" maxlength="1000">{{ memo }}</textarea></div>
-    <div class="field"><label><input type="checkbox" name="active" value="1" {{ 'checked' if s.active }}> 재원 중 (해제하면 퇴원 처리되고 로그인 계정이 삭제됩니다)</label></div>
+    <div class="field"><label><input type="checkbox" name="active" value="1" {{ 'checked' if s.active }}> 재원 중 (해제하면 퇴원 처리되고 로그인 계정이 삭제돼요)</label></div>
     <button class="btn primary">저장</button>
   </form>
   {% if g.user.role == 'teacher' %}
   <hr>
-  <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적, 메모, 질문을 영구 삭제합니다. 되돌릴 수 없습니다.">
+  <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적, 메모, 질문을 영구 삭제해요. 되돌릴 수 없어요.">
     {{ csrf() }}
-    <p class="small muted">개인정보 파기: 학생 이름을 입력하면 이 학생의 모든 기록을 영구 삭제합니다.</p>
+    <p class="small muted">개인정보 파기: 학생 이름을 입력하면 이 학생의 모든 기록을 영구 삭제해요.</p>
     <div class="row">
       <div class="field"><input type="text" name="confirm_name" placeholder="{{ s.name }}" required></div>
       <div class="field shrink"><button class="btn danger">영구 삭제</button></div>

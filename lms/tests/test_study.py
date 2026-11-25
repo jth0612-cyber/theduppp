@@ -102,7 +102,7 @@ class StudyTest(unittest.TestCase):
                                      "title": "통합과학 정규", "room": "302호"})
         s.post("/s/timetable", data={"weekday": "1", "starts": "15:00", "ends": "14:00", "title": "거꾸로"})   # 끝이 시작보다 빠름
         r = s.post("/s/timetable", data={"weekday": str(wd), "starts": "15:00", "ends": "16:00", "title": "겹침"}, follow_redirects=True)
-        self.assertIn("시간이 중복됩니다", r.data.decode())
+        self.assertIn("시간이 중복돼요", r.data.decode())
         self.assertEqual(self.q("SELECT COUNT(*) AS n FROM my_timetable", one=True)["n"], 2)
         page = s.get("/s/timetable").data.decode()
         self.assertIn("D-10", page)

@@ -30,8 +30,8 @@
     box.setAttribute("role", "status");
     var msg = document.createElement("p");
     msg.textContent = android
-      ? "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않습니다."
-      : "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않습니다. 주소를 복사해 Safari에서 여세요.";
+      ? "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않아요."
+      : "앱 안 브라우저에서는 홈 화면 설치 및 알림이 되지 않아요. 주소를 복사해 Safari에서 여세요.";
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn small";

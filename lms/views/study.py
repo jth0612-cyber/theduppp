@@ -174,7 +174,7 @@ def wrong_update(mid, no):
                reviewed_at = excluded.reviewed_at""", (g.user["id"], mid, no, reason, memo, 1 if reviewed else 0))
     if request.headers.get("X-Requested-With") == "fetch":
         return jsonify(ok=True)
-    flash(f"{no}번을 저장했습니다.", "ok")
+    flash(f"{no}번을 저장했어요.", "ok")
     k = query("SELECT b.kind FROM mocks m JOIN books b ON b.id = m.book_id WHERE m.id = ?", (mid,), one=True)
     kind = "mock" if k and k["kind"] == "모의고사" else "review"
     return redirect(url_for("study.wrong_notes", view=request.args.get("view"), mock=request.args.get("mock"), kind=kind) + f"#w-{mid}-{no}")
@@ -239,7 +239,7 @@ def _slot_form():
     if not (_valid_time(starts) and _valid_time(ends)):
         return "시작 및 끝 시간을 확인해 주세요."
     if starts >= ends:
-        return "끝나는 시간이 시작 시간보다 뒤여야 합니다."
+        return "끝나는 시간이 시작 시간보다 뒤여야 해요."
     if starts < f"{TT_FIRST:02d}:00" or (ends > "24:00"):
         return "07:00부터 24:00 사이로 넣어 주세요."
     return days, starts, ends, title, room, tone if tone is not None and 0 <= tone < 8 else None
@@ -274,13 +274,13 @@ def timetable():
             clash = next(((d, c) for d in days if (c := _overlap(uid, d, starts, ends))), None)
             if clash:
                 d, c = clash
-                flash(f"{WEEKDAYS[d]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 중복됩니다.", "error")
+                flash(f"{WEEKDAYS[d]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 중복돼요.", "error")
             else:
                 tone = _auto_tone(uid, title) if tone is None else tone
                 for d in days:
                     execute("INSERT INTO my_timetable (user_id, weekday, starts, ends, title, room, tone) VALUES (?, ?, ?, ?, ?, ?, ?)",
                             (uid, d, starts, ends, title, room, tone))
-                flash(f"{', '.join(WEEKDAYS[d] for d in days)}요일 {starts}–{ends}에 '{title}'을 추가했습니다.", "ok")
+                flash(f"{', '.join(WEEKDAYS[d] for d in days)}요일 {starts}–{ends}에 '{title}'을 추가했어요.", "ok")
         return redirect(url_for("study.timetable"))
     slots = my_slots(uid)
     hm = datetime.now().strftime("%H:%M")
@@ -304,7 +304,7 @@ def timetable_edit(tid):
         abort(404)
     if request.form.get("action") == "delete":
         execute("DELETE FROM my_timetable WHERE id = ?", (tid,))
-        flash(f"'{row['title']}'을 삭제했습니다.", "ok")
+        flash(f"'{row['title']}'을 삭제했어요.", "ok")
         return redirect(url_for("study.timetable"))
     got = _slot_form()
     if isinstance(got, str):
@@ -314,11 +314,11 @@ def timetable_edit(tid):
     wd = days[0]
     c = _overlap(uid, wd, starts, ends, skip=tid)
     if c:
-        flash(f"{WEEKDAYS[wd]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 중복됩니다.", "error")
+        flash(f"{WEEKDAYS[wd]}요일 {c['starts']}–{c['ends']} '{c['title']}'과 시간이 중복돼요.", "error")
     else:
         execute("UPDATE my_timetable SET weekday = ?, starts = ?, ends = ?, title = ?, room = ?, tone = ? WHERE id = ?",
                 (wd, starts, ends, title, room, row["tone"] if tone is None else tone, tid))
-        flash("수정했습니다.", "ok")
+        flash("수정했어요.", "ok")
     return redirect(url_for("study.timetable"))
 
 
@@ -328,13 +328,13 @@ def timetable_import():
     """처음 시작할 때만: 예전에 선생님이 넣어 둔 반 시간표를 내 시간표로 한 번에 가져온다."""
     me, uid = _me(), g.user["id"]
     if query("SELECT 1 FROM my_timetable WHERE user_id = ? LIMIT 1", (uid,), one=True):
-        flash("이미 내 시간표가 있습니다.", "error")
+        flash("이미 내 시간표가 있어요.", "error")
         return redirect(url_for("study.timetable"))
     rows = class_slots(me["class_id"]) if me["class_id"] else []
     for r in rows:
         execute("INSERT INTO my_timetable (user_id, weekday, starts, ends, title, room, tone) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (uid, r["weekday"], r["starts"], r["ends"], r["title"], r["room"], r["tone"]))
-    flash(f"반 시간표 {len(rows)}칸을 가져왔습니다.", "ok")
+    flash(f"반 시간표 {len(rows)}칸을 가져왔어요.", "ok")
     return redirect(url_for("study.timetable"))
 
 
@@ -344,7 +344,7 @@ def t_timetable():
     """주요 일정: 수능 D-day 및 휴강 설정 (시간표는 학생이 각자 만든다)."""
     if request.method == "POST" and request.form.get("action") == "break_del":
         execute("DELETE FROM class_breaks WHERE id = ?", (request.form.get("id", type=int),))
-        flash("휴강을 삭제했습니다.", "ok")
+        flash("휴강을 삭제했어요.", "ok")
         return redirect(url_for("study.t_timetable"))
     if request.method == "POST" and request.form.get("action") == "break_add":
         s, e = _parse_day(request.form.get("starts")), _parse_day(request.form.get("ends"))
@@ -357,7 +357,7 @@ def t_timetable():
             execute("INSERT INTO class_breaks (class_id, starts, ends, note) VALUES (?, ?, ?, ?)",
                     (cid or None, s.isoformat(), e.isoformat(), request.form.get("note", "").strip()[:40]))
             audit("break_add", f"class:{cid or 'all'} {s}~{e}")
-            flash(f"{s.isoformat()}~{e.isoformat()} 휴강을 넣었습니다.", "ok")
+            flash(f"{s.isoformat()}~{e.isoformat()} 휴강을 넣었어요.", "ok")
         return redirect(url_for("study.t_timetable"))
     if request.method == "POST":
         d = _parse_day(request.form.get("exam_day"))
@@ -367,7 +367,7 @@ def t_timetable():
         else:
             set_setting("exam_day", d.isoformat())
             set_setting("exam_label", label)
-            flash(f"{label} 날짜를 {d.isoformat()}로 정했습니다.", "ok")
+            flash(f"{label} 날짜를 {d.isoformat()}로 정했어요.", "ok")
         return redirect(url_for("study.t_timetable"))
     breaks = query("""SELECT b.*, c.name AS class_name FROM class_breaks b LEFT JOIN classes c ON c.id = b.class_id
                       WHERE b.ends >= ? ORDER BY b.starts""", (date.today().isoformat(),))
@@ -450,7 +450,7 @@ def t_faq(qid):
     if q is None or q["qtype"] != "학습질문":
         abort(404)
     execute("UPDATE questions SET faq = ? WHERE id = ?", (0 if q["faq"] else 1, qid))
-    flash("자주 묻는 질문에서 뺐습니다." if q["faq"] else "자주 묻는 질문으로 고정했습니다.", "ok")
+    flash("자주 묻는 질문에서 뺐어요." if q["faq"] else "자주 묻는 질문으로 고정했어요.", "ok")
     return redirect(url_for("teacher.question_detail", qid=qid))
 
 
@@ -511,10 +511,10 @@ def s_my_reset():
     topic = request.form.get("topic", "")
     if topic == "all":
         progress.reset(g.user["id"], list(quiz.TOPICS))
-        flash("통과 Quiz 학습 진도를 모두 초기화했습니다.", "ok")
+        flash("통과 Quiz 학습 진도를 모두 초기화했어요.", "ok")
     elif topic in quiz.TOPICS:
         progress.reset(g.user["id"], [topic])
-        flash(f"TOPIC {topic} 진도를 초기화했습니다.", "ok")
+        flash(f"TOPIC {topic} 진도를 초기화했어요.", "ok")
     else:
         abort(400)
     return redirect(url_for("study.s_my") + "#progress")

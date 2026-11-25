@@ -57,11 +57,11 @@
     </li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">이 회차는 모두 복습했습니다.</p>{% endif %}
+  {% else %}<p class="muted">이 회차는 모두 복습했어요.</p>{% endif %}
 </section>
 {% else %}{% if not sys_groups %}
 <div class="quiet-box">
-  <p>아직 모인 오답이 없습니다.</p>
+  <p>아직 모인 오답이 없어요.</p>
   <a class="btn" href="{{ url_for('books.analysis_home') }}">시험 분석으로</a>
 </div>
 {% endif %}{% endfor %}

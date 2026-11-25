@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% from "_macros.html" import csrf %}
 {% block title %}주요 일정 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
@@ -16,22 +17,21 @@
 </section>
 
 <section class="card">
-  <h2>휴강</h2>
+  <h2>휴강{% call help('휴강') %}<p>시작 3주 전부터 학생 시간표 위에 표시 / 휴강 주에는 요일 칸에 '휴강'</p>{% endcall %}</h2>
   <form method="post" class="row">{{ csrf() }}<input type="hidden" name="action" value="break_add">
     <div class="field"><label for="b-class">반</label><select id="b-class" name="class_id"><option value="">모든 반</option>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
     <div class="field"><label for="b-starts">시작</label><input type="date" id="b-starts" name="starts" min="{{ today }}" required></div>
     <div class="field"><label for="b-ends">끝</label><input type="date" id="b-ends" name="ends" min="{{ today }}" required></div>
     <div class="field"><label for="b-note">사유 (선택)</label><input type="text" id="b-note" name="note" maxlength="40" placeholder="예: 중간고사"></div>
     <div class="field shrink"><button class="btn primary">넣기</button></div></form>
-  <p class="small muted">시작 3주 전부터 학생 시간표 위에 표시 / 휴강 주에는 요일 칸에 '휴강'</p>
   {% if breaks %}
   <div class="table-wrap"><table>
     <tr><th>반</th><th>기간</th><th>사유</th><th></th></tr>
     {% for b in breaks %}
     <tr><td>{{ b.class_name or '모든 반' }}</td><td class="nowrap">{{ b.starts }} ~ {{ b.ends }}</td><td>{{ b.note }}</td>
-      <td class="num"><form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="break_del"><input type="hidden" name="id" value="{{ b.id }}"><button class="btn small danger" data-confirm="이 휴강을 삭제하시겠습니까?">삭제</button></form></td></tr>
+      <td class="num"><form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="break_del"><input type="hidden" name="id" value="{{ b.id }}"><button class="btn small danger" data-confirm="이 휴강을 삭제할까요?">삭제</button></form></td></tr>
     {% endfor %}
   </table></div>
-  {% else %}<p class="small muted">예정된 휴강이 없습니다.</p>{% endif %}
+  {% else %}<p class="small muted">예정된 휴강이 없어요.</p>{% endif %}
 </section>
 {% endblock %}

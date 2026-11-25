@@ -32,7 +32,7 @@
 {% if g.user.role == 'assistant' %}
 <form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <label class="small" for="ta-intro"><b>내 소개</b> <span class="muted">학생이 학습상담 조교를 고를 때 보입니다 (80자)</span></label>
+  <label class="small" for="ta-intro"><b>내 소개</b> <span class="muted">학생이 학습상담 조교를 고를 때 보여요 (80자)</span></label>
   <input type="text" id="ta-intro" name="intro" maxlength="80" value="{{ my_intro }}" placeholder="예: 생명 단원 개념 정리, 6월 이후 공부 계획 상담" class="grow">
   <button class="btn small">저장</button>
 </form>
@@ -55,6 +55,6 @@
     {% endfor %}
   </table></div>
   {{ pagination(page, pages, 'teacher.questions', status=status, qtype=qtype or None, unit=unit or None, q=word or None, faq=1 if faq else None) }}
-  {% else %}<p class="muted">질문이 없습니다.</p>{% endif %}
+  {% else %}<p class="muted">질문이 없어요.</p>{% endif %}
 </div>
 {% endblock %}

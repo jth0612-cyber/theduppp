@@ -86,7 +86,7 @@ class Care(unittest.TestCase):
         self.assertIn("몰 비를 1:1로 계산", page); self.assertIn("그래프 축부터 확인", page); self.assertIn("박조교 조교 첨삭", page)
         r = self.c1.post(f"/s/analysis/{mid}/paper", data={"image": [(io.BytesIO(PNG), "b.png")]}, content_type="multipart/form-data",
                          follow_redirects=True)
-        self.assertIn("다시 올릴 수 없습니다", r.data.decode())
+        self.assertIn("다시 올릴 수 없어요", r.data.decode())
         with self.app.app_context():
             from datetime import date
             from views.care import paper_review_counts

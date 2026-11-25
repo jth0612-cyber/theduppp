@@ -65,10 +65,10 @@ function initRoom(room) {
       status = "rest"; render();
       if (complete) sound.bell(0.6);
       msg.textContent = d.minutes >= 5
-        ? d.minutes + "분 기록했습니다. 오늘 모두 " + d.today + "분"
-        : "5분이 안 되어 기록하지 않았습니다. 오늘 " + d.today + "분";
+        ? d.minutes + "분 기록했어요. 오늘 모두 " + d.today + "분"
+        : "5분이 안 되어 기록하지 않았어요. 오늘 " + d.today + "분";
       beat();
-    }).catch(function () { msg.textContent = "연결이 불안정합니다. 잠시 뒤 다시 해 주세요."; })
+    }).catch(function () { msg.textContent = "연결이 불안정해요. 잠시 뒤 다시 해 주세요."; })
       .then(function () { finishing = false; });
   }
 

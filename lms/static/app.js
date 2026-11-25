@@ -292,13 +292,13 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
     inp.addEventListener("change", function () {
       var files = Array.prototype.slice.call(inp.files || []);
       if (!files.length) { clearPhoto(); return; }
-      if (files.length > 3) { clearPhoto(); return showErr("사진은 3장까지 올릴 수 있습니다."); }
+      if (files.length > 3) { clearPhoto(); return showErr("사진은 3장까지 올릴 수 있어요."); }
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) {
-          clearPhoto(); return showErr("PNG 및 JPG만 올릴 수 있습니다. 아이폰은 스크린샷으로 올려 주세요.");
+          clearPhoto(); return showErr("PNG 및 JPG만 올릴 수 있어요. 아이폰은 스크린샷으로 올려 주세요.");
         }
-        if (file.size > MAX) { clearPhoto(); return showErr("한 장에 20MB 이하만 올릴 수 있습니다."); }
+        if (file.size > MAX) { clearPhoto(); return showErr("한 장에 20MB 이하만 올릴 수 있어요."); }
       }
       showErr("");
       urls.forEach(function (u) { URL.revokeObjectURL(u); }); urls = []; thumbs.textContent = "";
@@ -327,7 +327,7 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       save();
       if (qv() === "학습질문" && !(inp.files && inp.files.length)) {
         e.preventDefault(); e.stopImmediatePropagation();
-        showErr("학습질문은 문제 사진이 필요합니다. 쓴 내용은 그대로 있습니다.");
+        showErr("학습질문은 문제 사진이 필요해요. 쓴 내용은 그대로 있어요.");
         wrap.scrollIntoView({ behavior: "smooth", block: "center" });
         inp.focus();
       }
@@ -337,7 +337,7 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
 
 // ---------- 조교 답변: 기본 인사말이 미리 들어 있고, 처음 누르면 가운데 빈 줄에서 바로 쓰기 시작 ----------
 document.querySelectorAll("textarea[data-answer-tpl]").forEach(function (t) {
-  var tpl = t.value, mark = "질문 남겨주셔서 감사합니다.\n\n", at = tpl.indexOf(mark);
+  var tpl = t.value, mark = "질문 남겨주셔서 고마워요.\n\n", at = tpl.indexOf(mark);
   if (at < 0) return;
   t.addEventListener("focus", function () {
     if (t.value !== tpl) return;               // 이미 쓰기 시작했으면 그대로
@@ -388,7 +388,7 @@ document.addEventListener("click", function (e) {
     });
     if (!empty.length || f._confirmed) { f._confirmed = false; return; }
     e.preventDefault();
-    askSheet("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장하시겠습니까?", function () { f._confirmed = true; f.requestSubmit ? f.requestSubmit() : f.submit(); });
+    askSheet("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장할까요?", function () { f._confirmed = true; f.requestSubmit ? f.requestSubmit() : f.submit(); });
   });
 })();
 // 사진 크게 보기: 첨부 사진 링크를 새 탭 대신 같은 화면 위에 연다 (누르거나 Esc 로 닫기)
@@ -456,4 +456,22 @@ document.addEventListener("click", function (e) {
 document.querySelectorAll("form[data-autosubmit]").forEach(function (f) {
   f.querySelectorAll(".js-hide").forEach(function (b) { b.hidden = true; });
   f.addEventListener("change", function (e) { if (e.target.tagName === "SELECT") f.submit(); });
+});
+
+// 설명 버튼(원 안 물음표): 설명은 화면에 늘어놓지 않고 누르면 아래에서 올라온다 (_macros.html help)
+document.addEventListener("click", function (e) {
+  var btn = e.target.closest && e.target.closest("[data-help]");
+  if (!btn) return;
+  var tpl = btn.nextElementSibling;
+  if (!tpl || tpl.tagName !== "TEMPLATE") return;
+  var d = document.createElement("dialog");
+  d.className = "sheet-dlg help-dlg";
+  d.innerHTML = '<div class="sd-box"><h2></h2><div class="help-body"></div><button type="button" class="btn primary">확인</button></div>';
+  d.querySelector("h2").textContent = tpl.getAttribute("data-help-title") || "";
+  d.querySelector(".help-body").appendChild(tpl.content.cloneNode(true));
+  document.body.appendChild(d);
+  var close = function () { d.close(); d.remove(); btn.focus(); };
+  d.addEventListener("click", function (ev) { if (ev.target === d || ev.target.closest(".btn.primary")) close(); });
+  d.addEventListener("cancel", function (ev) { ev.preventDefault(); close(); });
+  if (d.showModal) { d.showModal(); d.querySelector(".btn.primary").focus(); }
 });
