@@ -31,7 +31,7 @@
   </div>
 
   <div class="card">
-    <h2>최근 회차 <a class="small" href="{{ url_for('books.teacher_books') }}">복테/모의고사</a></h2>
+    <div class="sec-head"><h2>최근 회차</h2><a href="{{ url_for('books.teacher_books') }}">전체</a></div>
     {% if recent_exams %}
     <div class="table-wrap"><table>
       <tr><th>회차</th><th class="num">응시</th><th class="num">평균</th></tr>
@@ -48,7 +48,7 @@
 </div>
 
 <div class="card">
-  <h2>담당 반 <a class="small" href="{{ url_for('teacher.classes') }}">반 관리</a></h2>
+  <div class="sec-head"><h2>담당 반</h2><a href="{{ url_for('teacher.classes') }}">반 관리</a></div>
   {% if classes %}
   <div class="table-wrap"><table>
     <tr><th>반</th><th>설명</th><th class="num">학생 수</th></tr>

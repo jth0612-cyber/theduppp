@@ -4,12 +4,16 @@
 {% block content %}
 <div class="page-head">
   <h1>학생 검색 <span class="muted small">{{ total }}명</span></h1>
-  <form method="get" class="row">
-    <select name="track" aria-label="구분"><option value="">전체</option><option {{ 'selected' if track == '단과' }}>단과</option><option {{ 'selected' if track == '재종' }}>재종</option></select>
-    <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디" autofocus>
-    <button class="btn">검색</button>
-  </form>
 </div>
+<p class="chip-links" aria-label="구분">
+  <a href="{{ url_for('teacher.students', q=q or None) }}" class="{{ 'is-on' if not track }}">전체</a>
+  <a href="{{ url_for('teacher.students', q=q or None, track='단과') }}" class="{{ 'is-on' if track == '단과' }}">단과</a>
+  <a href="{{ url_for('teacher.students', q=q or None, track='재종') }}" class="{{ 'is-on' if track == '재종' }}">재종</a>
+</p>
+<form method="get" class="find find-wide" role="search">
+  {% if track %}<input type="hidden" name="track" value="{{ track }}">{% endif %}
+  <input type="search" name="q" value="{{ q }}" placeholder="이름이나 아이디로 찾기" aria-label="학생 찾기" enterkeyhint="search" autofocus>
+</form>
 <div class="card">
   {% if students %}
   <div class="table-wrap"><table>

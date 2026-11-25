@@ -8,7 +8,7 @@
   <div>
     <p class="crumb"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p>
     <h1>{{ grp.name }} <span class="badge gray">{{ grp.track }}</span></h1>
-    <p class="muted small">반 {{ members|length }}개<span class="sep" aria-hidden="true"></span>재원생 {{ total }}명<span class="sep" aria-hidden="true"></span>{{ weeks|length }}주<span class="sep" aria-hidden="true"></span>한 주차 = 토~금 (토요일반이 먼저)</p>
+    <p class="muted small">반 {{ members|length }}개<span class="sep" aria-hidden="true"></span>재원생 {{ total }}명<span class="sep" aria-hidden="true"></span>{{ weeks|length }}주</p>
   </div>
   <details>
     <summary class="small">그룹 관리</summary>
@@ -49,7 +49,7 @@
 </nav>
 
 {% if view == 'table' %}
-<div class="help-inline">표 읽는 법{% call help('표 읽는 법') %}<p>칸을 누르면 그 수업의 교재 넣고 빼기, 출석 (조교 시스템 출결은 자동으로 채움). 칸 숫자 = 출석/명단, 교재 <span class="badge open">주황</span> = 이 수업에만 더 넣은 교재</p>{% endcall %}</div>
+<div class="help-inline">표 읽는 법{% call help('표 읽는 법') %}<p>한 주차는 토요일부터 금요일까지예요. 칸을 누르면 그 수업의 교재와 출석을 고칠 수 있어요.</p><p>칸 숫자는 출석/명단이에요. <span class="badge open">주황</span> 교재는 그 수업에만 더 넣은 교재예요.</p><p>배부 수는 출석을 체크한 칸이면 출석(지각, 조퇴 포함) 수, 아직 체크하지 않은 칸이면 명단 수(예정)예요.</p>{% endcall %}</div>
 <div class="table-wrap sched-wrap"><table class="sched">
   <thead><tr><th class="sched-week">주차</th>
     {% for t in slots %}<th class="sched-col"><b>{{ t.class_name }}</b><br><span class="small">{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}</span>{% if t.hall or t.room %}<br><span class="small muted">{{ t.hall }} {{ t.room }}</span>{% endif %}</th>{% endfor %}
@@ -95,7 +95,6 @@
   {% endfor %}
   </tbody>
 </table></div>
-<p class="small muted">배부 = 출석 체크한 칸은 출석(지각, 조퇴 포함) 수, 아직 체크하지 않은 칸은 명단 수(예정)</p>
 {% else %}
 <div class="table-wrap"><table class="sched-cal">
   <thead><tr><th>주차</th>{% for d in '토일월화수목금' %}<th>{{ d }}</th>{% endfor %}</tr></thead>

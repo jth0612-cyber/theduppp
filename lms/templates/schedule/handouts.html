@@ -11,7 +11,7 @@
   <h2>넣기</h2>
   <form method="post" class="row">{{ csrf() }}
     <div class="field shrink"><label for="hk">구분</label><select id="hk" name="kind">{% for k in kinds %}<option>{{ k }}</option>{% endfor %}</select></div>
-    <div class="field wide"><label for="ht">교재 이름 (여러 권은 쉼표나 줄바꿈)</label><textarea id="ht" name="title" rows="2" placeholder="SQ-고체1, SQ-고체2, SQ-고체3"></textarea></div>
+    <div class="field wide"><label for="ht">교재 이름</label><textarea id="ht" name="title" rows="2" placeholder="여러 권은 쉼표나 줄바꿈으로 나눠요 (예: SQ-고체1, SQ-고체2)"></textarea></div>
     <div class="field shrink"><button class="btn primary">넣기</button></div>
   </form>
 </section>

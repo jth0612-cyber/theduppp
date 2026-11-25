@@ -1,21 +1,21 @@
 """데모 사이트용 DB: 정태혁 통합과학 SEASON 1 을 N주차까지 진행한 상황 (가짜 데이터).
 
-이 폴더의 instance/ 에 DB·비밀키·업로드 사진을 새로 만든다. 실제 운영 폴더에서 실행하지 말 것.
+이 폴더의 instance/ 에 DB·비밀키, 업로드 사진을 새로 만든다. 실제 운영 폴더에서 실행하지 말 것.
     python seed_demo.py            # 14주차(시즌1 끝)까지
     python seed_demo.py 4          # 4주차까지
 로그인 정보: DEMO_CREDENTIALS.txt (이 파일 옆)
 
 페르소나
-- 선생님 정태혁 (master)         공지·회차·시험 평가·행정문의·cast
-- 조교 한지수 (ta_hanjisu)        학습질문·학습상담·1:1 첨삭·시험지 첨삭·OMR·수업 기록
+- 선생님 정태혁 (master)         공지, 회차, 시험 평가, 행정문의·cast
+- 조교 한지수 (ta_hanjisu)        학습질문, 학습상담·1:1 첨삭, 시험지 첨삭·OMR·수업 기록
 - 학생 8명, 반마다 1명 (PERSONAS)  중심 인물은 박서윤 (대구 토요일 A반)
 
-진도·교재: SEASON 1 커리큘럼 (주차 = 토~금, 1주차 12.26~01.01, 14주차 03.27~04.02)
-시험: testfile/ 의 모의고사·복테 파일 한 벌을 1~14회로 복제 (문항정보는 demo_items.py)
-사진: make_demo.py 가 tools/demo_photos.py 를 띄워 두면 실제 교재·시험지에 학생 필기를 얹은 사진을 쓴다
+진도, 교재: SEASON 1 커리큘럼 (주차 = 토~금, 1주차 12.26~01.01, 14주차 03.27~04.02)
+시험: testfile/ 의 모의고사, 복테 파일 한 벌을 1~14회로 복제 (문항정보는 demo_items.py)
+사진: make_demo.py 가 tools/demo_photos.py 를 띄워 두면 실제 교재, 시험지에 학생 필기를 얹은 사진을 쓴다
 일정: 대구 토 12/26, 대치 일 12/27, 대치 목 12/31 개강 (재종 4반은 12/28 월).
 N주차가 끝난 금요일을 '오늘'로 보고, 요일을 지키며 실행일 직전 금요일로 당긴다.
-→ 화면의 '오늘·이번 주·최근 7일'이 채워진다.
+→ 화면의 '오늘, 이번 주, 최근 7일'이 채워진다.
 모든 행동은 실제 화면 기능(폼 전송)으로 실행하고, 날짜만 나중에 맞춘다.
 """
 import io
@@ -168,17 +168,17 @@ LESSONS = {
     10: [("note", "10주차 중화 반응 2 · 에너지 출입", ["넣은 부피 - 이온 수 그래프", "- H+: 중화점까지 감소 → 0", "- OH-: 중화점 뒤부터 증가",
                                               "!산에 염기: 전체 이온 수 중화점 전 일정", "에너지 출입", "- 발열: 연소, 중화, 호흡",
                                               "- 흡열: 광합성, 질산 암모늄 용해"]), ("item", "m", 10, "용해 = 흡열\n물리 변화")],
-    11: [("note", "11주차 진화 · 생태계", ["변이 → 자연 선택 → 진화", "!변이는 원래 있다 (환경이 고른다)", "- 유전적 다양성 ↑ → 환경 변화에 강함",
+    11: [("note", "11주차 진화, 생태계", ["변이 → 자연 선택 → 진화", "!변이는 원래 있다 (환경이 고른다)", "- 유전적 다양성 ↑ → 환경 변화에 강함",
                                      "생태계 구성 요소: 생물 / 비생물", "- 개체군 안 / 개체군 사이 / 생물↔비생물",
                                      "생태 피라미드: 위로 갈수록 에너지 ↓", "- 평형: 먹이 ↓ → 포식자 ↓ → 먹이 ↑"]), ("item", "m", 16, "Ⅰ → Ⅱ → Ⅲ")],
-    12: [("note", "12주차 열수지 · 엘니뇨", ["복사 평형: 흡수 = 방출", "- 태양 100 = 반사 30 + 지구 복사 70", "- 대기 재복사 → 온실 효과",
+    12: [("note", "12주차 열수지, 엘니뇨", ["복사 평형: 흡수 = 방출", "- 태양 100 = 반사 30 + 지구 복사 70", "- 대기 재복사 → 온실 효과",
                                       "!수증기·CO2 ↑ → 지표로 오는 재복사 ↑", "엘니뇨: 무역풍 약화", "- 동태평양 수온 ↑, 용승 약화",
                                       "- 서태평양 기압 ↑", "라니냐는 반대"]), ("item", "m", 23, "E = 58")],
-    13: [("note", "13주차 렌츠 법칙 · 에너지", ["전자기 유도: 자기장 변화 → 유도 전류", "!렌츠 법칙: 변화를 방해하는 방향",
+    13: [("note", "13주차 렌츠 법칙, 에너지", ["전자기 유도: 자기장 변화 → 유도 전류", "!렌츠 법칙: 변화를 방해하는 방향",
                                           "- 가까워질 때 밀고 멀어질 때 당김", "- 자석이 빠를수록, 감은 수가 많을수록 전류 ↑",
                                           "에너지 전환", "- 발전기: 운동 → 전기", "- 효율 = 유용한 에너지 ÷ 공급 에너지"]), ("item", "r", 13, "방해하는 방향")],
     14: [("note", "14주차 과학과 미래 사회", ["빅데이터: 수집 → 처리(오차) → 분석", "- 사물 인터넷: 사물끼리 정보 교환",
-                                        "- 스마트팜, 감염병 진단 키트", "!과학 기술의 양면성", "- 윤리·보안·환경 문제를 함께 고려",
+                                        "- 스마트팜, 감염병 진단 키트", "!과학 기술의 양면성", "- 윤리, 보안, 환경 문제를 함께 고려",
                                         "예시문항: 자료에 있는 것만 판단"]), ("item", "m", 7, "양면성")],
 }
 # Full 모의고사 피드백(1:1): 주차 → (모의고사 문항, 학생 풀이 줄, 조교 답변)
@@ -344,11 +344,11 @@ CLASSES = [  # 이름, 구분, [(요일, 시작, 끝, 교시, 관, 교실)]  단
 # 학생 페르소나: 반마다 1명. weak = 약한 단원, skill = 평균 정답률, ask = 주마다 질문할 확률
 PERSONAS = {
     "대구 토요일 A반": dict(name="박서윤", no="0012874416", parent="010-2817-4416", target="연세대 생명시스템", weak="생명중심원리",
-                          skill=0.70, ask=0.8, note="성실형. 질문·오답 노트·시험지 첨삭을 꾸준히 씀. 화면을 가장 많이 보는 학생"),
+                          skill=0.70, ask=0.8, note="성실형. 질문, 오답 노트, 시험지 첨삭을 꾸준히 씀. 화면을 가장 많이 보는 학생"),
     "대구 토요일 B반": dict(name="이도현", no="0031558207", parent="010-4120-8207", target="서울대 화학생물공학", weak="중화 반응",
-                          skill=0.88, ask=0.15, note="상위권. 질문은 거의 없고 모의고사 분석·통계만 봄"),
+                          skill=0.88, ask=0.15, note="상위권. 질문은 거의 없고 모의고사 분석, 통계만 봄"),
     "대치 일요일반": dict(name="최민서", no="0045019932", parent="010-7731-9932", target="고려대 의예", weak="역학",
-                        skill=0.62, ask=0.35, note="학원 여러 곳 병행. 결석이 잦고 강의 영상·수업 기록으로 따라잡음"),
+                        skill=0.62, ask=0.35, note="학원 여러 곳 병행. 결석이 잦고 강의 영상, 수업 기록으로 따라잡음"),
     "대치 목요일반": dict(name="정하준", no="0050772641", parent="010-3392-2641", target="성균관대 화학공학", weak="산화와 환원",
                         skill=0.58, ask=0.5, note="2주차에 늦게 합류. 1주차 자료를 찾아봄", late=2),
     "대치 재종 3반": dict(name="김나연", no="kny2027", parent="010-5560-1183", target="경북대 수의예", weak="화학 결합",
@@ -356,7 +356,7 @@ PERSONAS = {
     "대치 재종 4반": dict(name="오준혁", no="ojh0412", parent="010-6014-0412", target="계명대 간호", weak="지구 열수지",
                         skill=0.45, ask=0.55, note="하위권. 오답 노트 이유 고르기와 시험지 첨삭에 기대는 편"),
     "대치 재종 1반": dict(name="윤지아", no="yja2027", parent="010-8825-3071", target="이화여대 화학생명", weak="전기적 성질과 반도체",
-                        skill=0.68, ask=0.3, note="아이폰 사용. 알림·홈 화면 설치를 씀. 교재 배송·환불 행정문의"),
+                        skill=0.68, ask=0.3, note="아이폰 사용. 알림, 홈 화면 설치를 씀. 교재 배송, 환불 행정문의"),
     "대치 재종 2반": dict(name="한승우", no="hsw2027", parent="010-2290-7764", target="한양대 기계", weak="엘니뇨",
                         skill=0.57, ask=0.25, note="게임(퀴즈) 위주. 비밀번호를 잃어버려 임시 비밀번호를 받은 적 있음"),
 }
@@ -365,7 +365,7 @@ FIRST = ["민준", "서연", "도윤", "하은", "시우", "지유", "주원", "
          "다은", "건우", "예린", "현우", "소율", "우진", "지아", "선우", "윤서", "연우", "태민", "가은", "승현", "나연", "재원"]
 cls = {}
 for name, track, slots in CLASSES:
-    ok(f"반 {name}", T.post("/t/classes", data={"name": name, "track": track, "description": f"{track} · 2028 수능 대비 SEASON 1"}))
+    ok(f"반 {name}", T.post("/t/classes", data={"name": name, "track": track, "description": f"2028 수능 대비 SEASON 1"}))
     cid = q("SELECT id FROM classes WHERE name = ?", (name,), one=True)["id"]
     cls[name] = {"id": cid, "track": track, "slots": slots, "students": []}
     for wd, s, e, per_, hall, room in slots:
@@ -425,12 +425,12 @@ for name, c in cls.items():
         accounts[st["id"]] = (st["no"], pw, signup(c, st, pw, sess(c, 1)))
 SEO = P["대구 토요일 A반"]
 STUDY = {"대구 토요일 A반": ("개념 다지기형", "해설 참고형"), "대구 토요일 B반": ("심화 도전형", ""), "대치 일요일반": ("벼락치기형", "미이행형"),
-         "대치 목요일반": ("미이행형", "개념 다지기형"), "대치 재종 3반": ("안정형", ""), "대치 재종 4반": ("불안·과소확신형", "해설 참고형"),
+         "대치 목요일반": ("미이행형", "개념 다지기형"), "대치 재종 3반": ("안정형", ""), "대치 재종 4반": ("불안, 과소확신형", "해설 참고형"),
          "대치 재종 1반": ("마무리 다듬기형", ""), "대치 재종 2반": ("양치기형", "")}
-TYPE_POOL = ["안정형"] * 8 + ["개념 다지기형"] * 5 + ["마무리 다듬기형"] * 5 + ["심화 도전형"] * 5 + ["양치기형"] * 5 +             ["벼락치기형"] * 4 + ["해설 참고형"] * 5 + ["불안·과소확신형"] * 5 + ["미이행형"] * 4
+TYPE_POOL = ["안정형"] * 8 + ["개념 다지기형"] * 5 + ["마무리 다듬기형"] * 5 + ["심화 도전형"] * 5 + ["양치기형"] * 5 +             ["벼락치기형"] * 4 + ["해설 참고형"] * 5 + ["불안, 과소확신형"] * 5 + ["미이행형"] * 4
 PRACTICE = {"개념 다지기형": "필기노트 복습 후 같은 단원 기출 10문항", "심화 도전형": "LOGIC BUILD 킬러 1문항 끝까지 혼자 풀기",
-            "벼락치기형": "수업 다음 날 30분 복습 고정", "미이행형": "과제 1개만 정해 끝까지", "안정형": "지금 순서 유지 · 오답 이유 고르기",
-            "불안·과소확신형": "맞힌 문항도 근거 한 줄 쓰기", "마무리 다듬기형": "시간 재고 모의고사 1회", "양치기형": "푼 문항 중 3개만 다시 풀기",
+            "벼락치기형": "수업 다음 날 30분 복습 고정", "미이행형": "과제 1개만 정해 끝까지", "안정형": "지금 순서 유지, 오답 이유 고르기",
+            "불안, 과소확신형": "맞힌 문항도 근거 한 줄 쓰기", "마무리 다듬기형": "시간 재고 모의고사 1회", "양치기형": "푼 문항 중 3개만 다시 풀기",
             "해설 참고형": "해설 보기 전 5분 더 고민"}
 with app.app_context():
     from db import get_db
@@ -548,7 +548,7 @@ def make_round(kind, rnd, when, week):
                                                           content_type="multipart/form-data"))
     ok(f"시험 평가 {kind}-{rnd}", T.post(f"/t/mocks/{mid}/review", data={
         "level": str(rng.choice([3, 3, 4])), "time": rng.choice(["적당", "빠듯"]), "killer": KILLER[kind], "video": "",
-        "review": f"{CURRICULUM[week][0]} 주간. 킬러 문항 {KILLER[kind]}번은 조건 독해·계산형입니다. 오답이 몰린 문항은 다음 수업 앞 10분에 다시 봅니다."}))
+        "review": f"{CURRICULUM[week][0]} 주간. 킬러 문항 {KILLER[kind]}번은 조건 독해, 계산형입니다. 오답이 몰린 문항은 다음 수업 앞 10분에 다시 봅니다."}))
     x("UPDATE mocks SET exam_date = ? WHERE id = ?", (when.isoformat(), mid))
     at("mocks", mid, created_at=ts(when - timedelta(days=1), 20), review_at=ts(when + timedelta(days=1), 22))
     at("omr_uploads", last_id("omr_uploads"), created_at=ts(when + timedelta(days=1), 21))
@@ -727,7 +727,7 @@ ok("D-day", T.post("/t/timetable", data={"exam_day": "2027-11-18", "exam_label":
 for name, c in cls.items():
     ok(f"개강 공지 {name}", T.post(f"/t/classes/{c['id']}/notices", data={
         "tag": "공지", "pinned": "1", "title": "SEASON 1 개강 안내",
-        "body": "교재: LINE UP 개념서 · FRAMING 문제편 및 해설편 · LOGIC BUILD 필기노트 · 정태혁 모의고사\n"
+        "body": "교재: LINE UP 개념서 · FRAMING 문제편 및 해설편 · LOGIC BUILD 필기노트, 정태혁 모의고사\n"
                 "질문: 질문 게시판에 [교재-페이지-번호] 형식으로 / 행정: 질문 게시판 행정문의"}))
     at("notices", last_id("notices"), created_at=ts(sess(c, 1) - timedelta(days=2), 21))
 for name, p in P.items():
@@ -983,7 +983,7 @@ for gname, track in (("2028 단과 SEASON 1", "단과"), ("2028 재종 SEASON 1"
     for w in q("SELECT id, week_no FROM group_weeks WHERE group_id = ? ORDER BY week_no", (gid,)):
         k = w["week_no"]
         # 7주차부터는 설 연휴 한 주 뒤: 주차 날짜를 직접 바꾼다 (화면의 '고치기'와 같은 길)
-        note = "개강 · 교재 일괄 배부" if k == 1 else "설 연휴 뒤" if k == BREAK_AFTER + 1 else ""
+        note = "개강, 교재 일괄 배부" if k == 1 else "설 연휴 뒤" if k == BREAK_AFTER + 1 else ""
         ok(f"{gname} {k}주차", T.post(f"/t/schedule/weeks/{w['id']}", data={
             "action": "save", "starts": day(k, 5).isoformat(), "ends": (day(k, 5) + timedelta(days=6)).isoformat(),
             "topic": CURRICULUM[k][0], "review_round": str(k), "mock_round": str(k), "note": note,
@@ -1012,7 +1012,7 @@ if WEEKS >= 2:
     s13 = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS - 1], thu), one=True)["id"]
     s14 = q("SELECT id FROM sessions WHERE week_id = ? AND class_id = ?", (wk[WEEKS], thu), one=True)["id"]
     x("INSERT INTO session_handouts (session_id, handout_id, mode) VALUES (?, ?, 'drop')", (s13, HID[f"Sequence {WEEKS - 1}회"]))
-    x("UPDATE sessions SET note = 'Sequence 미입고 · 다음 주 배부' WHERE id = ?", (s13,))
+    x("UPDATE sessions SET note = 'Sequence 미입고, 다음 주 배부' WHERE id = ?", (s13,))
     x("INSERT INTO session_handouts (session_id, handout_id, mode) VALUES (?, ?, 'add')", (s14, HID[f"Sequence {WEEKS - 1}회"]))
 
 # ---------------------------------------------------------------- 날짜 맞추기
@@ -1025,7 +1025,7 @@ with app.app_context():
     x("DELETE FROM audit_log")
 
 with open(CRED, "w", encoding="utf-8") as fh:
-    fh.write(f"데모 로그인 (가짜 데이터) · SEASON 1 {WEEKS}주차까지 · 오늘 = {TODAY} (금)\n\n")
+    fh.write(f"데모 로그인 (가짜 데이터) · SEASON 1 {WEEKS}주차까지, 오늘 = {TODAY} (금)\n\n")
     fh.write(f"선생님 정태혁   master / {PW['teacher']}\n")
     fh.write(f"조교 한지수     ta_hanjisu / {PW['ta']}\n")
     fh.write(f"조교 김도윤     ta_kimdoyun / {PW['ta2']}\n\n")

@@ -39,18 +39,17 @@
 {% endif %}
 
 <section class="card" id="omr" aria-labelledby="h-omr">
-  <h2 id="h-omr">채점기 엑셀(OMR) 올리기{% call help('채점기 엑셀(OMR) 올리기') %}<p>이름, 수험번호(학부모 번호 뒤 8자리), 1~N번 답안 칸을 알아서 찾아요. '정답', '배점' 줄, 둘째 시트 '문항정보'를 함께 읽어요. 같은 학생은 새로 올린 내용으로 바뀌어요.</p>{% endcall %}</h2>
+  <h2 id="h-omr">채점기 엑셀(OMR) 올리기{% call help('채점기 엑셀(OMR) 올리기') %}<p>이름, 수험번호(학부모 번호 뒤 8자리), 1~N번 답안 칸을 알아서 찾아요. '정답', '배점' 줄, 둘째 시트 '문항정보'를 함께 읽어요. 같은 학생은 새로 올린 내용으로 바뀌어요.</p><p>빈 양식에는 재원생 명단, 정답과 배점 줄, 문항정보 시트가 들어 있어요.</p>{% if m.is_practice %}<p>연습용 예시 엑셀에는 실장 TEST반 가상 학생 50명의 답안, 정답, 문항정보가 들어 있어요.</p>{% endif %}{% endcall %}</h2>
   <form method="post" action="{{ url_for('books.omr_upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="file" name="file" accept=".xlsx,.csv" required>
     <button class="btn primary">올리기</button>
   </form>
-  <form method="get" action="{{ url_for('books.omr_template', mid=mock.id) }}" class="row mt">
-    {% if not m.n_items %}<label class="small" for="tn">문항 수</label><input type="number" id="tn" name="n" min="1" max="60" value="{{ 20 if m.kind == '복습 테스트' else 25 }}" class="w-num">{% endif %}
-    <button class="btn">빈 양식 받기</button><span class="small muted">재원생 명단<span class="sep" aria-hidden="true"></span>정답과 배점 줄<span class="sep" aria-hidden="true"></span>문항정보 시트 포함</span>
+  <form method="get" action="{{ url_for('books.omr_template', mid=mock.id) }}" class="row nowrap mt">
+    {% if not m.n_items %}<label class="small muted" for="tn">문항 수</label><input type="number" id="tn" name="n" min="1" max="60" value="{{ 20 if m.kind == '복습 테스트' else 25 }}" class="num-in">{% endif %}
+    <button class="btn">빈 양식 받기</button>
+    {% if m.is_practice %}<a class="btn" href="{{ url_for('books.practice_file', mid=mock.id) }}">연습용 예시 엑셀 받기</a>{% endif %}
   </form>
-  {% if m.is_practice %}<p class="mt"><a class="btn" href="{{ url_for('books.practice_file', mid=mock.id) }}">연습용 예시 엑셀 받기</a>
-    <span class="small muted">실장 TEST반 가상 학생 50명의 답안<span class="sep" aria-hidden="true"></span>정답<span class="sep" aria-hidden="true"></span>문항정보가 들어 있어요.</span></p>{% endif %}
   {% if up %}
   <div class="omr-log mt">
     <p class="small"><b>마지막 반영</b> {{ up.created_at[5:16] }}<span class="sep" aria-hidden="true"></span>{{ up.display_name or ('정태혁 선생님' if up.role == 'teacher' else up.username) }}<span class="sep" aria-hidden="true"></span>{{ up.filename }}</p>

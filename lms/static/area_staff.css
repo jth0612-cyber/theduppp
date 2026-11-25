@@ -3,3 +3,36 @@
 /* 선생님·조교 화면: 매일 쓰는 화면이라 폭을 넓게, 표는 카드 폭을 채운다 */
 .is-staff .container { max-width: 1160px; }
 .is-staff main .table-wrap > table, .is-staff main .card > table { width: 100%; }
+
+/* 휴대폰: 표를 옆으로 구겨 넣지 않고 한 줄씩 묶음으로 (제목 한 줄, 아래에 이름표와 값) */
+@media (max-width: 720px) {
+  main table.rowcards, main table.rowcards tbody { display: block; width: 100%; }
+  main table.rowcards thead, main table.rowcards tr.rc-head { display: none; }
+  main table.rowcards tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 14px 2px; border-bottom: 1px solid var(--line); background: none; }
+  main table.rowcards tr:last-child { border-bottom: 0; }
+  main table.rowcards td { display: inline-flex; align-items: baseline; gap: 6px; width: auto; padding: 0; border: 0; text-align: left; font-size: 14px; white-space: normal; background: none; }
+  main table.rowcards td::before { content: attr(data-th); color: var(--muted); font-size: 12.5px; font-weight: 400; white-space: nowrap; }
+  main table.rowcards td.rc-title { order: -2; flex: 1 1 100%; font-size: 16px; font-weight: 700; }
+  main table.rowcards td.rc-title a { color: var(--ink); }
+  main table.rowcards td.rc-title::before, main table.rowcards td.rc-tag::before, main table.rowcards td[data-th=""]::before { content: none; }
+  main table.rowcards td.rc-none { display: none; }
+  main .table-wrap:has(> table.rowcards) { overflow: visible; }
+}
+
+/* 이름표와 값 줄 (학생 기본 정보 등): 이름표는 왼쪽 흐리게, 값은 오른쪽 */
+.kv { margin: 0; }
+.kv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.kv > div:last-child { border-bottom: 0; }
+.kv dt { color: var(--muted); font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.kv dd { margin: 0; text-align: right; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.plink { overflow-wrap: anywhere; }
+.row.nowrap { flex-wrap: nowrap; align-items: center; }
+main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; text-align: center; }
+@media (max-width: 720px) {
+  main table.rowcards td.rc-wide { flex: 1 1 100%; display: block; }
+  main table.rowcards td.rc-wide::before { display: block; margin-bottom: 2px; }
+  main table.rowcards td.rc-title.rc-wide { font-size: 15px; }
+  /* 입력칸은 한 줄에 하나, 숫자 칸과 버튼 줄은 넘치면 다음 줄로 */
+  main .row > .field:not(.shrink) { flex: 1 1 100%; min-width: 0; }
+  main .row.nowrap { flex-wrap: wrap; }
+}

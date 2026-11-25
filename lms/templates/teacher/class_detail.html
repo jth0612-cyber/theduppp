@@ -44,16 +44,14 @@
   <div class="grid grid-2">
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
       {{ csrf() }}<input type="hidden" name="action" value="paste">
-      <div class="field"><label for="codes-paste">행정 시스템에서 뽑은 코드 붙여넣기</label>
+      <div class="field"><label for="codes-paste">행정 시스템 코드 붙여넣기</label>
         <textarea id="codes-paste" name="codes" rows="5" placeholder="한 줄에 하나씩&#10;메모를 붙이려면: 코드, 메모 (예: 271234, 3번)"></textarea></div>
       <button class="btn primary">등록</button>
     </form>
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
       {{ csrf() }}<input type="hidden" name="action" value="generate">
-      <div class="field"><label for="codes-n">이 사이트에서 난수 코드 만들기</label>
-        <div class="row"><input id="codes-n" type="number" name="count" min="1" max="200" value="30" class="shrink"><span class="small muted">개</span></div></div>
-      <button class="btn">만들기</button>
-      <p class="small muted">'CSV로 받기'로 내려받아 한 명에게 하나씩</p>
+      <div class="field"><label for="codes-n">난수 코드 만들기{% call help('난수 코드 만들기') %}<p>만든 코드는 'CSV로 받기'로 내려받아 한 명에게 하나씩 나눠 주세요.</p>{% endcall %}</label>
+        <div class="row nowrap"><input id="codes-n" type="number" name="count" min="1" max="200" value="30" aria-label="만들 개수" class="num-in"><span class="small muted">개</span><button class="btn">만들기</button></div></div>
     </form>
   </div>
   {% if codes %}
@@ -89,7 +87,7 @@
       <div class="row">
         <div class="field"><label>목표 (선택)</label><input type="text" name="target" maxlength="60" placeholder="예: 목표 대학 및 학과"></div>
         <div class="field"><label>연락처 (선택, 암호화 저장)</label><input type="text" name="phone" maxlength="30"></div>
-        <div class="field"><label>학부모 연락처 (OMR 수험번호, 암호화 저장)</label><input type="text" name="parent_phone" maxlength="30" inputmode="tel"></div>
+        <div class="field"><label>학부모 연락처</label><input type="text" name="parent_phone" maxlength="30" inputmode="tel"></div>
       </div>
       <div class="field"><label>메모 (선택, 암호화 저장)</label><textarea name="memo" maxlength="1000"></textarea></div>
       <button class="btn primary">등록</button>
@@ -144,7 +142,7 @@
 
 {% elif tab == 'notices' %}
 <div class="card">
-  <h2>공지 작성</h2>
+  <h2>공지 작성{% call help('공지 작성') %}<p>말머리를 '정오'로 하면 학생 화면의 정오표 탭에 교재별로 모여요.</p>{% endcall %}</h2>
   <form method="post" action="{{ url_for('teacher.notice_create', cid=cls.id) }}">
     {{ csrf() }}
     <div class="row">
@@ -161,7 +159,6 @@
     </details>
     {% endif %}
     <button class="btn primary mt">등록</button>
-    <p class="small muted">말머리를 '정오'로 하면 학생 화면의 정오표 탭에 교재별로 모여요.</p>
   </form>
 </div>
 {% for n in notices %}
@@ -199,8 +196,8 @@
   <form method="post" action="{{ url_for('teacher.material_create', cid=cls.id) }}" enctype="multipart/form-data" class="row">
     {{ csrf() }}
     <div class="field wide"><label>제목</label><input type="text" name="title" maxlength="120" required></div>
-    <div class="field"><label>파일 (PDF, PPT, DOCX, HWP, 이미지<span class="sep" aria-hidden="true"></span>최대 20MB)</label>
-      <input type="file" name="file" accept=".pdf,.ppt,.pptx,.docx,.hwp,.png,.jpg,.jpeg" required></div>
+    <div class="field wide"><input type="file" id="mt-file" name="file" accept=".pdf,.ppt,.pptx,.docx,.hwp,.png,.jpg,.jpeg" required class="drop-input">
+      <label for="mt-file" class="drop"><b>파일 올리기</b><span>PDF, PPT, DOCX, HWP, 이미지, 20MB까지</span></label></div>
     <div class="field shrink"><button class="btn primary">올리기</button></div>
   </form>
 </div>
@@ -224,11 +221,7 @@
 
 {% elif tab == 'videos' %}
 <div class="card">
-  <h2>강의 영상 등록</h2>
-  <div class="guide small">
-    영상 파일은 이 앱에 올리지 않고 <b>링크로 등록</b>해요. 유튜브는 <b>'일부 공개'</b>로 올린 뒤, 구글 드라이브는 <b>공유 → 링크 복사</b>로 주소를 붙여 넣어 주세요.
-    만료일이 지나면 학생 화면에서 자동으로 숨겨져요. 일부 공개 링크는 주소를 아는 사람은 볼 수 있으니, 외부 유출이 걱정되는 영상은 구글 드라이브 공유를 학원 계정으로 제한해 주세요.
-  </div>
+  <h2>강의 영상 등록{% call help('강의 영상 등록') %}<p>영상 파일은 올리지 않고 링크로 등록해요. 유튜브는 '일부 공개'로 올린 뒤, 구글 드라이브는 '공유 → 링크 복사'로 주소를 붙여 넣어 주세요.</p><p>만료일이 지나면 학생 화면에서 숨겨져요.</p><p>일부 공개 링크는 주소를 아는 사람이면 볼 수 있어요. 유출이 걱정되는 영상은 구글 드라이브 공유를 학원 계정으로 제한해 주세요.</p>{% endcall %}</h2>
   <form method="post" action="{{ url_for('teacher.video_create', cid=cls.id) }}">
     {{ csrf() }}
     <div class="row">

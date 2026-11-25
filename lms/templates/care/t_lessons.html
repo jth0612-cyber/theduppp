@@ -10,8 +10,9 @@
     <div class="field"><label for="ls-day">날짜</label><input type="date" id="ls-day" name="day" value="{{ today }}"></div>
     <div class="field wide"><label for="ls-title">주제</label><input type="text" id="ls-title" name="title" maxlength="120" required placeholder="예: TOPIC 24 산과 염기, 중화 반응"></div>
   </div>
-  <div class="field"><label for="ls-body">한 줄 정리 <span class="muted">(사진이 없으면 필수)</span></label><textarea id="ls-body" name="body" rows="2" maxlength="2000"></textarea></div>
-  <div class="field"><label for="ls-image">노트 사진 <span class="muted">(PNG, JPG, 10장까지)</span></label><input type="file" id="ls-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg"></div>
+  <div class="field"><label for="ls-body">한 줄 정리</label><textarea id="ls-body" name="body" rows="2" maxlength="2000" placeholder="사진이 없으면 꼭 적어 주세요"></textarea></div>
+  <div class="field"><input type="file" id="ls-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="drop-input">
+    <label for="ls-image" class="drop"><b>노트 사진 올리기</b><span>PNG, JPG 10장까지</span></label></div>
   <button class="btn primary">올리기</button>
 </form>
 <div class="card">

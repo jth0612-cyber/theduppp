@@ -1,12 +1,10 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf %}
+{% from "_macros.html" import csrf, help %}
 {% block title %}가입 승인 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
-    <h1>가입 승인 <span class="muted small">{{ requests|length }}건 대기</span></h1>
-    <p class="muted small">반 가입 코드로 들어온 신청
-      미리 등록해 둔 명단에 같은 아이디가 있으면, 승인할 때 그 학생 정보에 계정이 연결돼요.</p>
+    <h1>가입 승인{% call help('가입 승인') %}<p>반 가입 코드로 들어온 신청이에요. 미리 등록해 둔 명단에 같은 아이디가 있으면, 승인할 때 그 학생 정보에 계정이 연결돼요.</p>{% endcall %} <span class="muted small">{{ requests|length }}건 대기</span></h1>
   </div>
   {% if requests %}
   <form method="post" data-confirm="대기 중인 {{ requests|length }}건을 모두 승인할까요?">

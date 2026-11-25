@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 {% from "_macros.html" import pagination %}
 {% block title %}접근 기록 | 정태혁 통합과학 lab{% endblock %}
+{% set names = {'login': '로그인', 'login_google': 'Google 로그인', 'login_failed': '로그인 실패', 'login_disabled': '중지된 계정 로그인', 'logout': '로그아웃',
+  'password_changed': '비밀번호 바꿈', 'student_view': '학생 정보 열람', 'student_edit': '학생 정보 수정', 'student_create': '학생 등록', 'student_delete': '학생 삭제',
+  'student_import': '학생 일괄 등록', 'report_view': '성적 리포트 열람', 'file_download': '파일 받기', 'sms_view': '문자 열람', 'sms_csv': '문자 내보내기',
+  'staff_answers_csv': '답변 수 내보내기', 'ta_notes_csv': '조교 메모 내보내기', 'omr_upload': 'OMR 올림', 'omr_clear': 'OMR 지움', 'account_issue': '계정 발급',
+  'account_bulk_issue': '계정 일괄 발급', 'account_delete': '계정 삭제', 'assistant_create': '조교 추가', 'assistant_disable': '조교 사용 중지', 'assistant_reset': '조교 비밀번호 초기화',
+  'signup_approve': '가입 승인', 'signup_reject': '가입 거절', 'signup_code': '코드로 가입', 'signup_code_failed': '가입 코드 틀림', 'parent_link': '학부모 링크 만듦',
+  'question_create': '질문 올림', 'question_answer': '질문 답변', 'question_followup': '추가 질문', 'notice_create': '공지 올림', 'notice_edit': '공지 수정', 'notice_delete': '공지 삭제',
+  'paper_submit': '시험지 제출', 'paper_review': '시험지 첨삭', 'feedback_ask': '피드백 요청', 'feedback_reply': '피드백 답변', 'lesson_create': '수업 기록 올림',
+  'material_upload': '자료 올림', 'material_delete': '자료 삭제', 'video_create': '영상 올림', 'video_delete': '영상 삭제', 'class_create': '반 만듦', 'class_edit': '반 수정',
+  'mock_created': '회차 추가', 'mock_deleted': '회차 삭제', 'mock_review': '시험 분석 저장', 'book_created': '교재 추가', 'book_deleted': '교재 삭제',
+  'sys_sync': '조교 시스템 연동', 'sys_upload': 'CSV 올림', 'sys_token_new': '열쇠 만듦'} %}
 {% block content %}
 <div class="page-head">
   <div>
     <h1>접근 기록</h1>
-    <p class="muted small">로그인<span class="sep" aria-hidden="true"></span>학생 정보 열람 및 수정<span class="sep" aria-hidden="true"></span>다운로드<span class="sep" aria-hidden="true"></span>내보내기</p>
   </div>
 </div>
 <div class="card">
@@ -15,7 +25,7 @@
     <tr>
       <td class="small">{{ r.created_at }}</td>
       <td>{{ r.username or '-' }}</td>
-      <td><code>{{ r.action }}</code></td>
+      <td>{{ names.get(r.action, r.action) }}</td>
       <td class="small muted">{{ r.target }}</td>
       <td class="small muted">{{ r.ip }}</td>
     </tr>
