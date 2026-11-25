@@ -2,32 +2,27 @@
 {% from "_macros.html" import pagination, status_badge, qtype_badge %}
 {% block title %}질문답변 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head">
-  <h1>질문답변</h1>
-  <div class="row small">
-    <a href="{{ url_for('teacher.questions', status=status) }}" class="badge {{ '' if not qtype else 'gray' }}">전체 유형</a>
-    {% for t in qtypes %}
-    <a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="badge {{ '' if qtype == t else 'gray' }}">{{ t }}{% if waiting.get(t) %} <b>{{ waiting[t] }}</b>{% endif %}</a>
-    {% endfor %}
-  </div>
-</div>
-{% if qtype in ('', '학습질문') %}
-<div class="row small mt">
-  <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, q=word or None) }}" class="badge {{ '' if not unit else 'gray' }}">전체 단원</a>
-  {% for u in units %}<a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=u, q=word or None) }}" class="badge {{ '' if unit == u else 'gray' }}">{{ u }}</a>{% endfor %}
-</div>
-{% endif %}
-<nav class="tabs">
+<header class="ed-head"><h1>질문답변</h1></header>
+<nav class="tabs" aria-label="답변 상태">
   <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>
   <a href="{{ url_for('teacher.questions', status='answered', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'answered' }}">답변 완료</a>
   <a href="{{ url_for('teacher.questions', status='all', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'all' and not mine and not faq }}">전체</a>
   <a href="{{ url_for('teacher.questions', status='all', faq=1) }}" class="{{ 'active' if faq }}">자주 묻는 질문</a>
   {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>
-<form method="get" class="row small mt" role="search">
+<p class="chip-links" aria-label="질문 유형">
+  <a href="{{ url_for('teacher.questions', status=status) }}" class="{{ 'is-on' if not qtype }}">모든 유형</a>
+  {% for t in qtypes %}<a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="{{ 'is-on' if qtype == t }}">{{ t }}{% if waiting.get(t) %} <b>{{ waiting[t] }}</b>{% endif %}</a>{% endfor %}
+</p>
+{% if qtype in ('', '학습질문') %}
+<p class="chip-links chip-links-sm" aria-label="단원">
+  <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, q=word or None) }}" class="{{ 'is-on' if not unit }}">모든 단원</a>
+  {% for u in units %}<a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=u, q=word or None) }}" class="{{ 'is-on' if unit == u }}">{{ u }}</a>{% endfor %}
+</p>
+{% endif %}
+<form method="get" class="find find-wide" role="search">
   <input type="hidden" name="status" value="{{ status }}">{% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}{% if unit %}<input type="hidden" name="unit" value="{{ unit }}">{% endif %}
-  <input type="search" name="q" value="{{ word }}" placeholder="제목과 내용 검색 (예: 모의고사 3회)" aria-label="질문 검색">
-  <button class="btn small">검색</button>{% if word %} <a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=unit or None) }}">검색 지우기</a>{% endif %}
+  <input type="search" name="q" value="{{ word }}" placeholder="제목과 내용에서 찾기" aria-label="질문 찾기" enterkeyhint="search">
 </form>
 {% if g.user.role == 'assistant' %}
 <form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">

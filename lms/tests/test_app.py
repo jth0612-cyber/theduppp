@@ -712,7 +712,7 @@ class FeatureTest(AppTest):
         self.assertIn("Full 모의고사 피드백 대기", page)
         self.assertIn("복습 테스트 첨삭 대기", page)
         main = page.split('<main class="sheet', 1)[1].split("</main>", 1)[0]
-        self.assertIn("답변 대기 질문 <a", main)                             # 본문 카드 안에 질문 목록이 있다
+        self.assertIn("<h2>답변 대기 질문</h2>", main)                             # 본문 카드 안에 질문 목록이 있다
         self.assertIn("담당 반", main)
         self.assertNotIn("실장 TEST반", page.split("담당 반", 1)[0])         # 연습반은 요약 숫자에서 빠진다
         nav = self.c.get("/t/classes").data.decode()

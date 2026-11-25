@@ -12,7 +12,7 @@
 
 <form method="post" action="{{ url_for('books.mock_review', mid=mock.id) }}" class="card review-form" id="eval">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <h2>시험 분석 <span class="small muted">학생 화면 맨 위에 난이도와 주요 문항이 보이고, 총평과 영상은 접혀 있어요{% if mock.review_at and mock.review_by %}<span class="sep" aria-hidden="true"></span>{{ mock.review_by }} {{ mock.review_at[5:16] }}{% endif %}</span></h2>
+  <div class="sec-head"><h2>시험 분석{% call help('시험 분석') %}<p>학생 화면 맨 위에 난이도와 주요 문항이 보여요. 총평과 해설 영상은 접혀 있어요.</p>{% endcall %}</h2>{% if mock.review_at and mock.review_by %}<span>{{ mock.review_by }}<span class="sep" aria-hidden="true"></span>{{ mock.review_at[5:16] }}</span>{% endif %}</div>
   <div class="row">
     <div class="field"><label for="ev-level">난이도</label><select id="ev-level" name="level"><option value="">-</option>{% for k, v in levels.items() %}<option value="{{ k }}" {{ 'selected' if mock.eval_level == k }}>{{ v }}</option>{% endfor %}</select></div>
     <input type="hidden" name="time" value="{{ mock.eval_time }}">

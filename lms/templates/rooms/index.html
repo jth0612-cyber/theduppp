@@ -4,16 +4,14 @@
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>소도시 명상{% call help('소도시 명상') %}<p>5분 이상 집중한 시간만 기록돼요.</p>{% endcall %}</h1>
+    <h1>소도시 명상{% call help('소도시 명상') %}<p>자리에 앉으면 집중 시간이 재어져요. 5분 이상 집중한 시간만 기록돼요.</p>{% endcall %}</h1>
+    <p class="ed-lede">오늘 <b>{{ today }}분</b><span class="sep" aria-hidden="true"></span>이번 주 <b>{{ week }}분</b></p>
   </div>
-  <div class="rooms-side">
-  <dl class="my-mins"><div><dt>오늘</dt><dd>{{ today }}<small>분</small></dd></div><div><dt>이번 주</dt><dd>{{ week }}<small>분</small></dd></div></dl>
-  <details class="small my-weeks"><summary>최근 4주 기록</summary>
-    <table><tbody>{% for w in weeks %}<tr><td>{{ w.label }}</td><td class="num">{{ w.m|hm if w.m else '-' }}</td></tr>{% endfor %}</tbody></table>
-  </details>
-  <p class="rooms-links small"><a href="{{ url_for('rooms.rank') }}">터줏대감 순위</a></p>
-  </div>
+  <a class="btn" href="{{ url_for('rooms.rank') }}">순위 보기</a>
 </header>
+<details class="card my-weeks"><summary>최근 4주 기록</summary>
+  <ul class="list-rows">{% for w in weeks %}<li><div class="lr-row"><span class="lr-main"><b class="lr-title">{{ w.label }}</b></span><span class="lr-end"><b>{{ w.m|hm if w.m else '-' }}</b></span></div></li>{% endfor %}</ul>
+</details>
 <ul class="place-list">
   {% for key, p in places.items() %}
   {% set c = counts.get(key) %}

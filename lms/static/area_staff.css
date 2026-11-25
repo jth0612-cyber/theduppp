@@ -1,1 +1,5 @@
 /* staff 화면 전용 (토스 규칙 적용, 2026-11-26). 공용 부품은 style.css */
+
+/* 선생님·조교 화면: 매일 쓰는 화면이라 폭을 넓게, 표는 카드 폭을 채운다 */
+.is-staff .container { max-width: 1160px; }
+.is-staff main .table-wrap > table, .is-staff main .card > table { width: 100%; }

@@ -2762,3 +2762,11 @@ body.has-shell { background: var(--frame); }
 .has-shell .sheet { border-radius: 0; margin: 0; min-height: 100vh; }
 .side { background: var(--rail); }
 main.sheet > .colophon { padding-top: 40px; }
+/* 고르는 칩 줄 (유형, 단원 거르기) */
+.chip-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.chip-links a { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--sheet); color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: var(--lift); }
+.chip-links a.is-on { background: var(--accent-soft); color: var(--accent-ink); box-shadow: none; }
+.chip-links a b { color: var(--danger); }
+.chip-links-sm a { min-height: 32px; padding: 0 12px; font-size: 13px; }
+.card .chip-links a { background: var(--raised); box-shadow: none; }
+.find-wide { margin: 0 0 16px; } .find-wide input { width: 100%; }

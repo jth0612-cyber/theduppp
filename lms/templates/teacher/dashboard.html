@@ -20,18 +20,14 @@
 
 <div class="grid grid-2">
   <div class="card">
-    <h2>답변 대기 질문 <a class="small" href="{{ url_for('teacher.questions') }}">전체 보기</a></h2>
+    <div class="sec-head"><h2>답변 대기 질문</h2><a href="{{ url_for('teacher.questions') }}">전체</a></div>
     {% if open_questions %}
-    <div class="table-wrap"><table>
+    <ul class="list-rows">
       {% for q in open_questions %}
-      <tr>
-        <td><a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a><br>
-          <span class="small muted">{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.name }}</span></td>
-        <td class="small muted num">{{ q.created_at[5:16] }}</td>
-      </tr>
+      <li><a href="{{ url_for('teacher.question_detail', qid=q.id) }}"><span class="lr-main"><b class="lr-title">{{ q.title }}</b><span class="lr-sub">{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.name }}<span class="sep" aria-hidden="true"></span>{{ q.created_at[5:10]|replace('-', '.') }} {{ q.created_at[11:16] }}</span></span></a></li>
       {% endfor %}
-    </table></div>
-    {% else %}<p class="muted">밀린 질문이 없어요.</p>{% endif %}
+    </ul>
+    {% else %}<div class="list-empty">밀린 질문이 없어요.</div>{% endif %}
   </div>
 
   <div class="card">

@@ -53,3 +53,5 @@
 .my-sec .card, .my-sec .my-rank, .my-sec .list-rows { box-shadow: none; }
 .my-sec > .card { padding: 0; background: transparent; margin: 0; }
 .article-body { margin-top: 0; padding-top: 0; border-top: 0; }
+.my-weeks { margin: 0 0 16px; } .my-weeks summary { font-weight: 600; cursor: pointer; min-height: 28px; }
+.card > h1 + h2 { margin-top: 16px; }

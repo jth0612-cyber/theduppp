@@ -46,7 +46,6 @@
 {% endif %}
 {% endif %}
 {% if q.is_mine %}
-<p class="small muted center">질문 횟수 {{ 1 + q.followup_count }} / {{ 1 + max_followups }}</p>
 {% if can_follow_up %}
 <form method="post" action="{{ url_for('student.question_followup', qid=q.id) }}#fu" enctype="multipart/form-data" class="card" id="fu" data-qform data-draft-key="fu-draft-{{ q.id }}"{% if fu_body %} data-has-draft{% endif %}>
   {{ csrf() }}
