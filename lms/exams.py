@@ -240,7 +240,7 @@ def apply_upload(mid, raw, filename, by_id):
                 (mid, s["id"], ans, score, r["score"], "; ".join(msgs), now))
         ok += 1
         rows_out.append({"row": r["row"], "who": label, "state": "warn" if msgs else "ok",
-                         "msg": f"{s['name']} ({s['cls']}) {num(score)}점" + (" · " + "; ".join(msgs) if msgs else ""),
+                         "msg": f"{s['name']} ({s['cls']}) {num(score)}점" + (", " + "; ".join(msgs) if msgs else ""),
                          "account": bool(s["uid"])})
     absent = sorted(s["name"] for s in idx if s["cls"] in classes and s["id"] not in seen
                     and not query("SELECT 1 FROM exam_results WHERE mock_id = ? AND student_id = ?", (mid, s["id"]), one=True))
@@ -261,7 +261,7 @@ def apply_upload(mid, raw, filename, by_id):
         g.pop("_exam_cs", None)
     except RuntimeError:
         pass
-    summary = f"{ok}명 반영" + (f" · 못 넣은 줄 {sum(1 for r in rows_out if r['state'] == 'error')}개" if any(r["state"] == "error" for r in rows_out) else "")
+    summary = f"{ok}명 반영" + (f", 못 넣은 줄 {sum(1 for r in rows_out if r['state'] == 'error')}개" if any(r["state"] == "error" for r in rows_out) else "")
     execute("INSERT INTO omr_uploads (mock_id, by_id, filename, summary, rows) VALUES (?, ?, ?, ?, ?)",
             (mid, by_id, filename[:200], summary + ("\n" + "\n".join(warn) if warn else ""), json.dumps(rows_out, ensure_ascii=False)))
     analysis.invalidate(mid)
@@ -520,7 +520,7 @@ def _block(a, rep):
         bits.append(f"내 답 {a['mine']} → 정답 {a['key']}")
     else:
         bits.append(f"정답 {a['key']}")
-    lines = [head + " · " + ", ".join(bits)]
+    lines = [head + " · " + ", ".join(bits)]   # 학부모 문자: 선생님이 쓰던 문자 형식 그대로 (tests 의 기준 문자와 줄마다 맞춤)
     if enough and a["dist"]:
         lines.append(f"반 선택 비율: {a['dist']}")
     if a["diff"]:

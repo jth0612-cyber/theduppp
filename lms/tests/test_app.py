@@ -229,7 +229,7 @@ class AppTest(unittest.TestCase):
 
     def test_footer_operator_and_optional_contact(self):
         page = self.app.test_client().get("/login").data.decode()
-        self.assertIn("운영자 정태혁 · 개인정보 보호책임자 정태혁", page)
+        self.assertIn("개인정보 보호책임자 정태혁", page)
         self.assertNotIn("mailto:", page)  # 메일을 넣기 전에는 연락처 줄이 없다
         os.environ["CONTACT_EMAIL"] = "lab@example.com"
         try:
@@ -743,7 +743,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             sid = query("SELECT id FROM students WHERE student_no='A001'", one=True)["id"]
         page = self.c.get(f"/t/students/{sid}").data.decode()
-        self.assertIn("복테·모의고사", page)
+        self.assertIn("복테/모의고사", page)
         self.assertIn("학부모 리포트에 나가는 코멘트", page)
         self.assertIn("성적 추이", page)
 
@@ -936,7 +936,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             self.assertEqual([r["code"] for r in query("SELECT code FROM student_codes")], [codes[0]])
         # 조교는 코드를 볼 수 있지만 만들 수는 없다 (가입 화면 문구: 아이디)
-        self.assertIn("영문 및 숫자 3~30자", self.app.test_client().get("/signup?track=재종").data.decode())
+        self.assertIn("영문과 숫자 3~30자", self.app.test_client().get("/signup?track=재종").data.decode())
 
     def test_signup_requires_google_when_enabled(self):
         cid = self.setup_class_with_students()

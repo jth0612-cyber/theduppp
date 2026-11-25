@@ -15,8 +15,8 @@
   <div class="field"><label for="fb-body">{{ body_label }}</label>
     <textarea id="fb-body" name="body" rows="4" maxlength="2000" placeholder="{{ placeholder }}"></textarea></div>
   <div class="field photo-field" data-photo>
-    <label for="fb-image">사진 <span class="muted">(PNG·JPG, 3장까지, 한 장 20MB 이하)</span></label>
-    <input type="file" id="fb-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+    <input type="file" id="fb-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="drop-input">
+    <label for="fb-image" class="drop"><b>사진 올리기</b><span>PNG, JPG 3장까지, 한 장 20MB 이하</span></label>
     <p class="field-err" data-photo-err hidden></p>
     <div class="photo-preview" data-photo-preview hidden><div class="photo-thumbs" data-photo-thumbs></div><span></span><button type="button" class="btn small" data-photo-clear>모두 빼기</button></div>
   </div>

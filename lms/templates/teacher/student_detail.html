@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf, status_badge, kind_tabs %}
-{% block title %}{{ s.name }} · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ s.name }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
@@ -9,7 +9,7 @@
       {% if not s.active %}<span class="badge gray">퇴원</span>{% endif %}</h1>
     {% if s.target %}<p class="muted small">목표: {{ s.target }}</p>{% endif %}
   </div>
-  <a class="btn" href="{{ url_for('study.t_report', sid=s.id) }}">성적 리포트 (인쇄·PDF)</a>
+  <a class="btn" href="{{ url_for('study.t_report', sid=s.id) }}">성적 리포트 (인쇄, PDF)</a>
 </div>
 
 <div class="grid grid-2">
@@ -33,9 +33,9 @@
     <p><span class="muted small">메모</span><br><span class="pre">{{ memo or '-' }}</span></p>
     <h3 class="mt">로그인 계정</h3>
     {% if account %}
-      <p class="small">아이디 <b>{{ account.username }}</b> · 닉네임 <b>{{ account.nickname or '-' }}</b> ·
+      <p class="small">아이디 <b>{{ account.username }}</b><span class="sep" aria-hidden="true"></span>닉네임 <b>{{ account.nickname or '-' }}</b><span class="sep" aria-hidden="true"></span>
         {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '아직 접속 안 함' }}
-        {% if account.must_change_pw %}· <span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
+        {% if account.must_change_pw %}<span class="sep" aria-hidden="true"></span><span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
       <div class="row">
         <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급하시겠습니까?">
           {{ csrf() }}<button class="btn small">비밀번호 초기화</button></form>
@@ -48,7 +48,7 @@
     {% else %}<p class="small muted">퇴원 학생은 계정이 없습니다.</p>{% endif %}
     {% if engagement %}
     <h3 class="mt">학습 활동</h3>
-    <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b> · 연속 {{ engagement.streak.streak }}일</p>
+    <p class="small">누적 접속 <b>{{ engagement.streak.total }}일</b><span class="sep" aria-hidden="true"></span>연속 {{ engagement.streak.streak }}일</p>
     {% endif %}
   </div>
 </div>
@@ -73,12 +73,12 @@
   <h3 class="mt">학부모 리포트에 나가는 코멘트</h3>
   {% if rep.comment %}
   <p class="pre">{{ rep.comment.text }}</p>
-  <p class="small muted">{{ rep.comment.src }} · {{ (rep.comment.at or '')[:16] }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
+  <p class="small muted">{{ rep.comment.src }}<span class="sep" aria-hidden="true"></span>{{ (rep.comment.at or '')[:16] }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
   {% else %}<p class="small muted">없음 / 회차 화면의 학생 메모나 복습 테스트 첨삭 코멘트 중 가장 최근 것이 나갑니다.</p>{% endif %}
 </div>
 
 <div class="card" id="notes">
-  <h2>학습·상담 메모 <span class="small muted">(암호화 저장 · 학생에게 보이지 않음)</span></h2>
+  <h2>학습/상담 메모 <span class="small muted">(암호화 저장<span class="sep" aria-hidden="true"></span>학생에게 보이지 않음)</span></h2>
   <form method="post" action="{{ url_for('teacher.note_create', sid=s.id) }}">
     {{ csrf() }}
     <div class="row">
@@ -118,7 +118,7 @@
 </div>
 
 <details class="card">
-  <summary>학생 정보 수정 · 반 이동 · 퇴원 처리</summary>
+  <summary>학생 정보 수정<span class="sep" aria-hidden="true"></span>반 이동<span class="sep" aria-hidden="true"></span>퇴원 처리</summary>
   <form method="post" action="{{ url_for('teacher.student_edit', sid=s.id) }}">
     {{ csrf() }}
     <div class="row">
@@ -139,7 +139,7 @@
   </form>
   {% if g.user.role == 'teacher' %}
   <hr>
-  <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적·메모·질문을 영구 삭제합니다. 되돌릴 수 없습니다.">
+  <form method="post" action="{{ url_for('teacher.student_delete', sid=s.id) }}" data-confirm="학생과 모든 성적, 메모, 질문을 영구 삭제합니다. 되돌릴 수 없습니다.">
     {{ csrf() }}
     <p class="small muted">개인정보 파기: 학생 이름을 입력하면 이 학생의 모든 기록을 영구 삭제합니다.</p>
     <div class="row">

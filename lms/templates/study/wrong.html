@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf, kind_tabs %}
-{% block title %}오답 노트 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}오답 노트 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
@@ -27,14 +27,14 @@
 {% if reason_counts %}
 <section class="reason-bar" aria-label="틀린 이유 모아 보기">
   {% set total = reason_counts|sum(attribute='n') %}
-  {% for r in reason_counts %}<span><b>{{ r.reason }}</b> {{ r.n }}문항 · {{ (100 * r.n / total)|round|int }}%</span>{% endfor %}
+  {% for r in reason_counts %}<span><b>{{ r.reason }}</b> {{ r.n }}문항<span class="sep" aria-hidden="true"></span>{{ (100 * r.n / total)|round|int }}%</span>{% endfor %}
 </section>
 {% endif %}
 
 {% for gr in groups %}
 <section class="panel" aria-labelledby="g-{{ gr.mock_id }}">
   <div class="sec-head"><h2 id="g-{{ gr.mock_id }}">{{ gr.title }}</h2>
-    <span>{{ fmt(gr.score) }} / {{ fmt(gr.full) }}점 · 오답 {{ gr.total }}문항 중 {{ gr.done }}문항 복습 완료</span></div>
+    <span>{{ fmt(gr.score) }}/{{ fmt(gr.full) }}점<span class="sep" aria-hidden="true"></span>복습 {{ gr.done }}/{{ gr.total }}</span></div>
   {% if gr.rows %}
   <ul class="wrong-list">
     {% for it in gr.rows %}
@@ -42,17 +42,16 @@
       <form method="post" action="{{ url_for('study.wrong_update', mid=gr.mock_id, no=it.no, view='open' if only_open else None, mock=pick or None) }}" class="wrong-form" data-autosave>
         {{ csrf() }}
         <div class="w-head">
-          <span class="w-no">{{ it.no }}번</span>
-          <span class="muted small">내 답 {{ it.mine if it.mine != "0" else "무응답" }} · {{ fmt(it.points) }}점{% if it.rate is not none %} · 전체 오답률 {{ it.rate }}%{% endif %}</span>
-          <a class="small" href="{{ url_for('books.analysis_home', mock=gr.mock_id, item=it.no) }}#map">선지 비율 보기</a>
+          <a class="w-no" href="{{ url_for('books.analysis_home', mock=gr.mock_id, item=it.no) }}#map" aria-label="{{ it.no }}번 선지 비율 보기">{{ it.no }}번</a>
+          <span class="muted small">내 답 {{ it.mine if it.mine != "0" else "무응답" }}{% if it.rate is not none %}<span class="sep" aria-hidden="true"></span>오답률 {{ it.rate }}%{% endif %}</span>
         </div>
         <div class="w-reasons" role="radiogroup" aria-label="{{ it.no }}번 틀린 이유">
           {% for r in reasons %}<label class="chip"><input type="radio" name="reason" value="{{ r }}" {{ 'checked' if it.reason == r }}><span>{{ r }}</span></label>{% endfor %}
         </div>
         <div class="w-foot">
-          <input type="text" name="memo" maxlength="300" value="{{ it.memo }}" placeholder="한 줄 메모: 놓친 부분" aria-label="{{ it.no }}번 메모">
+          <input type="text" name="memo" maxlength="300" value="{{ it.memo }}" placeholder="메모" aria-label="{{ it.no }}번 메모">
           <label class="check"><input type="checkbox" name="reviewed" value="1" {{ 'checked' if it.reviewed }}> 다시 풀어서 맞힘</label>
-          <button class="btn small" type="submit">저장</button>
+          <button class="btn small w-save" type="submit">저장</button>
         </div>
       </form>
     </li>
@@ -63,7 +62,6 @@
 {% else %}{% if not sys_groups %}
 <div class="quiet-box">
   <p>아직 모인 오답이 없습니다.</p>
-  <p class="muted small">시험 분석에서 채점하면 쌓입니다.</p>
   <a class="btn" href="{{ url_for('books.analysis_home') }}">시험 분석으로</a>
 </div>
 {% endif %}{% endfor %}

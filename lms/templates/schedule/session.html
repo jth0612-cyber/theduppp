@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}{{ s.class_name }} {{ s.week_no }}주차 · 수업 일정{% endblock %}
+{% block title %}{{ s.class_name }} {{ s.week_no }}주차 | 수업 일정{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> / <a href="{{ url_for('schedule.group', gid=grp.id) }}#w{{ s.week_no }}">{{ grp.name }}</a> /</p>
-    <h1>{{ s.class_name }} · {{ s.week_no }}주차</h1>
-    <p class="muted small">{{ s.day }} ({{ weekdays[s.weekday] }}){% if s.period %} {{ s.period }}{% endif %} {{ s.starts }}–{{ s.ends }}{% if s.hall or s.room %} · {{ s.hall }} {{ s.room }}{% endif %}</p>
+    <h1>{{ s.class_name }}<span class="sep" aria-hidden="true"></span>{{ s.week_no }}주차</h1>
+    <p class="muted small">{{ s.day }} ({{ weekdays[s.weekday] }}){% if s.period %} {{ s.period }}{% endif %} {{ s.starts }}–{{ s.ends }}{% if s.hall or s.room %}<span class="sep" aria-hidden="true"></span>{{ s.hall }} {{ s.room }}{% endif %}</p>
   </div>
 </div>
 
 <div class="sched-stats">
   <div class="sched-stat"><span class="small muted">명단</span><b class="num">{{ s.roster }}명</b>{% if s.guests %}<span class="small muted">다른 반 {{ s.guests }}명 포함</span>{% endif %}</div>
-  <div class="sched-stat"><span class="small muted">출석 (지각·조퇴 포함)</span><b class="num">{{ s.present }}명</b><span class="small muted">체크 {{ s.checked }}명</span></div>
+  <div class="sched-stat"><span class="small muted">출석 (지각, 조퇴 포함)</span><b class="num">{{ s.present }}명</b><span class="small muted">체크 {{ s.checked }}명</span></div>
   <div class="sched-stat"><span class="small muted">상태</span><b>{% if s.week_off %}휴강 주{% elif s.brk %}휴강 (주요 일정){% else %}{{ s.status }}{% endif %}</b>{% if s.brk and s.brk.note %}<span class="small muted">{{ s.brk.note }}</span>{% endif %}</div>
 </div>
 
@@ -43,7 +43,7 @@
   </table></div>
   {% if extra %}
   <form method="post" class="row">{{ csrf() }}<input type="hidden" name="action" value="handout"><input type="hidden" name="mode" value="add">
-    <div class="field"><label for="ex-h">이 수업에만 더 넣기</label><select id="ex-h" name="handout_id">{% for h in extra %}<option value="{{ h.id }}">{{ h.kind }} · {{ h.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="ex-h">이 수업에만 더 넣기</label><select id="ex-h" name="handout_id">{% for h in extra %}<option value="{{ h.id }}">{{ h.kind }}, {{ h.title }}</option>{% endfor %}</select></div>
     <div class="field shrink"><button class="btn">넣기</button></div></form>{% endif %}
 </section>
 
@@ -69,7 +69,7 @@
   {% for r in roster if r.guest %}<form id="ug-{{ r.id }}" method="post">{{ csrf() }}<input type="hidden" name="action" value="unguest"><input type="hidden" name="student_id" value="{{ r.id }}"></form>{% endfor %}
   <p class="small muted">'다른 반' = 이번 주는 다른 반 수업을 들음 (명단에서 빠지고 교재는 들은 반에서 셉니다)</p>
   <form method="post" class="row">{{ csrf() }}<input type="hidden" name="action" value="guest">
-    <div class="field"><label for="gq">다른 반 학생 넣기 (리클래스·반 바꿔 듣기)</label><input type="text" id="gq" name="q" maxlength="40" placeholder="아이디(출결 번호) 또는 이름"></div>
+    <div class="field"><label for="gq">다른 반 학생 넣기 (리클래스, 반 바꿔 듣기)</label><input type="text" id="gq" name="q" maxlength="40" placeholder="아이디(출결 번호) 또는 이름"></div>
     <div class="field shrink"><button class="btn">넣기</button></div></form>
 </section>
 {% endblock %}

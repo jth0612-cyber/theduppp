@@ -325,7 +325,7 @@
       var fb = m("feedback");
       fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong");
       fb.textContent = "";
-      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (note ? " · " + note : rightLabel ? " · 정답 " + rightLabel : "")));
+      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (note ? ", " + note : rightLabel ? ", 정답 " + rightLabel : "")));
       if (res.explanation) res.explanation.split(" / ").forEach(function (t) { fb.appendChild(el("p", "", t)); });
       var last = game.i + 1 >= game.questions.length;
       var next = el("button", "btn primary", last ? "결과 보기" : "다음 문제");
@@ -399,7 +399,7 @@
             var q = (item.kind === "listen" ? item.say : item.question) + (item.sub ? " → " + item.sub : "") +
               (item.lines ? "  " + item.lines.map(function (t, n) { return "ㄱㄴㄷ".charAt(n) + ". " + t; }).join("  ") : "");
             box.appendChild(el("b", ""));
-            box.firstChild.textContent = (r.correct ? "맞음 · " : "틀림 · ") + (i + 1) + ". " + q;
+            box.firstChild.textContent = (r.correct ? "맞음 " : "틀림 ") + (i + 1) + ". " + q;
             if (!r.correct) box.appendChild(el("div", "small", "내 답: " + r.mine));
             box.appendChild(el("div", "small", "정답: " + r.answer));
             box.appendChild(el("div", "small muted", r.explanation));
@@ -458,7 +458,7 @@
       post(sp.dataset.start.replace(/\/start$/, "/" + run.id + "/submit"), { picks: run.picks })
         .then(function (res) {
           sq("result-title").textContent = res.score + "개 정답";
-          sq("result-detail").textContent = res.tried + "개 중 " + res.score + "개" + (res.best ? " · 최고 " + res.best + "개" : "");
+          sq("result-detail").textContent = res.tried + "개 중 " + res.score + "개" + (res.best ? ", 최고 " + res.best + "개" : "");
           var rv = sq("review"); rv.textContent = "";
           if (res.missed.length) rv.appendChild(el("p", "small muted", "틀린 문제"));
           res.missed.forEach(function (x) {
@@ -535,7 +535,7 @@
       post(mt.dataset.start.replace(/\/start$/, "/" + st.id + "/submit"), { wrong: st.wrong, seconds: secs })
         .then(function (res) {
           mq("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점" : "");
-          mq("result-detail").textContent = secs.toFixed(1) + "초" + (res.wrong.length ? " · 복습으로: " + res.wrong.join(", ") : "");
+          mq("result-detail").textContent = secs.toFixed(1) + "초" + (res.wrong.length ? ", 복습할 것: " + res.wrong.join(", ") : "");
           show(mt, "result");
         }).catch(function (e) { alert(e.message); show(mt, "start"); });
     };
@@ -560,7 +560,7 @@
     var feedback = function (res, extra) {
       var fb = pq("feedback");
       fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong"); fb.textContent = "";
-      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (extra ? " · " + extra : "")));
+      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (extra ? ", " + extra : "")));
       fb.appendChild(el("p", "", res.explanation));
       var last = pg.i + 1 >= pg.stages.length;
       var nx = el("button", "btn primary", last ? "결과 보기" : "다음"); nx.type = "button";
@@ -705,7 +705,7 @@
           var L = res.left;
           after.textContent = "";
           after.appendChild(arrowSvg("down"));
-          after.appendChild(beaker("혼합 용액(" + res.state + ") · BTB " + { "노랑": "노란색", "초록": "녹색", "파랑": "푸른색" }[res.color],
+          after.appendChild(beaker("혼합 용액(" + res.state + "), BTB " + { "노랑": "노란색", "초록": "녹색", "파랑": "푸른색" }[res.color],
             [["H⁺", L["H⁺"]], ["OH⁻", L["OH⁻"]], ["Na⁺", L["Na⁺"]], ["Cl⁻", L["Cl⁻"]], ["H₂O", res.water]],
             st.acid_ml + ml, { wide: true, tint: res.color, fade: true }));
           ctl.classList.add("is-spent");
@@ -806,7 +806,7 @@
 
     var stageShell = function (st, box) {
       var sh = [0, 0, 0, 0];
-      box.appendChild(el("p", "pl-q", st.name + " · 원자 번호 " + st.z + " · 전자 " + st.z + "개"));
+      box.appendChild(el("p", "pl-q", st.name + ", 원자 번호 " + st.z + ", 전자 " + st.z + "개"));
       var atom = el("div", "pl-atom"), ctl = el("div", "pl-shells"), left = el("p", "small muted pl-left");
       var legend = el("p", "pl-atom-key");
       [["#D9534F", "원자가 전자"], ["#231F20", "그 밖의 전자"]].forEach(function (k) {

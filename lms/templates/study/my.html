@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}내 공부 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}내 공부 | 정태혁 통합과학 lab{% endblock %}
 {% macro hm(m) %}{% if m >= 60 %}{{ m // 60 }}시간 {% endif %}{{ m % 60 }}분{% endmacro %}
 {% block content %}
 <header class="ed-head"><h1>내 공부</h1></header>
 
 <section class="my-card" aria-label="오늘 요약">
-  <div class="my-who"><b>{{ me.nickname or me.name }}</b><span>{{ me.class_name or '' }}{% if me.nickname and me.name %} · {{ me.name }}{% endif %}</span></div>
+  <div class="my-who"><b>{{ me.nickname or me.name }}</b><span>{{ me.class_name or '' }}{% if me.nickname and me.name %}<span class="sep" aria-hidden="true"></span>{{ me.name }}{% endif %}</span></div>
   <dl class="my-stats">
     <div><dt><span class="my-ico ico-time" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>오늘 공부 시간</dt>
       <dd>{{ '%02d:%02d'|format(m.sum.minutes // 60, m.sum.minutes % 60) }}</dd></div>
@@ -31,7 +31,7 @@
 </section>
 
 <section class="my-sec" aria-labelledby="h-day">
-  <div class="sec-head"><h2 id="h-day">일별 이용 시간</h2><span>최근 7일 · 분</span></div>
+  <div class="sec-head"><h2 id="h-day">일별 이용 시간</h2><span>최근 7일<span class="sep" aria-hidden="true"></span>분</span></div>
   {% set c = m.chart %}
   <svg class="day-chart" viewBox="0 0 {{ c.w }} {{ c.h }}" role="img" aria-label="최근 7일 공부 시간: {% for l in c.labels %}{{ l.t }} {{ l.m }}분{{ ', ' if not loop.last }}{% endfor %}">
     {% for t in c.ticks %}<line class="dc-grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"></line><text class="dc-tick" x="{{ c.left - 6 }}" y="{{ t.y + 4 }}">{{ t.v }}</text>{% endfor %}
@@ -51,7 +51,7 @@
     <form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="통과 Quiz 34개 TOPIC 진도를 모두 초기화하시겠습니까? 공부 시간 기록은 그대로 남습니다.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="all">
       <button class="btn small">전체 초기화</button></form></div>
-  <p class="small muted">통과 Quiz: TOPIC 진술 중 마지막에 맞힌 비율 · 영단어: Day 01~50 1000단어 중 외운 비율</p>
+  <p class="small muted">통과 Quiz: TOPIC 진술 중 마지막에 맞힌 비율<span class="sep" aria-hidden="true"></span>영단어: Day 01~50 1000단어 중 외운 비율</p>
   <table class="prog">
     <thead><tr><th>제목</th><th>진도율</th><th class="num">%</th><th><span class="sr">초기화</span></th></tr></thead>
     <tbody>

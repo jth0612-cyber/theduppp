@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}수능 영단어 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}수능 영단어 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head">
   <h1>수능 영단어</h1>
-  <p class="ed-lede">평가원 빈출 단어 · 하루 20개</p>
+  <p class="ed-lede">평가원 빈출 단어<span class="sep" aria-hidden="true"></span>하루 20개</p>
 </header>
 
 <div class="qz-voca">
   <a class="qz-today" href="{{ url_for('games.vocab_page') }}">
     <span class="qz-k">오늘의 20단어</span>
     <b>Day {{ v.today.day_no if v.today else v.days_done + 1 }}</b>
-    <span class="qz-s">{% if prog %}오늘 {{ prog.done }}/{{ prog.total }} 풀이 중 · 맞힘 {{ prog.score }}{% elif v.today and v.today.done_at %}오늘 {{ v.today.score }}/{{ v.today.total }}{% else %}카드 20장 · 20문제{% endif %}</span>
+    <span class="qz-s">{% if prog %}오늘 {{ prog.done }}/{{ prog.total }} 풀이 중<span class="sep" aria-hidden="true"></span>맞힘 {{ prog.score }}{% elif v.today and v.today.done_at %}오늘 {{ v.today.score }}/{{ v.today.total }}{% else %}카드 20장<span class="sep" aria-hidden="true"></span>20문제{% endif %}</span>
     <span class="qz-bar" aria-hidden="true">{% if prog %}{% set pp = prog.done * 20 // prog.total if prog.total else 0 %}{% elif v.today and v.today.done_at %}{% set pp = 20 %}{% else %}{% set pp = 0 %}{% endif %}<i class="qz-fill qz-p{{ pp }}"></i></span>
-    <span class="qz-s">누적 {{ v.seen }}단어 · {{ v.days_done }}일</span>
+    <span class="qz-s">누적 {{ v.seen }}단어<span class="sep" aria-hidden="true"></span>{{ v.days_done }}일</span>
   </a>
   <a class="qz-review{{ ' is-empty' if not v.review }}" href="{{ url_for('games.vocab_review') }}">
     <span class="qz-k">복습</span>
@@ -25,9 +25,9 @@
   <div class="sec-head"><h2 id="h-modes">게임</h2></div>
   <ul class="qz-modes">
     {% set m = best.get('vocab_match:') %}{% set sp = best.get('vocab_speed:') %}
-    <li><a href="{{ url_for('games.vocab_match') }}"><span class="qz-ico qi-match" aria-hidden="true"></span><b>짝 맞추기</b><span>단어–뜻 5쌍씩 4판</span>{% if m %}<em>최고 {{ m.top }}/20 · {{ m.plays }}판</em>{% endif %}</a></li>
+    <li><a href="{{ url_for('games.vocab_match') }}"><span class="qz-ico qi-match" aria-hidden="true"></span><b>짝 맞추기</b><span>단어–뜻 5쌍씩 4판</span>{% if m %}<em>최고 {{ m.top }}/20<span class="sep" aria-hidden="true"></span>{{ m.plays }}판</em>{% endif %}</a></li>
     <li><a href="{{ url_for('games.speed', kind='vocab_speed') }}"><span class="qz-ico qi-speed" aria-hidden="true"></span><b>스피드 O/X</b><span>60초, 맞으면 O 틀리면 X</span>{% if sp %}<em>최고 {{ sp.top }}개</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.vocab_page') }}#quiz"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>섞어 풀기</b><span>뜻 · 단어 · 듣기 · O/X · 철자</span></a></li>
+    <li><a href="{{ url_for('games.vocab_page') }}#quiz"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>섞어 풀기</b><span>뜻<span class="sep" aria-hidden="true"></span>단어<span class="sep" aria-hidden="true"></span>듣기<span class="sep" aria-hidden="true"></span>O/X<span class="sep" aria-hidden="true"></span>철자</span></a></li>
   </ul>
 </section>
 {% endblock %}

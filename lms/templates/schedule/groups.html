@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}수업 일정 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}수업 일정 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div><h1>수업 일정</h1><p class="muted small">진도를 같이 나가는 반을 그룹으로 묶습니다. 한 주차 = 토~금, 한 반은 그룹 하나</p></div>
@@ -36,11 +36,11 @@
       <div class="check-grid">
       {% for c in classes %}
         <label class="{{ 'muted' if c.group_id }}"><input type="checkbox" name="class_id" value="{{ c.id }}" {{ 'disabled' if c.group_id }}>
-          {{ c.name }} <span class="small muted">{{ c.track }} · {{ c.n }}명{% if not c.n_slot %} · 수업 시간 없음{% endif %}{% if c.group_id %} · {{ c.group_name }}{% endif %}</span></label>
+          {{ c.name }} <span class="small muted">{{ c.track }}<span class="sep" aria-hidden="true"></span>{{ c.n }}명{% if not c.n_slot %}<span class="sep" aria-hidden="true"></span>수업 시간 없음{% endif %}{% if c.group_id %}<span class="sep" aria-hidden="true"></span>{{ c.group_name }}{% endif %}</span></label>
       {% endfor %}
       </div>
     </fieldset>
-    <p class="small muted">반의 '수업 시간'(요일·교시·관·교실)마다 주차별 수업 칸이 생깁니다. 수업 시간은 반 화면의 '수업 시간' 탭에서 넣습니다.</p>
+    <p class="small muted">반의 '수업 시간'(요일, 교시, 관, 교실)마다 주차별 수업 칸이 생깁니다. 수업 시간은 반 화면의 '수업 시간' 탭에서 넣습니다.</p>
     <div><button class="btn primary">만들기</button></div>
   </form>
 </section>

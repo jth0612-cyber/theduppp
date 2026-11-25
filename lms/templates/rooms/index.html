@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}소도시 명상 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}소도시 명상 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
@@ -27,8 +27,8 @@
         <b>{{ p[0] }}</b>
         <span class="place-line">{{ p[1] }}</span>
         {% set k = kings[key] %}
-        <span class="place-king">{% if k %}<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>이번 주 터줏대감 <b>{{ k.nickname }}</b> · {{ k.m|hm }}{% else %}이번 주 터줏대감 자리가 비어 있어요{% endif %}</span>
-        <span class="place-now">{% if c and c.n %}<i class="dot-live" aria-hidden="true"></i>{{ c.n }}명 있음 · {{ c.focus or 0 }}명 집중 중{% else %}지금은 조용해요{% endif %}</span>
+        <span class="place-king">{% if k %}<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>이번 주 터줏대감 <b>{{ k.nickname }}</b><span class="sep" aria-hidden="true"></span>{{ k.m|hm }}{% else %}이번 주 터줏대감 자리가 비어 있어요{% endif %}</span>
+        <span class="place-now">{% if c and c.n %}<i class="dot-live" aria-hidden="true"></i>{{ c.n }}명 있음<span class="sep" aria-hidden="true"></span>{{ c.focus or 0 }}명 집중 중{% else %}지금은 조용해요{% endif %}</span>
       </span>
     </a>
   </li>

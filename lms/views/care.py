@@ -214,7 +214,7 @@ def t_lessons():
         from views.pwa import notify_users
         uids = [r["id"] for r in query("SELECT u.id FROM users u JOIN students s ON s.id = u.student_id WHERE s.class_id = ? AND s.active = 1", (cid,))]
         if uids:
-            notify_users(uids, "수업 기록", f"{title} · 노트 {len(photos)}장" if photos else title, url_for("care.s_lessons"))
+            notify_users(uids, "수업 기록", f"{title}, 노트 {len(photos)}장" if photos else title, url_for("care.s_lessons"))
         flash("수업 기록을 올렸습니다.", "ok")
         return redirect(url_for("care.t_lessons", c=cid))
     rows = query("""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files

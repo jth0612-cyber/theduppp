@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}과제 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}과제 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><h1>과제</h1>{% if rows %}<p class="muted small">안 낸 과제 {{ left }}개 · 조교 시스템 기록</p>{% endif %}</div>
+<div class="page-head"><h1>과제</h1>{% if rows %}<p class="muted small">안 낸 과제 {{ left }}개<span class="sep" aria-hidden="true"></span>조교 시스템 기록</p>{% endif %}</div>
 {% if not code %}{% include "sys/_link_box.html" %}
 {% elif not rows %}<div class="card"><p class="muted">아직 과제 기록이 없습니다.</p></div>
 {% else %}
 <div class="card"><ul class="task-list">
   {% for r in rows %}{% set ok = r.submit in ('O', 'o', '제출', '완료', '1') %}
-  <li><div class="task-main"><b>{{ r.book }}</b><span class="small muted">{{ r.day[5:]|replace('-', '.') }}까지{% if r.range %} · {{ r.range }}{% endif %}</span></div>
+  <li><div class="task-main"><b>{{ r.book }}</b><span class="small muted">{{ r.day[5:]|replace('-', '.') }}까지{% if r.range %}<span class="sep" aria-hidden="true"></span>{{ r.range }}{% endif %}</span></div>
     <div class="task-side">{% if ok %}<span class="badge answered">제출</span>{% if r.right is not none and r.total %}<span class="num small">{{ r.right|int }}/{{ r.total|int }}</span>{% endif %}{% else %}<span class="badge open">안 냄</span>{% endif %}</div></li>
   {% endfor %}
 </ul></div>

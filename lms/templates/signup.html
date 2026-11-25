@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}회원가입 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}회원가입 | 정태혁 통합과학 lab{% endblock %}
 {% block main_class %}auth-wrap{% endblock %}
 {% block content %}
 <div class="card">
   <h1>학생 회원가입</h1>
   {% if step == 'google' %}
   <ol class="signup-steps small" aria-label="가입 순서">
-    <li class="is-on"><b>1</b> Google 확인</li><li><b>2</b> 개인 코드·정보 입력</li><li><b>3</b> 바로 시작</li>
+    <li class="is-on"><b>1</b> Google 확인</li><li><b>2</b> 개인 코드와 정보 입력</li><li><b>3</b> 바로 시작</li>
   </ol>
   <p class="muted small">Google 계정으로 본인 확인 / 받는 정보: <b>이메일 주소</b>만</p>
   <a class="btn primary google-btn" href="{{ url_for('google.start', mode='signup') }}">Google 계정으로 시작하기</a>
@@ -23,13 +23,12 @@
 </div>
 {% else %}
   <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디입니다.' if track == '단과' else '원하는 아이디로 가입합니다.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
-  <p class="muted small">조교 선생님께 받은 <b>학생코드</b> (예: 271234). 한 번만 쓸 수 있습니다.</p>
   {% if gid %}
-  <p class="google-ok small">Google 계정 확인됨 · <b>{{ gid.email }}</b></p>
+  <p class="google-ok small">Google 계정 확인됨<span class="sep" aria-hidden="true"></span><b>{{ gid.email }}</b></p>
   {% endif %}
   {% set errors = errors or {} %}
   {% macro err(name) %}<p class="field-err" id="err-{{ name }}" data-err="{{ name }}"{{ '' if errors.get(name) else ' hidden' }}>{{ errors.get(name, '') }}</p>{% endmacro %}
-  {% macro bad(name) %}{% if errors.get(name) %} aria-invalid="true"{% endif %} aria-describedby="{{ 'hint-' ~ name ~ ' ' if name in ('student_no', 'password') else '' }}err-{{ name }}"{% endmacro %}
+  {% macro bad(name) %}{% if errors.get(name) %} aria-invalid="true"{% endif %} aria-describedby="{{ 'hint-' ~ name ~ ' ' if name == 'password' else '' }}err-{{ name }}"{% endmacro %}
   <form method="post" autocomplete="on" class="signup-form" data-signup novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="track" value="{{ track }}">
@@ -37,7 +36,7 @@
     <div class="field">
       <label for="code">학생코드</label>
       <input type="text" id="code" name="code" value="{{ form.code }}" required maxlength="40" autocomplete="off"
-             autocapitalize="characters" spellcheck="false" placeholder="예: 271234" inputmode="numeric"{{ bad('code') }}>
+             autocapitalize="characters" spellcheck="false" placeholder="조교에게 받은 코드, 한 번만 사용 (예: 271234)" inputmode="numeric"{{ bad('code') }}>
       {{ err('code') }}
       {% set oc = site_contact().openchat %}
       {% if oc and errors.get('code') %}<p class="small">착오라면 <a href="{{ oc }}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>으로 알려 주세요.</p>{% endif %}
@@ -49,23 +48,21 @@
     </div>
     <div class="field">
       {% if track == '단과' %}
-      <label for="student_no">카드 번호 <span class="small muted">(아이디)</span></label>
+      <label for="student_no">카드 번호</label>
       <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
-             inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="예: 0012345678" data-card{{ bad('student_no') }}>
-      <p class="field-hint" id="hint-student_no">출결 카드 번호 = 로그인 아이디</p>
+             inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="출결 카드 번호가 아이디 (예: 0012345678)" data-card{{ bad('student_no') }}>
       {% else %}
       <label for="student_no">아이디</label>
       <input type="text" id="student_no" name="student_no" value="{{ form.student_no }}" required maxlength="30" autocomplete="username"
-             autocapitalize="off" spellcheck="false"{{ bad('student_no') }}>
-      <p class="field-hint" id="hint-student_no">영문 및 숫자 3~30자 · 로그인할 때 사용</p>
+             autocapitalize="off" spellcheck="false" placeholder="영문과 숫자 3~30자"{{ bad('student_no') }}>
       {% endif %}
       {{ err('student_no') }}
     </div>
     <div class="field">
       <label for="password">비밀번호</label>
-      <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password"{{ bad('password') }}>
+      <input type="password" id="password" name="password" required minlength="10" autocomplete="new-password" placeholder="10자 이상, 영문, 숫자, 특수문자 중 2종류"{{ bad('password') }}>
       <div class="pw-meter" data-pw-meter hidden aria-hidden="true"><i></i><i></i><i></i></div>
-      <p class="field-hint" id="hint-password" data-pw-hint>10자 이상 · 영문·숫자·특수문자 중 2종류 이상</p>
+      <p class="field-hint" id="hint-password" data-pw-hint aria-live="polite"></p>
       {{ err('password') }}
     </div>
     <div class="field">
@@ -74,7 +71,7 @@
       {{ err('confirm') }}
     </div>
     <div class="guide small">
-      <b>개인정보 수집·이용 동의 (필수)</b>
+      <b>개인정보 수집 및 이용 동의 (필수)</b>
       <ul>
         <li>수집 항목: 이름, 아이디, {% if gid %}Google 계정 이메일, {% endif %}학습 기록(성적 및 질문 등)</li>
         <li>이용 목적: 수업 학습 관리, 질문 답변</li>

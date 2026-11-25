@@ -160,13 +160,13 @@ def signup():
         elif track == "단과" and not normalize_card(form["student_no"]):
             error, field = "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자입니다.", "student_no"
         elif track == "재종" and not _STUDENT_NO.match(form["student_no"]):
-            error, field = "아이디는 영문·숫자·- 로 3~30자입니다.", "student_no"
+            error, field = "아이디는 영문, 숫자, - 로 3~30자입니다.", "student_no"
         elif problem := password_problem(password):
             error, field = problem, "password"
         elif password != request.form.get("confirm", ""):
             error, field = "비밀번호가 서로 일치하지 않습니다.", "confirm"
         elif request.form.get("consent") != "1":
-            error, field = "개인정보 수집·이용에 동의해야 가입할 수 있습니다.", "consent"
+            error, field = "개인정보 수집 및 이용에 동의해야 가입할 수 있습니다.", "consent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
             error, field = ("이미 등록된 카드입니다. 카드를 잘못 받았다면 조교 선생님께 알려 주세요." if track == "단과"
                             else "이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요."), "student_no"

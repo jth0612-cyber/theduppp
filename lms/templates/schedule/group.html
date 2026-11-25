@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}{{ grp.name }} · 수업 일정{% endblock %}
+{% block title %}{{ grp.name }} | 수업 일정{% endblock %}
 {% macro hchips(hs) %}{% for h in hs %}<span class="badge {{ 'type' if h.extra is not defined or not h.extra else 'open' }}" title="{{ h.kind }}">{{ h.title }}</span> {% endfor %}{% endmacro %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p>
     <h1>{{ grp.name }} <span class="badge gray">{{ grp.track }}</span></h1>
-    <p class="muted small">반 {{ members|length }}개 · 재원생 {{ total }}명 · {{ weeks|length }}주 · 한 주차 = 토~금 (토요일반이 먼저)</p>
+    <p class="muted small">반 {{ members|length }}개<span class="sep" aria-hidden="true"></span>재원생 {{ total }}명<span class="sep" aria-hidden="true"></span>{{ weeks|length }}주<span class="sep" aria-hidden="true"></span>한 주차 = 토~금 (토요일반이 먼저)</p>
   </div>
   <details>
     <summary class="small">그룹 관리</summary>
@@ -25,7 +25,7 @@
         <div class="field"><label for="cp">다른 그룹 진도 가져오기 (주차 번호대로, 교재 더하기)</label><select id="cp" name="src">{% for x in groups %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}</select></div>
         <div class="field shrink"><button class="btn">가져오기</button></div></form>{% endif %}
       <form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}">{{ csrf() }}<input type="hidden" name="action" value="delete">
-        <button class="btn small danger" data-confirm="그룹을 지우면 주차·수업 칸·출석 기록이 모두 지워집니다. 반과 학생은 그대로입니다. 지우시겠습니까?">그룹 지우기</button></form>
+        <button class="btn small danger" data-confirm="그룹을 지우면 주차, 수업 칸, 출석 기록이 모두 지워집니다. 반과 학생은 그대로입니다. 지우시겠습니까?">그룹 지우기</button></form>
     </div>
   </details>
 </div>
@@ -36,7 +36,7 @@
     <tr><th>반</th><th>재원생</th><th>수업 시간</th><th></th></tr>
     {% for m in members %}
     <tr><td><a href="{{ url_for('teacher.class_detail', cid=m.id, tab='times') }}">{{ m.name }}</a></td><td class="num">{{ m.n }}명</td>
-      <td class="small">{% for t in slots if t.class_id == m.id %}{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}–{{ t.ends }}{% if t.hall or t.room %} · {{ t.hall }} {{ t.room }}{% endif %}{{ ' / ' if not loop.last }}{% else %}<span class="muted">수업 시간 없음 · 수업 칸이 생기지 않습니다</span>{% endfor %}</td>
+      <td class="small">{% for t in slots if t.class_id == m.id %}{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}–{{ t.ends }}{% if t.hall or t.room %}<span class="sep" aria-hidden="true"></span>{{ t.hall }} {{ t.room }}{% endif %}{{ ' / ' if not loop.last }}{% else %}<span class="muted">수업 시간 없음<span class="sep" aria-hidden="true"></span>수업 칸이 생기지 않습니다</span>{% endfor %}</td>
       <td class="num"><form method="post" action="{{ url_for('schedule.group_edit', gid=grp.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="remove_class"><input type="hidden" name="class_id" value="{{ m.id }}"><button class="btn small" data-confirm="이 반을 그룹에서 빼면 이 반의 수업 칸과 출석 기록이 지워집니다. 빼시겠습니까?">빼기</button></form></td></tr>
     {% endfor %}
   </table></div>
@@ -48,7 +48,7 @@
 </nav>
 
 {% if view == 'table' %}
-<p class="small muted">칸을 누르면 그 수업의 교재 넣기·빼기와 출석 (조교 시스템 출결은 자동으로 채움). 칸 숫자 = 출석/명단, 교재 <span class="badge open">주황</span> = 이 수업에만 더 넣은 교재</p>
+<p class="small muted">칸을 누르면 그 수업의 교재 넣고 빼기, 출석 (조교 시스템 출결은 자동으로 채움). 칸 숫자 = 출석/명단, 교재 <span class="badge open">주황</span> = 이 수업에만 더 넣은 교재</p>
 <div class="table-wrap sched-wrap"><table class="sched">
   <thead><tr><th class="sched-week">주차</th>
     {% for t in slots %}<th class="sched-col"><b>{{ t.class_name }}</b><br><span class="small">{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}</span>{% if t.hall or t.room %}<br><span class="small muted">{{ t.hall }} {{ t.room }}</span>{% endif %}</th>{% endfor %}
@@ -61,7 +61,7 @@
       {% if w.off %}<div><span class="badge gray">휴강 주</span></div>{% else %}
       <div class="small">{{ w.topic or '' }}</div>
       <div>{{ hchips(wh.get(w.id, [])) }}</div>
-      {% if w.review_round or w.mock_round %}<div class="small muted">{% if w.review_round %}복테 {{ w.review_round }}회{% endif %}{% if w.mock_round %} · 모의 {{ w.mock_round }}회{% endif %}</div>{% endif %}{% endif %}
+      {% if w.review_round or w.mock_round %}<div class="small muted">{% if w.review_round %}복테 {{ w.review_round }}회{% endif %}{% if w.mock_round %}<span class="sep" aria-hidden="true"></span>모의 {{ w.mock_round }}회{% endif %}</div>{% endif %}{% endif %}
       <details class="small"><summary>고치기</summary>
         <form method="post" action="{{ url_for('schedule.week_edit', wid=w.id) }}" class="stack week-form">{{ csrf() }}
           <div class="row"><div class="field"><label>시작</label><input type="date" name="starts" value="{{ w.starts }}"></div><div class="field"><label>끝</label><input type="date" name="ends" value="{{ w.ends }}"></div></div>
@@ -75,7 +75,7 @@
           <div class="field"><label>메모</label><input type="text" name="note" value="{{ w.note }}" maxlength="200"></div>
           <div class="row"><button class="btn primary small" name="action" value="save">저장</button>
             {% if w.off %}<button class="btn small" name="action" value="on" data-confirm="휴강을 풀면 뒤 주차 진도가 한 주씩 앞으로 당겨집니다.">휴강 풀기</button>
-            {% else %}<button class="btn small" name="action" value="off" data-confirm="이 주를 휴강 주로 바꾸면 이 주부터 진도·교재·회차가 한 주씩 뒤로 밀립니다.">휴강 주로 (진도 밀기)</button>{% endif %}</div>
+            {% else %}<button class="btn small" name="action" value="off" data-confirm="이 주를 휴강 주로 바꾸면 이 주부터 진도, 교재, 회차가 한 주씩 뒤로 밀립니다.">휴강 주로 (진도 밀기)</button>{% endif %}</div>
         </form>
       </details>
     </th>
@@ -94,7 +94,7 @@
   {% endfor %}
   </tbody>
 </table></div>
-<p class="small muted">배부 = 출석 체크한 칸은 출석(지각·조퇴 포함) 수, 아직 체크하지 않은 칸은 명단 수(예정)</p>
+<p class="small muted">배부 = 출석 체크한 칸은 출석(지각, 조퇴 포함) 수, 아직 체크하지 않은 칸은 명단 수(예정)</p>
 {% else %}
 <div class="table-wrap"><table class="sched-cal">
   <thead><tr><th>주차</th>{% for d in '토일월화수목금' %}<th>{{ d }}</th>{% endfor %}</tr></thead>

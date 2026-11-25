@@ -44,7 +44,7 @@
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
     ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), question_wait or 0),
     ('care.t_lessons', '수업 기록', 'folder', ep == 'care.t_lessons', 0),
-    ('books.teacher_books', '복테·모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
+    ('books.teacher_books', '복테/모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
     ('teacher.classes', '반', 'users', ep.startswith('teacher.class'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
@@ -97,7 +97,7 @@
 {%- if g.user.role in ('teacher', 'assistant') -%}
 {%- set items = [('teacher.dashboard', '홈', 'dash', ep == 'teacher.dashboard'),
                  ('teacher.questions', '질문', 'chat', ep.startswith('teacher.question')),
-                 ('books.teacher_books', '복테·모의', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms')),
+                 ('books.teacher_books', '복테/모의', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms')),
                  ('teacher.students', '학생', 'search', ep.startswith('teacher.student'))] -%}
 {%- else -%}
 {%- set items = [('student.home', '홈', 'home', ep == 'student.home'),

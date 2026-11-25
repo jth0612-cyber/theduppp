@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}{{ mock.book_title }} {{ mock.round_no }}회 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ mock.book_title }} {{ mock.round_no }}회 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 복테·모의고사</a></p>
+<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 복테/모의고사</a></p>
 {% if m.is_practice %}<p class="aside-note"><span>연습</span>실장 TEST반 전용 연습 회차입니다. 실제 학생 화면 및 통계에는 나가지 않습니다.</p>{% endif %}
 <div class="page-head">
-  <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %} · {{ mock.title }}{% endif %}</h1>
-    <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항 · {{ fmt(m.full_score) }}점 · 응시 {{ cs.all.n }}명{% if cs.all.avg is not none %} · 평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %} · {{ m.exam_date }}{% endif %}{% else %}결과 없음 · 엑셀을 올리면 문항 수·정답·배점이 정해집니다{% endif %}</p></div>
+  <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %}<span class="sep" aria-hidden="true"></span>{{ mock.title }}{% endif %}</h1>
+    <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항<span class="sep" aria-hidden="true"></span>{{ fmt(m.full_score) }}점<span class="sep" aria-hidden="true"></span>응시 {{ cs.all.n }}명{% if cs.all.avg is not none %}<span class="sep" aria-hidden="true"></span>평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %}<span class="sep" aria-hidden="true"></span>{{ m.exam_date }}{% endif %}{% else %}결과 없음<span class="sep" aria-hidden="true"></span>엑셀을 올리면 문항 수, 정답, 배점이 정해집니다{% endif %}</p></div>
   {% if m.n_items %}<a class="btn primary" href="{{ url_for('books.mock_sms', mid=mock.id) }}">학부모 문자</a>{% endif %}
 </div>
 
 <form method="post" action="{{ url_for('books.mock_review', mid=mock.id) }}" class="card review-form" id="eval">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <h2>시험 분석 <span class="small muted">학생 화면 맨 위에 난이도·주요 문항이 보이고, 총평·영상은 접혀 있습니다{% if mock.review_at and mock.review_by %} · {{ mock.review_by }} {{ mock.review_at[5:16] }}{% endif %}</span></h2>
+  <h2>시험 분석 <span class="small muted">학생 화면 맨 위에 난이도와 주요 문항이 보이고, 총평과 영상은 접혀 있습니다{% if mock.review_at and mock.review_by %}<span class="sep" aria-hidden="true"></span>{{ mock.review_by }} {{ mock.review_at[5:16] }}{% endif %}</span></h2>
   <div class="row">
     <div class="field"><label for="ev-level">난이도</label><select id="ev-level" name="level"><option value="">-</option>{% for k, v in levels.items() %}<option value="{{ k }}" {{ 'selected' if mock.eval_level == k }}>{{ v }}</option>{% endfor %}</select></div>
     <input type="hidden" name="time" value="{{ mock.eval_time }}">
@@ -19,13 +19,13 @@
   </div>
   <div class="field"><label for="mk-review">총평</label>
     <textarea id="mk-review" name="review" rows="5" maxlength="4000" placeholder="출제 범위, 체감 난이도, 시간 배분, 다음 회차까지 볼 것">{{ mock.review }}</textarea></div>
-  <div class="field"><label for="ev-video">해설·총평 영상 <span class="muted">(유튜브 주소, 선택)</span></label><input type="text" id="ev-video" name="video" value="{{ mock.eval_video }}" placeholder="https://youtu.be/..."></div>
+  <div class="field"><label for="ev-video">해설 영상 <span class="muted">(유튜브 주소, 선택)</span></label><input type="text" id="ev-video" name="video" value="{{ mock.eval_video }}" placeholder="https://youtu.be/..."></div>
   <button class="btn primary small">저장</button>
 </form>
 
 {% if config.ITEMS_ENABLED %}
 <section class="card" id="items" aria-labelledby="h-items">
-  <h2 id="h-items">문항 그림 <span class="small muted">{{ item_nos|length }}{% if m.n_items %}/{{ m.n_items }}{% endif %}장 · 학생은 시험 분석에서 번호를 눌러 보고, 그 위에 필기해서 질문합니다 (학생 아이디·날짜 워터마크)</span></h2>
+  <h2 id="h-items">문항 그림 <span class="small muted">{{ item_nos|length }}{% if m.n_items %}/{{ m.n_items }}{% endif %}장<span class="sep" aria-hidden="true"></span>학생은 시험 분석에서 번호를 눌러 보고, 그 위에 필기해서 질문합니다 (학생 아이디와 날짜 워터마크)</span></h2>
   <p class="small muted">파일 이름의 숫자가 문항 번호입니다 (07.png → 7번). 시험지 PDF는 PC에서 <code>python tools/split_items.py 시험지.pdf 폴더</code>로 문항별로 자릅니다. 같은 번호를 다시 올리면 바뀝니다.</p>
   <form method="post" action="{{ url_for('items.upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -39,7 +39,7 @@
 
 <section class="card" id="omr" aria-labelledby="h-omr">
   <h2 id="h-omr">채점기 엑셀(OMR) 올리기</h2>
-  <p class="small muted">이름·수험번호(학부모 번호 뒤 8자리)·1~N번 답안 칸을 알아서 찾습니다. '정답'·'배점' 줄, 둘째 시트 '문항정보'를 함께 읽습니다. 같은 학생은 새로 올린 내용으로 바뀝니다.</p>
+  <p class="small muted">이름, 수험번호(학부모 번호 뒤 8자리), 1~N번 답안 칸을 알아서 찾습니다. '정답', '배점' 줄, 둘째 시트 '문항정보'를 함께 읽습니다. 같은 학생은 새로 올린 내용으로 바뀝니다.</p>
   <form method="post" action="{{ url_for('books.omr_upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="file" name="file" accept=".xlsx,.csv" required>
@@ -47,13 +47,13 @@
   </form>
   <form method="get" action="{{ url_for('books.omr_template', mid=mock.id) }}" class="row mt">
     {% if not m.n_items %}<label class="small" for="tn">문항 수</label><input type="number" id="tn" name="n" min="1" max="60" value="{{ 20 if m.kind == '복습 테스트' else 25 }}" class="w-num">{% endif %}
-    <button class="btn">빈 양식 받기</button><span class="small muted">재원생 명단 · 정답·배점 줄 · 문항정보 시트 포함</span>
+    <button class="btn">빈 양식 받기</button><span class="small muted">재원생 명단<span class="sep" aria-hidden="true"></span>정답과 배점 줄<span class="sep" aria-hidden="true"></span>문항정보 시트 포함</span>
   </form>
   {% if m.is_practice %}<p class="mt"><a class="btn" href="{{ url_for('books.practice_file', mid=mock.id) }}">연습용 예시 엑셀 받기</a>
-    <span class="small muted">실장 TEST반 가상 학생 50명의 답안 · 정답 · 문항정보가 들어 있습니다.</span></p>{% endif %}
+    <span class="small muted">실장 TEST반 가상 학생 50명의 답안<span class="sep" aria-hidden="true"></span>정답<span class="sep" aria-hidden="true"></span>문항정보가 들어 있습니다.</span></p>{% endif %}
   {% if up %}
   <div class="omr-log mt">
-    <p class="small"><b>마지막 반영</b> {{ up.created_at[5:16] }} · {{ up.display_name or ('정태혁 선생님' if up.role == 'teacher' else up.username) }} · {{ up.filename }}</p>
+    <p class="small"><b>마지막 반영</b> {{ up.created_at[5:16] }}<span class="sep" aria-hidden="true"></span>{{ up.display_name or ('정태혁 선생님' if up.role == 'teacher' else up.username) }}<span class="sep" aria-hidden="true"></span>{{ up.filename }}</p>
     {% for line in up.summary.split('\n') %}<p class="small {{ 'muted' if loop.first else 'omr-warn' }}">{{ line }}</p>{% endfor %}
     {% set bad = up_rows|rejectattr('state', 'equalto', 'ok')|list %}
     {% if bad %}<details{{ ' open' if bad|selectattr('state', 'equalto', 'error')|list }}><summary class="small">확인할 줄 {{ bad|length }}개</summary>
@@ -73,9 +73,9 @@
 </section>
 
 <details class="card" id="items">
-  <summary><b>문항정보</b> <span class="small muted">정답 · 배점 · 단원 · 형식 (엑셀 '문항정보' 시트로 바꿉니다)</span></summary>
+  <summary><b>문항정보</b> <span class="small muted">정답<span class="sep" aria-hidden="true"></span>배점<span class="sep" aria-hidden="true"></span>단원<span class="sep" aria-hidden="true"></span>형식 (엑셀 '문항정보' 시트로 바꿉니다)</span></summary>
   <div class="table-wrap mt"><table class="small">
-    <thead><tr><th class="num">번</th><th>정답</th><th class="num">배점</th><th>단원</th><th>핵심개념</th><th>형식</th><th>보기함정·선지분석</th></tr></thead>
+    <thead><tr><th class="num">번</th><th>정답</th><th class="num">배점</th><th>단원</th><th>핵심개념</th><th>형식</th><th>보기 함정/선지 분석</th></tr></thead>
     <tbody>{% for i in range(1, m.n_items + 1) %}{% set d = m.info.get(i, {}) %}<tr><td class="num">{{ i }}</td><td>{{ key_label(m.key[i - 1]) or '-' }}</td><td class="num">{{ fmt(m.pts[i - 1]) }}</td>
       <td>{{ d.unit or '' }}</td><td>{{ d.concept or '' }}</td><td>{{ d.format or '' }}</td><td class="muted">{{ (d.traps or d.distractors or '')[:60] }}</td></tr>{% endfor %}</tbody>
   </table></div>
@@ -84,12 +84,12 @@
 {% include "_analysis_stats.html" %}
 
 <section class="card" aria-labelledby="h-res">
-  <details><summary><h2 id="h-res" class="inline">학생 결과 <span class="small muted">{{ entries|length }}명 · 눌러서 펼치기</span></h2></summary>
+  <details><summary><h2 id="h-res" class="inline">학생 결과 <span class="small muted">{{ entries|length }}명<span class="sep" aria-hidden="true"></span>눌러서 펼치기</span></h2></summary>
   <div class="table-wrap"><table>
     <thead><tr><th>학생</th><th>반</th><th class="num">점수</th><th class="num">오답</th><th>답안</th></tr></thead>
     <tbody>{% for e in entries %}<tr><td>{{ e.name }} <span class="small muted">{{ e.student_no }}</span>{% if e.note %} <span class="badge open" title="{{ e.note }}">확인</span>{% endif %}</td><td class="muted">{{ e.cls }}</td>
       <td class="num">{{ fmt(e.score) }}</td><td class="num">{{ e.wrong }}</td>
-      <td class="answer-key small">{% for ch in e.answers %}{{ '·' if ch == '0' else ('○' if ch == 'R' else ch) }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
+      <td class="answer-key small">{% for ch in e.answers %}{{ '-' if ch == '0' else ('○' if ch == 'R' else ch) }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
   </table></div>
   <form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 삭제하시겠습니까?">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 지우기</button></form>

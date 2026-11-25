@@ -1045,7 +1045,7 @@ function render() {
   $("[data-timer]").hidden = state !== "focus";
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
-  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 이동 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 착석` : `바닥을 누르면 이동 · 끌어서 둘러보기 · ${josa(P.seatNoun, "을", "를")} 누르면 착석 · 스페이스는 점프`)
+  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 이동, 끌어서 둘러보기, ${josa(P.seatNoun, "을", "를")} 누르면 착석` : `바닥을 누르면 이동, 끌어서 둘러보기, ${josa(P.seatNoun, "을", "를")} 누르면 착석, 스페이스는 점프`)
     : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록됩니다";
 }
 actionsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act); });
@@ -1089,7 +1089,7 @@ function act(id, obj) {
     x.drawImage(src, 0, 0);
     const pad = Math.round(H * 0.035), fs = Math.max(14, Math.round(H * 0.03));
     const now = new Date(), p2 = (n) => String(n).padStart(2, "0");
-    const label = `${$(".w3-place b") ? $(".w3-place b").textContent : "소도시 명상"} · ${now.getFullYear()}.${p2(now.getMonth() + 1)}.${p2(now.getDate())}`;
+    const label = `${$(".w3-place b") ? $(".w3-place b").textContent : "소도시 명상"}, ${now.getFullYear()}.${p2(now.getMonth() + 1)}.${p2(now.getDate())}`;
     x.font = `600 ${fs}px 'Noto Sans KR', sans-serif`; x.textBaseline = "bottom";
     x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = fs * 0.6; x.fillStyle = "rgba(255,255,255,.95)";
     x.fillText(label, pad, H - pad); x.textAlign = "right"; x.font = `500 ${Math.round(fs * 0.8)}px 'Noto Sans KR', sans-serif`; x.fillText("정태혁 통합과학 lab", W - pad, H - pad);
@@ -1246,7 +1246,7 @@ function drawList(ms) {
     b.append(m.nick + (m.me ? " (나)" : ""));
     if (m.king) { const k = document.createElement("small"); k.className = "here-tag is-king"; k.textContent = "터줏대감"; b.append(" ", k); }
     const s = document.createElement("span");
-    s.textContent = (m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중") + ` · 오늘 ${m.today}분`;
+    s.textContent = (m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중") + `, 오늘 ${m.today}분`;
     li.append(seat, b, s); listEl.appendChild(li);
   });
 }

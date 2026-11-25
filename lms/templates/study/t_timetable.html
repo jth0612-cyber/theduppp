@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}주요 일정 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}주요 일정 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div><h1>주요 일정</h1><p class="muted small">학생 시간표에 표시</p></div>
@@ -12,7 +12,7 @@
     <div class="field"><label for="exam_label">이름</label><input type="text" id="exam_label" name="exam_label" maxlength="20" value="{{ exam_label }}"></div>
     <div class="field"><label for="exam_day">날짜</label><input type="date" id="exam_day" name="exam_day" value="{{ dday.day if dday else '' }}" required></div>
     <div class="field shrink"><button class="btn primary">저장</button></div></form>
-  {% if dday %}<p class="small muted">지금 {% if dday.left >= 0 %}D-{{ dday.left }}{% else %}D+{{ -dday.left }}{% endif %} · 모든 반 학생에게 표시</p>{% endif %}
+  {% if dday %}<p class="small muted">지금 {% if dday.left >= 0 %}D-{{ dday.left }}{% else %}D+{{ -dday.left }}{% endif %}<span class="sep" aria-hidden="true"></span>모든 반 학생에게 표시</p>{% endif %}
 </section>
 
 <section class="card">

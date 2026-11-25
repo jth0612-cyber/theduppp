@@ -828,7 +828,7 @@ def staff():
             flash(str(e), "error")
             return redirect(url_for("teacher.staff"))
         if not _USERNAME.match(username):
-            flash("아이디는 영문·숫자·_ . - 로 3~30자입니다. (예: ta_kim)", "error")
+            flash("아이디는 영문, 숫자, _ . - 로 3~30자입니다. (예: ta_kim)", "error")
         elif query("SELECT 1 FROM users WHERE username = ?", (username,), one=True) or                 query("SELECT 1 FROM students WHERE student_no = ?", (username,), one=True):
             flash("이미 쓰이고 있는 아이디입니다. (학생 아이디와도 겹치면 안 됩니다)", "error")
         else:

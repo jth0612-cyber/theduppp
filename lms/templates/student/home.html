@@ -3,7 +3,7 @@
 {% block content %}
 <header class="ed-head home-head">
   <div>
-    <p class="kicker">{{ me.class_name }} · 닉네임 {{ g.user.nickname }}</p>
+    <p class="kicker">{{ me.class_name }}<span class="sep" aria-hidden="true"></span>닉네임 {{ g.user.nickname }}</p>
     <h1>{{ me.name }}님</h1>
   </div>
   <div class="home-actions">
@@ -42,6 +42,6 @@
   </section>
 </div>
 
-{% if cast %}<a class="home-shop home-cast" href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><b>태혁쌤의 cast</b><span>{{ cast.title }} · {{ cast.created_at[5:10] }}</span><span aria-hidden="true">→</span></a>{% endif %}
-<a class="home-shop" href="{{ url_for('books.shop') }}"><b>교재 구매</b><span>LINE UP · FRAMING · Squeeze · SWEEP</span><span aria-hidden="true">→</span></a>
+{% if cast %}<a class="home-shop home-cast" href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><b>태혁쌤의 cast</b><span>{{ cast.title }}<span class="sep" aria-hidden="true"></span>{{ cast.created_at[5:10] }}</span><span aria-hidden="true">→</span></a>{% endif %}
+<a class="home-shop" href="{{ url_for('books.shop') }}"><b>교재 구매</b><span>LINE UP<span class="sep" aria-hidden="true"></span>FRAMING<span class="sep" aria-hidden="true"></span>Squeeze<span class="sep" aria-hidden="true"></span>SWEEP</span><span aria-hidden="true">→</span></a>
 {% endblock %}

@@ -20,7 +20,7 @@ def renotify_due():
                           WHERE s.class_id = ? AND s.active = 1 AND u.disabled = 0
                           AND u.id NOT IN (SELECT user_id FROM notice_reads WHERE notice_id = ?)""", (n["class_id"], n["id"]))
         if unread:
-            notify_users([r["id"] for r in unread], "다시 알림 · " + n["title"], n["body"], f"/s/notices/{n['id']}")
+            notify_users([r["id"] for r in unread], "다시 알림: " + n["title"], n["body"], f"/s/notices/{n['id']}")
         execute("UPDATE notices SET renotified_at = datetime('now', 'localtime') WHERE id = ?", (n["id"],))
     return len(rows)
 

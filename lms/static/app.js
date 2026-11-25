@@ -1,4 +1,14 @@
 // CSP 때문에 인라인 스크립트 대신 이 파일만 사용한다.
+// 사진 칸(.drop): 고른 장수를 칸 안 제목에 보여 준다
+document.addEventListener("change", function (e) {
+  var inp = e.target;
+  if (!inp.classList || !inp.classList.contains("drop-input")) return;
+  var b = inp.parentNode.querySelector('label.drop[for="' + inp.id + '"] b');
+  if (!b) return;
+  if (!b.hasAttribute("data-base")) b.setAttribute("data-base", b.textContent);
+  var n = inp.files ? inp.files.length : 0;
+  b.textContent = n ? "사진 " + n + "장 (다시 누르면 바꾸기)" : b.getAttribute("data-base");
+});
 // 확인 시트: window.confirm 대신 아래에서 올라오는 시트. ok() 는 '확인'을 눌렀을 때만 부른다.
 function askSheet(msg, ok, danger) {
   var d = document.createElement("dialog");
@@ -73,7 +83,7 @@ function postForm(form) {
 // ---------- 오답 노트: 이유·복습 체크는 바로 저장 ----------
 document.addEventListener("change", function (e) {
   var form = e.target.closest("form[data-autosave]");
-  if (!form || e.target.name === "memo") return;
+  if (!form) return;                                  // 메모는 칸을 벗어날 때(change) 저장
   postForm(form).then(function () {
     var li = form.closest("li");
     var rv = form.querySelector('input[name="reviewed"]');
@@ -82,11 +92,10 @@ document.addEventListener("change", function (e) {
   }).catch(function () {});
 });
 function flashSaved(form) {
-  var b = form.querySelector('button[type="submit"]');
-  if (!b) return;
-  var old = b.textContent; b.textContent = "저장됨";
-  setTimeout(function () { b.textContent = old; }, 1200);
+  var li = form.closest("li"); if (!li) return;          // 바로 저장되므로 저장 버튼 대신 줄이 잠깐 밝아진다
+  li.classList.remove("is-saved"); void li.offsetWidth; li.classList.add("is-saved");
 }
+document.querySelectorAll("form[data-autosave] .w-save").forEach(function (b) { b.hidden = true; });
 
 // ---------- 개념 카드: 뒤집기, 표시 후 다음 카드 ----------
 document.addEventListener("click", function (e) {
@@ -305,10 +314,13 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       var v = qv();
       if (v !== "학습질문") showErr("");
       var t = document.getElementById("q-title");      // 유형에 맞는 제목 예시
-      if (t) t.placeholder = { "행정문의": "예) 교재 환불 · FRAMING 해설편 2권", "학습상담": "예) 평일 공부 계획 상담" }[v] || "[교재-페이지-번호] 예) 개념서 42p 3번";
-      var th = f.querySelector("[data-title-hint]"); if (th) th.hidden = !!v && v !== "학습질문";
-      var h = f.querySelector("[data-qtype-hint]");   // 고른 유형의 규칙 한 줄
-      if (h) { try { h.textContent = JSON.parse(h.getAttribute("data-hints"))[v] || ""; } catch (err) {} }
+      if (t) t.placeholder = { "행정문의": "예) 교재 환불, FRAMING 해설편 2권", "학습상담": "예) 평일 공부 계획 상담" }[v] || "[교재-페이지-번호] 예) 개념서 42p 3번";
+      try {                                              // 유형의 규칙은 내용 칸·사진 칸 안 글로
+        var b = document.getElementById("q-body"), bp = JSON.parse(b.getAttribute("data-ph"));
+        b.placeholder = bp[v] || bp[""];
+        var pn = f.querySelector("[data-photo-need]"), pp = JSON.parse(pn.getAttribute("data-ph"));
+        pn.textContent = pp[v] || "PNG, JPG 3장까지, 한 장 20MB 이하";
+      } catch (err) {}
       var fs = f.querySelector(".qtype-pick"); if (fs) fs.classList.remove("has-err");
     });
     f.addEventListener("submit", function (e) {
@@ -439,3 +451,9 @@ document.addEventListener("click", function (e) {
     requestAnimationFrame(step);
   });
 })();
+
+// 고르면 바로 이동하는 폼(data-autosubmit): 보기·이동 버튼은 숨긴다 (토스 글: 하나만 고르는 화면은 확인 버튼 없이)
+document.querySelectorAll("form[data-autosubmit]").forEach(function (f) {
+  f.querySelectorAll(".js-hide").forEach(function (b) { b.hidden = true; });
+  f.addEventListener("change", function (e) { if (e.target.tagName === "SELECT") f.submit(); });
+});

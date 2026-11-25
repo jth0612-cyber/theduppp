@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}교재·모의고사 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}교재/모의고사 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>복테·모의고사</h1><p class="muted small">회차를 눌러 채점기 엑셀을 올리면 학생 화면과 학부모 문자에 바로 반영됩니다.</p></div>
+  <div><h1>복테/모의고사</h1><p class="muted small">회차를 눌러 채점기 엑셀을 올리면 학생 화면과 학부모 문자에 바로 반영됩니다.</p></div>
 </div>
 {% for k in kinds %}{% if rounds.get(k) %}
 <section class="card round-grid-card" aria-labelledby="h-{{ loop.index }}">
-  <h2 id="h-{{ loop.index }}">{{ k }} <span class="small muted">1~{{ rounds[k]|length }}회 · 결과 있음 {{ rounds[k]|selectattr('n')|list|length }}회</span></h2>
+  <h2 id="h-{{ loop.index }}">{{ k }} <span class="small muted">1~{{ rounds[k]|length }}회<span class="sep" aria-hidden="true"></span>결과 있음 {{ rounds[k]|selectattr('n')|list|length }}회</span></h2>
   <ol class="round-grid">
     {% for r in rounds[k] %}<li><a href="{{ url_for('books.teacher_mock', mid=r.id) }}" class="{{ 'has' if r.n }}"><b>{{ r.round_no }}</b><span>{% if r.n %}{{ r.n }}명{% else %}–{% endif %}</span></a></li>{% endfor %}
   </ol>
@@ -55,7 +55,7 @@
     <div class="row">
       <div class="field"><label for="kind">종류</label><select id="kind" name="kind"><option>복습 테스트</option><option selected>모의고사</option></select></div>
       <div class="field wide"><label for="title">교재 이름</label><input type="text" id="title" name="title" required maxlength="100" placeholder="예: 2027 통합과학 파이널 모의고사"></div>
-      <div class="field"><label for="subject">과목·표지 글자</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
+      <div class="field"><label for="subject">과목(표지 글자)</label><input type="text" id="subject" name="subject" maxlength="40" placeholder="예: 통합과학"></div>
       <div class="field"><label for="expires_on">이용 기간 (마지막 날)</label><input type="date" id="expires_on" name="expires_on" required></div>
     </div>
     <div class="field"><label for="notice">학생 화면 알림 문구 (선택)</label><input type="text" id="notice" name="notice" maxlength="300" placeholder="예: 12월 31일까지 열람할 수 있습니다."></div>

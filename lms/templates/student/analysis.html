@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% from "_macros.html" import kind_tabs %}
-{% block title %}시험 분석 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}시험 분석 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if not mock %}
 <header class="ed-head">
   <h1>시험 분석</h1>
-  <p class="ed-lede">복습 테스트 및 모의고사가 끝나면 OMR 채점 결과가 여기에 올라옵니다.</p>
 </header>
 <section class="quiet-box"><p>아직 올라온 결과가 없습니다.</p></section>
 {% else %}
@@ -13,13 +12,13 @@
   <div>
     <h1>시험 분석</h1>
     {{ kind_tabs(mock.kind, 'books.analysis_home', kind_counts) }}
-    <p class="ed-lede">{{ mock.kind }} · {{ mock.book_title }} {{ mock.round_no }}회{% if mock.title %} {{ mock.title }}{% endif %}{% if mock.n_items %} · {{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if why_open %} · <b>{{ why_open }}</b>{% endif %}</p>
+    {% if mock.n_items or why_open %}<p class="ed-lede">{% if mock.n_items %}{{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if mock.n_items and why_open %}<span class="sep" aria-hidden="true"></span>{% endif %}{% if why_open %}<b>{{ why_open }}</b>{% endif %}</p>{% endif %}
   </div>
   <form method="get" class="pick" data-autosubmit>
-    <label for="mock">다른 회차 보기</label>
+    <label for="mock" class="sr-only">회차</label>
     <div class="pick-row">
       <select id="mock" name="mock">
-        {% for m in mocks if m.kind == mock.kind %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' · 미응시' if m.uploaded else ' · 평가만') }}</option>{% endfor %}
+        {% for m in mocks if m.kind == mock.kind %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' (미응시)' if m.uploaded else ' (평가만)') }}</option>{% endfor %}
       </select>
       <button class="btn small js-hide" type="submit">이동</button>
     </div>
@@ -35,7 +34,7 @@
   </dl>
   {% endif %}
   {% if mock.review or ev.yt %}
-  <details class="ev-more"><summary>{{ '총평' if mock.review }}{{ ' · ' if mock.review and ev.yt }}{{ '해설 영상' if ev.yt }}</summary>
+  <details class="ev-more"><summary>{{ '총평' if mock.review }}{{ ', ' if mock.review and ev.yt }}{{ '해설 영상' if ev.yt }}</summary>
     {% if mock.review %}<div class="pre">{{ mock.review }}</div>{% endif %}
     {% if ev.yt %}<div class="cast-video mt"><iframe src="https://www.youtube-nocookie.com/embed/{{ ev.yt }}" title="{{ mock.book_title }} {{ mock.round_no }}회 해설 영상" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>{% endif %}
   </details>
@@ -48,7 +47,7 @@
 <div class="sheet-grid">
   <section class="omr is-view" aria-labelledby="h-omr">
     <div class="sec-head"><h2 id="h-omr">내 답안</h2></div>
-    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 <span class="omr-legend-pt">빨간 번호 = 틀린 문항 · 번호 밑 숫자 = 배점 (2점이 아닌 문항){% if item_nos %} · 번호를 누르면 문항{% endif %}</span></p>
+    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 <span class="omr-legend-pt">빨간 번호 틀림<span class="sep" aria-hidden="true"></span>번호 밑 숫자 배점{% if item_nos %}<span class="sep" aria-hidden="true"></span>번호를 누르면 문항{% endif %}</span></p>
     <div class="omr-cols">
       {% for i in range(1, mock.n_items + 1) %}{% set mine = marks[i - 1] %}
       <div class="omr-row{{ ' is-wrong' if i in my_wrong }}" role="group" aria-label="{{ i }}번 {{ fmt(points[i - 1]) }}점, 내 답 {{ mine if mine != '0' else '무응답' }}, 정답 {{ key[i - 1] }}{{ ', 오답' if i in my_wrong }}">
@@ -72,9 +71,9 @@
       </div>
     </div>
     <dl class="report-lines">
-      {% if rep %}<div><dt>{{ rep.cls }} 평균</dt><dd>{{ fmt(rep.st.avg) }}점 · 응시 {{ rep.st.n }}명</dd></div>{% endif %}
+      {% if rep %}<div><dt>{{ rep.cls }} 평균</dt><dd>{{ fmt(rep.st.avg) }}점<span class="sep" aria-hidden="true"></span>응시 {{ rep.st.n }}명</dd></div>{% endif %}
       <div><dt>채점 결과</dt><dd>{% if my_wrong %}{{ my_wrong|length }}문항 오답{% else %}모두 정답{% endif %}</dd></div>
-      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>
+      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %}<span class="sep" aria-hidden="true"></span>{% endif %}{% endfor %}</dd></div>
       <div><dt>놓친 점수</dt><dd>{{ fmt(lost) }}점</dd></div>{% endif %}{% if not stats.cuts %}<div><dt>예상 등급</dt><dd>응시 {{ min_for_cuts }}명부터 표시</dd></div>{% endif %}
       <div><dt>함께 응시</dt><dd>{{ stats.n }}명</dd></div>
     </dl>
@@ -88,16 +87,16 @@
   <ol class="hw-steps" aria-label="진행 상태">
     <li class="{{ 'on' if paper }}"><b>시험지 제출</b><span>{{ paper.submitted_at[5:16] if paper else '-' }}</span></li>
     <li class="{{ 'on' if paper }}{{ ' now' if paper and paper.status != 'done' }}"><b>선생님 검사</b><span>{% if paper and paper.status != 'done' %}검사 중{% elif paper %}완료{% else %}-{% endif %}</span></li>
-    <li class="{{ 'on' if paper and paper.status == 'done' }}"><b>문항별 첨삭</b><span>{% if paper and paper.status == 'done' %}{{ paper.reviewed_at[5:16] }} · {{ paper.reviewer }}{% else %}-{% endif %}</span></li>
+    <li class="{{ 'on' if paper and paper.status == 'done' }}"><b>문항별 첨삭</b><span>{% if paper and paper.status == 'done' %}{{ paper.reviewed_at[5:16] }}<span class="sep" aria-hidden="true"></span>{{ paper.reviewer }}{% else %}-{% endif %}</span></li>
   </ol>
   {% if paper and paper.status == 'done' and paper.comment %}<section class="mock-review"><h2>선생님 코멘트 <span>{{ paper.reviewer }}</span></h2><div class="pre">{{ paper.comment }}</div></section>{% endif %}
   {% if paper_files %}<div class="q-photos">{% for fid in paper_files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="내 시험지 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
   {% if not paper or paper.status != 'done' %}
   <form method="post" action="{{ url_for('care.s_paper', mid=mock.id) }}" enctype="multipart/form-data" class="card mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="field"><label for="pp-image">시험지 사진 <span class="muted">(PNG·JPG, 6장까지{% if paper %} · 다시 올리면 이전 사진은 지워집니다{% endif %})</span></label>
-      <input type="file" id="pp-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required></div>
-    <div class="field"><label for="pp-note">조교에게 한 줄 <span class="muted">(선택)</span></label><input type="text" id="pp-note" name="note" maxlength="1000" value="{{ paper.note if paper else '' }}"></div>
+    <div class="field"><input type="file" id="pp-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="drop-input">
+      <label for="pp-image" class="drop"><b>시험지 사진 올리기</b><span>PNG, JPG 6장까지{% if paper %}<span class="sep" aria-hidden="true"></span>다시 올리면 이전 사진은 지워집니다{% endif %}</span></label></div>
+    <div class="field"><label for="pp-note">조교에게 한 줄</label><input type="text" id="pp-note" name="note" maxlength="1000" placeholder="선택" value="{{ paper.note if paper else '' }}"></div>
     <button class="btn primary">{{ '다시 올리기' if paper else '시험지 올리기' }}</button>
   </form>
   {% endif %}
@@ -108,17 +107,15 @@
 <section class="wa-sec" aria-labelledby="h-wa">
   <div class="sec-head"><h2 id="h-wa">오답 분석</h2><span>{% if rep.enough %}{{ rep.cls }} 기준{% else %}반 응시 {{ rep.st.n }}명이라 반 오답률은 표시하지 않음{% endif %}</span></div>
   {% if prof and prof.type != '판단 보류' %}
-  <div class="learn-card"><h2>누적 학습 유형 · {{ prof.type }}</h2><p class="muted">{{ prof.basis }} (문항정보로 자동 분류)</p><p>{{ prof.coach }}</p></div>
+  <div class="learn-card"><h2>누적 학습 유형<span class="sep" aria-hidden="true"></span>{{ prof.type }}</h2><p class="muted">{{ prof.basis }}</p></div>
   {% endif %}
   {% if rep.wrongs %}
   <ul class="wa-list">
     {% for a in rep.wrongs %}
     <li class="wa-item">
       <h3>{{ a.no }}번{% if a.type %} <span class="badge">{{ a.type }}</span>{% endif %}
-        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %} · 반 오답률 {{ pct1(a.rate) }}%{% endif %}{% if a.unit %} · {{ a.unit }}{% endif %}</span></h3>
-      {% if a.diff %}<p>{{ a.diff }}</p>{% endif %}
-      {% if a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
-      {% if a.trap %}<p class="muted">{{ a.trap }}</p>{% endif %}
+        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ pct1(a.rate) }}%{% endif %}{% if a.unit %}<span class="sep" aria-hidden="true"></span>{{ a.unit }}{% endif %}</span></h3>
+      {% if a.trap %}<p>{{ a.trap }}</p>{% elif a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
       {% set pm = paper_marks.get(a.no) %}{% if pm and paper.status == 'done' %}<p class="ta-mark"><b>{{ paper.reviewer }} 첨삭</b>{% if pm.reason %} <span class="badge">{{ pm.reason }}</span>{% endif %} {{ pm.memo }}</p>{% endif %}
       {% if rep.enough and a.dist %}<p class="muted">반 선택 비율: {{ a.dist }}</p>{% endif %}
       {% if a.evidence == '문항 성격 추정' and a.concept %}<p class="muted">핵심 개념: {{ a.concept }}</p>{% endif %}
@@ -132,13 +129,12 @@
 {% if units %}
 <section class="unit-sec" aria-labelledby="h-unit">
   <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 6회</span></div>
-  {% if season_units %}<p class="small">시즌 전체 낮은 단원: {% for u in season_units %}<b>{{ u.unit }}</b> {{ u.pct }}%{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
   <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
     <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
     <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   {% if weak %}
   <div class="weak-card">
-    <p><b>{{ weak.unit.unit }}</b> {{ weak.unit.got|round(1)|replace('.0', '') }}/{{ weak.unit.total|round(1)|replace('.0', '') }}점 · {{ weak.unit.pct }}%</p>
+    <p><b>{{ weak.unit.unit }}</b> {{ weak.unit.got|round(1)|replace('.0', '') }}/{{ weak.unit.total|round(1)|replace('.0', '') }}점<span class="sep" aria-hidden="true"></span>{{ weak.unit.pct }}%</p>
     {% if weak.wrongs %}<p class="small">틀린 문항: {% for t, no in weak.wrongs[:8] %}{{ t }} {{ no }}번{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
     <div class="row">
       <a class="btn small" href="{{ url_for('study.wrong_notes', kind='mock' if mock.kind == '모의고사' else 'review') }}">오답 노트</a>

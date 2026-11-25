@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import tag_badge %}
-{% block title %}공지 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}공지 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
-  <div><h1>{{ '정오표' if tag == '정오' else '공지' }}</h1><p class="ed-lede">{{ notices|length }}건{% if q %} · ‘{{ q }}’ 찾은 결과{% endif %}</p></div>
+  <div><h1>{{ '정오표' if tag == '정오' else '공지' }}</h1><p class="ed-lede">{{ notices|length }}건{% if q %}<span class="sep" aria-hidden="true"></span>‘{{ q }}’ 찾은 결과{% endif %}</p></div>
   <form method="get" class="find" role="search">
     {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
     <label for="nq" class="sr">공지에서 찾기</label>
-    <input type="search" id="nq" name="q" value="{{ q }}" placeholder="제목·본문에서 찾기">
+    <input type="search" id="nq" name="q" value="{{ q }}" placeholder="제목과 본문에서 찾기">
     <button class="btn small" type="submit">찾기</button>
   </form>
 </header>

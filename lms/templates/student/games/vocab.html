@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}오늘의 20단어 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}오늘의 20단어 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
@@ -14,7 +14,7 @@
   <li><button type="button" class="voca-card" aria-pressed="false"><b lang="en">{{ w }}</b><span>{{ m }}</span></button></li>
   {% endfor %}
 </ol>
-<h2 class="voca-quiz-h" id="quiz">섞어 풀기 <small class="muted">20문제 · 뜻 · 단어 · 듣기 · O/X · 철자</small></h2>
+<h2 class="voca-quiz-h" id="quiz">섞어 풀기 <small class="muted">20문제<span class="sep" aria-hidden="true"></span>뜻<span class="sep" aria-hidden="true"></span>단어<span class="sep" aria-hidden="true"></span>듣기<span class="sep" aria-hidden="true"></span>O/X<span class="sep" aria-hidden="true"></span>철자</small></h2>
 {% set begin_label = '퀴즈 시작' %}
 {% include "student/games/_mc_block.html" %}
 {% endblock %}

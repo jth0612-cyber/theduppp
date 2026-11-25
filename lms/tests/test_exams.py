@@ -207,7 +207,7 @@ class Upload(unittest.TestCase):
                                           WHERE b.kind = ? AND b.title = ?""", (kind, kind), one=True)["n"], 50)
         page = self.ta.get("/t/books").data.decode()
         self.assertIn("복습 테스트", page); self.assertIn("모의고사", page)
-        self.assertIn("복테·모의고사", page)                              # 조교 메뉴도 강사와 같다
+        self.assertIn("복테/모의고사", page)                              # 조교 메뉴도 강사와 같다
 
     def test_phone_numbers_key_row_and_safety(self):
         rows = [["", "", "1번", "2번", "3번", "4번", "5번"],                # 위에 빈 줄이 있어도 머리글을 찾는다

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}시간표 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}시간표 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
     <h1>내 시간표</h1>
-    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b> · {{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %} · {{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없습니다.{% else %}빈 칸을 눌러 수업·자습·인강 추가{% endif %}</p>
+    <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b><span class="sep" aria-hidden="true"></span>{{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %}<span class="sep" aria-hidden="true"></span>{{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없습니다.{% else %}빈 칸을 눌러 수업, 자습, 인강 추가{% endif %}</p>
   </div>
   <div class="tt-head-side">
     {% if dday %}<p class="dday"><span>{{ dday.label }}</span><b>{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</b></p>{% endif %}
@@ -14,10 +14,10 @@
 </header>
 
 {% if wk %}
-<p class="tt-break week-now"><b>{{ wk.w.week_no }}주차</b>{{ wk.w.starts[5:]|replace('-', '/') }}~{{ wk.w.ends[5:]|replace('-', '/') }}{% if wk.w.off %} · 휴강 주{% else %}{% if wk.w.topic %} · {{ wk.w.topic }}{% endif %}{% if wk.handouts %} · 받을 교재 {{ wk.handouts|map(attribute='title')|join(', ') }}{% endif %}{% if wk.w.review_round %} · 복습 테스트 {{ wk.w.review_round }}회{% endif %}{% if wk.w.mock_round %} · 모의고사 {{ wk.w.mock_round }}회{% endif %}{% endif %}</p>
+<p class="tt-break week-now"><b>{{ wk.w.week_no }}주차</b>{{ wk.w.starts[5:]|replace('-', '/') }}~{{ wk.w.ends[5:]|replace('-', '/') }}{% if wk.w.off %}<span class="sep" aria-hidden="true"></span>휴강 주{% else %}{% if wk.w.topic %}<span class="sep" aria-hidden="true"></span>{{ wk.w.topic }}{% endif %}{% if wk.handouts %}<span class="sep" aria-hidden="true"></span>받을 교재 {{ wk.handouts|map(attribute='title')|join(', ') }}{% endif %}{% if wk.w.review_round %}<span class="sep" aria-hidden="true"></span>복습 테스트 {{ wk.w.review_round }}회{% endif %}{% if wk.w.mock_round %}<span class="sep" aria-hidden="true"></span>모의고사 {{ wk.w.mock_round }}회{% endif %}{% endif %}</p>
 {% endif %}
 {% for b in brks %}
-<p class="tt-break"><b>{{ '휴강 중' if b.now else '휴강 예정' }}</b>{{ b.starts[5:]|replace('-', '/') }}~{{ b.ends[5:]|replace('-', '/') }}{% if b.note %} · {{ b.note }}{% endif %}{% if b.now %} · 수업 재개 {{ b.back[5:]|replace('-', '/') }} (D-{{ b.back_left }}){% endif %}</p>
+<p class="tt-break"><b>{{ '휴강 중' if b.now else '휴강 예정' }}</b>{{ b.starts[5:]|replace('-', '/') }}~{{ b.ends[5:]|replace('-', '/') }}{% if b.note %}<span class="sep" aria-hidden="true"></span>{{ b.note }}{% endif %}{% if b.now %}<span class="sep" aria-hidden="true"></span>수업 재개 {{ b.back[5:]|replace('-', '/') }} (D-{{ b.back_left }}){% endif %}</p>
 {% endfor %}
 {% if class_has %}
 <form method="post" action="{{ url_for('study.timetable_import') }}" class="tt-import">
@@ -51,7 +51,7 @@
       <div class="field"><label for="tt-s">시작</label><input id="tt-s" type="time" name="starts" step="300" min="07:00" max="23:59" required></div>
       <div class="field"><label for="tt-e">끝</label><input id="tt-e" type="time" name="ends" step="300" min="07:00" max="23:59" required></div>
     </div>
-    <div class="field"><label for="tt-room">장소 <span class="muted">(선택)</span></label><input id="tt-room" name="room" maxlength="30" placeholder="예) 3강의실, 독서실"></div>
+    <div class="field"><label for="tt-room">장소</label><input id="tt-room" name="room" maxlength="30" placeholder="선택 (예: 3강의실, 독서실)"></div>
     <div class="field"><label>색</label>
       <div class="tt-tones">{% for t in range(8) %}<label class="tt-tone tone-{{ t }}"><input type="radio" name="tone" value="{{ t }}"><span class="sr-only">색 {{ t + 1 }}</span></label>{% endfor %}</div>
     </div>

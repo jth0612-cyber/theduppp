@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}조교 시스템 연동 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}조교 시스템 연동 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head"><div><h1>조교 시스템 연동</h1>
-  <p class="muted small">시트의 🌐앱_ 표를 받아 학생코드별로 보여 줍니다. 이름·연락처·학교 칸은 저장하지 않습니다.</p></div></div>
+  <p class="muted small">시트의 🌐앱_ 표를 받아 학생코드별로 보여 줍니다. 이름, 연락처, 학교 칸은 저장하지 않습니다.</p></div></div>
 
 {% if new_token %}
 <section class="card sys-token" aria-labelledby="h-tok">
@@ -14,7 +14,7 @@
 {% endif %}
 
 <section class="card">
-  <div class="sec-head"><h2>받은 표</h2><span class="small muted">학생코드 연결 {{ linked }}명 · 기록이 있는 코드 {{ with_data }}개</span></div>
+  <div class="sec-head"><h2>받은 표</h2><span class="small muted">학생코드 연결 {{ linked }}명<span class="sep" aria-hidden="true"></span>기록이 있는 코드 {{ with_data }}개</span></div>
   <div class="table-wrap"><table class="ledger compact">
     <thead><tr><th>표</th><th>내용</th><th class="num">줄</th><th>마지막 반영</th><th>방법</th></tr></thead>
     <tbody>{% for t in tables %}<tr><td><b>{{ t.key }}</b></td><td class="small muted">{{ t.label }}</td>

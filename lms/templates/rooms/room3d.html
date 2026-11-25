@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
 {% from "rooms/_social.html" import rank_row %}
-{% block title %}{{ info[0] }} · 소도시 명상{% endblock %}
+{% block title %}{{ info[0] }} | 소도시 명상{% endblock %}
 {% block body_class %}in-room3d{% endblock %}
 {% block content %}
 <div class="w3" id="w3" data-room="{{ key }}"
@@ -42,7 +42,7 @@
         <b>집중 시작</b><span data-cta-min>40분</span>
       </button>
       <nav class="w3-actions" data-actions aria-label="동작"></nav>
-      <p class="w3-hint" data-hint>바닥을 누르면 이동 · 끌어서 둘러보기</p>
+      <p class="w3-hint" data-hint>바닥을 누르면 이동<span class="sep" aria-hidden="true"></span>끌어서 둘러보기</p>
     </div>
 
     <div class="w3-enter" data-enter>
@@ -62,7 +62,7 @@
       <ul class="here-list" data-members>
         {% for m in members %}
         <li class="{{ 'is-focus' if m.status == 'focus' }}{{ ' is-me' if m.me }}"><i class="seat" aria-hidden="true"></i><b>{% if m.cap %}<span class="cap">{{ m.cap }}</span> {% endif %}{{ m.nick }}{% if m.me %} (나){% endif %}{% if m.king %} <small class="here-tag is-king">터줏대감</small>{% endif %}</b>
-          <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %} · 오늘 {{ m.today }}분</span></li>
+          <span>{% if m.status == 'focus' %}집중 {{ m.elapsed }}/{{ m.plan }}분{% else %}쉬는 중{% endif %}<span class="sep" aria-hidden="true"></span>오늘 {{ m.today }}분</span></li>
         {% endfor %}
       </ul>
       <div class="w3-colors" role="radiogroup" aria-label="내 캐릭터 색">
@@ -73,7 +73,7 @@
         <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
         {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id) }}{% endfor %}</ol>
         {% else %}<p class="muted small">이번 주 기록 없음</p>{% endif %}
-        <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위 · {{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
+        <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위<span class="sep" aria-hidden="true"></span>{{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
       </div>
       <p class="fine" data-msg>오늘 {{ today }}분</p>
     </section>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf, pagination, filesize, tag_badge, kind_badge %}
-{% block title %}{{ cls.name }} · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ cls.name }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
@@ -39,7 +39,7 @@
       <h2 id="h-codes">학생 개별 가입 코드</h2>
       <p class="small muted">학생마다 다른 코드를 하나씩 나눠 주세요. 학생은 가입할 때 <b>코드 + 이름 + 아이디 + 비밀번호</b>를 넣고, 코드가 맞으면 바로 가입됩니다. 한 코드는 한 번만 사용할 수 있습니다.</p>
     </div>
-    <p class="small">등록 {{ codes|length }}개 · 가입 {{ codes|selectattr('student_id')|list|length }}명{% if codes %} · <a href="{{ url_for('teacher.class_codes_csv', cid=cls.id) }}">CSV로 받기</a>{% endif %}</p>
+    <p class="small">등록 {{ codes|length }}개<span class="sep" aria-hidden="true"></span>가입 {{ codes|selectattr('student_id')|list|length }}명{% if codes %}<span class="sep" aria-hidden="true"></span><a href="{{ url_for('teacher.class_codes_csv', cid=cls.id) }}">CSV로 받기</a>{% endif %}</p>
   </div>
   <div class="grid grid-2">
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
@@ -58,7 +58,7 @@
   </div>
   {% if codes %}
   {% set unused = codes|rejectattr('student_id')|list|length %}
-  <details{{ ' open' if unused == codes|length }}><summary class="small">코드 목록 {{ codes|length }}개 · 미사용 {{ unused }}개</summary>
+  <details{{ ' open' if unused == codes|length }}><summary class="small">코드 목록 {{ codes|length }}개<span class="sep" aria-hidden="true"></span>미사용 {{ unused }}개</summary>
   <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
     {{ csrf() }}<input type="hidden" name="action" value="delete">
     <div class="table-wrap codes-table"><table>
@@ -68,7 +68,7 @@
         <td>{% if not c.student_id %}<input type="checkbox" name="ids" value="{{ c.id }}" aria-label="{{ c.code }} 고르기">{% endif %}</td>
         <td><code>{{ c.code }}</code></td>
         <td class="small">{{ c.memo }}</td>
-        <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }} · {{ c.s_no }} · {{ c.used_at[5:16] }}{% else %}<span class="muted">아직</span>{% endif %}</td>
+        <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }}<span class="sep" aria-hidden="true"></span>{{ c.s_no }}<span class="sep" aria-hidden="true"></span>{{ c.used_at[5:16] }}{% else %}<span class="muted">아직</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </table></div>
@@ -168,7 +168,7 @@
 <div class="card">
   <div class="page-head">
     <div><h3>{% if n.pinned %}<span class="badge">고정</span> {% endif %}{{ tag_badge(n.tag) }} {{ n.title }}</h3>
-      <span class="small muted">{% if n.textbook %}{{ n.textbook }} · {% endif %}{{ n.created_at[:16] }} · <b>{{ n.readers }}/{{ n.members }}명 읽음</b> · 좋아요 {{ n.likes }}{% if n.renotified_at %} · 안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at[5:16] }}){% endif %}</span></div>
+      <span class="small muted">{% if n.textbook %}{{ n.textbook }}<span class="sep" aria-hidden="true"></span>{% endif %}{{ n.created_at[:16] }}<span class="sep" aria-hidden="true"></span><b>{{ n.readers }}/{{ n.members }}명 읽음</b><span class="sep" aria-hidden="true"></span>좋아요 {{ n.likes }}{% if n.renotified_at %}<span class="sep" aria-hidden="true"></span>안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at[5:16] }}){% endif %}</span></div>
     <div class="row">
       <form method="post" action="{{ url_for('teacher.notice_pin', nid=n.id) }}">{{ csrf() }}<button class="btn small">{{ '고정 해제' if n.pinned else '맨 위 고정' }}</button></form>
       <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제하시겠습니까?">
@@ -199,7 +199,7 @@
   <form method="post" action="{{ url_for('teacher.material_create', cid=cls.id) }}" enctype="multipart/form-data" class="row">
     {{ csrf() }}
     <div class="field wide"><label>제목</label><input type="text" name="title" maxlength="120" required></div>
-    <div class="field"><label>파일 (PDF, PPT, DOCX, HWP, 이미지 · 최대 20MB)</label>
+    <div class="field"><label>파일 (PDF, PPT, DOCX, HWP, 이미지<span class="sep" aria-hidden="true"></span>최대 20MB)</label>
       <input type="file" name="file" accept=".pdf,.ppt,.pptx,.docx,.hwp,.png,.jpg,.jpeg" required></div>
     <div class="field shrink"><button class="btn primary">올리기</button></div>
   </form>
@@ -262,7 +262,7 @@
 {% elif tab == 'times' %}
 <section class="card">
   <h2>수업 시간</h2>
-  <p class="small muted">{% if group %}진도 그룹 <a href="{{ url_for('schedule.group', gid=group.id) }}">{{ group.name }}</a> · 주차마다 이 시간마다 수업 칸이 생깁니다.{% else %}진도 그룹이 없습니다. <a href="{{ url_for('schedule.groups') }}">수업 일정</a>에서 그룹에 넣으면 주차별 수업 칸이 생깁니다.{% endif %}</p>
+  <p class="small muted">{% if group %}진도 그룹 <a href="{{ url_for('schedule.group', gid=group.id) }}">{{ group.name }}</a><span class="sep" aria-hidden="true"></span>주차마다 이 시간마다 수업 칸이 생깁니다.{% else %}진도 그룹이 없습니다. <a href="{{ url_for('schedule.groups') }}">수업 일정</a>에서 그룹에 넣으면 주차별 수업 칸이 생깁니다.{% endif %}</p>
   <form method="post" action="{{ url_for('schedule.slots', cid=cls.id) }}" class="row">{{ csrf() }}
     <div class="field shrink"><label for="sl-wd">요일</label><select id="sl-wd" name="weekday">{% for i in [5, 6, 0, 1, 2, 3, 4] %}<option value="{{ i }}">{{ weekdays[i] }}</option>{% endfor %}</select></div>
     <div class="field shrink"><label for="sl-p">교시</label><input type="text" id="sl-p" name="period" maxlength="10" placeholder="2교시" size="6"></div>

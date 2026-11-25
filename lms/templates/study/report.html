@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}{{ r.s.name }} 성적 리포트 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ r.s.name }} 성적 리포트 | 정태혁 통합과학 lab{% endblock %}
 {% block body_class %}print-page{% endblock %}
 {% block content %}
 <div class="row no-print mb">
   {% if teacher %}<a class="small" href="{{ url_for('teacher.student_detail', sid=r.s.id) }}">← {{ r.s.name }}</a>{% endif %}
-  <button class="btn primary" type="button" data-print>인쇄 · PDF 저장</button>
+  <button class="btn primary" type="button" data-print>인쇄<span class="sep" aria-hidden="true"></span>PDF 저장</button>
 </div>
 <article class="report-sheet">
   <header class="rs-head">
     <div>
-      <p class="kicker">정태혁 통합과학 lab · 학습 리포트</p>
-      <h1>{{ r.s.name }} <small>{{ r.s.class_name }} · {{ r.s.student_no }}</small></h1>
+      <p class="kicker">정태혁 통합과학 lab<span class="sep" aria-hidden="true"></span>학습 리포트</p>
+      <h1>{{ r.s.name }} <small>{{ r.s.class_name }}<span class="sep" aria-hidden="true"></span>{{ r.s.student_no }}</small></h1>
     </div>
     <p class="small muted">{{ r.today }} 기준</p>
   </header>
@@ -39,7 +39,7 @@
   <section class="rs-sec">
     <h2>단원별 이해도</h2>
     {% for season, units in r.units|dictsort|reverse %}
-    <p class="small muted rs-sub">{{ season }} · 그 단원 문항에서 맞힌 배점 비율</p>
+    <p class="small muted rs-sub">{{ season }}<span class="sep" aria-hidden="true"></span>그 단원 문항에서 맞힌 배점 비율</p>
     <ul class="rs-bars">{% for u in units %}{% set p = (u.pct or 0)|round|int %}
       <li><span>{{ u.unit }}</span><span class="mini-bar"><span class="pg-fill w-{{ (p // 10 * 10)|int }}{{ ' is-low' if p < 60 }}"></span></span><b>{{ p }}%</b></li>{% endfor %}</ul>
     {% endfor %}
@@ -53,7 +53,6 @@
       <h2>학습 유형 <small class="muted">시험 오답 기록</small></h2>
       <p class="rs-type">{{ r.learn.type }}{% if r.learn.trust %} <span class="badge gray">신뢰도 {{ r.learn.trust }}</span>{% endif %}</p>
       {% if r.learn.basis %}<p class="small">{{ r.learn.basis }}</p>{% endif %}
-      {% if r.learn.coach %}<p class="rs-coach">{{ r.learn.coach }}</p>{% endif %}
       {% if r.learn.weak %}<p class="small muted">보완할 단원: {{ r.learn.weak }}</p>{% endif %}
     </section>
     {% endif %}
@@ -93,7 +92,7 @@
     <section class="rs-sec">
       <h2>학습 습관</h2>
       <dl class="report-lines">
-        <div><dt>소도시 명상 4주</dt><dd>{% if r.focus and r.focus.n %}{{ r.focus.m // 60 }}시간 {{ r.focus.m % 60 }}분 · {{ r.focus.n }}번{% else %}기록 없음{% endif %}</dd></div>
+        <div><dt>소도시 명상 4주</dt><dd>{% if r.focus and r.focus.n %}{{ r.focus.m // 60 }}시간 {{ r.focus.m % 60 }}분<span class="sep" aria-hidden="true"></span>{{ r.focus.n }}번{% else %}기록 없음{% endif %}</dd></div>
       </dl>
     </section>
   </div>

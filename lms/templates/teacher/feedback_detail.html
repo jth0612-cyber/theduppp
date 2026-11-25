@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ t.student_name }} 첨삭 · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ t.student_name }} 첨삭 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <p class="small"><a href="{{ url_for('feedback.t_list', status=t.status) }}">Full 모의고사 피드백</a> /</p>
 <header class="ed-head ed-head-split">
   <div>
     <h1>{{ t.student_name or '-' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>
-    <p class="ed-lede">{{ t.class_name or '' }} · {{ t.book_title }} {{ t.round_no }}회{% if t.mock_title %} {{ t.mock_title }}{% endif %}</p>
+    <p class="ed-lede">{{ t.class_name or '' }}<span class="sep" aria-hidden="true"></span>{{ t.book_title }} {{ t.round_no }}회{% if t.mock_title %} {{ t.mock_title }}{% endif %}</p>
     {% if paper %}<p class="small">같은 회차 복습 테스트 첨삭: <a href="{{ url_for('care.t_paper', pid=paper.id) }}">{{ '첨삭 완료' if paper.status == 'done' else '첨삭 대기' }}</a></p>{% endif %}
   </div>
   {% if t.status == 'done' %}
@@ -14,7 +14,7 @@
 </header>
 <dl class="report-lines fb-facts">
   <div><dt>원점수</dt><dd>{% if entry and entry.score is not none %}{{ fmt(entry.score) }} / {{ fmt(t.full_score) }}{% elif entry %}채점 전{% else %}답안 없음{% endif %}</dd></div>
-  {% if wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in wrong %}{{ n }}번<small>({{ fmt(points[n - 1]) }}점, 정답 {{ key[n - 1] }}, 고른 답 {{ entry.answers[n - 1] if entry.answers[n - 1] != "0" else "무응답" }})</small>{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>{% endif %}
+  {% if wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in wrong %}{{ n }}번<small>({{ fmt(points[n - 1]) }}점, 정답 {{ key[n - 1] }}, 고른 답 {{ entry.answers[n - 1] if entry.answers[n - 1] != "0" else "무응답" }})</small>{% if not loop.last %}<span class="sep" aria-hidden="true"></span>{% endif %}{% endfor %}</dd></div>{% endif %}
 </dl>
 {% with msgs=msgs, action=url_for('feedback.t_detail', tid=t.id), me_staff=true, body_label='답변',
         placeholder='', submit_label='답변 보내기' %}{% include "_feedback_thread.html" %}{% endwith %}

@@ -2605,3 +2605,20 @@ form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display:
 [data-qform] > .row { flex-wrap: wrap; }
 [data-qform] > .row > .field.wide { flex: 1 1 320px; }
 .photo-field label .muted { font-weight: 400; margin-left: 4px; }
+
+/* 사진 칸: 안내 글을 칸 안에 (파일 입력은 숨기고 큰 칸을 누르면 고르기) */
+.drop-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 88px; padding: 14px; border: 1.5px dashed var(--control); border-radius: 14px; background: var(--raised); color: var(--muted); text-align: center; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
+.drop b { color: var(--ink); font-size: 15px; }
+.drop span { font-size: 13px; font-weight: 400; word-break: keep-all; }
+.drop:hover, .drop-input:focus-visible + .drop { border-color: var(--accent); background: var(--accent-soft); }
+.photo-field.has-err .drop { border-color: var(--danger); }
+.photo-field.has-err .drop span { color: var(--danger); }
+[data-qform] textarea { min-height: 132px; }
+/* 사이 구분: 가운뎃점(·) 대신 교재 홍보물처럼 얇은 세로 줄 (templates 의 <span class="sep">) */
+.sep { display: inline-block; width: 1px; height: .85em; margin: 0 .55em; vertical-align: -.08em; background: currentColor; opacity: .28; }
+
+/* 오답 노트: 바로 저장되면 그 줄이 잠깐 밝아진다 (저장 버튼 없음) */
+.wrong-list li.is-saved { animation: saved-glow 900ms ease; }
+@keyframes saved-glow { 0% { background: var(--accent-soft); } 100% { background: transparent; } }
+.wrong-list .w-no { font-weight: 800; color: var(--danger); text-decoration: none; }

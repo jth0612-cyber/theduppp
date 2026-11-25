@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <title>{{ r.s.name }} 학생 리포트 · 정태혁 통합과학</title>
+  <title>{{ r.s.name }} 학생 리포트 | 정태혁 통합과학</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='inapp.js') }}"></script>
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
@@ -13,7 +13,7 @@
 <body class="no-shell parent-page">
 <main class="pr-wrap">
   <header class="pr-head">
-    <p class="small muted">정태혁 통합과학 · 학부모 리포트</p>
+    <p class="small muted">정태혁 통합과학<span class="sep" aria-hidden="true"></span>학부모 리포트</p>
     <h1>{{ r.s.name }} <span>{{ r.s.cls }}</span></h1>
   </header>
   {{ kind_tabs(kind, 'care.parent_page', kind_counts, token=token) }}

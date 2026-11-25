@@ -28,10 +28,4 @@
       code.value = raw.replace(/(.{4})(?=.)/g, "$1 ");
     });
   }
-  var pick = document.querySelector("[data-autosubmit]");
-  if (pick) {
-    var btn = pick.querySelector(".js-hide");
-    if (btn) btn.hidden = true;
-    pick.querySelector("select").addEventListener("change", function () { pick.submit(); });
-  }
 })();

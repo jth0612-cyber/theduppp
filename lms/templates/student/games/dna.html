@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }} · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="small"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> /</p>
     <h1>{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }}</h1>
-    <p class="muted small">{% if mode == 'rna' %}주형 가닥에서 전사될 RNA 염기를 차례로 누르세요. A→U, T→A, G→C, C→G. 키보드 A·U·G·C.{% else %}위 가닥과 짝이 되는 염기를 차례로 누르세요. A–T, G–C. 키보드 A·T·G·C.{% endif %}</p>
+    <p class="muted small">{% if mode == 'rna' %}주형 가닥에서 전사될 RNA 염기를 차례로 누르세요. A→U, T→A, G→C, C→G. 키보드 A, U, G, C.{% else %}위 가닥과 짝이 되는 염기를 차례로 누르세요. A–T, G–C. 키보드 A, T, G, C.{% endif %}</p>
   </div>
   <nav class="seg" aria-label="방식">
     <a href="{{ url_for('games.dna') }}" class="{{ 'is-on' if mode == 'dna' }}">DNA 짝</a>

@@ -15,7 +15,7 @@
       {% endfor %}
       </tbody>
     </table></div>
-    <p class="fine">수능 9등급 누적 비율(4·11·23·40·60·77·89·96%)을 이 회차 응시자에게 적용한 추정입니다. 표준점수는 평균 50 및 표준편차 10으로 환산했고, 오차 범위는 누적 비율 ±2%p 안에 드는 원점수입니다(한 점뿐이면 그 점수). 답안을 내지 않아도 볼 수 있습니다.</p>
+    <p class="fine">수능 9등급 누적 비율(4, 11, 23, 40, 60, 77, 89, 96%)을 이 회차에 적용한 추정입니다. 표준점수는 평균 50, 표준편차 10 기준입니다.</p>
     {% else %}
     <p class="muted">응시자가 {{ min_for_cuts }}명이 되면 기준표를 엽니다. 지금 {{ stats.n }}명</p>
     {% endif %}
@@ -46,7 +46,7 @@
 </div>
 
 <section class="panel" id="items" aria-labelledby="h-items">
-  <div class="sec-head"><h2 id="h-items">문항 지도</h2><span>답안 제출 {{ stats.n_answers }}명 · 칸을 누르면 선지 비율</span></div>
+  <div class="sec-head"><h2 id="h-items">문항 지도</h2><span>답안 제출 {{ stats.n_answers }}명<span class="sep" aria-hidden="true"></span>칸을 누르면 선지 비율</span></div>
   {% if stats['items'] %}
   <ol class="item-map">
     {% for it in stats['items'] %}
@@ -68,14 +68,14 @@
   {% if selected %}
   <div class="choice-panel">
     {% set mine = (marks[selected.no - 1] if marks is defined and marks and marks|length >= selected.no else '') %}
-    <h3>{{ selected.no }}번 선지별 응답 <span>오답률 {{ selected.wrong_pct }}%{% if key is defined %} · 정답 {{ key[selected.no - 1] }}번{% endif %}{% if mine and mine != '0' %} · 내 답 {{ mine }}번{% endif %}</span></h3>
+    <h3>{{ selected.no }}번 선지별 응답 <span>오답률 {{ selected.wrong_pct }}%{% if key is defined %}<span class="sep" aria-hidden="true"></span>정답 {{ key[selected.no - 1] }}번{% endif %}{% if mine and mine != '0' %}<span class="sep" aria-hidden="true"></span>내 답 {{ mine }}번{% endif %}</span></h3>
     <svg class="hbars" viewBox="0 0 400 130" role="img" aria-label="{{ selected.no }}번 선지별 응답 비율">
       {% for p in selected.choices %}
         {% set y = loop.index0 * 26 %}
         <text class="lab" x="20" y="{{ y + 17 }}" text-anchor="middle">{{ '①②③④⑤'[loop.index0] }}</text>
         <line class="axis" x1="40" x2="40" y1="{{ y }}" y2="{{ y + 26 }}"></line>
         <rect class="hb{{ ' hb-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 7 }}" width="{{ (p * 3)|round(1) }}" height="12"></rect>
-        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%{% if mine == loop.index|string %} · 내 답{% endif %}</text>
+        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%{% if mine == loop.index|string %}<span class="sep" aria-hidden="true"></span>내 답{% endif %}</text>
       {% endfor %}
     </svg>
   </div>

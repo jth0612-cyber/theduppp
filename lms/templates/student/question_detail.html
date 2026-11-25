@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf, status_badge, qtype_badge %}
-{% block title %}{{ q.title }} · 정태혁 통합과학 lab{% endblock %}
+{% block title %}{{ q.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if request.args.get('posted') %}<i hidden data-draft-clear="q-draft-{{ g.user.id }} fu-draft-{{ q.id }}"></i>{% endif %}
 <div class="page-head">
@@ -8,7 +8,7 @@
     <p class="small"><a href="{{ url_for('student.questions') }}">질답 게시판</a> /</p>
     <h1>{{ q.title }}</h1>
     <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
-      <span class="muted">{{ q.nickname }}{% if q.is_mine %} <span class="badge">나</span>{% endif %} · {{ q.created_at[:16] }}{% if q.qtype == '학습상담' %} · 상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구든 먼저' }}{% endif %}</span></p>
+      <span class="muted">{{ q.nickname }}{% if q.is_mine %} <span class="badge">나</span>{% endif %}<span class="sep" aria-hidden="true"></span>{{ q.created_at[:16] }}{% if q.qtype == '학습상담' %}<span class="sep" aria-hidden="true"></span>상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구든 먼저' }}{% endif %}</span></p>
   </div>
   {% if q.is_mine and q.status == 'open' and not q.answer_count %}
   <form method="post" action="{{ url_for('student.question_delete', qid=q.id) }}" data-confirm="질문을 삭제하시겠습니까?">
@@ -25,9 +25,9 @@
 <div id="thread">
 {% for m in thread %}
   {% if m.kind == 'answer' %}
-  <div class="answer"><div class="small muted answer-by"><span class="cap">{{ '조교' if m.author_role == 'assistant' else '선생님' }}</span> {{ m.author_name or ('조교' if m.author_role == 'assistant' else '선생님') }} 답변 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
+  <div class="answer"><div class="small muted answer-by"><span class="cap">{{ '조교' if m.author_role == 'assistant' else '선생님' }}</span> {{ m.author_name or ('조교' if m.author_role == 'assistant' else '선생님') }} 답변<span class="sep" aria-hidden="true"></span>{{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div></div>
   {% else %}
-  <div class="followup"><div class="small muted">추가 질문 · {{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div>
+  <div class="followup"><div class="small muted">추가 질문<span class="sep" aria-hidden="true"></span>{{ m.created_at[:16] }}</div><div class="pre">{{ m.body }}</div>
     {% if m.image_id %}<p class="mt"><img class="question-img" src="{{ url_for('student.file', fid=m.image_id, inline=1) }}" alt="추가 질문 사진"></p>{% endif %}
   </div>
   {% endif %}
@@ -52,11 +52,11 @@
 <form method="post" action="{{ url_for('student.question_followup', qid=q.id) }}#fu" enctype="multipart/form-data" class="card" id="fu" data-qform data-draft-key="fu-draft-{{ q.id }}"{% if fu_body %} data-has-draft{% endif %}>
   {{ csrf() }}
   {% if fu_err %}<p class="form-err" role="alert">{{ fu_err }}</p>{% endif %}
-  <div class="field"><label for="fu-body">추가 질문 (남은 횟수 {{ max_followups - q.followup_count }}번)</label>
+  <div class="field"><label for="fu-body">추가 질문 <span class="muted">남은 횟수 {{ max_followups - q.followup_count }}번</span></label>
     <textarea id="fu-body" name="body" maxlength="3000" required placeholder="답변에서 더 궁금한 점을 적어 주세요.">{{ fu_body or '' }}</textarea></div>
   <div class="field photo-field" data-photo>
-    <label for="fu-image">사진 첨부 <span class="muted">(선택 · PNG·JPG, 최대 20MB)</span></label>
-    <input type="file" id="fu-image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+    <input type="file" id="fu-image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="drop-input">
+    <label for="fu-image" class="drop"><b>사진 올리기</b><span>선택<span class="sep" aria-hidden="true"></span>PNG, JPG, 20MB 이하</span></label>
     <p class="field-err" data-photo-err hidden></p>
     <div class="photo-preview" data-photo-preview hidden><img alt="첨부할 사진 미리보기"><span></span><button type="button" class="btn small" data-photo-clear>빼기</button></div>
   </div>

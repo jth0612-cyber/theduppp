@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "rooms/_social.html" import rank_row %}
-{% block title %}터줏대감 순위 · 소도시 명상{% endblock %}
+{% block title %}터줏대감 순위 | 소도시 명상{% endblock %}
 {% block content %}
 {% set here = request.full_path.rstrip('?') %}
 <header class="ed-head ed-head-split">
@@ -8,7 +8,7 @@
     <h1>{{ places[place][0] }}의 터줏대감</h1>
     <p class="ed-lede">집중 시간 순 / 5분 미만 제외</p>
   </div>
-  <dl class="my-mins"><div><dt>내 순위 · {{ periods[period] }}</dt><dd>{% if my_rank.rank %}{{ my_rank.rank }}<small>위</small>{% else %}–{% endif %}</dd></div>
+  <dl class="my-mins"><div><dt>내 순위<span class="sep" aria-hidden="true"></span>{{ periods[period] }}</dt><dd>{% if my_rank.rank %}{{ my_rank.rank }}<small>위</small>{% else %}–{% endif %}</dd></div>
     <div><dt>내 시간</dt><dd class="dd-text">{{ my_rank.m|hm }}</dd></div></dl>
 </header>
 <nav class="seg seg-wide" aria-label="장소">

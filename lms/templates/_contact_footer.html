@@ -6,7 +6,7 @@
     {% if sc.kakao %}<p><a href="{{ sc.kakao }}" target="_blank" rel="noopener noreferrer">카카오톡 채널</a>로도 받습니다.</p>{% endif %}
     {% if sc.openchat %}<p><a href="{{ sc.openchat }}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>으로도 받습니다.</p>{% endif %}
     {% if sc.note %}<p>{{ sc.note }}</p>{% endif %}
-    <p class="colo-op">운영자 정태혁 · 개인정보 보호책임자 정태혁</p>
-    {% if sc.email or sc.phone %}<p>{% if sc.email %}<a href="mailto:{{ sc.email }}">{{ sc.email }}</a>{% endif %}{% if sc.email and sc.phone %} · {% endif %}{% if sc.phone %}{{ sc.phone }}{% endif %}</p>{% endif %}
+    <p class="colo-op">운영자 정태혁<span class="sep" aria-hidden="true"></span>개인정보 보호책임자 정태혁</p>
+    {% if sc.email or sc.phone %}<p>{% if sc.email %}<a href="mailto:{{ sc.email }}">{{ sc.email }}</a>{% endif %}{% if sc.email and sc.phone %}<span class="sep" aria-hidden="true"></span>{% endif %}{% if sc.phone %}{{ sc.phone }}{% endif %}</p>{% endif %}
   </div>
 </footer>

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf %}
-{% block title %}배부 교재 · 수업 일정{% endblock %}
+{% block title %}배부 교재 | 수업 일정{% endblock %}
 {% block content %}
 <div class="page-head">
   <div><p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p><h1>배부 교재</h1>
-    <p class="muted small">수업 때 나눠 주는 교재. 복습 테스트·모의고사 회차와는 따로입니다. 진도 그룹의 주차에 배정합니다.</p></div>
+    <p class="muted small">수업 때 나눠 주는 교재. 복습 테스트, 모의고사 회차와는 따로입니다. 진도 그룹의 주차에 배정합니다.</p></div>
 </div>
 <section class="card">
   <h2>넣기</h2>
