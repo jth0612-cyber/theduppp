@@ -39,13 +39,13 @@ def parse_points(raw, n_items, full_score):
     if not raw:
         each = full_score / n_items
         if each != int(each):
-            raise ValueError("만점이 문항 수로 나누어떨어지지 않습니다. 배점을 직접 입력하세요.")
+            raise ValueError("만점이 문항 수로 나누어떨어지지 않습니다. 배점을 직접 적어 주세요.")
         return [int(each)] * n_items
     parts = [p for p in raw.replace(" ", ",").split(",") if p]
     try:
         pts = [float(p) for p in parts]
     except ValueError:
-        raise ValueError("배점은 숫자를 쉼표로 구분해 입력하세요.") from None
+        raise ValueError("배점은 숫자를 쉼표로 구분해 적어 주세요.") from None
     if len(pts) != n_items or any(p <= 0 for p in pts):
         raise ValueError(f"배점은 양수 {n_items}개여야 합니다. (지금 {len(pts)}개)")
     if abs(sum(pts) - full_score) > 1e-9:

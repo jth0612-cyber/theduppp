@@ -202,7 +202,7 @@ def teacher_books():
         except ValueError:
             expires_on = ""
         if not title or not expires_on:
-            flash("교재 이름과 이용 기간(마지막 날짜)을 입력하세요.", "error")
+            flash("교재 이름과 이용 기간(마지막 날짜)을 넣어 주세요.", "error")
         else:
             kind = request.form.get("kind") if request.form.get("kind") in KINDS else "모의고사"
             bid = execute("INSERT INTO books (title, subject, expires_on, is_free, notice, kind) VALUES (?, ?, ?, ?, ?, ?)",
@@ -247,7 +247,7 @@ def edit_book(bid):
     try:
         date.fromisoformat(expires_on)
     except ValueError:
-        flash("이용 기간 날짜가 올바르지 않아요.", "error")
+        flash("이용 기간 날짜를 다시 확인해 주세요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid))
     kind = request.form.get("kind") if request.form.get("kind") in KINDS else _book_or_404(bid)["kind"]
     execute("UPDATE books SET title = ?, subject = ?, expires_on = ?, is_free = ?, notice = ?, kind = ? WHERE id = ?",
@@ -266,7 +266,7 @@ def add_mock(bid):
         n_items = int(request.form.get("n_items", analysis.DEFAULT_ITEMS))
         full = float(request.form.get("full_score", analysis.DEFAULT_FULL))
         if not (1 <= n_items <= 60 and 0 < full <= 200 and round_no >= 1):
-            raise ValueError("문항 수(1~60), 만점(0~200), 회차(1 이상)를 확인하세요.")
+            raise ValueError("문항 수(1~60), 만점(0~200), 회차(1 이상)를 확인해 주세요.")
         key = analysis.parse_key(request.form.get("answer_key"), n_items)
         if request.form.get("points", "").strip():
             points = analysis.parse_points(request.form.get("points"), n_items, full)
@@ -276,7 +276,7 @@ def add_mock(bid):
         else:
             points = analysis.parse_points("", n_items, full)
     except ValueError as e:
-        flash(str(e) if str(e) and not str(e).startswith("invalid literal") else "숫자를 확인하세요.", "error")
+        flash(str(e) if str(e) and not str(e).startswith("invalid literal") else "숫자를 확인해 주세요.", "error")
         return redirect(url_for("books.teacher_book", bid=bid) + "#add-mock")
     if query("SELECT 1 FROM mocks WHERE book_id = ? AND round_no = ?", (bid, round_no), one=True):
         flash(f"{round_no}회는 이미 있어요.", "error")

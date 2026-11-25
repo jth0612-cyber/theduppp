@@ -71,7 +71,7 @@
           <div class="row"><div class="field"><label>복테 회차</label><input type="number" name="review_round" min="1" max="50" value="{{ w.review_round or '' }}"></div>
             <div class="field"><label>모의고사 회차</label><input type="number" name="mock_round" min="1" max="50" value="{{ w.mock_round or '' }}"></div></div>
           <fieldset class="field"><legend>배부 교재</legend><div class="check-list">{% set mine = wh.get(w.id, [])|map(attribute='id')|list %}
-            {% for h in handouts %}<label><input type="checkbox" name="handout_id" value="{{ h.id }}" {{ 'checked' if h.id in mine }}> <span class="muted">{{ h.kind }}</span> {{ h.title }}</label>{% else %}<span class="muted">배부 교재가 없어요. <a href="{{ url_for('schedule.handouts') }}">배부 교재</a>에서 먼저 넣으세요.</span>{% endfor %}</div></fieldset>
+            {% for h in handouts %}<label><input type="checkbox" name="handout_id" value="{{ h.id }}" {{ 'checked' if h.id in mine }}> <span class="muted">{{ h.kind }}</span> {{ h.title }}</label>{% else %}<span class="muted">배부 교재가 없어요. <a href="{{ url_for('schedule.handouts') }}">배부 교재</a>에서 먼저 넣어 주세요.</span>{% endfor %}</div></fieldset>
           {% endif %}
           <div class="field"><label>메모</label><input type="text" name="note" value="{{ w.note }}" maxlength="200"></div>
           <div class="row"><button class="btn primary small" name="action" value="save">저장</button>

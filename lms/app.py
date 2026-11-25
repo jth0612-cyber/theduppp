@@ -149,7 +149,7 @@ def create_app(test_config=None):
     @app.errorhandler(CSRFError)
     def csrf_error(_e):
         return render_template("error.html", code=400,
-                               message="요청이 만료되었어요. 페이지를 새로고침한 뒤 다시 시도하세요."), 400
+                               message="시간이 지나 요청이 끊겼어요. 새로고침한 뒤 다시 해 주세요."), 400
 
     @app.errorhandler(403)
     def forbidden(_e):
@@ -159,15 +159,15 @@ def create_app(test_config=None):
             flash("이 작업은 선생님만 할 수 있어요.", "error")
             ref = request.referrer or ""
             return redirect(ref if ref.startswith(request.host_url) else "/t/questions")
-        return render_template("error.html", code=403, message="접근 권한이 없어요."), 403
+        return render_template("error.html", code=403, message="볼 수 없는 화면이에요."), 403
 
     @app.errorhandler(404)
     def not_found(_e):
-        return render_template("error.html", code=404, message="페이지를 찾을 수 없어요."), 404
+        return render_template("error.html", code=404, message="없는 화면이에요."), 404
 
     @app.errorhandler(413)
     def too_large(_e):
-        return render_template("error.html", code=413, message="파일이 너무 커요. (최대 20MB)"), 413
+        return render_template("error.html", code=413, message="파일이 너무 커요. 20MB까지 올릴 수 있어요."), 413
 
     if not app.config.get("TESTING"):
         from views import notices_job

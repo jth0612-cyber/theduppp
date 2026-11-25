@@ -66,7 +66,7 @@ def t_link():
 def t_link_token():
     token = sysdata.new_token()
     audit("sys_token_new")
-    flash("새 열쇠를 생성했어요. 이 화면을 벗어나면 다시 볼 수 없으니 지금 시트에 붙여 넣으세요. 이전 열쇠는 더 이상 사용할 수 없어요.", "ok")
+    flash("새 열쇠를 만들었어요. 이 화면을 벗어나면 다시 볼 수 없으니 지금 시트에 붙여 넣어 주세요. 이전 열쇠는 이제 쓸 수 없어요.", "ok")
     return _page(new_token=token)
 
 

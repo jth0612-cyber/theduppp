@@ -352,7 +352,7 @@ def t_timetable():
         if cid and not query("SELECT 1 FROM classes WHERE id = ?", (cid,), one=True):
             abort(404)
         if s is None or e is None or e < s:
-            flash("휴강 시작일 및 끝나는 날을 확인하세요.", "error")
+            flash("휴강 시작일과 끝나는 날을 확인해 주세요.", "error")
         else:
             execute("INSERT INTO class_breaks (class_id, starts, ends, note) VALUES (?, ?, ?, ?)",
                     (cid or None, s.isoformat(), e.isoformat(), request.form.get("note", "").strip()[:40]))
@@ -363,7 +363,7 @@ def t_timetable():
         d = _parse_day(request.form.get("exam_day"))
         label = request.form.get("exam_label", "").strip()[:20] or "수능"
         if d is None:
-            flash("날짜를 확인하세요.", "error")
+            flash("날짜를 확인해 주세요.", "error")
         else:
             set_setting("exam_day", d.isoformat())
             set_setting("exam_label", label)

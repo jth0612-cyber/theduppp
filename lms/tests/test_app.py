@@ -893,7 +893,7 @@ class FeatureTest(AppTest):
         self.assertEqual(len(codes[0]), 6); self.assertTrue(codes[0].startswith("27") and codes[0].isdigit())
         anon = self.app.test_client()
         # 틀린 코드, 동의 안 함 → 거부
-        self.assertIn("학생코드가 올바르지", self._signup(anon, "WRONGCODE1").data.decode())
+        self.assertIn("학생코드가 맞지", self._signup(anon, "WRONGCODE1").data.decode())
         self._signup(anon, codes[0], consent="")
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE role='student' AND username='S100'", one=True)["n"], 0)

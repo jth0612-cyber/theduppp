@@ -45,7 +45,7 @@ def _get_student(sid):
 def _text(name, max_len=200, required=True):
     value = request.form.get(name, "").strip()
     if required and not value:
-        raise ValueError("필수 항목을 입력하세요.")
+        raise ValueError("필수 항목을 적어 주세요.")
     if len(value) > max_len:
         raise ValueError(f"입력이 너무 길어요. (최대 {max_len}자)")
     return value
@@ -269,11 +269,11 @@ def student_import(cid):
     _get_class(cid)
     upload = request.files.get("csv")
     if not upload or not upload.filename.lower().endswith(".csv"):
-        flash("CSV 파일을 선택하세요.", "error")
+        flash("CSV 파일을 골라 주세요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     raw = upload.read(5 * 1024 * 1024 + 1)
     if len(raw) > 5 * 1024 * 1024:
-        flash("CSV 파일이 너무 커요. (최대 5MB)", "error")
+        flash("CSV 파일이 너무 커요. 5MB까지 올릴 수 있어요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
     for enc in ("utf-8-sig", "cp949"):
         try:
@@ -282,7 +282,7 @@ def student_import(cid):
         except UnicodeDecodeError:
             continue
     else:
-        flash("파일 인코딩을 읽을 수 없어요. UTF-8 또는 CP949(엑셀 기본)로 저장하세요.", "error")
+        flash("파일 인코딩을 읽을 수 없어요. UTF-8이나 CP949(엑셀 기본)로 저장해 주세요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     reader = csv.DictReader(io.StringIO(text))
@@ -380,7 +380,7 @@ def student_edit(sid):
         f = _student_fields()
         class_id = int(request.form.get("class_id", ""))
     except ValueError as e:
-        flash(str(e) if str(e) else "입력값을 확인하세요.", "error")
+        flash(str(e) if str(e) else "입력값을 확인해 주세요.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     _get_class(class_id)
     dup = query("SELECT 1 FROM students WHERE student_no = ? AND id != ?", (f["student_no"], sid), one=True)
@@ -410,7 +410,7 @@ def student_edit(sid):
 def student_delete(sid):
     s = _get_student(sid)
     if request.form.get("confirm_name", "").strip() != s["name"]:
-        flash("삭제하려면 학생 이름을 정확히 입력하세요.", "error")
+        flash("삭제하려면 학생 이름을 정확히 적어 주세요.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     # 개인정보 파기: 질문·추가 질문 첨부 사진까지 지운다. 기록을 지운 뒤 파일을 지워야 중간에 실패해도 기록이 깨지지 않는다
     file_ids = [r["image_id"] for r in query("""
@@ -499,7 +499,7 @@ def student_account_delete(sid):
     _get_student(sid)
     execute("DELETE FROM users WHERE student_id = ?", (sid,))
     audit("account_delete", f"student:{sid}")
-    flash("학생 계정을 삭제했어요. 학습 기록은 유지돼요.", "ok")
+    flash("학생 계정을 삭제했어요. 학습 기록은 그대로 남아요.", "ok")
     return redirect(url_for("teacher.student_detail", sid=sid))
 
 
@@ -511,7 +511,7 @@ def class_accounts(cid):
     targets = query("""SELECT s.* FROM students s LEFT JOIN users u ON u.student_id = s.id
                        WHERE s.class_id = ? AND s.active = 1 AND u.id IS NULL ORDER BY s.name""", (cid,))
     if not targets:
-        flash("새로 발급할 학생이 없어요. (이미 모두 계정이 있음)", "ok")
+        flash("새로 발급할 학생이 없어요. 모두 계정이 있어요.", "ok")
         return redirect(url_for("teacher.class_detail", cid=cid))
     rows = []
     for s in targets:
@@ -744,7 +744,7 @@ def video_create(cid):
         expires = date.fromisoformat(expires).isoformat() if expires else None
     except ValueError as e:
         msg = str(e)
-        flash(msg if any(k in msg for k in ("입력", "주소", "링크")) else "만료일 형식을 확인하세요.", "error")
+        flash(msg if any(k in msg for k in ("입력", "주소", "링크")) else "만료일 형식을 확인해 주세요.", "error")
     else:
         vid = execute("INSERT INTO videos (class_id, title, url, duration, expires_on) VALUES (?, ?, ?, ?, ?)",
                       (cid, title, url, duration, expires))
@@ -830,7 +830,7 @@ def staff():
         if not _USERNAME.match(username):
             flash("아이디는 영문, 숫자, _ . - 로 3~30자예요. (예: ta_kim)", "error")
         elif query("SELECT 1 FROM users WHERE username = ?", (username,), one=True) or                 query("SELECT 1 FROM students WHERE student_no = ?", (username,), one=True):
-            flash("이미 쓰이고 있는 아이디예요. (학생 아이디와도 겹치면 안 돼요)", "error")
+            flash("이미 있는 아이디예요. 학생 아이디와도 겹치면 안 돼요.", "error")
         else:
             temp = generate_temp_password()
             uid = execute("""INSERT INTO users (role, username, display_name, password_hash, must_change_pw)
@@ -923,7 +923,7 @@ def class_codes(cid):
         for _ in range(n):
             execute("INSERT INTO student_codes (class_id, code) VALUES (?, ?)", (cid, new_student_code()))
         audit("student_codes_generate", f"class:{cid} n:{n}")
-        flash(f"코드 {n}개를 생성했어요. 'CSV로 받기'로 내려받아 행정 시스템에 맞춰 쓰세요.", "ok")
+        flash(f"코드 {n}개를 만들었어요. 'CSV로 받기'로 내려받아 행정 시스템에 넣어 주세요.", "ok")
     elif action == "delete":
         ids = [int(x) for x in request.form.getlist("ids") if x.isdigit()]
         n = 0
@@ -952,10 +952,10 @@ def class_joincode(cid):
     action = request.form.get("action")
     if action == "regen":
         execute("UPDATE classes SET join_code = ? WHERE id = ?", (new_join_code(join_code_taken), cid))
-        flash("새 가입 코드를 만들었어요. 예전 코드는 더 이상 사용할 수 없어요.", "ok")
+        flash("새 가입 코드를 만들었어요. 예전 코드는 이제 쓸 수 없어요.", "ok")
     elif action in ("open", "close"):
         execute("UPDATE classes SET join_open = ? WHERE id = ?", (1 if action == "open" else 0, cid))
-        flash("가입을 받아요." if action == "open" else "가입 받기를 멈췄어요.", "ok")
+        flash("가입을 다시 받아요." if action == "open" else "가입 받기를 멈췄어요.", "ok")
     audit("joincode_" + (action or "unknown"), f"class:{cid}")
     return redirect(url_for("teacher.class_detail", cid=cid))
 
@@ -971,7 +971,7 @@ def _approve(req):
         sid = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, ?, ?)",
                       (req["class_id"], req["name"], req["student_no"]))
     elif not student["active"]:
-        return f"{req['name']}({req['student_no']}): 퇴원 처리된 학생이에요. 학생 정보에서 재원으로 바꾼 뒤 승인하세요."
+        return f"{req['name']}({req['student_no']}): 퇴원 처리된 학생이에요. 학생 정보에서 재원으로 바꾼 뒤 승인해 주세요."
     else:
         sid = student["id"]  # 선생님이 미리 등록해 둔 명단과 연결 (반·이름은 명단 기준)
     execute("""INSERT INTO users (role, username, nickname, password_hash, student_id, google_sub, google_email)

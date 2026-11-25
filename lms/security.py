@@ -63,7 +63,7 @@ def authenticate(username, password):
     user = query("SELECT * FROM users WHERE username = ?", (username,), one=True)
     if user is None:
         verify_password(_DUMMY_HASH, password)
-        return None, "아이디 또는 비밀번호가 올바르지 않아요."
+        return None, "아이디나 비밀번호가 달라요."
 
     now = datetime.now()
     if user["locked_until"] and datetime.fromisoformat(user["locked_until"]) > now:
@@ -78,7 +78,7 @@ def authenticate(username, password):
         execute("UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
                 (attempts, locked, user["id"]))
         audit("login_failed", f"user:{username}", user_id=user["id"], username=username)
-        return None, "아이디 또는 비밀번호가 올바르지 않아요."
+        return None, "아이디나 비밀번호가 달라요."
 
     if user["disabled"]:
         audit("login_disabled", f"user:{username}", user_id=user["id"], username=username)

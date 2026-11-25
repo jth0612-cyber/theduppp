@@ -194,7 +194,7 @@ def groups():
             first = None
         n = max(1, min(60, _int(request.form.get("weeks")) or 20))
         if not name or not first:
-            flash("그룹 이름과 1주차 날짜를 넣으세요.", "error")
+            flash("그룹 이름과 1주차 날짜를 넣어 주세요.", "error")
             return redirect(url_for("schedule.groups"))
         gid = execute("INSERT INTO course_groups (name, track) VALUES (?, ?)", (name, track))
         db = get_db()
@@ -331,7 +331,7 @@ def week_edit(wid):
         except ValueError:
             st = en = None
         if not st or en < st or (en - st).days > 13:
-            flash("주차 날짜를 확인하세요 (끝이 시작보다 앞이거나 2주를 넘어요).", "error")
+            flash("주차 날짜를 확인해 주세요 (끝이 시작보다 앞이거나 2주를 넘어요).", "error")
         else:
             db.execute("""UPDATE group_weeks SET starts = ?, ends = ?, topic = ?, note = ?, review_round = ?, mock_round = ?
                           WHERE id = ?""", (st.isoformat(), en.isoformat(), request.form.get("topic", "").strip()[:80],
@@ -371,7 +371,7 @@ def _shift(w, push):
             db.execute("INSERT OR IGNORE INTO week_handouts (week_id, handout_id) VALUES (?, ?)", (r["id"], h))
     lost = [p for p in plans[len(targets):] if p[0] or p[3]]
     if lost:
-        flash(f"마지막 {len(lost)}주 진도가 넘쳐 지워졌어요. 주차를 더 만든 뒤 휴강을 다시 넣으세요.", "error")
+        flash(f"마지막 {len(lost)}주 진도가 넘쳐 지워졌어요. 주차를 더 만든 뒤 휴강을 다시 넣어 주세요.", "error")
 
 
 # ---------------------------------------------------------------- 수업 칸: 교재 넣기·빼기, 명단·출석
@@ -410,7 +410,7 @@ def session(sid):
             st = (query("SELECT id, class_id, name FROM students WHERE active = 1 AND student_no = ?", (key,))
                   or query("SELECT id, class_id, name FROM students WHERE active = 1 AND name = ?", (key,))) if key else []
             if len(st) != 1:
-                flash("같은 이름이 여럿이에요. 아이디(출결 번호)로 찾으세요." if st else "학생을 찾지 못했어요.", "error")
+                flash("같은 이름이 여럿이에요. 아이디(출결 번호)로 찾아 주세요." if st else "학생을 찾지 못했어요.", "error")
             elif st[0]["class_id"] == row["class_id"]:
                 flash(f"{st[0]['name']} 학생은 이 반 학생이에요.", "error")
             else:
@@ -472,7 +472,7 @@ def slots(cid):
         wd = _int(request.form.get("weekday"))
         st, en = request.form.get("starts", ""), request.form.get("ends", "")
         if wd is None or not 0 <= wd <= 6 or not st or not en or en <= st:
-            flash("요일과 시간을 확인하세요.", "error")
+            flash("요일과 시간을 확인해 주세요.", "error")
             return redirect(url_for("teacher.class_detail", cid=cid, tab="times"))
         execute("""INSERT INTO timetable (class_id, weekday, starts, ends, title, period, hall, room)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",

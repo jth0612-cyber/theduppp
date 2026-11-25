@@ -408,5 +408,5 @@ def t_parent_link(sid):
         abort(404)
     parent_token(sid, renew=request.form.get("renew") == "1")
     audit("parent_link", f"student:{sid}")
-    flash("학부모 리포트 링크를 새로 만들었어요. 이전 링크는 더 이상 열리지 않아요." if request.form.get("renew") == "1" else "학부모 리포트 링크를 만들었어요.", "ok")
+    flash("학부모 리포트 링크를 새로 만들었어요. 이전 링크는 이제 열리지 않아요." if request.form.get("renew") == "1" else "학부모 리포트 링크를 만들었어요.", "ok")
     return redirect(url_for("teacher.student_detail", sid=sid) + "#parent")

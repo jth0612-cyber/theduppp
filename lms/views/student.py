@@ -387,7 +387,7 @@ def question_followup(qid):
     if q["answer_count"] == 0:
         flash("선생님 답변이 달린 뒤에 추가 질문을 할 수 있어요.", "error")
     elif q["followup_count"] >= MAX_FOLLOWUPS:
-        flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 가능해요. 새 질문으로 올려 주세요.", "error")
+        flash(f"추가 질문은 {MAX_FOLLOWUPS}번까지 할 수 있어요. 새 질문으로 올려 주세요.", "error")
     else:
         body = request.form.get("body", "").strip()
         err = None

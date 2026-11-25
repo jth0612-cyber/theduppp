@@ -486,8 +486,8 @@ export default {
         splash: '<svg viewBox="0 0 24 24"><path d="M12 4c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg>',
       },
       custom: {
-        soak(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 다 찼어요. 화롯가는 남아 있어요.") : E.sit(s); },
-        hearth(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 누르세요."); const s = E.nearestSeat(hearthSeat); s === null ? E.whisper("화롯가 방석이 다 찼어요.") : E.sit(s); },
+        soak(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 눌러 주세요."); const s = E.nearestSeat(waterSeat); s === null ? E.whisper("탕 자리가 다 찼어요. 화롯가는 남아 있어요.") : E.sit(s); },
+        hearth(E) { if (E.state === "focus") return E.whisper("집중 중이에요. 먼저 '그만하기'를 눌러 주세요."); const s = E.nearestSeat(hearthSeat); s === null ? E.whisper("화롯가 방석이 다 찼어요.") : E.sit(s); },
         splash(E) {
           if (!inPool(E.me.pos.x, E.me.pos.z) && E.me.seat === null) {
             const a = Math.atan2(E.me.pos.z - POOL.z, E.me.pos.x - POOL.x), r = poolR(a) + 0.6;

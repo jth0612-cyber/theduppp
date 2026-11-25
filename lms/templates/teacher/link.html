@@ -9,7 +9,7 @@
 {% if new_token %}
 <section class="card sys-token" aria-labelledby="h-tok">
   <h2 id="h-tok">새 열쇠</h2>
-  <p class="small">이 화면을 벗어나면 다시 볼 수 없어요. 시트의 <b>확장 프로그램 → Apps Script → 프로젝트 설정 → 스크립트 속성</b>에 이름 <code>WEB_SYNC_TOKEN</code>으로 붙여 넣으세요.</p>
+  <p class="small">이 화면을 벗어나면 다시 볼 수 없어요. 시트의 <b>확장 프로그램 → Apps Script → 프로젝트 설정 → 스크립트 속성</b>에 이름 <code>WEB_SYNC_TOKEN</code>으로 붙여 넣어 주세요.</p>
   <input class="mono" value="{{ new_token }}" readonly aria-label="연동 열쇠" data-select-all>
 </section>
 {% endif %}
@@ -24,7 +24,7 @@
 </section>
 
 <section class="card">
-  <h2>CSV로 직접 올리기{% call help('CSV로 직접 올리기') %}<p>시트에서 표마다 <b>파일 → 다운로드 → CSV</b>로 받은 파일을 한꺼번에 고르세요. 파일 이름이나 머리글로 어떤 표인지 알아봐요. 올린 표는 통째로 교체돼요.</p>{% endcall %}</h2>
+  <h2>CSV로 직접 올리기{% call help('CSV로 직접 올리기') %}<p>시트에서 표마다 <b>파일 → 다운로드 → CSV</b>로 받은 파일을 한꺼번에 골라 주세요. 파일 이름이나 머리글로 어떤 표인지 알아봐요. 올린 표는 통째로 교체돼요.</p>{% endcall %}</h2>
   <form method="post" action="{{ url_for('link.t_link_upload') }}" enctype="multipart/form-data" class="row">
     {{ csrf() }}
     <input type="file" name="files" accept=".csv,text/csv" multiple required aria-label="CSV 파일">

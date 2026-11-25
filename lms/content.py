@@ -19,7 +19,7 @@ def validate_https_url(url, allowed_hosts=None):
         raise ValueError("주소가 너무 길어요.")
     parsed = urlparse(url)
     if parsed.scheme != "https" or not parsed.hostname:
-        raise ValueError("https:// 로 시작하는 주소를 입력하세요.")
+        raise ValueError("https:// 로 시작하는 주소를 적어 주세요.")
     if allowed_hosts is not None and parsed.hostname.lower() not in allowed_hosts:
         raise ValueError("유튜브, 비메오, 구글 드라이브 링크만 등록할 수 있어요.")
     return url

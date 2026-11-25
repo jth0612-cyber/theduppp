@@ -12,7 +12,7 @@ def main():
     with app.app_context():
         username = input("강사 아이디: ").strip()
         if not username:
-            sys.exit("아이디를 입력하세요.")
+            sys.exit("아이디를 적어 주세요.")
         if query("SELECT 1 FROM users WHERE username = ?", (username,), one=True):
             sys.exit("이미 있는 아이디입니다.")
         pw = getpass.getpass("비밀번호: ")

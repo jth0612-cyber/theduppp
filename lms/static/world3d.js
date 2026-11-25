@@ -878,7 +878,7 @@ function tap(cx, cy) {
     return;
   }
   if (o.userData.action) return act(o.userData.action, o);
-  if (state === "focus") return whisper("집중 중에는 자리에 머물러요. 일어나려면 '그만하기'를 누르세요.");
+  if (state === "focus") return whisper("집중 중에는 자리에 머물러요. 일어나려면 '그만하기'를 눌러 주세요.");
   const pts = P.planWalk(me.pos, h.point, o);
   if (!pts || !pts.length) return;
   standUp(true);
@@ -922,7 +922,7 @@ function nearestFreeSeat() {
   return best;
 }
 function goSit(id) {
-  if (state === "focus") return whisper("집중 중이에요. 자리를 옮기려면 먼저 '그만하기'를 누르세요.");
+  if (state === "focus") return whisper("집중 중이에요. 자리를 옮기려면 먼저 '그만하기'를 눌러 주세요.");
   if (occupiedSeats().has(id)) return whisper(`그 ${P.seatNoun}에는 이미 다른 사람이 있어요.`);
   standUp(true);
   const path = P.planSeat(me.pos, id);
@@ -1070,7 +1070,7 @@ function act(id, obj) {
     stopArmed = Date.now() + 4000;
     const b = actionsEl.querySelector('[data-act="stop"]'), min = Math.floor((Date.now() - focusStart) / 60000);
     if (b) { b.classList.add("is-armed"); b.querySelector("span").textContent = "한 번 더"; setTimeout(() => { if (Date.now() >= stopArmed && state === "focus") render(); }, 4100); }
-    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않아요. 끝내려면 한 번 더 누르세요." : `지금 끝내면 ${min}분이 기록돼요. 끝내려면 한 번 더 누르세요.`, 4000);
+    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않아요. 끝내려면 한 번 더 눌러 주세요." : `지금 끝내면 ${min}분이 기록돼요. 끝내려면 한 번 더 눌러 주세요.`, 4000);
   }
 }
 
