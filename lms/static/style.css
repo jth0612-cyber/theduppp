@@ -2815,3 +2815,5 @@ main fieldset > legend + * { clear: both; }
 .card-narrow { max-width: 520px; }
 @media (min-width: 901px) { .seg.seg-wide { width: fit-content; } }
 .no-shell .colo-name { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.auth-affil, .m-affil) { filter: brightness(0) invert(1); } }
+:root[data-theme="dark"] :is(.auth-affil, .m-affil) { filter: brightness(0) invert(1); }
