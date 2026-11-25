@@ -1,9 +1,33 @@
 // CSP 때문에 인라인 스크립트 대신 이 파일만 사용한다.
+// 확인 시트: window.confirm 대신 아래에서 올라오는 시트. ok() 는 '확인'을 눌렀을 때만 부른다.
+function askSheet(msg, ok, danger) {
+  var d = document.createElement("dialog");
+  d.className = "sheet-dlg" + (danger ? " is-danger" : "");
+  d.innerHTML = '<div class="sd-box"><p></p><div class="sd-act"><button type="button" class="btn" value="no">취소</button><button type="button" class="btn primary" value="yes">확인</button></div></div>';
+  d.querySelector("p").textContent = msg;
+  document.body.appendChild(d);
+  var close = function () { d.close(); d.remove(); };
+  d.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b) { close(); if (b.value === "yes") ok(); }
+    else if (e.target === d) close();
+  });
+  d.addEventListener("cancel", function (e) { e.preventDefault(); close(); });
+  if (d.showModal) { d.showModal(); d.querySelector(".primary").focus(); }
+  else { d.remove(); if (window.confirm(msg)) ok(); }
+}
 document.addEventListener("submit", function (e) {
   // 폼 또는 누른 버튼에 data-confirm 이 있으면 확인
-  var msg = (e.submitter && e.submitter.getAttribute("data-confirm")) || e.target.getAttribute("data-confirm");
-  if (msg && !window.confirm(msg)) e.preventDefault();
-});
+  var f = e.target, sub = e.submitter;
+  var msg = (sub && sub.getAttribute("data-confirm")) || f.getAttribute("data-confirm");
+  if (!msg || f._confirmed) { f._confirmed = false; return; }
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  askSheet(msg, function () {
+    f._confirmed = true;
+    if (f.requestSubmit) f.requestSubmit(sub && sub.form === f ? sub : undefined); else f.submit();
+  }, /삭제|지우|초기화/.test(msg));
+}, true);
 
 // 점수 입력표: Enter 로 다음 칸 이동
 document.addEventListener("keydown", function (e) {
@@ -336,7 +360,9 @@ document.addEventListener("click", function (e) {
     f.querySelectorAll('input[name^="m"]').forEach(function (inp) {
       if (!inp.value.trim()) empty.push(inp.name.slice(1) + "번");
     });
-    if (empty.length && !confirm("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장하시겠습니까?")) e.preventDefault();
+    if (!empty.length || f._confirmed) { f._confirmed = false; return; }
+    e.preventDefault();
+    askSheet("메모가 빈 문항: " + empty.join(", ") + "\n그대로 저장하시겠습니까?", function () { f._confirmed = true; f.requestSubmit ? f.requestSubmit() : f.submit(); });
   });
 })();
 // 사진 크게 보기: 첨부 사진 링크를 새 탭 대신 같은 화면 위에 연다 (누르거나 Esc 로 닫기)
@@ -378,5 +404,24 @@ document.addEventListener("click", function (e) {
   document.querySelectorAll("img").forEach(function (im) {
     var done = function () { im.classList.add("is-loaded"); };
     if (im.complete) done(); else { im.addEventListener("load", done); im.addEventListener("error", done); }
+  });
+})();
+
+// 큰 숫자는 0에서 올라가며 나타난다 (앱 홈 숫자, 성적표 점수)
+(function () {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll(".ah-stats b, .ah-score b, [data-count]").forEach(function (el) {
+    var t = el.firstChild;
+    if (!t || t.nodeType !== 3) return;
+    var m = t.nodeValue.match(/^\s*(\d+(?:\.\d+)?)\s*$/);
+    if (!m) return;
+    var end = parseFloat(m[1]), dec = (m[1].split(".")[1] || "").length, t0 = performance.now();
+    var step = function (now) {
+      var k = Math.min(1, (now - t0) / 700), v = end * (1 - Math.pow(1 - k, 3));
+      t.nodeValue = v.toFixed(dec);
+      if (k < 1) requestAnimationFrame(step);
+    };
+    t.nodeValue = (0).toFixed(dec);
+    requestAnimationFrame(step);
   });
 })();
