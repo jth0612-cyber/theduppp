@@ -107,8 +107,7 @@
     <form method="post" action="{{ url_for('teacher.class_accounts', cid=cls.id) }}"
           data-confirm="계정이 없는 학생들에게 임시 비밀번호를 발급해요. 내려받은 파일은 학생에게 전달한 뒤 바로 삭제해 주세요.">
       {{ csrf() }}
-      <p class="small muted">계정이 없는 학생 전원에게 로그인 계정을 만들고, 임시 비밀번호 목록(CSV)을 <b>한 번만</b> 내려받아요. 학생은 첫 로그인 때 비밀번호를 바꿔야 해요.</p>
-      <button class="btn">학생 계정 일괄 발급</button>
+      <div class="row nowrap"><button class="btn">학생 계정 일괄 발급</button>{% call help('학생 계정 일괄 발급') %}<p>계정이 없는 학생 모두에게 로그인 계정을 만들어요. 임시 비밀번호 목록(CSV)은 한 번만 내려받을 수 있어요.</p><p>학생은 처음 로그인할 때 비밀번호를 바꿔야 해요.</p>{% endcall %}</div>
     </form>
   </details>
 </div>

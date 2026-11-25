@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import pagination, status_badge, qtype_badge %}
 {% block title %}질문답변 | 정태혁 통합과학 lab{% endblock %}
+{% from "_macros.html" import help %}
 {% block content %}
 <header class="ed-head"><h1>질문답변</h1></header>
 <nav class="tabs" aria-label="답변 상태">
@@ -27,7 +28,7 @@
 {% if g.user.role == 'assistant' %}
 <form method="post" action="{{ url_for('teacher.my_intro') }}" class="card row intro-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <label class="small" for="ta-intro"><b>내 소개</b> <span class="muted">학생이 학습상담 조교를 고를 때 보여요 (80자)</span></label>
+  <label class="small" for="ta-intro"><b>내 소개</b>{% call help('내 소개') %}<p>학생이 학습상담 조교를 고를 때 보여요. 80자까지 쓸 수 있어요.</p>{% endcall %}</label>
   <input type="text" id="ta-intro" name="intro" maxlength="80" value="{{ my_intro }}" placeholder="예: 생명 단원 개념 정리, 6월 이후 공부 계획 상담" class="grow">
   <button class="btn small">저장</button>
 </form>
