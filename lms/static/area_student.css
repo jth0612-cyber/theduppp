@@ -1,1 +1,23 @@
 /* student 화면 전용 (토스 규칙 적용, 2026-11-26). 공용 부품은 style.css */
+
+/* 질답 게시판 */
+.ask-card:not([open]) { display: none; }
+.ask-card > summary { list-style: none; }
+.ask-title { margin: 0 0 16px; font-size: 18px; font-weight: 700; }
+.rank-no { width: 24px; text-align: center; font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.card > .find { margin-bottom: 8px; }
+.card > .find input { width: 100%; }
+.chip-links { display: flex; gap: 8px; margin: 4px 0 8px; }
+.chip-links a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--raised); color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
+.chip-links a.is-on { background: var(--accent-soft); color: var(--accent-ink); }
+.find-wide { margin: 0 0 16px; } .find-wide input { width: 100%; }
+
+/* 홈 */
+.home-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; margin: 0; }
+.home-cols > .panel { margin-bottom: 16px; }
+.ed-head-split { display: flex; align-items: center; justify-content: space-between; }
+.txt-danger { color: var(--danger); }
+.lr-end b small { font-size: 13px; font-weight: 500; color: var(--faint); }
+/* 영상, 자료 */
+.list-rows .thumb { width: 96px; aspect-ratio: 16 / 9; height: auto; border-radius: 10px; object-fit: cover; background: var(--raised); }
+.list-rows .thumb-empty { display: grid; place-items: center; color: var(--faint); }

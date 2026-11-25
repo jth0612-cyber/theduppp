@@ -1,21 +1,18 @@
 {% extends "base.html" %}
 {% block title %}강의 영상 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>강의 영상</h1></div>
-</div>
-<div class="card">
+<header class="ed-head"><h1>강의 영상</h1></header>
+{% if videos %}
+<section class="card"><ul class="list-rows">
   {% for v in videos %}
   {% set yt = v.url|youtube_id %}
-  <a class="video-row" href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
-    {% if yt %}<img class="thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">
-    {% else %}<span class="thumb thumb-empty thumb-{{ 'drive' if (v.url|video_source) == '구글 드라이브' else 'other' }}">▶</span>{% endif %}
-    <span class="file-main">
-      <b>{{ v.title }}</b>
-      <span class="small muted"><span class="src-chip src-{{ 'drive' if (v.url|video_source) == '구글 드라이브' else 'yt' }}">{{ v.url|video_source }}</span>{% if v.duration %} <span class="badge gray">{{ v.duration }}</span>{% endif %} {{ v.created_at[:10] }}</span>
-    </span>
-    {% if v.expires_on %}<span class="small muted num">{{ v.expires_on[2:] }} 만료</span>{% endif %}
-  </a>
-  {% else %}<p class="muted">볼 수 있는 영상이 없어요.</p>{% endfor %}
-</div>
+  <li><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">
+    {% if yt %}<img class="lr-lead thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">
+    {% else %}<span class="lr-lead thumb thumb-empty" aria-hidden="true">▶</span>{% endif %}
+    <span class="lr-main"><b class="lr-title">{{ v.title }}</b>
+      <span class="lr-sub">{{ v.created_at[5:10]|replace('-', '.') }}{% if v.duration %}<span class="sep" aria-hidden="true"></span>{{ v.duration }}{% endif %}{% if v.expires_on %}<span class="sep" aria-hidden="true"></span>{{ v.expires_on[5:]|replace("-", ".") }}까지{% endif %}</span></span>
+  </a></li>
+  {% endfor %}
+</ul></section>
+{% else %}<section class="quiet-box"><p>볼 수 있는 영상이 없어요.</p></section>{% endif %}
 {% endblock %}

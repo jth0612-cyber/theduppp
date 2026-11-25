@@ -2,14 +2,15 @@
 {% from "_macros.html" import filesize, kind_badge %}
 {% block title %}자료실 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head"><h1>자료실</h1></div>
-<div class="card">
+<header class="ed-head"><h1>자료실</h1></header>
+{% if materials %}
+<section class="card"><ul class="list-rows">
   {% for m in materials %}
-  <a class="file-row" href="{{ url_for('student.file', fid=m.file_id) }}">
-    {{ kind_badge(m.original_name) }}
-    <span class="file-main"><b>{{ m.title }}</b><span class="small muted">{{ m.original_name }}</span></span>
-    <span class="small muted num">{{ filesize(m.size) }}<br>{{ m.created_at[:10] }}</span>
-  </a>
-  {% else %}<p class="muted">자료가 없어요.</p>{% endfor %}
-</div>
+  <li><a href="{{ url_for('student.file', fid=m.file_id) }}">
+    <span class="lr-lead">{{ kind_badge(m.original_name) }}</span>
+    <span class="lr-main"><b class="lr-title">{{ m.title }}</b><span class="lr-sub">{{ m.created_at[5:10]|replace('-', '.') }}<span class="sep" aria-hidden="true"></span>{{ filesize(m.size) }}</span></span>
+  </a></li>
+  {% endfor %}
+</ul></section>
+{% else %}<section class="quiet-box"><p>자료가 없어요.</p></section>{% endif %}
 {% endblock %}

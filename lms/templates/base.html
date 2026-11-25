@@ -66,8 +66,11 @@
   </aside>
 
   {# 휴대폰: 위 막대 + 아래 탭 + 전체 메뉴 #}
+  {% set home_ep = 'student.home' if g.user.role == 'student' else 'teacher.dashboard' %}
+  {% set sub_page = ep != home_ep and not ep.startswith('rooms.room') %}
   <header class="m-top">
-    <a class="m-brand" href="{{ url_for('auth.index') }}" aria-label="홈">{% include "_logo.html" %}<span>통합과학 lab</span></a>
+    {% if sub_page %}<a class="m-back" href="{{ url_for(home_ep) }}" data-back aria-label="뒤로">{{ nav.icon('back') }}</a>
+    {% else %}<a class="m-brand" href="{{ url_for('auth.index') }}" aria-label="홈">{% include "_logo.html" %}<span>통합과학 lab</span></a>{% endif %}
     <a class="m-who" href="{{ url_for('auth.change_password') }}">{% if who_cap %}<span class="cap">{{ who_cap }}</span> {% endif %}{{ who }}</a>
   </header>
   <nav class="m-tabs" aria-label="빠른 메뉴">
@@ -108,10 +111,6 @@
     <img class="m-affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">
   </div>
   <main class="sheet {% block main_class %}container{% endblock %}">
-    {% set home_ep = 'student.home' if g.user.role == 'student' else 'teacher.dashboard' %}
-    {% if ep != home_ep and not ep.startswith('rooms.room') %}
-    <nav class="backbar" aria-label="이동"><a class="back-link" href="{{ url_for(home_ep) }}" data-back>{{ nav.icon('back') }}<span>뒤로</span></a><a class="home-link" href="{{ url_for(home_ep) }}">홈</a></nav>
-    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
     {% endwith %}

@@ -1,47 +1,53 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, tag_badge %}
+{% from "_macros.html" import status_badge %}
 {% block content %}
-<header class="ed-head home-head">
+<header class="ed-head ed-head-split home-head">
   <div>
-    <p class="kicker">{{ me.class_name }}<span class="sep" aria-hidden="true"></span>닉네임 {{ g.user.nickname }}</p>
     <h1>{{ me.name }}님</h1>
+    <p class="ed-lede">{{ me.class_name }}<span class="sep" aria-hidden="true"></span>{{ g.user.nickname }}</p>
   </div>
-  <div class="home-actions">
-    <a class="btn primary" href="{{ url_for('student.questions', ask=1) }}#ask">질문하기</a>
-  </div>
+  <a class="btn primary" href="{{ url_for('student.questions', ask=1) }}#ask">질문하기</a>
 </header>
 
 {% if news and (news.feedback or news.papers or news.answers or news.lessons) %}
 <section class="panel home-news" aria-labelledby="h-news">
   <div class="sec-head"><h2 id="h-news">알림</h2><span>최근 7일</span></div>
-  <ul class="mini-list">
-    {% if news.feedback %}<li><a href="{{ url_for('books.analysis_home') }}">Full 모의고사 피드백 답변 {{ news.feedback }}건</a></li>{% endif %}
-    {% if news.papers %}<li><a href="{{ url_for('books.analysis_home') }}">복습 테스트 첨삭 완료 {{ news.papers }}건</a></li>{% endif %}
-    {% if news.answers %}<li><a href="{{ url_for('student.questions', view='mine', status='answered') }}">내 질문에 답변 {{ news.answers }}건</a></li>{% endif %}
-    {% if news.lessons %}<li><a href="{{ url_for('care.s_lessons') }}">새 수업 기록 {{ news.lessons }}건</a></li>{% endif %}
+  <ul class="list-rows">
+    {% if news.feedback %}<li><a href="{{ url_for('books.analysis_home') }}"><span class="lr-main"><b class="lr-title">모의고사 피드백 답변이 왔어요</b></span><span class="lr-end"><b>{{ news.feedback }}건</b></span></a></li>{% endif %}
+    {% if news.papers %}<li><a href="{{ url_for('books.analysis_home') }}"><span class="lr-main"><b class="lr-title">시험지 첨삭이 끝났어요</b></span><span class="lr-end"><b>{{ news.papers }}건</b></span></a></li>{% endif %}
+    {% if news.answers %}<li><a href="{{ url_for('student.questions', view='mine', status='answered') }}"><span class="lr-main"><b class="lr-title">내 질문에 답변이 달렸어요</b></span><span class="lr-end"><b>{{ news.answers }}건</b></span></a></li>{% endif %}
+    {% if news.lessons %}<li><a href="{{ url_for('care.s_lessons') }}"><span class="lr-main"><b class="lr-title">수업 기록이 올라왔어요</b></span><span class="lr-end"><b>{{ news.lessons }}건</b></span></a></li>{% endif %}
   </ul>
 </section>
 {% endif %}
 
-<div class="home-cols home-core">
+<div class="home-cols">
   <section class="panel" aria-labelledby="h-notice">
-    <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체 보기 →</a></div>
-    <ul class="mini-list">
+    <div class="sec-head"><h2 id="h-notice">공지</h2><a href="{{ url_for('student.notices') }}">전체</a></div>
+    {% if notices %}
+    <ul class="list-rows">
       {% for n in notices %}
-        <li>{{ tag_badge(n.tag) }}<a href="{{ url_for('student.notice_detail', nid=n.id) }}">{{ n.title }}</a><time>{{ n.created_at[5:10] }}</time></li>
-      {% else %}<li class="empty">새 공지가 없어요.</li>{% endfor %}
+      <li><a href="{{ url_for('student.notice_detail', nid=n.id) }}"><span class="lr-main"><b class="lr-title">{{ n.title }}</b><span class="lr-sub">{{ '정오표' if n.tag == '정오' else n.tag }}<span class="sep" aria-hidden="true"></span>{{ n.created_at[5:10]|replace('-', '.') }}</span></span></a></li>
+      {% endfor %}
     </ul>
+    {% else %}<div class="list-empty">새 공지가 없어요.</div>{% endif %}
   </section>
   <section class="panel" aria-labelledby="h-q">
-    <div class="sec-head"><h2 id="h-q">질답 게시판</h2><a href="{{ url_for('student.questions') }}">전체 보기 →</a></div>
-    <ul class="mini-list">
+    <div class="sec-head"><h2 id="h-q">내 질문</h2><a href="{{ url_for('student.questions', view='mine') }}">전체</a></div>
+    {% if questions %}
+    <ul class="list-rows">
       {% for q in questions %}
-        <li><a href="{{ url_for('student.question_detail', qid=q.id) }}">{{ q.title }}</a>{{ status_badge(q.status) }}</li>
-      {% else %}<li class="empty">아직 질문하지 않았어요.</li>{% endfor %}
+      <li><a href="{{ url_for('student.question_detail', qid=q.id) }}"><span class="lr-main"><b class="lr-title">{{ q.title }}</b></span><span class="lr-end">{{ status_badge(q.status) }}</span></a></li>
+      {% endfor %}
     </ul>
+    {% else %}<div class="list-empty">아직 질문하지 않았어요.</div>{% endif %}
   </section>
 </div>
 
-{% if cast %}<a class="home-shop home-cast" href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><b>태혁쌤의 cast</b><span>{{ cast.title }}<span class="sep" aria-hidden="true"></span>{{ cast.created_at[5:10] }}</span><span aria-hidden="true">→</span></a>{% endif %}
-<a class="home-shop" href="{{ url_for('books.shop') }}"><b>교재 구매</b><span>LINE UP<span class="sep" aria-hidden="true"></span>FRAMING<span class="sep" aria-hidden="true"></span>Squeeze<span class="sep" aria-hidden="true"></span>SWEEP</span><span aria-hidden="true">→</span></a>
+<section class="panel" aria-label="바로가기">
+  <ul class="list-rows">
+    {% if cast %}<li><a href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><span class="lr-main"><b class="lr-title">{{ cast.title }}</b><span class="lr-sub">태혁쌤의 cast<span class="sep" aria-hidden="true"></span>{{ cast.created_at[5:10]|replace('-', '.') }}</span></span></a></li>{% endif %}
+    <li><a href="{{ url_for('books.shop') }}"><span class="lr-main"><b class="lr-title">교재 구매</b><span class="lr-sub">LINE UP, FRAMING, Squeeze, SWEEP</span></span></a></li>
+  </ul>
+</section>
 {% endblock %}

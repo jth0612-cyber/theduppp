@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% from "_macros.html" import csrf, status_badge, qtype_badge, pagination %}
+{% from "_macros.html" import csrf, status_badge, pagination %}
 {% block title %}질답 게시판 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div>
-    <h1>질답 게시판</h1>
-  </div>
-</div>
+<header class="ed-head ed-head-split">
+  <h1>질답 게시판</h1>
+  <a class="btn primary" href="{{ url_for('student.questions', ask=1) }}#ask">질문하기</a>
+</header>
 
 {% set dq = draft.qtype if draft else qtype %}
 {% set fe = form_err[0] if form_err else None %}
-<details class="card" id="ask" {{ 'open' if request.args.get('ask') or draft }}>
-  <summary>질문 쓰기</summary>
+<details class="card ask-card" id="ask" {{ 'open' if request.args.get('ask') or draft }}>
+  <summary class="sr-only">질문 쓰기</summary>
+  <h2 class="ask-title">질문 쓰기</h2>
   {% if form_err %}<p class="form-err" role="alert">{{ form_err[1] }}</p>{% endif %}
   <form method="post" enctype="multipart/form-data" data-qform data-draft-key="q-draft-{{ g.user.id }}"{% if draft %} data-has-draft{% endif %}>
     {{ csrf() }}
@@ -77,61 +77,56 @@
 </details>
 
 {% if best %}
-<section class="panel week-best" aria-labelledby="h-best">
+<section class="panel" aria-labelledby="h-best">
   <div class="sec-head"><h2 id="h-best">이번 주 많이 본 질문</h2></div>
-  <ol class="best-list">
-    {% for b in best %}<li><a href="{{ url_for('student.question_detail', qid=b.id) }}"><span class="best-no">{{ loop.index }}</span><b>{{ b.title }}</b></a>
-      <span class="best-meta">조회 {{ b.views }}{% if b.answer_count %}<span class="sep" aria-hidden="true"></span>답변 {{ b.answer_count }}{% else %}<span class="sep" aria-hidden="true"></span>답변 대기{% endif %}</span></li>{% endfor %}
-  </ol>
-</section>
-{% endif %}
-
-{% if faqs %}
-<section class="panel faq" aria-labelledby="h-faq">
-  <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2></div>
-  <ul class="mini-list">
-    {% for f in faqs %}<li><a href="{{ url_for('student.question_detail', qid=f.id) }}">{{ f.title }}</a></li>{% endfor %}
+  <ul class="list-rows">
+    {% for b in best %}<li><a href="{{ url_for('student.question_detail', qid=b.id) }}"><span class="lr-lead rank-no">{{ loop.index }}</span>
+      <span class="lr-main"><b class="lr-title">{{ b.title }}</b><span class="lr-sub">조회 {{ b.views }}<span class="sep" aria-hidden="true"></span>{{ '답변 ' ~ b.answer_count if b.answer_count else '답변 대기' }}</span></span></a></li>{% endfor %}
   </ul>
 </section>
 {% endif %}
 
-<nav class="tabs">
+{% if faqs %}
+<section class="panel" aria-labelledby="h-faq">
+  <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2></div>
+  <ul class="list-rows">
+    {% for f in faqs %}<li><a href="{{ url_for('student.question_detail', qid=f.id) }}"><span class="lr-main"><b class="lr-title">{{ f.title }}</b></span></a></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<nav class="tabs" aria-label="질문 종류">
   <a href="{{ url_for('student.questions') }}" class="{{ 'active' if view == 'all' and not qtype }}">전체</a>
   {% for t in qtypes %}
   <a href="{{ url_for('student.questions', qtype=t) }}" class="{{ 'active' if qtype == t and view == 'all' }}">{{ t }}</a>
   {% endfor %}
   <a href="{{ url_for('student.questions', view='mine') }}" class="{{ 'active' if view == 'mine' }}">내 질문</a>
 </nav>
-{% if view == 'mine' %}
-<p class="row small">{% for st, label in [('', '전체'), ('answered', '답변 완료'), ('open', '답변 대기')] %}<a href="{{ url_for('student.questions', view='mine', status=st or None) }}" class="badge {{ '' if (request.args.get('status') or '') == st else 'gray' }}">{{ label }}</a> {% endfor %}</p>
-{% endif %}
 
-<div class="card">
-  <div class="page-head">
-    <span class="muted small">{{ total }}개</span>
-    <form method="get" class="row">
-      {% if view == 'mine' %}<input type="hidden" name="view" value="mine">{% endif %}
-      {% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
-      <input type="search" name="q" value="{{ q }}" placeholder="제목과 내용 검색">
-      <button class="btn">검색</button>
-    </form>
-  </div>
+<section class="card" aria-label="질문 목록">
+  <form method="get" class="find" role="search">
+    {% if view == 'mine' %}<input type="hidden" name="view" value="mine">{% endif %}
+    {% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
+    <label for="qq" class="sr-only">질문 찾기</label>
+    <input type="search" id="qq" name="q" value="{{ q }}" placeholder="질문 {{ total }}개에서 찾기" enterkeyhint="search">
+  </form>
+  {% if view == 'mine' %}
+  <p class="chip-links">{% for st, label in [('', '전체'), ('open', '답변 대기'), ('answered', '답변 완료')] %}<a href="{{ url_for('student.questions', view='mine', status=st or None) }}" class="{{ 'is-on' if (request.args.get('status') or '') == st }}">{{ label }}</a>{% endfor %}</p>
+  {% endif %}
   {% if questions %}
-  <div class="table-wrap"><table>
-    <tr><th>제목</th><th>작성자</th><th>상태</th><th class="num">작성</th></tr>
+  <ul class="list-rows">
     {% for item in questions %}
-    <tr>
-      <td>{{ qtype_badge(item.qtype) }} <a href="{{ url_for('student.question_detail', qid=item.id) }}">{{ item.title }}</a>
-        {% if item.image_id %} <span class="badge gray">사진</span>{% endif %}
-        {% if item.answer_count %} <span class="small muted">답변 {{ item.answer_count }}</span>{% endif %}</td>
-      <td class="small">{{ item.nickname }}{% if item.is_mine %} <span class="badge">나</span>{% endif %}</td>
-      <td>{{ status_badge(item.status) }}</td>
-      <td class="small muted num">{{ item.created_at[5:16] }}</td>
-    </tr>
+    <li><a href="{{ url_for('student.question_detail', qid=item.id) }}">
+      <span class="lr-main"><b class="lr-title">{{ item.title }}</b>
+        <span class="lr-sub">{{ item.qtype }}<span class="sep" aria-hidden="true"></span>{{ '나' if item.is_mine else item.nickname }}<span class="sep" aria-hidden="true"></span>{{ item.created_at[5:10]|replace('-', '.') }}{% if item.answer_count > 1 %}<span class="sep" aria-hidden="true"></span>답변 {{ item.answer_count }}{% endif %}</span></span>
+      <span class="lr-end">{{ status_badge(item.status) }}</span>
+    </a></li>
     {% endfor %}
-  </table></div>
+  </ul>
   {{ pagination(page, pages, 'student.questions', view=view if view == 'mine' else None, qtype=qtype or None, q=q or None) }}
-  {% else %}<p class="muted">{{ '검색 결과가 없어요.' if q else '아직 질문이 없어요.' }}</p>{% endif %}
-</div>
+  {% else %}
+  <div class="list-empty">{{ '찾는 질문이 없어요.' if q else '아직 질문이 없어요.' }}</div>
+  {% endif %}
+</section>
 <script src="{{ url_for('static', filename='ink.js') }}" defer></script>
 {% endblock %}

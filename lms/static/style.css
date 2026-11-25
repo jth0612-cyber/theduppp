@@ -1990,7 +1990,6 @@ select { appearance: none; -webkit-appearance: none; padding-right: 40px;
 main.sheet { display: flex; flex-direction: column; min-height: calc(100vh - 16px); }
 main.sheet > .colophon { margin-top: auto; padding-top: 16px; }
 main.sheet > .colophon { min-height: 0; }
-main.sheet > :nth-last-child(2) { margin-bottom: 48px; }
 .qz-modes { grid-auto-rows: 1fr; }
 .qz-modes li { display: flex; }
 .qz-modes a { flex: 1; align-content: center; }
@@ -2697,3 +2696,69 @@ main table :is(th, td) { text-align: center !important; vertical-align: middle !
 main table :is(th, td) :is(.row, .badge-row) { justify-content: center; }
 main table :is(th, td) { word-break: keep-all; overflow-wrap: break-word; }
 main table td .badge, main table th { white-space: nowrap; }
+
+/* =====================================================================
+   토스 규칙 전면 적용: 공용 부품 (2026-11-26, 화면을 하나씩 보고 고침)
+   ===================================================================== */
+/* 틀: 내용 폭은 읽기 좋은 한 줄기(최대 960), 화면 제목 아래 장식 줄 없음 */
+.container { max-width: 960px; margin-inline: auto; }
+.ed-head h1::after, .ah-head h1::after { content: none; }
+h1, .ed-head h1, .page-head h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.3; }
+.ed-head, .page-head { margin: 4px 0 20px; padding: 0; border: 0; gap: 12px; }
+.ed-lede, .page-head p { margin: 6px 0 0; font-size: 14px; color: var(--faint); }
+.card, .panel, .quiet-box { margin: 0 0 16px; }
+.sec-head { margin: 0 0 12px; align-items: center; }
+.sec-head h2, .card > h2, .panel > h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.sec-head > span, .sec-head > a { font-size: 13px; color: var(--faint); }
+
+/* 휴대폰 위 막대: 하위 화면에서는 로고 대신 뒤로 화살표 하나 (토스: 한 줄 머리) */
+.m-back { display: none; }
+@media (max-width: 900px) {
+  .m-top { min-height: 52px; padding: 6px 16px; padding-top: max(6px, env(safe-area-inset-top)); }
+  .m-back { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: -12px; border-radius: 50%; color: var(--ink); transition: background-color 120ms ease, transform 120ms var(--ease); }
+  .m-back svg { width: 24px; height: 24px; }
+  .m-back:active { background: var(--active); transform: scale(.94); }
+  .container { padding-top: 8px; }
+  h1, .ed-head h1, .page-head h1 { font-size: 24px; }
+}
+
+/* 탭: 내용만큼만 차지, 넘치면 옆으로 민다 */
+.tabs { display: flex; width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0 0 16px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs a { white-space: nowrap; min-height: 36px; display: inline-flex; align-items: center; gap: 4px; }
+
+/* 목록 행 (토스 목록): 굵은 제목 한 줄 + 회색 보조 한 줄, 오른쪽 끝에 상태나 값. 행 전체가 눌린다.
+   <ul class="list-rows"><li><a href><span class="lr-main"><b class="lr-title">제목</b><span class="lr-sub">보조</span></span><span class="lr-end">값</span></a></li></ul> */
+.list-rows { list-style: none; margin: 0; padding: 0; }
+.list-rows > li + li { border-top: 1px solid var(--rule); }
+.list-rows > li > a, .list-rows > li > .lr-row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 12px 8px; margin: 0 -8px; border-radius: 12px; color: var(--ink); text-decoration: none; transition: background-color 120ms ease, transform 120ms var(--ease); }
+.list-rows > li > a:hover { background: var(--raised); text-decoration: none; }
+.list-rows > li > a:active { background: var(--active); transform: scale(.99); }
+.lr-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lr-title { font-size: 16px; font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; }
+.lr-sub { font-size: 13px; color: var(--faint); line-height: 1.4; }
+.lr-end { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 13px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.lr-end b { font-size: 17px; font-weight: 700; color: var(--ink); }
+.lr-lead { flex: none; }
+.list-rows .is-new .lr-title::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--danger); vertical-align: middle; }
+.list-empty { padding: 28px 0; text-align: center; color: var(--faint); font-size: 15px; }
+
+/* 빈 상태: 한 문장 + 버튼 하나 */
+.quiet-box { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 24px; text-align: center; color: var(--muted); }
+.quiet-box p { margin: 0; font-size: 16px; }
+
+/* 찾기 칸: 버튼 없이 칸 하나 (엔터로 찾기) */
+.find { display: flex; gap: 8px; align-items: center; }
+.find input[type=search] { min-height: 44px; }
+/* 내 답안: 원이 서로 겹치지 않게 한 줄 폭을 지킨다. 칸이 좁으면 한 줄로 */
+.omr-cols { grid-template-columns: repeat(auto-fit, minmax(236px, 1fr)); gap: 0 32px; }
+.omr-row, .omr.is-view .omr-row { grid-template-columns: 40px repeat(5, minmax(32px, 1fr)); justify-items: center; padding: 6px 0; }
+.omr-row .legend { justify-self: start; }
+.sheet-grid { grid-template-columns: minmax(0, 1fr); margin-bottom: 0; }
+@media (min-width: 1100px) { .sheet-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+.container { width: 100%; justify-self: center; }
+/* 데스크톱 틀: 흰 옆 메뉴 + 회색 바탕. 본문 둘레의 둥근 판은 없앤다 */
+body.has-shell { background: var(--frame); }
+.has-shell .sheet { border-radius: 0; margin: 0; min-height: 100vh; }
+.side { background: var(--rail); }
+main.sheet > .colophon { padding-top: 40px; }
