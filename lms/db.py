@@ -681,6 +681,15 @@ CREATE TABLE IF NOT EXISTS push_subs (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
+-- 앱(안드로이드·아이폰) 푸시 토큰: 기기마다 하나 (Firebase 클라우드 메시징, lms/fcm.py)
+CREATE TABLE IF NOT EXISTS app_tokens (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token       TEXT NOT NULL UNIQUE,
+    platform    TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
 -- 공지 좋아요 (한 사람 한 번)
 CREATE TABLE IF NOT EXISTS notice_likes (
     notice_id   INTEGER NOT NULL REFERENCES notices(id) ON DELETE CASCADE,

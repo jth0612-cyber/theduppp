@@ -10,3 +10,5 @@ ios/DerivedData/
 *.keystore
 *.jks
 keystore.properties
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist

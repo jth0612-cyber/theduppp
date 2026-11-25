@@ -2,7 +2,8 @@
 # 처음 한 번 Codemagic 웹에서 할 일 (app/README.md 3장):
 #   1) 이 저장소(GitHub)를 Codemagic 앱으로 추가
 #   2) Team settings → Integrations → App Store Connect 에 API 키를 넣고 이름을 THEDU_ASC 로 저장
-#   3) 이 워크플로를 수동으로 시작 (Start new build → ios-testflight)
+#   3) (푸시 알림) 환경 변수 GOOGLE_SERVICE_INFO_PLIST 넣기
+#   4) 이 워크플로를 수동으로 시작 (Start new build → ios-testflight)
 workflows:
   ios-testflight:
     name: iOS → TestFlight
@@ -19,6 +20,16 @@ workflows:
     scripts:
       - name: npm 설치
         script: cd app && npm ci
+      - name: Firebase 설정 (푸시 알림)
+        script: |
+          # Codemagic 환경 변수 GOOGLE_SERVICE_INFO_PLIST = GoogleService-Info.plist 를 base64 로 바꾼 값 (app/README.md 4장)
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > app/ios/App/App/GoogleService-Info.plist
+          else
+            echo "GOOGLE_SERVICE_INFO_PLIST 없음: 푸시 알림 없이 빌드합니다"
+            sed -i '' '/GoogleService-Info.plist/d' app/ios/App/App.xcodeproj/project.pbxproj
+            sed -i '' '/CODE_SIGN_ENTITLEMENTS/d' app/ios/App/App.xcodeproj/project.pbxproj   # 푸시 권한 없이 서명
+          fi
       - name: Capacitor iOS 동기화
         script: cd app && npx cap sync ios
       - name: 서명 프로파일 적용

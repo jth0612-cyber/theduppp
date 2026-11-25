@@ -115,6 +115,30 @@ def push_unsubscribe():
     return jsonify(ok=True)
 
 
+# ---------- 앱 푸시 토큰 (Capacitor 앱이 로그인 뒤 보낸다: static/app_push.js) ----------
+
+@bp.route("/push/app-token", methods=["POST"])
+@login_required()
+def app_token():
+    data = request.get_json(silent=True) or {}
+    token = str(data.get("token", "")).strip()
+    platform = str(data.get("platform", ""))[:10]
+    if not token or len(token) > 400:
+        abort(400)
+    execute("""INSERT INTO app_tokens (user_id, token, platform) VALUES (?, ?, ?)
+               ON CONFLICT(token) DO UPDATE SET user_id = excluded.user_id, platform = excluded.platform""",
+            (g.user["id"], token, platform))
+    return jsonify(ok=True)
+
+
+@bp.route("/push/app-token/delete", methods=["POST"])
+@login_required()
+def app_token_delete():
+    data = request.get_json(silent=True) or {}
+    execute("DELETE FROM app_tokens WHERE token = ? AND user_id = ?", (str(data.get("token", "")), g.user["id"]))
+    return jsonify(ok=True)
+
+
 # ---------- 보내기 (요청을 막지 않도록 뒤에서) ----------
 
 def _send(subs, payload, db_path, vapid_path):
@@ -151,6 +175,8 @@ def notify_users(user_ids, title, body, url="/"):
         return
     marks = ",".join("?" * len(ids))
     _dispatch(query(f"SELECT * FROM push_subs WHERE user_id IN ({marks})", ids), title, body, url)
+    import fcm                                       # 앱 알림 (instance/firebase.json 이 있을 때만)
+    fcm.dispatch([r["token"] for r in query(f"SELECT token FROM app_tokens WHERE user_id IN ({marks})", ids)], title, body, url)
 
 
 def notify_student(student_id, title, body, url="/"):

@@ -7,6 +7,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- 푸시 알림: 상태 표시줄 아이콘(흰색 단색)과 기본 채널 (lms/fcm.py 의 channel_id) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_notify" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notify_accent" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="default" />
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"

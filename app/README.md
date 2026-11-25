@@ -35,8 +35,20 @@ cd android; .\gradlew.bat bundleRelease      # 플레이 스토어용: android\a
 5. Start new build → 워크플로 `ios-testflight` (설정: 저장소 맨 위 `codemagic.yaml`). 끝나면 TestFlight 에 올라가 휴대폰에서 시험할 수 있습니다. 무료 한도: macOS M2 월 500분, 한 번에 10~15분.
 6. 심사 제출 시 '로그인이 필요한 앱'이므로 심사용 계정(데모 사이트 학생 계정 등)과 설명을 적습니다.
 
+## 4. 푸시 알림 켜기 (Firebase 클라우드 메시징, 무료·건수 제한 없음)
+
+코드는 다 들어가 있습니다. 아래 파일 세 개만 넣으면 켜집니다. 파일이 없으면 앱·사이트는 알림 없이 그대로 동작합니다.
+
+1. console.firebase.google.com 에서 프로젝트 만들기(애널리틱스는 꺼도 됨).
+2. **안드로이드 앱 추가**: 패키지 이름 `me.synology.jth4377.lab` → `google-services.json` 을 받아 `app/android/app/` 에 넣고 다시 빌드.
+3. **iOS 앱 추가**: 번들 ID `me.synology.jth4377.lab` → `GoogleService-Info.plist` 를 받습니다.
+   - Apple Developer → Keys 에서 **APNs 키(.p8)** 를 만들어 Firebase 프로젝트 설정 → 클라우드 메시징 → Apple 앱 구성에 올립니다.
+   - Apple Developer → Identifiers → 이 앱 ID 에 **Push Notifications** 를 켭니다.
+   - plist 를 base64 로 바꿔(`[Convert]::ToBase64String([IO.File]::ReadAllBytes("GoogleService-Info.plist"))`) Codemagic 환경 변수 `GOOGLE_SERVICE_INFO_PLIST` 로 넣습니다. 없으면 Codemagic 이 알림 없이 빌드합니다.
+4. **서버 키**: Firebase 프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성 → 받은 JSON 을 NAS 의 `docker/student-lms/instance/firebase.json` 으로 올립니다(File Station). 저장소·zip 에는 넣지 않습니다.
+
+그 뒤로는 사이트가 웹 푸시를 보내는 모든 곳(새 공지, 질문 답변, 첨삭·피드백 등)에서 앱 알림도 같이 나갑니다. 앱은 로그인한 뒤 알림 권한을 묻고 기기 토큰을 서버(`/push/app-token`)에 등록합니다. 알림을 누르면 그 화면이 열리고, 로그아웃하면 그 기기 토큰을 지웁니다.
+
 ## 남은 일
 
-- 네이티브 푸시 알림 (Firebase 클라우드 메시징, 무료): Firebase 프로젝트를 만든 뒤 `google-services.json`(안드로이드)·APNs 키(아이폰)를 받아 붙입니다.
-- 앱 홈 화면을 확정 시안(`docs/app_design/README.md`, `소개자료_사진/홈과_기능별/`)대로.
 - Google 로그인을 켜 둔 경우: 구글은 앱 안 웹뷰 로그인을 막으므로, 앱에서는 시스템 브라우저로 로그인하고 돌아오게 해야 합니다.
