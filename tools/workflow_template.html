@@ -97,7 +97,7 @@ DATA.forEach((f, i) => {
     c.style.left = (PAD + HEAD + col[k] * (CW + GAP)) + "px"; c.dataset.col = col[k]; c.dataset.from = from; c.style.top = y + "px";
     c.innerHTML = `<header><span class="chip"></span><span class="step">${s.no || k + 1}</span><span class="t"></span></header><img class="shot" tabindex="0" loading="lazy" alt=""><p></p>`;
     c.querySelector(".chip").textContent = s.role; c.querySelector(".t").textContent = s.title; c.querySelector("p").textContent = s.desc;
-    const im = c.querySelector("img"); im.src = s.img; im.dataset.full = s.full || s.img; im.alt = `${s.role} 화면: ${s.title}`; im.dataset.cap = `${f.title} · ${s.no || k + 1}. ${s.title} (${s.role}) · ${s.desc}`;
+    const im = c.querySelector("img"); im.src = s.img; im.dataset.full = s.full || s.img; im.alt = `${s.role} 화면: ${s.title}`; im.dataset.cap = `${f.title} | ${s.no || k + 1}. ${s.title} (${s.role}) | ${s.desc}`;
     world.appendChild(c); cards.push(c);
   });
   rows.push({head: h, cards, top: y});
