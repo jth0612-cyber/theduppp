@@ -2778,3 +2778,12 @@ main.sheet > .colophon { padding-top: 40px; }
 input:not([type]) { min-height: 48px; padding: 12px 14px; border: 1.5px solid var(--edge); border-radius: 14px; background-color: var(--sheet); font: inherit; color: var(--ink); width: 100%; }
 :is(.card, .panel, dialog, details) input:not([type]) { background-color: var(--raised); border-color: transparent; }
 input:not([type]):focus { outline: none; background-color: var(--sheet); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
+/* 모든 입력 부품은 화면 글꼴을 그대로 쓴다 (시간·날짜 칸이 브라우저 기본 글꼴로 깨져 보이던 것) */
+input, select, textarea, button, optgroup { font-family: inherit; font-size: inherit; letter-spacing: inherit; color: inherit; }
+input[type=time], input[type=date], input[type=month], input[type=datetime-local], input[type=number] {
+  font-family: var(--font-ui); font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: 0; line-height: 1.4; }
+input[type=time]::-webkit-datetime-edit, input[type=date]::-webkit-datetime-edit, input[type=month]::-webkit-datetime-edit { font-family: var(--font-ui); padding: 0; }
+input[type=time]::-webkit-datetime-edit-fields-wrapper, input[type=date]::-webkit-datetime-edit-fields-wrapper { font-family: var(--font-ui); }
+input::-webkit-datetime-edit-text, input::-webkit-datetime-edit-hour-field, input::-webkit-datetime-edit-minute-field, input::-webkit-datetime-edit-ampm-field,
+input::-webkit-datetime-edit-year-field, input::-webkit-datetime-edit-month-field, input::-webkit-datetime-edit-day-field { font-family: var(--font-ui); padding: 0 1px; }
+input::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
