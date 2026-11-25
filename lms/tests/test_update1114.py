@@ -48,7 +48,8 @@ class Update1114(unittest.TestCase):
     def test_mds_is_dangwa_and_tasks_gone(self):
         with self.app.app_context():
             self.assertEqual(query("SELECT track FROM classes", one=True)["track"], "단과")
-        self.assertEqual(self.s.get("/s/tasks").status_code, 404)
+        tasks = self.s.get("/s/tasks")                       # 과제는 조교 시스템 기록 보기만 (사진 제출 기능은 없앤 그대로)
+        self.assertEqual(tasks.status_code, 200); self.assertNotIn('type="file"', tasks.data.decode())
         self.assertEqual(self.t.get("/t/tasks").status_code, 404)
         home = self.s.get("/s/").data.decode()
         self.assertIn("공지", home); self.assertIn("질답 게시판", home); self.assertIn("교재 구매", home)

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "_nav.html" as nav with context %}
+{% from "_macros.html" import tag_badge %}
+{% block title %}홈 · 정태혁 통합과학 lab{% endblock %}
+{% block body_class %}app-home-page{% endblock %}
+{% block content %}
+{# 앱 홈: 한 화면에 모든 기능 (docs/app_design/README.md). 이름·날짜·숫자·기능 이름만 #}
+<header class="ah-head">
+  <div>
+    <p class="ah-kicker">{{ me.class_name }}{% if g.user.nickname %} · {{ g.user.nickname }}{% endif %}</p>
+    <h1>{{ me.name }}</h1>
+  </div>
+  {% if a.dday %}<p class="ah-dday"><span>{{ a.dday.label }}</span><b>{% if a.dday.left > 0 %}D-{{ a.dday.left }}{% elif a.dday.left == 0 %}D-DAY{% else %}D+{{ -a.dday.left }}{% endif %}</b></p>{% endif %}
+</header>
+
+{% set cur = a.now or a.next %}
+{% if cur %}
+<a class="ah-now" href="{{ url_for('study.timetable') }}">
+  <span class="ah-dot{{ ' is-live' if a.now }}" aria-hidden="true"></span>
+  <span class="ah-now-main"><b>{{ cur.title }}</b><span>{% if not a.now %}다음 · {% endif %}{{ cur.starts }}–{{ cur.ends }}{% if cur.room %} · {{ cur.room }}{% endif %}</span></span>
+  {% if a.now and a.next %}<span class="ah-now-next"><span>다음</span><b>{{ a.next.starts }} {{ a.next.title }}</b></span>{% endif %}
+</a>
+{% endif %}
+
+<div class="ah-stats">
+  <a href="{{ url_for('rooms.rooms') }}"><b>{{ a.focus }}<small>분</small></b><span>오늘 집중</span></a>
+  <a href="{{ url_for('link.s_tasks') }}"><b>{{ a.tasks if a.has_code else '–' }}</b><span>남은 과제</span></a>
+  <a href="{{ url_for('study.wrong_notes', view='open') }}"><b>{{ a.wrong }}</b><span>복습할 오답</span></a>
+  <a href="{{ url_for('games.hub') }}"><b>{{ a.vocab }}<small>/20</small></b><span>영단어</span></a>
+</div>
+
+{% set apps = [
+  ('student.notices', '공지', 'notice', a.badge.notice), ('study.timetable', '시간표', 'timetable', 0),
+  ('link.s_tasks', '과제', 'task', a.badge.task), ('student.materials', '자료실', 'folder', 0),
+  ('student.videos', '강의 영상', 'video', 0), ('student.questions', '질답', 'chat', a.badge.chat),
+  ('rooms.rooms', '소도시 명상', 'torii', 0), ('games.sci_hub', '통과 Quiz', 'game', 0),
+  ('study.wrong_notes', '오답 노트', 'wrong', a.badge.wrong), ('books.analysis_home', '시험 분석', 'chart', 0),
+  ('student.scores', '내 성적', 'score', 0), ('study.s_report', '내 리포트', 'report', 0)] %}
+<nav class="ah-apps" aria-label="기능">
+  {% for ep, label, ic, n in apps %}
+  <a href="{{ url_for(ep) }}"><span class="ah-ico">{{ nav.icon(ic) }}{% if n %}<i class="ah-badge" aria-label="{{ n }}개">{{ n if n < 100 else '99+' }}</i>{% endif %}</span><span>{{ label }}</span></a>
+  {% endfor %}
+</nav>
+
+{% if a.exam or a.reply %}
+<div class="ah-cards">
+  {% if a.exam %}{% set e = a.exam.last %}
+  <a class="ah-card ah-exam" href="{{ url_for('books.analysis_home', kind='review' if e.kind == '복습 테스트' else 'mock') }}">
+    <span class="ah-card-t">{{ e.title }}</span>
+    <span class="ah-score"><b>{{ '%g'|format(e.score) }}</b><span>/{{ e.full|int }}{% if e.avg is not none %} · 반 평균 {{ '%g'|format(e.avg) }}{% endif %}</span></span>
+    {% set pts = a.exam.pts %}{% if pts|length > 1 %}
+    {% set W, H, n = 160, 44, pts|length %}
+    <svg class="ah-spark" viewBox="0 0 {{ W }} {{ H }}" aria-hidden="true" preserveAspectRatio="none">
+      {% set avg = a.exam.avg %}
+      <polyline class="ah-avg" points="{% for v in avg %}{% if v is not none %}{{ (loop.index0 * W / (n - 1))|round(1) }},{{ (H - 4 - v * (H - 8) / 100)|round(1) }} {% endif %}{% endfor %}"/>
+      <polyline class="ah-me" points="{% for v in pts %}{{ (loop.index0 * W / (n - 1))|round(1) }},{{ (H - 4 - (v or 0) * (H - 8) / 100)|round(1) }} {% endfor %}"/>
+      {% for v in pts %}<circle cx="{{ (loop.index0 * W / (n - 1))|round(1) }}" cy="{{ (H - 4 - (v or 0) * (H - 8) / 100)|round(1) }}" r="2.6"/>{% endfor %}
+    </svg>{% endif %}
+  </a>{% endif %}
+  {% if a.reply %}
+  <a class="ah-card ah-reply" href="{{ url_for('student.question_detail', qid=a.reply.id) }}">
+    <span class="ah-tag">답변</span>
+    <b class="ah-reply-t">{{ a.reply.title }}</b>
+    <span class="ah-reply-b">{{ a.reply.body }}</span>
+  </a>{% endif %}
+</div>
+{% endif %}
+
+<ul class="ah-lines">
+  {% if a.notice %}<li><a href="{{ url_for('student.notice_detail', nid=a.notice.id) }}">{{ tag_badge(a.notice.tag) }}<b>{{ a.notice.title }}</b><time>{{ a.notice.created_at[5:10]|replace('-', '.') }}</time></a></li>{% endif %}
+  {% if a.video %}<li><a href="{{ url_for('student.videos') }}"><span class="badge gray">영상</span><b>{{ a.video.title }}</b><time>{{ a.video.duration }}</time></a></li>{% endif %}
+  {% if news and (news.feedback or news.papers) %}<li><a href="{{ url_for('feedback.s_list') }}"><span class="badge type">1:1</span><b>{% if news.feedback %}Full 모의고사 피드백 답변 {{ news.feedback }}건{% endif %}{% if news.feedback and news.papers %} · {% endif %}{% if news.papers %}복습 테스트 첨삭 {{ news.papers }}건{% endif %}</b><time>7일</time></a></li>{% endif %}
+</ul>
+{% endblock %}

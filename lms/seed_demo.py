@@ -882,6 +882,23 @@ with app.app_context():
                             (code["code"], _json.dumps({"학생코드": code["code"], "날짜": sess(c, k).isoformat(), "출결": status, "도착시각": arrived}, ensure_ascii=False)))
                 n_att += 1
     db_.execute("INSERT INTO sys_sync (tbl, n_rows, synced_at, source) VALUES ('출결', ?, ?, 'csv')", (n_att, ts(TODAY, 22)))
+    # 과제 (조교 시스템 '과제' 표): 주차마다 주간지 과제. 마지막 두 주는 아직 안 낸 학생이 있다 → 앱 홈 '남은 과제'
+    n_task = 0
+    for name, c in cls.items():
+        for st in c["students"]:
+            code = q("SELECT code FROM student_codes WHERE student_id = ?", (st["id"],), one=True)
+            if not code:
+                continue
+            for k in range(1, WEEKS + 1):
+                due = sess(c, k) + timedelta(days=6)
+                late = k >= WEEKS - 1 and rng.random() < (0.7 if st is P["대구 토요일 A반"]["st"] else 0.3)
+                done = not late and rng.random() > 0.08
+                right = rng.randint(9, 20) if done else ""
+                db_.execute("INSERT INTO sys_rows (tbl, code, data) VALUES ('과제', ?, ?)", (code["code"], _json.dumps(
+                    {"학생코드": code["code"], "날짜": due.isoformat(), "교재": f"Squeeze {k}호", "범위": CURRICULUM[k][0],
+                     "제출": "O" if done else "", "맞은수": right, "문항수": 20 if done else ""}, ensure_ascii=False)))
+                n_task += 1
+    db_.execute("INSERT INTO sys_sync (tbl, n_rows, synced_at, source) VALUES ('과제', ?, ?, 'csv')", (n_task, ts(TODAY, 22)))
     db_.commit()
 
 # 한승우: 비밀번호 분실 → 조교가 임시 비밀번호 발급 → 직접 바꿈

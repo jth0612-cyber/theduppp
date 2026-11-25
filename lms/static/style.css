@@ -2312,3 +2312,64 @@ summary h2.inline { display: inline; margin: 0; }
 
 /* 앱(Capacitor) 안: 웹 푸시 버튼은 쓰지 않는다 (앱 알림은 네이티브 푸시로) */
 .in-app [data-push] { display: none !important; }
+
+/* ---------- 앱 홈 (student/app_home.html): 한 화면에 모든 기능 ---------- */
+.ah-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin: 4px 0 14px; }
+.ah-kicker { margin: 0 0 2px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.ah-head h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; }
+.ah-dday { margin: 0; display: flex; flex-direction: column; align-items: center; background: var(--ink); color: var(--sheet);
+  border-radius: 12px; padding: 6px 14px 8px; line-height: 1.1; }
+.ah-dday span { font-size: 12px; opacity: .8; }
+.ah-dday b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.ah-now { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #1f4d3d; color: #f3f5f2;
+  text-decoration: none; margin-bottom: 12px; }
+.ah-dot { width: 12px; height: 12px; border-radius: 50%; background: #8fa79b; flex: none; }
+.ah-dot.is-live { background: #8ee0a8; box-shadow: 0 0 0 5px rgba(142, 224, 168, .18); }
+.ah-now-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ah-now-main b { font-size: 18px; }
+.ah-now-main span { font-size: 14px; opacity: .85; }
+.ah-now-next { display: flex; flex-direction: column; align-items: flex-end; font-size: 13px; text-align: right; }
+.ah-now-next span { opacity: .75; }
+.ah-now-next b { font-size: 15px; }
+.ah-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--edge); border-radius: 14px;
+  background: var(--sheet); margin-bottom: 18px; overflow: hidden; }
+.ah-stats a { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px; color: inherit; text-decoration: none; min-width: 0; }
+.ah-stats a + a { border-left: 1px solid var(--edge); }
+.ah-stats b { font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ah-stats small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 1px; }
+.ah-stats span { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah-apps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 6px; margin-bottom: 20px; }
+.ah-apps a { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; font-size: 14px;
+  text-align: center; word-break: keep-all; }
+.ah-ico { position: relative; width: 58px; height: 58px; border-radius: 18px; background: var(--raised); display: grid; place-items: center;
+  color: var(--accent); }
+.ah-ico .ico { width: 26px; height: 26px; stroke-width: 1.7; }
+.ah-apps a:active .ah-ico { background: var(--accent-soft); }
+.ah-badge { position: absolute; top: -5px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px;
+  background: var(--danger); color: #fff; font: 700 12px/20px var(--font-ui); font-style: normal; text-align: center; }
+.ah-cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 14px; }
+.ah-cards:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+.ah-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; background: var(--raised); color: inherit;
+  text-decoration: none; min-width: 0; }
+.ah-card-t { font-size: 14px; color: var(--muted); font-weight: 600; }
+.ah-score b { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.ah-score span { font-size: 13px; color: var(--muted); margin-left: 3px; }
+.ah-spark { width: 100%; height: 44px; overflow: visible; }
+.ah-spark .ah-me { fill: none; stroke: var(--accent); stroke-width: 2; }
+.ah-spark .ah-avg { fill: none; stroke: var(--control); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.ah-spark circle { fill: var(--sheet); stroke: var(--accent); stroke-width: 1.6; }
+.ah-reply { background: var(--accent-soft); }
+.ah-tag { align-self: flex-start; font-size: 12px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 6px; padding: 2px 8px; }
+.ah-reply-t { font-size: 16px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ah-reply-b { font-size: 13px; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ah-lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--edge); }
+.ah-lines li { border-bottom: 1px solid var(--edge); }
+.ah-lines a { display: flex; align-items: center; gap: 10px; padding: 12px 0; color: inherit; text-decoration: none; min-width: 0; }
+.ah-lines b { flex: 1; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah-lines time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (min-width: 720px) { .ah-apps { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.task-list { list-style: none; margin: 0; padding: 0; }
+.task-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.task-list li:last-child { border-bottom: 0; }
+.task-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.task-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }

@@ -150,6 +150,16 @@ def s_redo():
     return redirect(url_for("study.wrong_notes") + "#sys")
 
 
+@bp.route("/s/tasks")
+@student_required
+def s_tasks():
+    """과제 (조교 시스템 '과제' 표): 날짜·교재·범위·제출·맞은 수."""
+    code = sysdata.code_of_student(g.user["student_id"])
+    rows = sysdata.tasks(code)
+    left = [r for r in rows if r["submit"] not in ("O", "o", "제출", "완료", "1")]
+    return render_template("student/tasks.html", code=code, rows=rows, left=len(left))
+
+
 @bp.route("/s/attendance")
 @student_required
 def s_attendance():

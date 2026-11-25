@@ -54,7 +54,58 @@ def home():
            WHERE q.student_id = ? AND a.created_at >= {week}) AS answers,
         (SELECT COUNT(*) FROM lessons WHERE class_id = ? AND created_at >= {week}) AS lessons""",
                  (g.user["id"], me["id"], me["id"], me["class_id"]), one=True)
+    if "THeduApp/" in (request.user_agent.string or "") or request.args.get("view") == "app":
+        return render_template("student/app_home.html", me=me, a=app_home(me), news=news)
     return render_template("student/home.html", me=me, notices=notices, questions=questions, cast=cast, news=news)
+
+
+def app_home(me):
+    """앱 홈(docs/app_design/README.md): 지금 수업, 숫자 4칸, 기능 12개 알림 숫자, 최근 시험, 조교 답변, 공지·영상 한 줄."""
+    import json
+    from datetime import datetime
+
+    import analysis
+    import progress
+    import sysdata
+    from views.care import parent_report
+    from views.study import class_slots, dday_info, my_slots
+    uid, sid = g.user["id"], me["id"]
+    hm, wd = datetime.now().strftime("%H:%M"), date.today().weekday()
+    slots = my_slots(uid) or class_slots(me["class_id"])                  # 내 시간표가 없으면 반 시간표
+    today = sorted((s for s in slots if s["weekday"] == wd), key=lambda s: s["starts"])
+    now = next((s for s in today if s["starts"] <= hm < s["ends"]), None)
+    nxt = next((s for s in today if s["starts"] > hm), None)
+    focus = progress.daily(uid, 1)[0]["focus"]
+    code = sysdata.code_of_student(sid)
+    tasks_left = sum(1 for t in sysdata.tasks(code) if t["submit"] not in ("O", "o", "제출", "완료", "1"))
+    # 복습할 오답: 틀린 문항 중 '다시 풀어서 맞힘'을 안 한 것 (오답 노트의 '복습 전만'과 같은 수)
+    done = {(r["mock_id"], r["item_no"]) for r in query("SELECT mock_id, item_no FROM wrong_notes WHERE user_id = ? AND reviewed_at IS NOT NULL", (uid,))}
+    wrong_open = 0
+    for e in query("""SELECT e.mock_id, e.answers, m.answer_key FROM mock_entries e JOIN mocks m ON m.id = e.mock_id
+                      WHERE e.user_id = ? AND e.mode = 'answers' AND e.score IS NOT NULL AND m.open = 1""", (uid,)):
+        wrong_open += sum(1 for no in analysis.wrong_items(e["answers"], json.loads(e["answer_key"])) if (e["mock_id"], no) not in done)
+    vd = query("SELECT * FROM vocab_days WHERE user_id = ? AND day = ?", (uid, date.today().isoformat()), one=True)
+    vocab = 20 if vd and vd["done_at"] else 0
+    if vd and not vd["done_at"]:
+        from views.games import _vocab_progress
+        p = _vocab_progress(vd)
+        vocab = p["done"] if p else 0
+    unread = query("""SELECT COUNT(*) AS n FROM notices n WHERE n.class_id = ? AND n.created_at >= date('now', 'localtime', '-30 days')
+                      AND NOT EXISTS (SELECT 1 FROM notice_reads r WHERE r.notice_id = n.id AND r.user_id = ?)""", (me["class_id"], uid), one=True)["n"]
+    answered = query("""SELECT COUNT(DISTINCT a.question_id) AS n FROM answers a JOIN questions q ON q.id = a.question_id
+                        WHERE q.student_id = ? AND a.created_at >= datetime('now', 'localtime', '-7 days')""", (sid,), one=True)["n"]
+    rep = parent_report(sid, limit=12)
+    exam = None
+    if rep["last"]:
+        same = [e for e in rep["exams"] if e["kind"] == rep["last"]["kind"]][:6][::-1]       # 오래된 것 → 최근
+        exam = {"last": rep["last"], "pts": [e["rate"] for e in same], "avg": [round(100 * e["avg"] / e["full"]) if e["full"] and e["avg"] is not None else None for e in same]}
+    reply = query("""SELECT a.body, q.title, q.id FROM answers a JOIN questions q ON q.id = a.question_id
+                     WHERE q.student_id = ? ORDER BY a.created_at DESC LIMIT 1""", (sid,), one=True)
+    notice = query("SELECT * FROM notices WHERE class_id = ? ORDER BY pinned DESC, created_at DESC LIMIT 1", (me["class_id"],), one=True)
+    video = next(iter(_visible_videos(me["class_id"])), None)
+    return {"dday": dday_info(), "now": now, "next": nxt, "focus": focus, "tasks": tasks_left, "wrong": wrong_open, "vocab": vocab,
+            "badge": {"notice": unread, "task": tasks_left, "chat": answered, "wrong": wrong_open},
+            "exam": exam, "reply": reply, "notice": notice, "video": video, "has_code": bool(code)}
 
 
 @bp.route("/notices")
