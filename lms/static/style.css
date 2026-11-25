@@ -2689,3 +2689,11 @@ form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display:
 .help-dlg .help-body ul { margin: 0 0 8px; padding-left: 18px; }
 .help-dlg .btn.primary { width: 100%; min-height: 52px; }
 .help-inline { display: flex; align-items: center; gap: 2px; margin: 6px 0; font-size: 13px; color: var(--faint); }
+.omr-row .legend .pt-mid { color: var(--faint); }
+
+/* 표: 머리행과 내용 칸 모두 가로·세로 가운데, 열 너비는 내용에 맞춤 (전역 문서 규칙, 2026-11-26 사용자 지시) */
+main table { width: auto; margin-inline: auto; }
+main table :is(th, td) { text-align: center !important; vertical-align: middle !important; }
+main table :is(th, td) :is(.row, .badge-row) { justify-content: center; }
+main table :is(th, td) { word-break: keep-all; overflow-wrap: break-word; }
+main table td .badge, main table th { white-space: nowrap; }
