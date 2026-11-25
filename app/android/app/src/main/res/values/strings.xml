@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">통합과학 lab</string>
+    <string name="title_activity_main">통합과학 lab</string>
+    <string name="package_name">me.synology.jth4377.lab</string>
+    <string name="custom_url_scheme">me.synology.jth4377.lab</string>
+</resources>

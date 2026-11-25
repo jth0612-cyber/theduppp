@@ -3,6 +3,11 @@
 (function () {
   var ua = navigator.userAgent || "";
   var here = location.href;
+  // 우리 앱(Capacitor, app/capacitor.config.json 의 appendUserAgent): 웹 푸시·홈 화면 설치 안내를 감춘다
+  if (/THeduApp\//.test(ua)) {
+    document.documentElement.classList.add("in-app");
+    return;
+  }
 
   // 카카오톡·라인은 바깥 브라우저로 여는 주소가 있어 바로 넘긴다
   if (/KAKAOTALK/i.test(ua)) {

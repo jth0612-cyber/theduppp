@@ -1,0 +1,38 @@
+# Codemagic: 맥 없이 아이폰 앱을 빌드해 TestFlight(App Store Connect)로 올린다. 개인 계정 macOS M2 월 500분 무료.
+# 처음 한 번 Codemagic 웹에서 할 일 (app/README.md 3장):
+#   1) 이 저장소(GitHub)를 Codemagic 앱으로 추가
+#   2) Team settings → Integrations → App Store Connect 에 API 키를 넣고 이름을 THEDU_ASC 로 저장
+#   3) 이 워크플로를 수동으로 시작 (Start new build → ios-testflight)
+workflows:
+  ios-testflight:
+    name: iOS → TestFlight
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: THEDU_ASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: me.synology.jth4377.lab
+      node: 22
+      xcode: latest
+    scripts:
+      - name: npm 설치
+        script: cd app && npm ci
+      - name: Capacitor iOS 동기화
+        script: cd app && npx cap sync ios
+      - name: 서명 프로파일 적용
+        script: xcode-project use-profiles --project app/ios/App/App.xcodeproj
+      - name: 빌드 번호 (App Store Connect 최신 번호 + 1)
+        script: |
+          cd app/ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          agvtool new-version -all $((LATEST + 1))
+      - name: IPA 빌드
+        script: xcode-project build-ipa --project app/ios/App/App.xcodeproj --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

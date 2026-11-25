@@ -1,0 +1,26 @@
+{
+  "appId": "me.synology.jth4377.lab",
+  "appName": "통합과학 lab",
+  "webDir": "www",
+  "server": {
+    "url": "https://lab.jth4377.synology.me",
+    "allowNavigation": ["lab.jth4377.synology.me"],
+    "errorPath": "offline.html"
+  },
+  "appendUserAgent": "THeduApp/1.0",
+  "backgroundColor": "#f3f1ec",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#2c6852",
+      "showSpinner": false
+    }
+  }
+}

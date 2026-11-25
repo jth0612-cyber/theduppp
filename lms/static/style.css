@@ -2309,3 +2309,6 @@ summary h2.inline { display: inline; margin: 0; }
 .week-form .field { min-width: 0; margin-bottom: 4px; }
 .week-form input, .week-form select { width: 100%; min-width: 0; box-sizing: border-box; padding: 4px 6px; font-size: 13px; }
 .week-form .row > .btn { width: 100%; }
+
+/* 앱(Capacitor) 안: 웹 푸시 버튼은 쓰지 않는다 (앱 알림은 네이티브 푸시로) */
+.in-app [data-push] { display: none !important; }
