@@ -2,7 +2,7 @@
 {% from "_macros.html" import help %}
 {% block title %}{{ book.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 교재/모의고사</a></p>
+<p class="crumb"><a href="{{ url_for('books.teacher_books') }}">← 교재/모의고사</a></p>
 <div class="page-head">
   <div><h1>{{ book.title }}{% call help('학생 화면에 보이는 회차') %}<p>학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>{% endcall %}</h1><p class="muted small">{{ book.kind }}<span class="sep" aria-hidden="true"></span>{{ book.expires_on }}까지{% if book.is_free %}<span class="sep" aria-hidden="true"></span>배포본{% endif %}</p></div>
 </div>

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('games.hub') }}">수능 영단어</a> /</p>
+    <p class="crumb"><a href="{{ url_for('games.hub') }}">수능 영단어</a> /</p>
     <h1>오늘의 20단어 <small class="muted">Day {{ day.day_no }}</small>{% call help('오늘의 20단어') %}<p>카드를 눌러 뜻 확인 / 틀린 단어는 복습으로 이동</p>{% endcall %}</h1>
   </div>
   <button type="button" class="btn small" data-voca-toggle aria-pressed="false">뜻 모두 보기</button>

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('teacher.class_detail', cid=s.class_id) }}">{{ s.class_name }}</a> /</p>
+    <p class="crumb"><a href="{{ url_for('teacher.class_detail', cid=s.class_id) }}">{{ s.class_name }}</a> /</p>
     <h1>{{ s.name }} <span class="muted small">{{ s.student_no }}</span>
       {% if not s.active %}<span class="badge gray">퇴원</span>{% endif %}</h1>
     {% if s.target %}<p class="muted small">목표: {{ s.target }}</p>{% endif %}

@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ n.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<article class="narrow article">
-  <p class="fine"><a href="{{ url_for('student.notices') }}">공지 목록</a> / {{ n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}</p>
+<p class="crumb"><a href="{{ url_for('student.notices') }}">공지</a> /</p>
+<header class="ed-head">
   <h1>{{ n.title }}</h1>
-  <p class="fine">{{ n.created_at[:16]|replace('-', '.') }}<span class="sep" aria-hidden="true"></span>{{ readers }}명 읽음</p>
+  <p class="ed-lede">{{ '정오표' if n.tag == '정오' else n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at[5:10]|replace('-', '.') }}</p>
+</header>
+<article class="card article">
   <div class="pre article-body">{{ n.body }}</div>
-  <form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="mt">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn{{ ' is-on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '공감함' if liked else '공감' }}<span class="sep" aria-hidden="true"></span>{{ likes }}</button>
-  </form>
 </article>
+<form method="post" action="{{ url_for('student.notice_like', nid=n.id) }}" class="like-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn{{ ' is-on' if liked }}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}">{{ '확인했어요' if liked else '확인' }}{% if likes %} {{ likes }}{% endif %}</button>
+</form>
 {% endblock %}

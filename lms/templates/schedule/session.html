@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> / <a href="{{ url_for('schedule.group', gid=grp.id) }}#w{{ s.week_no }}">{{ grp.name }}</a> /</p>
+    <p class="crumb"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> / <a href="{{ url_for('schedule.group', gid=grp.id) }}#w{{ s.week_no }}">{{ grp.name }}</a> /</p>
     <h1>{{ s.class_name }}<span class="sep" aria-hidden="true"></span>{{ s.week_no }}주차</h1>
     <p class="muted small">{{ s.day }} ({{ weekdays[s.weekday] }}){% if s.period %} {{ s.period }}{% endif %} {{ s.starts }}–{{ s.ends }}{% if s.hall or s.room %}<span class="sep" aria-hidden="true"></span>{{ s.hall }} {{ s.room }}{% endif %}</p>
   </div>

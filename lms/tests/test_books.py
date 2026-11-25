@@ -310,7 +310,7 @@ class BooksTest(unittest.TestCase):
         s = self.student(0)
         page = s.get("/s/notices").data.decode()
         self.assertLess(page.index("시즌2 커리큘럼"), page.index("7주차 정오"))      # 고정 공지가 위
-        self.assertIn("고정 공지", page)
+        self.assertIn('<span class="badge gray">고정</span>', page)
         found = s.get("/s/notices?q=정답").data.decode()
         self.assertIn("7주차 정오", found)
         self.assertNotIn("시즌2 커리큘럼", found)

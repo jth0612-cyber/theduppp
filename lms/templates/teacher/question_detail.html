@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('teacher.questions') }}">질문답변</a> /</p>
+    <p class="crumb"><a href="{{ url_for('teacher.questions') }}">질문답변</a> /</p>
     <h1>{{ q.title }}{% call help('공개 범위') %}<p>{% if q.qtype == '학습질문' %}이 질문과 답변은 학생 질답 게시판에 닉네임으로 공개돼요.{% else %}행정문의는 이 학생과 선생님 및 조교만 볼 수 있어요.{% endif %}</p>{% endcall %}</h1>
     <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
       <span class="muted"><a href="{{ url_for('teacher.student_detail', sid=q.sid) }}">{{ q.name }}</a> (게시판 닉네임: {{ q.nickname or '없음' }})<span class="sep" aria-hidden="true"></span>{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.created_at[:16] }}{% if q.qtype == '학습상담' %}<span class="sep" aria-hidden="true"></span>상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구나' }}{% if q.rating %}<span class="sep" aria-hidden="true"></span>학생 평가 {{ q.rating }}점{% endif %}{% endif %}</span></p>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}학부모 문자 | {{ title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('books.teacher_mock', mid=m.id) }}">← {{ title }}</a></p>
+<p class="crumb"><a href="{{ url_for('books.teacher_mock', mid=m.id) }}">← {{ title }}</a></p>
 <div class="page-head">
   <div><h1>학부모 문자</h1><p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ rows|length }}명<span class="sep" aria-hidden="true"></span>반 통계 기준<span class="sep" aria-hidden="true"></span>2000바이트 이내</p></div>
   <div class="row"><a class="btn" href="{{ url_for('books.ta_notes_csv') }}">피드백 모음 받기</a>

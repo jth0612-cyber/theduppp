@@ -4,13 +4,10 @@
 {% block content %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>내 시간표</h1>
+    <h1>시간표{% if dday %} <span class="dday-chip">{{ dday.label }} {% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</span>{% endif %}</h1>
     <p class="ed-lede">{% if current %}지금 <b>{{ current.title }}</b><span class="sep" aria-hidden="true"></span>{{ current.ends }}까지{% elif upnext %}다음 <b>{{ upnext.starts }} {{ upnext.title }}</b>{% if upnext.room %}<span class="sep" aria-hidden="true"></span>{{ upnext.room }}{% endif %}{% elif has_slots %}오늘 남은 일정이 없어요.{% else %}빈 칸을 눌러 수업, 자습, 인강 추가{% endif %}</p>
   </div>
-  <div class="tt-head-side">
-    {% if dday %}<p class="dday"><span>{{ dday.label }}</span><b>{% if dday.left > 0 %}D-{{ dday.left }}{% elif dday.left == 0 %}D-DAY{% else %}D+{{ -dday.left }}{% endif %}</b></p>{% endif %}
-    <button type="button" class="btn primary" data-tt-new>일정 추가</button>
-  </div>
+  <button type="button" class="btn primary" data-tt-new>일정 추가</button>
 </header>
 
 {% if wk %}

@@ -21,3 +21,35 @@
 /* 영상, 자료 */
 .list-rows .thumb { width: 96px; aspect-ratio: 16 / 9; height: auto; border-radius: 10px; object-fit: cover; background: var(--raised); }
 .list-rows .thumb-empty { display: grid; place-items: center; color: var(--faint); }
+
+/* 경로 줄: 데스크톱에서만 (휴대폰은 위 막대의 뒤로 화살표) */
+.crumb { margin: 0 0 4px; font-size: 13px; color: var(--faint); }
+.crumb a { color: var(--faint); }
+@media (max-width: 900px) { .crumb { display: none; } }
+/* 공지 읽기 */
+.article-body { font-size: 16px; line-height: 1.7; }
+.like-form { margin: 0 0 16px; }
+/* 내 공부: 진도 */
+.prog-rows .lr-main { gap: 8px; }
+.prog-rows .pbar { width: 100%; height: 8px; display: block; }
+.prog-code { color: var(--faint); font-weight: 500; font-variant-numeric: tabular-nums; margin-right: 2px; }
+/* 시간표 머리 */
+.dday-chip { display: inline-block; margin-left: 6px; padding: 4px 10px; border-radius: 999px; background: var(--danger-soft); color: var(--danger); font-size: 14px; font-weight: 700; vertical-align: middle; letter-spacing: 0; }
+
+/* 시험 분석: 묶음마다 흰 카드 하나, 그 안은 줄로만 나눈다 */
+.wa-sec, .unit-sec, .my-sec, .fb-sec, .stats-sec { background: var(--sheet); border-radius: var(--radius); box-shadow: var(--lift); padding: 20px; margin: 0 0 16px; }
+@media (max-width: 900px) { .wa-sec, .unit-sec, .my-sec, .fb-sec, .stats-sec { border-radius: 18px; padding: 18px; } }
+.wa-list { list-style: none; margin: 0; padding: 0; display: block; }
+.wa-sec .wa-item { border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: 14px 0; }
+.wa-sec .wa-item + .wa-item { border-top: 1px solid var(--rule); }
+.wa-item h3 { font-size: 16px; font-weight: 700; align-items: center; }
+.wa-item h3 .small { font-weight: 400; }
+.wa-item p { font-size: 15px; }
+.wa-sec .learn-card { border: 0; box-shadow: none; background: var(--raised); border-radius: 14px; margin: 0 0 8px; }
+.learn-card h2 { font-size: 16px; }
+.unit-bars li.weak b { color: var(--danger); } .unit-bars li.weak .pb-fg { fill: var(--danger); }
+.unit-bars .pb-fg { fill: var(--accent); }
+.weak-card { border: 0; border-radius: 14px; background: var(--danger-soft); padding: 14px 16px; }
+.my-sec .card, .my-sec .my-rank, .my-sec .list-rows { box-shadow: none; }
+.my-sec > .card { padding: 0; background: transparent; margin: 0; }
+.article-body { margin-top: 0; padding-top: 0; border-top: 0; }

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ p.name }} 복습 테스트 첨삭 | {{ title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('care.t_papers') }}">← 복습 테스트 첨삭</a></p>
+<p class="crumb"><a href="{{ url_for('care.t_papers') }}">← 복습 테스트 첨삭</a></p>
 <div class="page-head"><div><h1>{{ p.name }} <span class="small muted">{{ p.cls }}<span class="sep" aria-hidden="true"></span>{{ p.student_no }}</span></h1>
   <p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ rep.r.score|round(1)|replace('.0', '') }}/{{ rep.full|round(1)|replace('.0', '') }}점<span class="sep" aria-hidden="true"></span>틀린 문항 {{ rep.wrong|length }}개<span class="sep" aria-hidden="true"></span>제출 {{ p.submitted_at[5:16] }}{% if p.status == 'done' %}<span class="sep" aria-hidden="true"></span>첨삭 {{ p.reviewed_at[5:16] }} {{ reviewer }}{% endif %}</p></div></div>
 {% if p.note %}<p class="aside-note"><span>학생</span>{{ p.note }}</p>{% endif %}

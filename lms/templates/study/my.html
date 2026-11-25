@@ -51,19 +51,12 @@
   <div class="sec-head"><h2 id="h-prog">학습 진도{% call help('학습 진도') %}<p>통과 Quiz는 마지막에 맞힌 비율, 영단어는 1000단어 중 외운 비율</p>{% endcall %}</h2>
     <form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="통과 Quiz 34개 TOPIC 진도를 모두 초기화할까요? 공부 시간 기록은 그대로 남아요.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="all">
-      <button class="btn small">전체 초기화</button></form></div>
-  <table class="prog">
-    <thead><tr><th>제목</th><th>진도율</th><th class="num">%</th><th><span class="sr">초기화</span></th></tr></thead>
-    <tbody>
-      <tr><td>수능 영단어</td><td><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if m.vocab.pct %}<rect class="pb-fg" width="{{ [m.vocab.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></td>
-        <td class="num">{{ m.vocab.pct }}%</td><td></td></tr>
-      {% for t in m.topics %}
-      <tr><td><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="muted">{{ t.code }}</span> {{ t.title }}</a></td>
-        <td><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></td>
-        <td class="num">{{ t.pct }}%</td>
-        <td class="num">{% if t.pct %}<form method="post" action="{{ url_for('study.s_my_reset') }}" data-confirm="TOPIC {{ t.code }} 진도를 초기화할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="{{ t.code }}"><button class="btn small">초기화</button></form>{% endif %}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      <button class="btn small">진도 초기화</button></form></div>
+  <div class="card"><ul class="list-rows prog-rows">
+    <li><a href="{{ url_for('games.hub') }}"><span class="lr-main"><b class="lr-title">수능 영단어</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if m.vocab.pct %}<rect class="pb-fg" width="{{ [m.vocab.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></span><span class="lr-end"><b>{{ m.vocab.pct }}<small>%</small></b></span></a></li>
+    {% for t in m.topics %}
+    <li><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="lr-main"><b class="lr-title"><span class="prog-code">{{ t.code }}</span> {{ t.title }}</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></span><span class="lr-end"><b>{{ t.pct }}<small>%</small></b></span></a></li>
+    {% endfor %}
+  </ul></div>
 </section>
 {% endblock %}

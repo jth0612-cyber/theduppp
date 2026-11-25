@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ '글 고치기' if editing else '새 글' }} | 태혁쌤의 cast{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('cast.cast_list') }}">태혁쌤의 cast</a> /</p>
+<p class="crumb"><a href="{{ url_for('cast.cast_list') }}">태혁쌤의 cast</a> /</p>
 <h1>{{ '글 고치기' if editing else '새 글' }}</h1>
 <form method="post" class="card">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

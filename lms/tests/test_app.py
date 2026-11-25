@@ -315,7 +315,7 @@ class FeatureTest(AppTest):
         else:
             self.assertIn("이번 주 많이 본 질문", page)
             self.assertIn("조회 2", page)
-            self.assertLess(page.index("이번 주 많이 본 질문"), page.index("<table"))
+            self.assertLess(page.index("이번 주 많이 본 질문"), page.index('aria-label="질문 목록"'))
 
     def test_staff_can_join_rooms_with_caption(self):
         _, s1, _ = self._students()
@@ -394,7 +394,7 @@ class FeatureTest(AppTest):
         with self.app.app_context():
             nid = query("SELECT id FROM notices", one=True)["id"]
         s1.get(f"/s/notices/{nid}")
-        self.assertIn("1명 읽음", s1.get(f"/s/notices/{nid}").data.decode())   # 같은 학생은 한 번만
+        self.assertNotIn("명 읽음", s1.get(f"/s/notices/{nid}").data.decode())  # 두 번 열어도 한 번만 세고, 읽은 수는 학생에게 보이지 않는다
         page = self.c.get(f"/t/classes/{cid}?tab=notices").data.decode()
         self.assertRegex(page, r"<b>1/\d+명 읽음</b>")                       # 반 인원 중 읽은 수
         from unittest import mock

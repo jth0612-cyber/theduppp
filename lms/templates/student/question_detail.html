@@ -3,12 +3,11 @@
 {% block title %}{{ q.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if request.args.get('posted') %}<i hidden data-draft-clear="q-draft-{{ g.user.id }} fu-draft-{{ q.id }}"></i>{% endif %}
-<div class="page-head">
+<div class="page-head ed-head-split">
   <div>
-    <p class="small"><a href="{{ url_for('student.questions') }}">질답 게시판</a> /</p>
+    <p class="crumb"><a href="{{ url_for('student.questions') }}">질답 게시판</a> /</p>
     <h1>{{ q.title }}</h1>
-    <p class="small">{{ status_badge(q.status) }} {{ qtype_badge(q.qtype) }}
-      <span class="muted">{{ q.nickname }}{% if q.is_mine %} <span class="badge">나</span>{% endif %}<span class="sep" aria-hidden="true"></span>{{ q.created_at[:16] }}{% if q.qtype == '학습상담' %}<span class="sep" aria-hidden="true"></span>상담 조교: {{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구든 먼저' }}{% endif %}</span></p>
+    <p class="ed-lede">{{ status_badge(q.status) }} {{ q.qtype }}<span class="sep" aria-hidden="true"></span>{{ '나' if q.is_mine else q.nickname }}<span class="sep" aria-hidden="true"></span>{{ q.created_at[5:10]|replace('-', '.') }}{% if q.qtype == '학습상담' %}<span class="sep" aria-hidden="true"></span>{{ (q.assignee_name ~ ' 조교') if q.assignee_name else '누구든 먼저' }}{% endif %}</p>
   </div>
   {% if q.is_mine and q.status == 'open' and not q.answer_count %}
   <form method="post" action="{{ url_for('student.question_delete', qid=q.id) }}" data-confirm="질문을 삭제할까요?">

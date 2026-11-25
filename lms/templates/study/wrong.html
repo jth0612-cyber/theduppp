@@ -15,7 +15,7 @@
 {% if rounds|length > 1 %}
 <form method="get" class="pick" data-autosubmit>
   {% if only_open %}<input type="hidden" name="view" value="open">{% endif %}<input type="hidden" name="kind" value="{{ kind_key }}">
-  <label for="wr-mock">회차</label>
+  <label for="wr-mock" class="sr-only">회차</label>
   <select id="wr-mock" name="mock"><option value="">전체 회차</option>{% for mid, t in rounds %}<option value="{{ mid }}"{{ ' selected' if pick == mid }}>{{ t }}</option>{% endfor %}</select>
   <button class="btn small js-hide" type="submit">보기</button>
 </form>

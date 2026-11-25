@@ -2,7 +2,7 @@
 {% from "_macros.html" import help %}
 {% block title %}{{ mock.book_title }} {{ mock.round_no }}회 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('books.teacher_books') }}">← 복테/모의고사</a></p>
+<p class="crumb"><a href="{{ url_for('books.teacher_books') }}">← 복테/모의고사</a></p>
 {% if m.is_practice %}<p class="aside-note"><span>연습</span>실장 TEST반 전용 연습 회차예요. 실제 학생 화면 및 통계에는 나가지 않아요.</p>{% endif %}
 <div class="page-head">
   <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %}<span class="sep" aria-hidden="true"></span>{{ mock.title }}{% endif %}</h1>

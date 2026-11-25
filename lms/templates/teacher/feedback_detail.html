@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t.student_name }} 첨삭 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
-<p class="small"><a href="{{ url_for('feedback.t_list', status=t.status) }}">Full 모의고사 피드백</a> /</p>
+<p class="crumb"><a href="{{ url_for('feedback.t_list', status=t.status) }}">Full 모의고사 피드백</a> /</p>
 <header class="ed-head ed-head-split">
   <div>
     <h1>{{ t.student_name or '-' }} <span class="fb-state is-{{ t.status }}">{{ '답변 대기' if t.status == 'wait' else '답변 완료' }}</span></h1>

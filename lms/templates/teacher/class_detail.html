@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('teacher.classes') }}">반 관리</a> /</p>
+    <p class="crumb"><a href="{{ url_for('teacher.classes') }}">반 관리</a> /</p>
     <h1>{{ cls.name }} {% if cls.archived %}<span class="badge gray">보관됨</span>{% endif %}{% call help('학생 아이디') %}<p>단과 학생은 출결 카드 번호가 아이디예요.</p>{% endcall %}</h1>
     <p class="muted small">{{ cls.description }}</p>
   </div>

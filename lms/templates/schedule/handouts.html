@@ -4,7 +4,7 @@
 {% block title %}배부 교재 | 수업 일정{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p><h1>배부 교재{% call help('배부 교재') %}<p>수업 때 나눠 주는 교재. 복습 테스트, 모의고사 회차와는 따로예요. 진도 그룹의 주차에 배정해요.</p>{% endcall %}</h1>
+  <div><p class="crumb"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p><h1>배부 교재{% call help('배부 교재') %}<p>수업 때 나눠 주는 교재. 복습 테스트, 모의고사 회차와는 따로예요. 진도 그룹의 주차에 배정해요.</p>{% endcall %}</h1>
     </div>
 </div>
 <section class="card">

@@ -53,7 +53,7 @@ class AppHome(unittest.TestCase):
 
     def test_tasks_page(self):
         page = self.c.get("/s/tasks").data.decode()
-        self.assertIn("Squeeze 14호", page); self.assertIn("안 낸 과제 1개", page); self.assertIn("17/20", page)
+        self.assertIn("Squeeze 14호", page); self.assertIn('안 낸 과제 <b class="txt-danger">1개</b>', page); self.assertIn("17<small>/20</small>", page)
 
 
 if __name__ == "__main__":

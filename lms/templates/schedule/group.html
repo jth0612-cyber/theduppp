@@ -6,7 +6,7 @@
 {% block content %}
 <div class="page-head">
   <div>
-    <p class="small"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p>
+    <p class="crumb"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> /</p>
     <h1>{{ grp.name }} <span class="badge gray">{{ grp.track }}</span></h1>
     <p class="muted small">반 {{ members|length }}개<span class="sep" aria-hidden="true"></span>재원생 {{ total }}명<span class="sep" aria-hidden="true"></span>{{ weeks|length }}주<span class="sep" aria-hidden="true"></span>한 주차 = 토~금 (토요일반이 먼저)</p>
   </div>
