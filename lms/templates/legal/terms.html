@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}이용약관 | 정태혁 통합과학 lab{% endblock %}
+{% block main_class %}{{ 'container' if g.user else 'legal-wrap' }}{% endblock %}
+{% block content %}
+{% set sc = site_contact() %}
+<article class="card legal">
+  <h1>이용약관</h1>
+  <p class="legal-date">시행일 {{ legal_date }}</p>
+
+  <h2>1. 이 서비스</h2>
+  <p>정태혁 통합과학 lab은 정태혁(개인)이 운영해요. 정태혁 선생님 수업을 듣는 학생의 학습을 돕는 서비스예요. 시험 분석, 질문 답변, 공지, 자료, 공부 기록을 제공해요.</p>
+
+  <h2>2. 가입과 계정</h2>
+  <ul>
+    <li>수업을 듣는 학생만 가입할 수 있어요. 가입에는 학원에서 받은 개인 코드가 필요해요.</li>
+    <li>만 14세 미만은 가입할 수 없어요.</li>
+    <li>계정은 본인만 써요. 아이디와 비밀번호를 다른 사람에게 알려 주면 안 돼요.</li>
+    <li>수강이 끝나면 1년 안에 계정과 기록을 지워요.</li>
+  </ul>
+
+  <h2>3. 하면 안 되는 일</h2>
+  <ul>
+    <li>시험 문항, 해설, 교재, 강의 영상을 캡처하거나 밖으로 퍼뜨리는 일</li>
+    <li>다른 사람의 계정을 쓰거나 다른 학생의 정보를 알아내려는 일</li>
+    <li>질문이나 채팅에 욕설, 비방, 광고, 다른 사람의 개인정보를 쓰는 일</li>
+    <li>서비스를 망가뜨리거나 자동 프로그램으로 접속하는 일</li>
+  </ul>
+  <p>이런 일이 확인되면 글을 지우거나 계정을 멈출 수 있어요.</p>
+
+  <h2>4. 올린 글과 사진</h2>
+  <p>학생이 올린 질문과 사진은 답변과 첨삭에만 써요. 질답 게시판의 학습질문은 다른 학생에게 닉네임으로 보여요. 학습상담과 행정문의는 본인과 선생님, 조교만 봐요.</p>
+
+  <h2>5. 자료의 권리</h2>
+  <p>시험 문항, 해설, 교재 내용, 강의 영상의 권리는 선생님과 각 권리자에게 있어요. 수업을 듣는 동안 본인 공부에만 쓸 수 있어요.</p>
+
+  <h2 id="refund">6. 요금과 환불</h2>
+  <p>이 서비스는 요금을 받지 않고, 결제 기능이 없어요. 수강료와 교재 값은 학원과 각 판매처에 내요. 수강료와 교재의 환불도 학원과 판매처의 규정을 따라요.</p>
+
+  <h2>7. 서비스가 멈출 때</h2>
+  <p>점검이나 장애로 서비스가 잠시 멈출 수 있어요. 미리 알 수 있는 점검은 공지에 올려요.</p>
+
+  <h2>8. 참고 자료</h2>
+  <p>성적 분석과 예상 등급은 수업에서 본 시험을 바탕으로 한 참고 자료예요. 실제 수능 결과와 다를 수 있어요.</p>
+
+  <h2>9. 운영자</h2>
+  <p>{% if sc.biz_name %}{{ sc.biz_name }}<span class="sep" aria-hidden="true"></span>{% endif %}운영자 정태혁{% if sc.biz_no %}<span class="sep" aria-hidden="true"></span>사업자등록번호 {{ sc.biz_no }}{% endif %}</p>
+  {% if sc.biz_addr %}<p>{{ sc.biz_addr }}</p>{% endif %}
+  {% if sc.email or sc.phone %}<p>{% if sc.email %}<a href="mailto:{{ sc.email }}">{{ sc.email }}</a>{% endif %}{% if sc.email and sc.phone %}<span class="sep" aria-hidden="true"></span>{% endif %}{{ sc.phone }}</p>{% endif %}
+  <p>문의는 질답 게시판의 행정문의로 남겨 주세요.</p>
+
+  <h2>10. 약관이 바뀔 때</h2>
+  <p>약관이 바뀌면 시행 7일 전에 공지에 올려요.</p>
+</article>
+{% endblock %}

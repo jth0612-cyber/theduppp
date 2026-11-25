@@ -73,10 +73,11 @@
       <ul>
         <li>수집 항목: 이름, 아이디, {% if gid %}Google 계정 이메일, {% endif %}학습 기록(성적 및 질문 등)</li>
         <li>이용 목적: 수업 학습 관리, 질문 답변</li>
-        <li>보관 기간: 수강이 끝나면 선생님이 파기해요</li>
+        <li>보관 기간: 수강이 끝난 뒤 1년 안에, 삭제를 요청하면 그 전에도 지워요</li>
+        <li>학부모께 성적과 일정을 문자와 리포트 주소로 알려요.</li>
         <li>질답 게시판의 학습질문은 다른 학생에게 <b>닉네임으로</b> 공개돼요.</li>
       </ul>
-      <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> 위 내용에 동의해요</label>
+      <label class="consent"><input type="checkbox" name="consent" value="1" required{{ bad('consent') }}> <span>만 14세 이상이고, 위 내용과 <a href="{{ url_for('auth.privacy') }}" target="_blank" rel="noopener">개인정보처리방침</a>, <a href="{{ url_for('auth.terms') }}" target="_blank" rel="noopener">이용약관</a>에 동의해요</span></label>
       {{ err('consent') }}
     </div>
     <button class="btn primary" type="submit">가입하기</button>

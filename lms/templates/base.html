@@ -26,6 +26,7 @@
 </head>
 {% set entered = g.user and not g.user.must_change_pw and session.pop('entered', None) %}
 <body class="{% block body_class %}{% endblock %} {{ 'has-shell' if g.user and not g.user.must_change_pw else 'no-shell' }}{{ ' entered' if entered }}{{ ' is-staff' if g.user and g.user.role != 'student' }}">
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
 {% if g.user and not g.user.must_change_pw %}
 {% set ep = request.endpoint or '' %}
 {% import "_nav.html" as nav with context %}
@@ -110,7 +111,7 @@
     </div>
     <img class="m-affil" src="{{ url_for('static', filename='img/sdij.svg') }}" alt="시대인재">
   </div>
-  <main class="sheet {% block main_class %}container{% endblock %}">
+  <main id="main" tabindex="-1" class="sheet {% block main_class %}container{% endblock %}">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
     {% endwith %}
@@ -119,7 +120,7 @@
   </main>
 </div>
 {% else %}
-<main class="{{ self.main_class() }}">
+<main id="main" tabindex="-1" class="{{ self.main_class() }}">
   {% block auth_brand %}<a class="auth-brand" href="{{ url_for('auth.login') }}" aria-label="정태혁 통합과학 lab">
     {% include "_logo.html" %}
     <span>정태혁 통합과학 lab</span>

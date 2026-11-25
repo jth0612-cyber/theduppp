@@ -120,6 +120,19 @@ _NAME = re.compile(r"^[가-힣A-Za-z ]{2,20}$")
 _STUDENT_NO = re.compile(r"^[A-Za-z0-9-]{3,30}$")
 
 
+LEGAL_DATE = "2026-11-26"   # 방침과 약관의 시행일. 내용을 바꾸면 같이 바꾼다
+
+
+@bp.route("/privacy")
+def privacy():
+    return render_template("legal/privacy.html", legal_date=LEGAL_DATE)
+
+
+@bp.route("/terms")
+def terms():
+    return render_template("legal/terms.html", legal_date=LEGAL_DATE)
+
+
 @bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if g.user is not None:

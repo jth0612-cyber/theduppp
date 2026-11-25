@@ -99,7 +99,7 @@
       {{ csrf() }}
       <div class="help-inline">CSV 형식{% call help('CSV 형식') %}<p>첫 줄: <code>이름,아이디,연락처,학부모연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 돼요.</p>{% endcall %}</div>
       <div class="row">
-        <div class="field"><input type="file" name="csv" accept=".csv" required></div>
+        <div class="field"><input type="file" name="csv" accept=".csv" required aria-label="CSV 파일"></div>
         <div class="field shrink"><button class="btn primary">가져오기</button></div>
       </div>
     </form>

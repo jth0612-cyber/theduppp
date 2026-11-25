@@ -504,3 +504,20 @@ document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(
   });
   t.classList.add("rowcards");
 });
+
+// 이름표 연결: 입력칸 위에 이름표만 놓인 곳(.field > label + 입력칸)을 화면 낭독기가 읽을 수 있게 for/id 로 잇는다.
+// 이름표가 없는 입력칸은 칸 안 글(placeholder)을 이름으로 쓴다.
+(function () {
+  var n = 0;
+  document.querySelectorAll(".field").forEach(function (f) {
+    var lab = f.querySelector(":scope > label:not([for])"), ctl = f.querySelectorAll("input:not([type=hidden]):not([type=radio]):not([type=checkbox]), select, textarea");
+    if (!lab || ctl.length !== 1 || lab.contains(ctl[0])) return;
+    if (!ctl[0].id) ctl[0].id = "fld-" + (++n);
+    lab.htmlFor = ctl[0].id;
+  });
+  document.querySelectorAll("input:not([type=hidden]), select, textarea").forEach(function (c) {
+    if ((c.labels && c.labels.length) || c.getAttribute("aria-label") || c.getAttribute("aria-labelledby") || c.title) return;
+    var td = c.closest("td"), name = c.getAttribute("placeholder") || (td && td.getAttribute("data-th")) || "";
+    if (name) c.setAttribute("aria-label", name);
+  });
+})();

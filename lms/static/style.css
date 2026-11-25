@@ -2400,7 +2400,7 @@ summary h2.inline { display: inline; margin: 0; }
   --frame: #eceef0; --sheet: #ffffff; --raised: #f3f4f6; --active: #e2e5e9;
   --edge: #e2e5e9; --rule: #eef0f2; --control: #a7adb5;
   --ink: #1a1b1e; --muted: #4e5560; --faint: #646b76;
-  --accent: #2f6fc4; --accent-soft: #e8f0fb; --accent-ink: #1e4f95; --on-accent: #ffffff;
+  --accent: #2a67ba; --accent-soft: #e8f0fb; --accent-ink: #1e4f95; --on-accent: #ffffff;
   --point: #d02028; --point-soft: #fdecec;
   --grad-red: linear-gradient(90deg, #c0141e, #e8343c); --grad-blue: linear-gradient(90deg, #2e6fc6, #6aa6e8);
   --danger: #d02028; --danger-soft: #fdecec; --ok: #1f7a5e; --ok-soft: #e3f3ec; --warn: #8a5300; --warn-soft: #fdf3e1;
@@ -2817,3 +2817,28 @@ main fieldset > legend + * { clear: both; }
 .no-shell .colo-name { display: none; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.auth-affil, .m-affil) { filter: brightness(0) invert(1); } }
 :root[data-theme="dark"] :is(.auth-affil, .m-affil) { filter: brightness(0) invert(1); }
+
+/* 방침과 약관: 읽는 글. 좁은 폭, 넉넉한 줄 간격 */
+.legal-wrap { max-width: 760px; margin: 0 auto; padding: 6vh 16px 48px; display: grid; gap: 18px; }
+.legal { max-width: 760px; padding: 28px; line-height: 1.75; }
+.legal h1 { margin: 0; }
+.legal-date { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.legal h2 { margin: 30px 0 8px; font-size: 17px; }
+.legal p { margin: 0 0 8px; font-size: 15px; }
+.legal ul { margin: 0 0 8px; padding-left: 1.2em; font-size: 15px; }
+.legal li { margin: 2px 0; }
+.legal a { text-decoration: underline; text-underline-offset: 3px; }
+main .legal table.legal-table { width: 100%; font-size: 14px; }
+main .legal table.legal-table :is(th, td) { text-align: left; vertical-align: top; }
+.colo-legal a { color: var(--ink); }
+.consent a { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 720px) { .legal { padding: 22px 18px; } }
+
+/* 대비 4.5 이상 (2026-11-26 점검): 숫자 배지는 빨강 토큰, 역할 표시는 바탕에 맞는 글자색 */
+.side .nav .count { background: var(--danger); }
+.side .cap, .m-top .cap { color: var(--on-accent); }
+/* 키보드로 들어오면 맨 먼저 잡히는 건너뛰기 링크 */
+.skip-link { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 14px; border-radius: 10px; background: var(--ink); color: var(--sheet); font-weight: 600; }
+.skip-link:focus { top: 12px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .side .nav .count { color: #0f1012; } }
+:root[data-theme="dark"] .side .nav .count { color: #0f1012; }

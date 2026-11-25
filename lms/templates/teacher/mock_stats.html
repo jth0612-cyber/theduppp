@@ -42,7 +42,7 @@
   <h2 id="h-omr">채점기 엑셀(OMR) 올리기{% call help('채점기 엑셀(OMR) 올리기') %}<p>이름, 수험번호(학부모 번호 뒤 8자리), 1~N번 답안 칸을 알아서 찾아요. '정답', '배점' 줄, 둘째 시트 '문항정보'를 함께 읽어요. 같은 학생은 새로 올린 내용으로 바뀌어요.</p><p>빈 양식에는 재원생 명단, 정답과 배점 줄, 문항정보 시트가 들어 있어요.</p>{% if m.is_practice %}<p>연습용 예시 엑셀에는 실장 TEST반 가상 학생 50명의 답안, 정답, 문항정보가 들어 있어요.</p>{% endif %}{% endcall %}</h2>
   <form method="post" action="{{ url_for('books.omr_upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="file" name="file" accept=".xlsx,.csv" required>
+    <input type="file" name="file" accept=".xlsx,.csv" required aria-label="채점기 엑셀 파일">
     <button class="btn primary">올리기</button>
   </form>
   <form method="get" action="{{ url_for('books.omr_template', mid=mock.id) }}" class="row nowrap mt">

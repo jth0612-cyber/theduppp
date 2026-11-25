@@ -163,6 +163,25 @@ def notice_like(nid):
     return redirect(url_for("student.notice_detail", nid=nid))
 
 
+ERASE_TITLE = "개인정보 삭제 요청"
+
+
+@bp.route("/erase-request", methods=["POST"])
+@student_required
+def erase_request():
+    """개인정보 삭제 요청: 행정문의로 남겨 선생님과 조교가 확인한 뒤 학생 화면의 영구 삭제로 지운다."""
+    me = _me()
+    old = query("SELECT id FROM questions WHERE student_id = ? AND title = ? AND status = 'open'", (me["id"], ERASE_TITLE), one=True)
+    if old:
+        flash("이미 요청했어요. 선생님이 확인하고 있어요.", "ok")
+        return redirect(url_for("student.question_detail", qid=old["id"]))
+    qid = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, ?, ?, '행정문의')",
+                  (me["id"], ERASE_TITLE, "계정과 모든 기록(성적, 질문, 사진, 공부 기록)을 지워 주세요."))
+    audit("erase_request", f"student:{me['id']} question:{qid}")
+    flash("삭제를 요청했어요. 선생님이 확인한 뒤 지워요.", "ok")
+    return redirect(url_for("student.question_detail", qid=qid))
+
+
 @bp.route("/materials")
 @student_required
 def materials():

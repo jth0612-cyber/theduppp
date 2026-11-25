@@ -113,7 +113,10 @@ def create_app(test_config=None):
         return {"kakao": url if url.startswith("https://") else "",
                 "openchat": oc if oc.startswith("https://open.kakao.com/") else "", "note": os.environ.get("CONTACT_NOTE", "").strip(),
                 # 하단 운영자 줄 아래 연락처. 비어 있으면 줄 자체를 감춘다
-                "email": os.environ.get("CONTACT_EMAIL", "").strip(), "phone": os.environ.get("CONTACT_PHONE", "").strip()}
+                "email": os.environ.get("CONTACT_EMAIL", "").strip(), "phone": os.environ.get("CONTACT_PHONE", "").strip(),
+                # 사업자 정보 (상호, 사업자등록번호, 주소). 넣은 것만 하단과 약관에 보인다
+                "biz_name": os.environ.get("BIZ_NAME", "").strip(), "biz_no": os.environ.get("BIZ_REG_NO", "").strip(),
+                "biz_addr": os.environ.get("BIZ_ADDRESS", "").strip()}
     app.jinja_env.globals["site_contact"] = site_contact
 
     def question_photos(q):
