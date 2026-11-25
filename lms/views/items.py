@@ -1,4 +1,4 @@
-"""문항 그림: 조교가 회차의 문항 그림을 올리면, 학생은 시험 분석에서 문항을 눌러 보고 그 그림 위에 필기해서 질문한다.
+"""문항 그림 (보류: ITEMS_ENABLED 가 켜져 있을 때만 동작): 조교가 회차의 문항 그림을 올리면, 학생은 시험 분석에서 문항을 눌러 보고 그 그림 위에 필기해서 질문한다.
 
 - 그림 파일은 tools/split_items.py 로 시험지 PDF 에서 자른다. 파일 이름의 숫자가 문항 번호(07.png → 7번).
 - 학생에게는 아이디·날짜 워터마크를 그림에 새겨서 보낸다(Pillow). 캡처해서 돌려도 누구 것인지 남는다.
@@ -17,7 +17,20 @@ from security import IMAGE_EXTS, audit, delete_file, login_required, save_upload
 bp = Blueprint("items", __name__)
 
 
+def enabled():
+    """보안 문제로 보류 (2026-11-25). 켜려면 환경 변수 ITEMS_ENABLED=1."""
+    return bool(current_app.config.get("ITEMS_ENABLED"))
+
+
+@bp.before_request
+def _gate():
+    if not enabled():
+        abort(404)
+
+
 def item_nos(mock_id):
+    if not enabled():
+        return set()
     return {r["item_no"] for r in query("SELECT item_no FROM mock_item_images WHERE mock_id = ?", (mock_id,))}
 
 

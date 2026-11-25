@@ -327,9 +327,9 @@ def questions():
     best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
     # 문항 불러오기: 시험 분석에서 볼 수 있는 회차 중 문항 그림이 있는 것 → 그 그림 위에 필기해서 질문 (views/items.py)
     from views.books import _accessible_mocks
-    from views.items import exam_label
+    from views.items import enabled as items_on, exam_label
     have = {}
-    for r in query("SELECT mock_id, item_no FROM mock_item_images ORDER BY item_no"):
+    for r in (query("SELECT mock_id, item_no FROM mock_item_images ORDER BY item_no") if items_on() else []):
         have.setdefault(r["mock_id"], []).append(r["item_no"])
     pick = [{"id": m["id"], "label": exam_label(m), "nos": have[m["id"]]} for m in _accessible_mocks() if m["id"] in have]
     item = None

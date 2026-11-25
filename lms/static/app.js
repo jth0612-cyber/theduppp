@@ -252,26 +252,31 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
   });
   document.querySelectorAll("form[data-qform]").forEach(function (f) {
     var store = box(f.getAttribute("data-draft-key"));
-    var fields = Array.prototype.filter.call(f.elements, function (el) { return ["title", "body", "qtype"].indexOf(el.name) >= 0; });
+    var fields = Array.prototype.filter.call(f.elements, function (el) { return ["title", "body"].indexOf(el.name) >= 0; });
+    var qtypes = f.querySelectorAll("input[name=qtype]");
+    function qv() { var c = f.querySelector("input[name=qtype]:checked"); return c ? c.value : ""; }
     var note = f.querySelector("[data-draft-note]");
     if (!f.hasAttribute("data-has-draft")) {        // 서버가 돌려준 내용이 없을 때만, 지난번에 쓰던 내용을 불러온다
       var d = store.get();
       if (d && fields.some(function (el) { return !el.value && d[el.name]; })) {
         fields.forEach(function (el) { if (!el.value && d[el.name]) el.value = d[el.name]; });
+        if (!qv() && d.qtype) qtypes.forEach(function (r) { if (r.value === d.qtype) { r.checked = true; r.dispatchEvent(new Event("change", { bubbles: true })); } });
         if (note) note.hidden = false;
         var det = f.closest("details"); if (det) det.open = true;
       }
     }
     function save() {
       var v = {}, any = false;
-      fields.forEach(function (el) { v[el.name] = el.value; if (el.name !== "qtype" && el.value.trim()) any = true; });
+      fields.forEach(function (el) { v[el.name] = el.value; if (el.value.trim()) any = true; });
+      v.qtype = qv();
       if (any) store.set(v); else store.del();
     }
     var t; f.addEventListener("input", function () { clearTimeout(t); t = setTimeout(save, 400); });
+    f.addEventListener("change", function (e) { if (e.target.name === "qtype") save(); });
 
     var wrap = f.querySelector("[data-photo]"); if (!wrap) return;
     var inp = wrap.querySelector("input[type=file]"), err = wrap.querySelector("[data-photo-err]"),
-        pv = wrap.querySelector("[data-photo-preview]"), thumbs = pv.querySelector("[data-photo-thumbs]"), qt = f.querySelector("[data-qtype]");
+        pv = wrap.querySelector("[data-photo-preview]"), thumbs = pv.querySelector("[data-photo-thumbs]");
     var urls = [];
     function showErr(msg) { err.textContent = msg || ""; err.hidden = !msg; wrap.classList.toggle("has-err", !!msg); }
     function clearPhoto() { inp.value = ""; pv.hidden = true; urls.forEach(function (u) { URL.revokeObjectURL(u); }); urls = []; thumbs.textContent = ""; }
@@ -295,14 +300,20 @@ window.addEventListener("pageshow", function (e) {   // 뒤로 가기로 돌아�
       pv.querySelector("span").textContent = files.length + "장"; pv.hidden = false;
     });
     pv.querySelector("[data-photo-clear]").addEventListener("click", function () { clearPhoto(); inp.focus(); });
-    if (qt) qt.addEventListener("change", function () {
-      if (qt.value !== "학습질문") showErr("");
+    f.addEventListener("change", function (e) {
+      if (e.target.name !== "qtype") return;
+      var v = qv();
+      if (v !== "학습질문") showErr("");
       var t = document.getElementById("q-title");      // 유형에 맞는 제목 예시
-      if (t) t.placeholder = { "행정문의": "예) 교재 환불 · FRAMING 해설편 2권", "학습상담": "예) 평일 공부 계획 상담" }[qt.value] || "[교재-페이지-번호] 예) 개념서 42p 3번";
+      if (t) t.placeholder = { "행정문의": "예) 교재 환불 · FRAMING 해설편 2권", "학습상담": "예) 평일 공부 계획 상담" }[v] || "[교재-페이지-번호] 예) 개념서 42p 3번";
+      var th = f.querySelector("[data-title-hint]"); if (th) th.hidden = !!v && v !== "학습질문";
+      var h = f.querySelector("[data-qtype-hint]");   // 고른 유형의 규칙 한 줄
+      if (h) { try { h.textContent = JSON.parse(h.getAttribute("data-hints"))[v] || ""; } catch (err) {} }
+      var fs = f.querySelector(".qtype-pick"); if (fs) fs.classList.remove("has-err");
     });
     f.addEventListener("submit", function (e) {
       save();
-      if (qt && qt.value === "학습질문" && !(inp.files && inp.files.length)) {
+      if (qv() === "학습질문" && !(inp.files && inp.files.length)) {
         e.preventDefault(); e.stopImmediatePropagation();
         showErr("학습질문은 문제 사진이 필요합니다. 쓴 내용은 그대로 있습니다.");
         wrap.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -346,10 +357,13 @@ document.addEventListener("click", function (e) {
 });
 // 질문 유형이 '학습상담'일 때만 상담 조교 고르기를 보인다
 (function () {
-  var sel = document.querySelector("[data-qtype]"), box = document.querySelector("[data-consult]"), unit = document.querySelector("[data-unit-field]");
-  if (!sel || !box) return;
-  function sync() { box.hidden = sel.value !== "학습상담"; if (unit) unit.hidden = sel.value !== "학습질문"; }
-  sel.addEventListener("change", sync); sync();
+  var f = document.querySelector("form[data-qform]"), box = document.querySelector("[data-consult]"), unit = document.querySelector("[data-unit-field]");
+  if (!f || !box) return;
+  function sync() {
+    var c = f.querySelector("input[name=qtype]:checked"), v = c ? c.value : "";
+    box.hidden = v !== "학습상담"; if (unit) unit.hidden = v !== "학습질문";
+  }
+  f.addEventListener("change", function (e) { if (e.target.name === "qtype") sync(); }); sync();
 })();
 // 시험지 첨삭: 메모가 빈 문항이 있으면 저장 전에 몇 번인지 알린다
 (function () {

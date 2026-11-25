@@ -280,7 +280,7 @@ class FeatureTest(AppTest):
         self.assertIn('value="개념서 42p 3번"', page)
         self.assertIn("보기 ㄴ에서 막혔어요</textarea>", page)
         self.assertIn("작성한 내용은 그대로 남아 있습니다", page)
-        self.assertIn('<option value="학습질문" selected', page)
+        self.assertIn('value="학습질문" required data-qtype checked', page)                   # 질문 유형 칩(라디오)이 골라진 채로
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM questions", one=True)["n"], 0)
         # 이어서 사진만 붙여 보내면 등록

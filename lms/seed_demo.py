@@ -937,7 +937,7 @@ shutil.rmtree(SHOTS, ignore_errors=True)
 
 # ---------------------------------------------------------------- 문항 그림 (시험 분석에서 번호를 누르면 문항, 그 위에 필기해서 질문)
 # 데모 시험지 PDF 를 tools/split_items.py 로 잘라(시스템 python + pymupdf) 매 회차에 같은 그림을 올린다
-if all(os.environ.get(k) for k in ("DEMO_SYS_PY", "DEMO_PHOTOS", "DEMO_PDF")):
+if app.config["ITEMS_ENABLED"] and all(os.environ.get(k) for k in ("DEMO_SYS_PY", "DEMO_PHOTOS", "DEMO_PDF")):
     import tempfile
     _tools = os.path.dirname(os.environ["DEMO_PHOTOS"])
     _idir = tempfile.mkdtemp(prefix="demo-items-")

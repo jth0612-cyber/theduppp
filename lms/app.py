@@ -41,6 +41,7 @@ def create_app(test_config=None):
         DATABASE=os.environ.get("LMS_DATABASE") or os.path.join(INSTANCE_DIR, "lms.sqlite3"),
         UPLOAD_DIR=os.path.join(INSTANCE_DIR, "uploads"),
         MAX_CONTENT_LENGTH=20 * 1024 * 1024,  # 20MB
+        ITEMS_ENABLED=os.environ.get("ITEMS_ENABLED") == "1",  # 문항 그림(views/items.py): 보안 검토 전까지 꺼 둔다 (2026-11-25)
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",

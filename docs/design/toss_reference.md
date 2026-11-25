@@ -103,3 +103,55 @@
 - 저장·오류 알림 토스트(오류는 더 오래), 이동 중 위쪽 줄, 그림 자리 회색 반짝임.
 - 다크 모드 색을 따로 정하고 모든 조합 대비 4.5 이상. 아이콘은 화면 읽기 도구가 읽지 않음(aria-hidden).
 - 시험 분석 화면 정리(한 화면 한 가지 일, 총평·해설 영상 접기).
+
+## 부록: 글 없이 발표 영상으로만 있는 36편
+
+toss.tech 글 주소를 열면 컨퍼런스 세션 페이지로 넘어간다. 세션 페이지에는 제목·발표자와 영상만 있다.
+
+### Simplicity 23 (2023, 17편, toss.tech 16~25페이지)
+
+| 제목 | 발표 | toss.tech 주소 | 세션 페이지 |
+|:---:|:---:|:---:|:---:|
+| 토스뱅크만의 차별화된 경험을 찾아서 | 허소임 | https://toss.tech/article/27396 | https://simplicity-23.toss.im/sessions/1 |
+| 심플한 결제 단말기, 말은 쉬워 보이지만 | 류관준 | https://toss.tech/article/27382 | https://simplicity-23.toss.im/sessions/2 |
+| 사용자에게 질문을 멈춰야 할 때 | 박지희 | https://toss.tech/article/27182 | https://simplicity-23.toss.im/sessions/3 |
+| 초등학생도 쓸 수 있는 제품 만들기 | 성소연 | https://toss.tech/article/27404 | https://simplicity-23.toss.im/sessions/4 |
+| 3,250개의 요구사항을 해결한 1개의 제품 | 윤종구 | https://toss.tech/article/27398 | https://simplicity-23.toss.im/sessions/5 |
+| 100가지 문제를 한번에 해결하는 방법 | 하승주 | https://toss.tech/article/27394 | https://simplicity-23.toss.im/sessions/7 |
+| 토스만의 제품 윤리 원칙 탄생기 | 김명지 | https://toss.tech/article/27190 | https://simplicity-23.toss.im/sessions/8 |
+| 데이터로 내린 의사결정, 뒤집어엎기 | 정나림 | https://toss.tech/article/27458 | https://simplicity-23.toss.im/sessions/9 |
+| 게릴라 테스트에 진심인 이유 | 서은해 | https://toss.tech/article/27184 | https://simplicity-23.toss.im/sessions/10 |
+| UX 라이팅, 혼자가 아닌 함께 잘 쓰기 | 김상훈 | https://toss.tech/article/27192 | https://simplicity-23.toss.im/sessions/11 |
+| 사용자의 공감 얻으면서 제품 뜯어고치기 | 오지은, 한주연 | https://toss.tech/article/27186 | https://simplicity-23.toss.im/sessions/12 |
+| 사장님에게 익숙한 불편함 깨부수기 | 박지영 | https://toss.tech/article/27180 | https://simplicity-23.toss.im/sessions/13 |
+| 복잡한 B2B 제품, 정답으로 향하는 길 | 이영민 | https://toss.tech/article/27400 | https://simplicity-23.toss.im/sessions/14 |
+| 운영성 업무에서 임팩트를 만드는 방법 | 유가은 | https://toss.tech/article/27188 | https://simplicity-23.toss.im/sessions/16 |
+| 유일한 장애물이 상상력일 때 | 김지윤, 최민수 | https://toss.tech/article/27392 | https://simplicity-23.toss.im/sessions/18 |
+| 왜 이렇게까지 디테일을 챙기는 거예요? | 최민수 | https://toss.tech/article/27176 | https://simplicity-23.toss.im/sessions/19 |
+| 프로덕트 브랜딩, 사용자의 마음을 움직이다 | 김유라, 구슬 | https://toss.tech/article/27178 | https://simplicity-23.toss.im/sessions/20 |
+
+세션 6, 15, 17번(크고 복잡한 제품 갈아엎기, 가입 과정 개선, 10대 전용 카드)은 같은 제목의 글이 toss.tech에 따로 있어 본문을 읽었다.
+
+### Simplicity 21 (2021, 19편, toss.tech 26~29페이지)
+
+| 제목 | 발표 | toss.tech 주소 | 세션 페이지 |
+|:---:|:---:|:---:|:---:|
+| 이제껏 없었던 혜택을 찾아서 | 송승원 | https://toss.tech/article/27376 | https://toss.im/simplicity-21/sessions/1-1 |
+| 우리가 효율적으로 일할 수 있는 이유 | 강영화 | https://toss.tech/article/27378 | https://toss.im/simplicity-21/sessions/1-2 |
+| 그냥 사용자한테 물어보면 안 돼요? | 김서연 | https://toss.tech/article/27380 | https://toss.im/simplicity-21/sessions/1-3 |
+| 오직 한 사람, 사장님을 위하여 | 오청희 | https://toss.tech/article/27364 | https://toss.im/simplicity-21/sessions/1-4 |
+| 불편한 경험 완전히 밀어버리기 | 송윤아 | https://toss.tech/article/27366 | https://toss.im/simplicity-21/sessions/2-1 |
+| 우리가 귀찮을수록 사용자는 더 편해지니까 | 윤지영 | https://toss.tech/article/27368 | https://toss.im/simplicity-21/sessions/2-2 |
+| 완벽한 제품에도 필요한 혁신 | 지은이 | https://toss.tech/article/27370 | https://toss.im/simplicity-21/sessions/2-3 |
+| 대출, 새로고침 | 이경훈 | https://toss.tech/article/27372 | https://toss.im/simplicity-21/sessions/2-4 |
+| 1,000만 명의 홈 개편하기 | 김명지 | https://toss.tech/article/27374 | https://toss.im/simplicity-21/sessions/2-5 |
+| 새로운 경험의 공간, 홈페이지 | 김지윤, 용석민, 금혜원 | https://toss.tech/article/27354 | https://toss.im/simplicity-21/sessions/3-1 |
+| 인터랙션, 본능을 움직이다 | 김지혜 | https://toss.tech/article/27356 | https://toss.im/simplicity-21/sessions/3-2 |
+| 모두를 위한 단 하나의 서체 | 김지윤 | https://toss.tech/article/27358 | https://toss.im/simplicity-21/sessions/3-3 |
+| 그래픽, 보이는 아름다움 그 너머 | 고현선 | https://toss.tech/article/27360 | https://toss.im/simplicity-21/sessions/3-4 |
+| 사용자를 넘어 팬으로 | 최민수, 용석민, 이정효 | https://toss.tech/article/27362 | https://toss.im/simplicity-21/sessions/3-5 |
+| 당연했던 것을 새롭게 만드는 법 | 김소현, 정명화 | https://toss.tech/article/27346 | https://toss.im/simplicity-21/sessions/4-1 |
+| 투자의 시작을 간편하게 만드는 여정 | 이예슬, 김애지 | https://toss.tech/article/27348 | https://toss.im/simplicity-21/sessions/4-2 |
+| 어느 날 토스가 말을 걸기 시작했다 | 김자유, 구슬 | https://toss.tech/article/27350 | https://toss.im/simplicity-21/sessions/4-3 |
+| 지금, 툴이 아닌 틀을 바꿔야 할 때 | 강수영 | https://toss.tech/article/27344 | https://toss.im/simplicity-21/sessions/4-4 |
+| 보험이 필요할 때 어떻게 하세요? | 김재현 | https://toss.tech/article/27342 | https://toss.im/simplicity-21/sessions/4-5 |

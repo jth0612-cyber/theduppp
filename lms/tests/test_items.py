@@ -24,7 +24,7 @@ class Items(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False,
-                               "DATABASE": os.path.join(self.tmp.name, "t.sqlite3"), "UPLOAD_DIR": os.path.join(self.tmp.name, "up")})
+                               "DATABASE": os.path.join(self.tmp.name, "t.sqlite3"), "UPLOAD_DIR": os.path.join(self.tmp.name, "up"), "ITEMS_ENABLED": True})
         os.makedirs(self.app.config["UPLOAD_DIR"], exist_ok=True)
         with self.app.app_context():
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta', ?, '박조교')", (hash_password(PW),))
@@ -77,6 +77,29 @@ class Items(unittest.TestCase):
         self.assertNotIn("data-ink ", self.s.get(f"/s/questions?ask=1&mock={self.other}&item=1").data.decode())
         self.ta.post(f"/t/mocks/{self.mid}/items/2/delete")
         self.assertEqual(self.s.get(f"/items/{self.mid}/2.png").status_code, 404)
+
+
+class ItemsOff(unittest.TestCase):
+    """보류(기본값): 꺼져 있으면 올리기·그림·문항 보기 모두 없고, 시험 분석에 번호 링크도 없다."""
+    def test_off_by_default(self):
+        tmp = tempfile.TemporaryDirectory()
+        app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "DATABASE": os.path.join(tmp.name, "t.sqlite3"),
+                          "UPLOAD_DIR": os.path.join(tmp.name, "up")})
+        with app.app_context():
+            execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta', ?, '조교')", (hash_password(PW),))
+        from views import auth
+        auth._ip_attempts.clear()
+        c = app.test_client()
+        c.post("/login", data={"username": "ta", "password": PW})
+        self.assertEqual(c.post("/t/mocks/1/items").status_code, 404)
+        self.assertEqual(c.get("/items/1/1.png").status_code, 404)
+        page = c.get("/t/mocks/1")
+        self.assertEqual(page.status_code, 200)
+        self.assertNotIn('id="h-items"', page.data.decode())                        # 조교 화면에 올리기 칸도 없다
+        with app.app_context():
+            from db import close_db
+            close_db()
+        tmp.cleanup()
 
 
 if __name__ == "__main__":
