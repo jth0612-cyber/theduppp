@@ -325,7 +325,21 @@ def questions():
     faqs = query("""SELECT id, title FROM questions WHERE faq = 1 AND qtype = '학습질문'
                     ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
     best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
-    return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs,
+    # 문항 불러오기: 시험 분석에서 볼 수 있는 회차 중 문항 그림이 있는 것 → 그 그림 위에 필기해서 질문 (views/items.py)
+    from views.books import _accessible_mocks
+    from views.items import exam_label
+    have = {}
+    for r in query("SELECT mock_id, item_no FROM mock_item_images ORDER BY item_no"):
+        have.setdefault(r["mock_id"], []).append(r["item_no"])
+    pick = [{"id": m["id"], "label": exam_label(m), "nos": have[m["id"]]} for m in _accessible_mocks() if m["id"] in have]
+    item = None
+    pm, pn = request.args.get("mock", type=int), request.args.get("item", type=int)
+    sel = next((p for p in pick if p["id"] == pm), None)
+    if sel and pn in sel["nos"]:
+        item = {"mock": pm, "no": pn, "label": sel["label"], "src": url_for("items.image", mid=pm, no=pn)}
+        if not draft:
+            draft = {"title": f"[{sel['label']} {pn}번] ", "body": "", "qtype": "학습질문", "unit": ""}
+    return render_template("student/questions.html", me=me, questions=rows, view=view, q=q, page=page, faqs=faqs, pick=pick, item=item,
                            qtype=qtype, qtypes=QUESTION_TYPES, units=UNITS, draft=draft, form_err=form_err, best=best, tas=consult.ta_cards(),
                            pages=max(1, -(-total // QUESTIONS_PER_PAGE)), total=total), 400 if form_err else 200
 

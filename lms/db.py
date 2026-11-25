@@ -681,6 +681,14 @@ CREATE TABLE IF NOT EXISTS push_subs (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
+-- 문항 그림: 회차의 문항마다 한 장 (조교가 올림, tools/split_items.py 로 시험지 PDF 에서 자름). 학생에게는 워터마크를 얹어 보여 준다
+CREATE TABLE IF NOT EXISTS mock_item_images (
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    item_no     INTEGER NOT NULL,
+    file_id     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    PRIMARY KEY (mock_id, item_no)
+);
+
 -- 앱(안드로이드·아이폰) 푸시 토큰: 기기마다 하나 (Firebase 클라우드 메시징, lms/fcm.py)
 CREATE TABLE IF NOT EXISTS app_tokens (
     id          INTEGER PRIMARY KEY,

@@ -353,3 +353,30 @@ document.addEventListener("click", function (e) {
   box.addEventListener("click", close); document.addEventListener("keydown", esc);
   document.body.appendChild(box);
 });
+
+// ---------- 토스 스타일: 알림은 잠깐 떴다 사라짐, 이동 중 위쪽 줄, 그림 다 불러오면 회색 자리 해제 ----------
+(function () {
+  document.querySelectorAll(".flash").forEach(function (f, i) {
+    var wait = (f.classList.contains("error") ? 6000 : 3200) + i * 400;
+    var hide = function () { f.classList.add("is-out"); setTimeout(function () { f.remove(); }, 260); };
+    var t = setTimeout(hide, wait);
+    f.addEventListener("click", function () { clearTimeout(t); hide(); });
+  });
+  var bar = document.createElement("div");
+  bar.className = "nav-progress";
+  document.body.appendChild(bar);
+  var go = function () { bar.classList.add("is-on"); };
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a[href]");
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.target || a.hasAttribute("download")) return;
+    var h = a.getAttribute("href");
+    if (!h || h.charAt(0) === "#" || h.indexOf("javascript:") === 0 || a.origin !== location.origin) return;
+    go();
+  });
+  document.addEventListener("submit", function (e) { if (!e.defaultPrevented && !e.target.target) go(); });
+  window.addEventListener("pageshow", function () { bar.classList.remove("is-on"); });
+  document.querySelectorAll("img").forEach(function (im) {
+    var done = function () { im.classList.add("is-loaded"); };
+    if (im.complete) done(); else { im.addEventListener("load", done); im.addEventListener("error", done); }
+  });
+})();

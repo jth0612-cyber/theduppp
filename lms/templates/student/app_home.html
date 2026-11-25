@@ -7,8 +7,8 @@
 {# 앱 홈: 한 화면에 모든 기능 (docs/app_design/README.md). 이름·날짜·숫자·기능 이름만 #}
 <header class="ah-head">
   <div>
-    <p class="ah-kicker">{{ me.class_name }}{% if g.user.nickname %} · {{ g.user.nickname }}{% endif %}</p>
     <h1>{{ me.name }}</h1>
+    <p class="ah-sub">{{ me.class_name }}{% if g.user.nickname %} · {{ g.user.nickname }}{% endif %}</p>
   </div>
   {% if a.dday %}<p class="ah-dday"><span>{{ a.dday.label }}</span><b>{% if a.dday.left > 0 %}D-{{ a.dday.left }}{% elif a.dday.left == 0 %}D-DAY{% else %}D+{{ -a.dday.left }}{% endif %}</b></p>{% endif %}
 </header>

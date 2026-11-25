@@ -90,6 +90,8 @@ def create_app(test_config=None):
     app.register_blueprint(feedback_bp)
     from views.care import bp as care_bp                     # 숙제 인증·문항별 첨삭·수업 기록·학부모 리포트
     app.register_blueprint(care_bp)
+    from views.items import bp as items_bp                   # 문항 그림 (워터마크 · 필기 질문)
+    app.register_blueprint(items_bp)
     from views.schedule import bp as schedule_bp             # 수업 일정: 진도 그룹·주차·수업 칸·배부 교재·출석
     app.register_blueprint(schedule_bp)
     csrf.exempt(link_api)                                    # 시트가 열쇠(토큰)로 보내는 주소라 폼 토큰이 없다

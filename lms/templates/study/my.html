@@ -17,7 +17,7 @@
 </section>
 
 <section class="my-sec" aria-labelledby="h-rank">
-  <div class="sec-head"><h2 id="h-rank">주간 공부 순위</h2><span>{{ m.rank.label }} · 소도시 명상 집중 + 퀴즈 푼 시간</span></div>
+  <div class="sec-head"><h2 id="h-rank">주간 공부 순위</h2><span>{{ m.rank.label }}</span></div>
   <ol class="my-rank">
     {% for r in m.rank.top %}
     <li class="{{ 'is-me' if r.me }}"><span class="medal medal-{{ r.rank }}">{{ r.rank }}</span><b>{{ r.name }}</b><span class="t">{{ hm(r.minutes) }}</span></li>

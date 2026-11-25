@@ -51,6 +51,25 @@
       {% endfor %}
     </fieldset>
     <div class="field{{ ' has-err' if fe == 'body' }}"><label for="q-body">내용</label><textarea id="q-body" name="body" maxlength="5000" required>{{ draft.body if draft else '' }}</textarea></div>
+    {% if pick %}
+    <div class="field item-pick" data-item-pick>
+      <div><label for="ip-mock">문항 불러오기 <span class="muted">(시험 분석 회차 · 그림 위에 필기)</span></label>
+        <select id="ip-mock" data-ip-mock><option value="">회차</option>{% for p in pick %}<option value="{{ p.id }}" data-nos="{{ p.nos|join(',') }}" {{ 'selected' if item and item.mock == p.id }}>{{ p.label }}</option>{% endfor %}</select></div>
+      <div><label for="ip-no">번호</label><select id="ip-no" data-ip-no data-cur="{{ item.no if item else '' }}"><option value="">번호</option></select></div>
+    </div>
+    {% endif %}
+    {% if item %}
+    <div class="ink" data-ink data-src="{{ item.src }}" data-name="{{ item.label }} {{ item.no }}번.png">
+      <canvas aria-label="{{ item.label }} {{ item.no }}번 문항. 손가락이나 펜으로 필기"></canvas>
+      <div class="ink-bar">
+        <button type="button" class="ink-pen" data-pen="#1a1a1a" style="background:#1a1a1a" aria-label="검정 펜" aria-pressed="true"></button>
+        <button type="button" class="ink-pen" data-pen="#c0352b" style="background:#c0352b" aria-label="빨강 펜" aria-pressed="false"></button>
+        <button type="button" class="ink-pen" data-pen="#1f5aa6" style="background:#1f5aa6" aria-label="파랑 펜" aria-pressed="false"></button>
+        <button type="button" class="btn small" data-ink-undo>한 획 지우기</button>
+        <button type="button" class="btn small" data-ink-clear>필기 모두 지우기</button>
+      </div>
+    </div>
+    {% endif %}
     <div class="field photo-field{{ ' has-err' if fe == 'image' }}" data-photo>
       <label for="q-image">사진 첨부 <span class="muted" data-photo-need>(PNG·JPG, 3장까지, 한 장 20MB 이하 · 학습질문은 필수)</span></label>
       <input type="file" id="q-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
@@ -64,7 +83,7 @@
 
 {% if best %}
 <section class="panel week-best" aria-labelledby="h-best">
-  <div class="sec-head"><h2 id="h-best">이번 주 많이 본 질문</h2><span>월요일부터 · 한 사람 하루 한 번</span></div>
+  <div class="sec-head"><h2 id="h-best">이번 주 많이 본 질문</h2></div>
   <ol class="best-list">
     {% for b in best %}<li><a href="{{ url_for('student.question_detail', qid=b.id) }}"><span class="best-no">{{ loop.index }}</span><b>{{ b.title }}</b></a>
       <span class="best-meta">조회 {{ b.views }}{% if b.answer_count %} · 답변 {{ b.answer_count }}{% else %} · 답변 대기{% endif %}</span></li>{% endfor %}
@@ -74,7 +93,7 @@
 
 {% if faqs %}
 <section class="panel faq" aria-labelledby="h-faq">
-  <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2><span>선생님이 골라 둔 질문</span></div>
+  <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2></div>
   <ul class="mini-list">
     {% for f in faqs %}<li><a href="{{ url_for('student.question_detail', qid=f.id) }}">{{ f.title }}</a></li>{% endfor %}
   </ul>
@@ -119,4 +138,5 @@
   {{ pagination(page, pages, 'student.questions', view=view if view == 'mine' else None, qtype=qtype or None, q=q or None) }}
   {% else %}<p class="muted">{{ '검색 결과가 없습니다.' if q else '아직 질문이 없습니다.' }}</p>{% endif %}
 </div>
+<script src="{{ url_for('static', filename='ink.js') }}" defer></script>
 {% endblock %}

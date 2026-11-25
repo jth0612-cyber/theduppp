@@ -935,6 +935,23 @@ if _ph:
     _ph.wait()
 shutil.rmtree(SHOTS, ignore_errors=True)
 
+# ---------------------------------------------------------------- 문항 그림 (시험 분석에서 번호를 누르면 문항, 그 위에 필기해서 질문)
+# 데모 시험지 PDF 를 tools/split_items.py 로 잘라(시스템 python + pymupdf) 매 회차에 같은 그림을 올린다
+if all(os.environ.get(k) for k in ("DEMO_SYS_PY", "DEMO_PHOTOS", "DEMO_PDF")):
+    import tempfile
+    _tools = os.path.dirname(os.environ["DEMO_PHOTOS"])
+    _idir = tempfile.mkdtemp(prefix="demo-items-")
+    for kind, pdf, pick in (("m", "모의고사 데모.pdf", None), ("r", "복테 데모.pdf", DI.REVIEW_SRC)):
+        out = os.path.join(_idir, kind)
+        cmd = [os.environ["DEMO_SYS_PY"], "-X", "utf8", os.path.join(_tools, "split_items.py"), os.path.join(os.environ["DEMO_PDF"], pdf), out]
+        subprocess.run(cmd + (["--pick", ",".join(map(str, pick))] if pick else []), check=True, capture_output=True)
+        files = sorted(os.listdir(out))
+        blobs = [(f, open(os.path.join(out, f), "rb").read()) for f in files]
+        for w in range(1, WEEKS + 1):
+            ok(f"문항 그림 {kind}{w}", T.post(f"/t/mocks/{MOCK[(kind, w)]}/items", data={"image": [(io.BytesIO(b), f) for f, b in blobs]},
+                                         content_type="multipart/form-data"))
+    shutil.rmtree(_idir, ignore_errors=True)
+
 # ---------------------------------------------------------------- 수업 일정: 진도 그룹 2개(단과·재종) · 배부 교재 · 출석
 # 커리큘럼(SEASON 1, 14주): 1주차 개념서 2권 + 기출문제집 문항편·해설편 각 2권, 매주 주간지·모의고사+분석서·필기노트, 고난도 TOPIC 8권
 PLAN_WEEKS = WEEKS

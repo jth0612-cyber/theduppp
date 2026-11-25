@@ -15,6 +15,8 @@ import analysis
 from db import execute, query
 from security import audit, decrypt, member_required, staff_required, student_required, teacher_required
 
+from views.items import item_nos  # noqa: E402  문항 그림 (시험 분석에서 번호를 누르면 문항 보기)
+
 bp = Blueprint("books", __name__)
 
 
@@ -127,7 +129,7 @@ def analysis_home():
     return render_template("student/analysis.html", kind_counts=kind_counts, why_open=why_open, mocks=mocks, mock=mock, entry=entry, stats=stats, fb=fb, fb_msgs=fb_msgs,
                            rep=rep, prof=prof, pct1=exams.pct1, key_label=analysis.key_label, ev=ev, units=units, season_units=season_units, weak=weak, paper=paper, paper_files=paper_files, paper_marks=paper_marks,
                            kinds=KINDS, key=key, my_score=my_score, my_grade=analysis.grade_for(my_score, stats["cuts"]),
-                           my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid,
+                           my_wrong=my_wrong, selected=_selected_item(stats), mock_param=mid, item_nos=item_nos(mid),
                            my_bucket=analysis.bucket_label(my_score, mock["full_score"], step=analysis.score_step(points)),
                            marks=marks, points=points, lost=sum(points[n - 1] for n in my_wrong),
                            min_for_cuts=analysis.MIN_FOR_CUTS, fmt=analysis._fmt)
@@ -352,7 +354,7 @@ def mock_review(mid):
                review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?""",
             (text, level, tm, killer, video, who if filled else "", mid))
     audit("mock_review", f"mock:{mid}")
-    flash("시험 평가를 저장했습니다. 학생 화면에 바로 보입니다." if filled else "시험 평가를 지웠습니다.", "ok")
+    flash("시험 분석을 저장했습니다. 학생 화면에 바로 보입니다." if filled else "시험 분석을 지웠습니다.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
 
 
@@ -368,7 +370,7 @@ def teacher_mock(mid):
     up_rows = json.loads(up["rows"]) if up else []
     ctx = {"mock": mock, "m": m, "up": up, "up_rows": up_rows, "fmt": analysis._fmt, "pct1": exams.pct1,
            "levels": EVAL_LEVELS, "times": EVAL_TIMES,
-           "key_label": analysis.key_label, "min_n": exams.SET["min_n"]}
+           "key_label": analysis.key_label, "min_n": exams.SET["min_n"], "item_nos": sorted(item_nos(mid))}
     if m["n_items"]:
         cs = exams.class_stats(mid)
         stats = _stats(mock)

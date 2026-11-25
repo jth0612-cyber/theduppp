@@ -33,7 +33,7 @@
   {% set rest = notices|rejectattr('pinned')|list %}
   {% if pinned %}
   <section class="panel pinned-panel" aria-label="고정 공지">
-    <div class="sec-head"><h2>고정</h2><span>먼저 읽어 주세요</span></div>
+    <div class="sec-head"><h2>고정</h2></div>
     <ol class="ledger-list">
       {% for n in pinned %}{% include "student/_notice_row.html" %}{% endfor %}
     </ol>

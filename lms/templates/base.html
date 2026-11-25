@@ -19,6 +19,7 @@
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
   {% if g.user and 'THeduApp/' in (request.user_agent.string or '') %}<script src="{{ url_for('static', filename='app_push.js') }}" defer></script>{% endif %}
+  {% if "THeduApp/" in (request.user_agent.string or "") %}<script src="{{ url_for('static', filename='app_native.js') }}" defer></script>{% endif %}
 </head>
 {% set entered = g.user and not g.user.must_change_pw and session.pop('entered', None) %}
 <body class="{% block body_class %}{% endblock %} {{ 'has-shell' if g.user and not g.user.must_change_pw else 'no-shell' }}{{ ' entered' if entered }}">

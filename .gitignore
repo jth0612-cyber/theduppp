@@ -16,3 +16,7 @@ _deploy/
 
 # 데모용 교재·시험지 원본 (저작물, 저장소에 올리지 않음)
 testfile/
+
+# LAB-JTH 슬랙 봇 토큰 (비밀, 저장소에 올리지 않음)
+.slack-labjth
+.slack-labjth.txt

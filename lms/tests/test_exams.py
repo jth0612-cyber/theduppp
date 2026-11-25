@@ -321,13 +321,14 @@ class Upload(unittest.TestCase):
         r = self.ta.post(f"/t/mocks/{self.mid}/review", data={"level": "4", "time": "빠듯", "killer": "14번, 19",
                                                               "review": "후반 그래프 문항이 길다.", "video": "https://youtu.be/dQw4w9WgXcQ"},
                          follow_redirects=True)
-        self.assertIn("시험 평가를 저장했습니다", r.data.decode())
+        self.assertIn("시험 분석을 저장했습니다", r.data.decode())
         with self.app.app_context():
             m = query("SELECT * FROM mocks WHERE id = ?", (self.mid,), one=True)
             self.assertEqual((m["eval_level"], m["eval_time"], m["eval_killer"], m["review_by"]), (4, "빠듯", "14, 19", "박조교"))
         s = self.app.test_client(); s.post("/login", data={"username": "270000", "password": PW})
         page = s.get("/s/analysis").data.decode()
-        self.assertIn("시험 평가", page); self.assertIn("어려움", page); self.assertIn("14, 19번", page)
+        self.assertIn("주요 문항", page); self.assertIn("어려움", page); self.assertIn("14, 19번", page)
+        self.assertNotIn("빠듯", page); self.assertNotIn("박조교", page)                    # 시간·작성자는 학생에게 안 보인다
         self.assertIn("youtube-nocookie.com/embed/dQw4w9WgXcQ", page)
         self.assertIn("내 결과는 아직 올라오지 않았습니다", page)
         bad = self.ta.post(f"/t/mocks/{self.mid}/review", data={"video": "https://example.com/v"}, follow_redirects=True)

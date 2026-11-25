@@ -3,7 +3,7 @@
 {% block content %}
 <header class="ed-head">
   <h1>수능 영단어</h1>
-  <p class="ed-lede">평가원 빈출 단어 실전 연습 / 하루 20개</p>
+  <p class="ed-lede">평가원 빈출 단어 · 하루 20개</p>
 </header>
 
 <div class="qz-voca">
@@ -22,7 +22,7 @@
 </div>
 
 <section class="qz-sec" aria-labelledby="h-modes">
-  <div class="sec-head"><h2 id="h-modes">게임</h2><span>오늘·복습·지난·다음 단어를 섞어서</span></div>
+  <div class="sec-head"><h2 id="h-modes">게임</h2></div>
   <ul class="qz-modes">
     {% set m = best.get('vocab_match:') %}{% set sp = best.get('vocab_speed:') %}
     <li><a href="{{ url_for('games.vocab_match') }}"><span class="qz-ico qi-match" aria-hidden="true"></span><b>짝 맞추기</b><span>단어–뜻 5쌍씩 4판</span>{% if m %}<em>최고 {{ m.top }}/20 · {{ m.plays }}판</em>{% endif %}</a></li>
