@@ -75,7 +75,7 @@
         <text class="lab" x="20" y="{{ y + 17 }}" text-anchor="middle">{{ '①②③④⑤'[loop.index0] }}</text>
         <line class="axis" x1="40" x2="40" y1="{{ y }}" y2="{{ y + 26 }}"></line>
         <rect class="hb{{ ' hb-key' if key is defined and key[selected.no - 1] == loop.index }}" x="40" y="{{ y + 7 }}" width="{{ (p * 3)|round(1) }}" height="12"></rect>
-        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%{% if mine == loop.index|string %}<span class="sep" aria-hidden="true"></span>내 답{% endif %}</text>
+        <text class="pv" x="{{ 48 + p * 3 }}" y="{{ y + 17 }}">{{ p }}%{% if mine == loop.index|string %} (내 답){% endif %}</text>
       {% endfor %}
     </svg>
   </div>

@@ -33,7 +33,7 @@
 {% if has_omr %}{{ kind_tabs(kind, 'student.scores', kind_counts) }}{% if not omr %}<section class="card"><p class="muted">{{ kind }} 결과가 아직 없습니다.</p></section>{% endif %}{% endif %}
 {% for o in omr %}
 <section class="card sys-scores" aria-label="{{ o.kind }} 성적">
-  <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회<span class="sep" aria-hidden="true"></span>시험 분석과 같은 점수</span></div>
+  <div class="sec-head"><h2>{{ o.kind }}</h2><span class="small muted">{{ o.exams|length }}회</span></div>
   {% if o.chart.pts|length > 1 %}
   {% with chart = o.chart, label = o.kind %}{% include "_rate_chart.html" %}{% endwith %}
   {% endif %}

@@ -2622,3 +2622,58 @@ form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display:
 .wrong-list li.is-saved { animation: saved-glow 900ms ease; }
 @keyframes saved-glow { 0% { background: var(--accent-soft); } 100% { background: transparent; } }
 .wrong-list .w-no { font-weight: 800; color: var(--danger); text-decoration: none; }
+
+/* 예전 소나무 초록이 박혀 있던 곳을 새 배색(파랑·빨강)으로 (2026-11-26) */
+.im { border-radius: 12px; }
+.heat-1 { background: #e8f0fb; }
+.heat-2 { background: #bcd3f1; }
+.heat-3 { background: #5b8fd9; color: var(--ink); }
+.heat-4 { background: #2f6fc4; color: #fff; }
+.hbars .hb { fill: #bcd3f1; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .heat-1 { background: #1a2a40; }
+  :root:not([data-theme="light"]) .heat-2 { background: #24406a; }
+  :root:not([data-theme="light"]) .heat-3 { background: #3466ad; color: #eceef0; }
+  :root:not([data-theme="light"]) .heat-4 { background: #6ea2ec; color: #0f1012; }
+  :root:not([data-theme="light"]) .hbars .hb { fill: #2e4565; }
+}
+:root[data-theme="dark"] .heat-1 { background: #1a2a40; }
+:root[data-theme="dark"] .heat-2 { background: #24406a; }
+:root[data-theme="dark"] .heat-3 { background: #3466ad; color: #eceef0; }
+:root[data-theme="dark"] .heat-4 { background: #6ea2ec; color: #0f1012; }
+:root[data-theme="dark"] .hbars .hb { fill: #2e4565; }
+.ah-now { background: var(--accent); color: var(--on-accent); }
+.ah-dot.is-live { background: var(--on-accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--on-accent) 25%, transparent); }
+.qz-fill { background: var(--accent); }
+.room.is-focus .st-state::before { background: var(--accent); }
+.p-week a.is-on .p-dots s.f { background: var(--accent); }
+.w3-cta:hover { background: color-mix(in srgb, var(--accent) 85%, #000); }
+
+/* 예전 '1px 테두리 상자'를 토스식으로: 회색 바탕 위는 테두리 없는 흰 카드, 작은 칩은 회색 칸 (2026-11-26) */
+.todo, .shelf li, .play-list a, .points-box, .deck-list li > a:first-child, .place, .tk-row,
+.qz-topics a, .qz-extra a, .shop-item, .qz-modes a, .qz-tlist > li > a, .qz-games a, .home-shop, .cast-list a,
+.mock-review, .fb-msg, .my-card, .my-rank, .round-grid a, .wa-item, .learn-card, .ta-card, .hw-row, .pr-card,
+.att-sum div, .code-block, .pk-lines, .p-menu {
+  border-color: transparent; background: var(--sheet); box-shadow: var(--lift); border-radius: 16px;
+}
+:is(.card, .panel, .quiet-box, .exam-eval, .report, .paper-sec, details) :is(.wa-item, .fb-msg, .ta-card, .hw-row, .tk-row, .att-sum div, .code-block, .learn-card) {
+  background: var(--raised); box-shadow: none;
+}
+.todo { padding: 16px 18px; }
+.todo b { font-size: 26px; font-weight: 800; }
+.todo.is-on { background: var(--accent-soft); box-shadow: none; }
+.chip span, .choice span, .p-chips label, .chip-btn, .tick, .task-state {
+  border-color: transparent; background: var(--raised);
+}
+.chip input:checked + span, .choice input:checked + span { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+/* 예전 먹색(검정)으로 칠한 '고른 것' 표시를 토스식으로: 회색 칸 안 흰 조각, 또는 파랑 (OMR 내 답 검정은 그대로) */
+.seg, .seg-pick { border: 0; padding: 4px; border-radius: 14px; background: var(--active); }
+.seg a, .seg-pick span { padding: 8px 14px; border-radius: 10px; font-weight: 600; }
+.seg a.is-on, .seg-pick input:checked + span { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 31, 40, .12); }
+.so-seg.is-on { border-color: transparent; background: var(--accent); color: var(--on-accent); }
+.pagination span.current, .p-week a.is-on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.p-field button, .tk-go { background: var(--accent); color: var(--on-accent); }
+.tt-slot.is-now::before, .tt-day h2 small { background: var(--accent); color: var(--on-accent); }
+.todo.is-on { border-color: transparent; }
+.wrong-form input[name=memo] { width: 100%; min-height: 44px; padding: 10px 12px; border: 1.5px solid transparent; border-radius: 12px; background: var(--raised); }
+.wrong-form input[name=memo]:focus { background: var(--sheet); border-color: var(--accent); }
