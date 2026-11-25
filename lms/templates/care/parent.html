@@ -40,7 +40,7 @@
 
   {% if k.exams %}
   <section class="pr-card"><h2>{{ kind }} 결과</h2>
-    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date[5:] if e.date }}</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}</small></b><span class="small muted">반 평균 {{ e.avg }}</span></li>{% endfor %}</ul>
+    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date[5:]|replace('-', '.') if e.date }}<span class="sep" aria-hidden="true"></span>반 평균 {{ e.avg }}</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}</small></b></li>{% endfor %}</ul>
   </section>
   {% endif %}
 

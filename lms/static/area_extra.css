@@ -21,3 +21,19 @@
 .mt-item.is-sel { background: var(--accent-soft); color: var(--accent-ink); box-shadow: inset 0 0 0 2px var(--accent); }
 .mt-item.is-done { background: var(--ok-soft); color: var(--ok); }
 .mt-item.is-bad { background: var(--danger-soft); color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
+
+/* 시작 화면에서는 게임 카드가 내용만큼만 (빈 공간 없이), 설명과 버튼 사이는 띄운다 */
+.card.game:has(> [data-role="start"]:not(.hidden)), .card.game:has(> .game-start:not(.hidden)) { min-height: 0; }
+.g-start > .g-intro:not(:has(+ .g-meta)) { margin-bottom: 12px; }
+.g-start > :last-child:is(p) { margin-bottom: 0; }
+
+/* 고르는 조각(so-seg): 테두리 상자와 검은 선택 대신 연한 바탕, 고르면 파랑 */
+.so-seg { border: 0; background: var(--raised); color: var(--ink); border-radius: 12px; min-height: 40px; transition: background-color 120ms ease, transform 120ms var(--ease); }
+.so-seg:active:not(:disabled) { transform: scale(.97); }
+.so-seg.is-on { background: var(--accent); color: var(--on-accent, #fff); }
+.so-row.is-wrong .so-seg.is-on, .so-seg.is-bad { background: var(--danger-soft); color: var(--danger); }
+.so-row.is-wrong .so-seg.is-answer, .so-seg.is-answer { background: var(--ok-soft); color: var(--ok); }
+.pl-opts .so-seg { padding: 12px 18px; }
+@media (max-width: 720px) {
+  .card.game .btn.primary { width: 100%; min-height: 52px; font-size: 16px; }
+}

@@ -13,12 +13,10 @@
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% elif not track %}
-  <div class="track-pick" role="list">
-    <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='단과') }}">
-      <b>단과</b><span>통합과학 단과 수강생</span><em>받은 출결 카드 번호로 가입</em></a>
-    <a class="track-box" role="listitem" href="{{ url_for('auth.signup', track='재종') }}">
-      <b>재종</b><span>재수종합반 학생</span><em>원하는 아이디로 가입</em></a>
-  </div>
+  <ul class="list-rows track-pick">
+    <li><a class="track-box" href="{{ url_for('auth.signup', track='단과') }}"><span class="lr-main"><b class="lr-title">단과</b><span class="lr-sub">출결 카드 번호로 가입해요</span></span></a></li>
+    <li><a class="track-box" href="{{ url_for('auth.signup', track='재종') }}"><span class="lr-main"><b class="lr-title">재종</b><span class="lr-sub">원하는 아이디로 가입해요</span></span></a></li>
+  </ul>
   <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
 </div>
 {% else %}
