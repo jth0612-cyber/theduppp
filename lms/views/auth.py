@@ -165,7 +165,7 @@ def signup():
         elif sc is None:
             error, field = "학생코드가 맞지 않아요. 받은 코드를 다시 확인해 주세요.", "code"
         elif sc["student_id"]:
-            error, field = "이미 가입에 사용한 코드예요. 착오라면 선생님께 알려 주세요.", "code"
+            error, field = "이미 가입에 사용한 코드예요. 착오라면 선생님에게 알려 주세요.", "code"
         elif sc["track"] != track:
             error, field = f"이 학생코드는 {sc['track']} 반 코드예요. 위에서 {sc['track']}을 골라 주세요.", "code"
         elif not _NAME.match(form["name"]):
@@ -181,13 +181,13 @@ def signup():
         elif request.form.get("consent") != "1":
             error, field = "개인정보 수집 및 이용에 동의해야 가입할 수 있어요.", "consent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
-            error, field = ("이미 등록된 카드예요. 카드를 잘못 받았다면 조교 선생님께 알려 주세요." if track == "단과"
+            error, field = ("이미 등록된 카드예요. 카드를 잘못 받았다면 조교 선생님에게 알려 주세요." if track == "단과"
                             else "이미 있는 아이디예요. 다른 아이디로 정해 주세요."), "student_no"
         elif (roster := query("SELECT * FROM students WHERE student_no = ?", (form["student_no"],), one=True)) and \
                 (roster["class_id"] != sc["class_id"] or not roster["active"]):
             error, field = "이미 있는 아이디예요. 다른 아이디로 정해 주세요.", "student_no"
         elif gid and query("SELECT 1 FROM users WHERE google_sub = ?", (gid["sub"],), one=True):
-            error = "이 Google 계정은 이미 가입되어 있어요. 로그인해 주세요."
+            error = "이 Google 계정은 이미 가입돼 있어요. 로그인해 주세요."
         if error:
             if sc is None:
                 audit("signup_code_failed", f"code:{code[:4]}")

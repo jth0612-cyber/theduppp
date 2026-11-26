@@ -113,16 +113,16 @@ def s_link():
     """이미 가입한 학생이 학생코드를 넣어 시스템 기록과 잇는다 (코드는 한 사람만 쓸 수 있다)."""
     sid = g.user["student_id"]
     if sysdata.code_of_student(sid):
-        flash("이미 학생코드가 연결되어 있어요.", "ok")
+        flash("이미 학생코드가 연결돼 있어요.", "ok")
         return redirect(request.referrer or url_for("student.scores"))
     code = normalize_student_code(request.form.get("code", ""))
     me = query("SELECT class_id FROM students WHERE id = ?", (sid,), one=True)
     sc = query("SELECT * FROM student_codes WHERE code = ?", (code,), one=True) if code else None
     if sc is None or sc["student_id"]:
         audit("sys_link_failed", f"code:{code[:4]}")
-        flash("학생코드가 맞지 않거나 이미 사용된 코드예요. 조교 선생님께 확인해 주세요.", "error")
+        flash("학생코드가 맞지 않거나 이미 사용된 코드예요. 조교 선생님에게 확인해 주세요.", "error")
     elif sc["class_id"] != me["class_id"]:
-        flash("다른 반의 학생코드예요. 조교 선생님께 확인해 주세요.", "error")
+        flash("다른 반의 학생코드예요. 조교 선생님에게 확인해 주세요.", "error")
     else:
         execute("UPDATE student_codes SET student_id = ?, used_at = datetime('now', 'localtime') WHERE id = ?", (sid, sc["id"]))
         audit("sys_link", f"student:{sid}")

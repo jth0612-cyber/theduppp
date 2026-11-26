@@ -2,7 +2,7 @@
 {# 학생코드가 아직 연결되지 않은 학생: 조교 시스템 기록과 잇는 칸 #}
 {% from "_macros.html" import csrf %}
 <section class="sys-link card" aria-labelledby="sys-link-h">
-  <h2 id="sys-link-h">학생코드 연결{% call help('학생코드 연결') %}<p>조교 선생님께 받은 학생코드 (예: 271234). 한 사람만 쓸 수 있어요.</p>{% endcall %}</h2>
+  <h2 id="sys-link-h">학생코드 연결{% call help('학생코드 연결') %}<p>조교 선생님에게 받은 학생코드 (예: 271234). 한 사람만 쓸 수 있어요.</p>{% endcall %}</h2>
   <form method="post" action="{{ url_for('link.s_link') }}" class="sys-link-form">
     {{ csrf() }}
     <label class="sr-only" for="sys-code">학생코드</label>

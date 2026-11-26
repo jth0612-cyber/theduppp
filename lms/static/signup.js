@@ -15,7 +15,7 @@
   function kinds(pw) { return [/[A-Za-z가-힣]/.test(pw), /\d/.test(pw), /[^A-Za-z0-9가-힣]/.test(pw)].filter(Boolean).length; }
 
   const check = {
-    code: (v) => (v.replace(/[\s-]/g, "").length < 6 ? "선생님께 받은 개인 코드를 입력해 주세요." : ""),
+    code: (v) => (v.replace(/[\s-]/g, "").length < 6 ? "선생님에게 받은 개인 코드를 입력해 주세요." : ""),
     name: (v) => (NAME.test(v.trim()) ? "" : "이름은 한글이나 영문 2~20자로 적어 주세요."),
     student_no: (v) => ($("student_no").hasAttribute("data-card")
       ? (/^[0-9A-Fa-f]{4,20}$/.test(v.replace(/[\s:-]/g, "")) ? "" : "카드 번호는 카드에 적힌 숫자(또는 영문 A~F 섞인 번호) 4~20자예요.")

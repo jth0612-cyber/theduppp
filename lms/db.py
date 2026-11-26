@@ -937,7 +937,7 @@ def new_student_code():
         code = STUDENT_CODE_PREFIX + "".join(secrets.choice("0123456789") for _ in range(4))
         if query("SELECT 1 FROM student_codes WHERE code = ?", (code,), one=True) is None:
             return code
-    raise ValueError("올해 학생코드(27XXXX)를 모두 썼습니다.")
+    raise ValueError("올해 학생코드(27XXXX)를 모두 썼어요.")
 
 
 def join_code_taken(code):

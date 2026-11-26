@@ -67,7 +67,7 @@ def authenticate(username, password):
 
     now = datetime.now()
     if user["locked_until"] and datetime.fromisoformat(user["locked_until"]) > now:
-        return None, f"로그인 시도가 너무 많아 잠겼어요. {LOCK_MINUTES}분 후 다시 시도하세요."
+        return None, f"로그인 시도가 너무 많아 잠겼어요. {LOCK_MINUTES}분 후 다시 해 주세요."
 
     if not verify_password(user["password_hash"], password):
         attempts = user["failed_attempts"] + 1
@@ -82,7 +82,7 @@ def authenticate(username, password):
 
     if user["disabled"]:
         audit("login_disabled", f"user:{username}", user_id=user["id"], username=username)
-        return None, "사용이 중지된 계정이에요. 선생님께 문의하세요."
+        return None, "사용이 중지된 계정이에요. 선생님에게 문의해 주세요."
 
     if _ph.check_needs_rehash(user["password_hash"]):
         execute("UPDATE users SET password_hash = ? WHERE id = ?",
@@ -222,7 +222,7 @@ def save_upload(file_storage, allowed_exts):
     """검증 후 저장하고 files.id 반환. 실패 시 ValueError."""
     original = (file_storage.filename or "").strip()
     if not original:
-        raise ValueError("파일을 선택하세요.")
+        raise ValueError("파일을 골라 주세요.")
     ext = original.rsplit(".", 1)[-1].lower() if "." in original else ""
     if ext not in allowed_exts or ext not in ALLOWED_UPLOADS:
         raise ValueError(f"허용되지 않는 파일 형식이에요. ({', '.join(sorted(allowed_exts))})")

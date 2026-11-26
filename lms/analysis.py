@@ -39,7 +39,7 @@ def parse_points(raw, n_items, full_score):
     if not raw:
         each = full_score / n_items
         if each != int(each):
-            raise ValueError("만점이 문항 수로 나누어떨어지지 않습니다. 배점을 직접 적어 주세요.")
+            raise ValueError("만점이 문항 수로 나누어떨어지지 않아요. 배점을 직접 적어 주세요.")
         return [int(each)] * n_items
     parts = [p for p in raw.replace(" ", ",").split(",") if p]
     try:
@@ -64,7 +64,7 @@ def parse_item_numbers(raw, n_items):
             else:
                 rng = [int(part)]
         except ValueError:
-            raise ValueError(f"문항 번호 '{part}'를 읽지 못했습니다. 숫자와 쉼표로 적어 주세요.") from None
+            raise ValueError(f"문항 번호 '{part}'를 읽지 못했어요. 숫자와 쉼표로 적어 주세요.") from None
         for n in rng:
             if not 1 <= n <= n_items:
                 raise ValueError(f"{n}번은 없는 문항입니다. (1~{n_items}번)")
@@ -78,7 +78,7 @@ def points_from_levels(high_raw, low_raw, n_items, full_score):
     low = parse_item_numbers(low_raw, n_items)
     both = high & low
     if both:
-        raise ValueError(f"{', '.join(map(str, sorted(both)))}번이 2.5점과 1.5점에 모두 들어 있습니다.")
+        raise ValueError(f"{', '.join(map(str, sorted(both)))}번이 2.5점과 1.5점에 모두 들어 있어요.")
     pts = [HIGH_POINT if i in high else LOW_POINT if i in low else BASE_POINT for i in range(1, n_items + 1)]
     total = sum(pts)
     if abs(total - full_score) > 1e-9:

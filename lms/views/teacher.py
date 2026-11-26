@@ -965,7 +965,7 @@ def _approve(req):
     if query("SELECT 1 FROM users WHERE username = ?", (req["student_no"],), one=True):
         return f"{req['name']}({req['student_no']}): 이미 같은 아이디의 계정이 있어요."
     if req["google_sub"] and query("SELECT 1 FROM users WHERE google_sub = ?", (req["google_sub"],), one=True):
-        return f"{req['name']}({req['student_no']}): 이 Google 계정은 이미 다른 계정에 연결되어 있어요."
+        return f"{req['name']}({req['student_no']}): 이 Google 계정은 이미 다른 계정에 연결돼 있어요."
     student = query("SELECT * FROM students WHERE student_no = ?", (req["student_no"],), one=True)
     if student is None:
         sid = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, ?, ?)",

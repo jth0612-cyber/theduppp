@@ -1156,7 +1156,7 @@ function finishFocus(complete) {
   post(root.dataset.done, { minutes: complete ? planMin : minutes }).then((d) => {
     state = "sitting"; me.focus = false; audio.duck(false); audio.sfx("bowl");
     seatCam(false); render();
-    const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분` : `5분이 안 되어 기록하지 않았어요. 오늘 ${d.today}분`;
+    const m = d.minutes >= 5 ? `${d.minutes}분 기록했어요. 오늘 모두 ${d.today}분` : `5분이 안 돼서 기록하지 않았어요. 오늘 ${d.today}분`;
     whisper(m, 5000); msgEl.textContent = m;
     sync(true);
   }).catch(() => { finishRetry = Date.now() + 5000; whisper(complete ? "연결이 불안정해요. 기록을 다시 보내는 중이에요." : "연결이 불안정해요. 잠시 뒤 다시 눌러 주세요."); }).finally(() => { finishing = false; });

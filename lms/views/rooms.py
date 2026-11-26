@@ -328,7 +328,7 @@ def write(place):
     if not body:
         return fail("한 줄을 적어 주세요.")
     if bad_word(body):
-        return fail("사용할 수 없는 말이 포함되어 있어요.")
+        return fail("사용할 수 없는 말이 들어 있어요.")
     if b["kind"] == "chat":
         me = query(f"""SELECT seat FROM room_presence WHERE user_id = ? AND place = ?
                        AND last_seen >= datetime('now', 'localtime', '-{PRESENT_SECONDS} seconds')""", (uid, place), one=True)

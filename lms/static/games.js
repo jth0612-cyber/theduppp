@@ -12,7 +12,7 @@
       body: JSON.stringify(body || {})
     }).then(function (r) {
       if (r.status === 410) throw new Error("시간이 지나 끝났어요. 다시 시작해 주세요.");
-      if (r.status === 401 || r.redirected) throw new Error("로그인이 만료되었어요. 새로고침해 주세요.");
+      if (r.status === 401 || r.redirected) throw new Error("로그인이 만료됐어요. 새로고침해 주세요.");
       if (!r.ok) throw new Error("오류가 났어요. 잠시 후 다시 해 주세요.");
       return r.json();
     });

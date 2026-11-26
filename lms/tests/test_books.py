@@ -280,12 +280,12 @@ class BooksTest(unittest.TestCase):
             self.assertIn("accounts.google.com", r.headers["Location"])
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
             r = anon.get(f"/auth/google/callback?state={state}&code=x", follow_redirects=True)
-            self.assertIn("연결된 계정이 없습니다", r.data.decode())
+            self.assertIn("연결된 계정이 없어요", r.data.decode())
             # 학생이 로그인한 뒤 연결
             s = self.student(0)
             r = s.get("/auth/google/start?mode=link")
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
-            self.assertIn("연결했습니다", s.get(f"/auth/google/callback?state={state}&code=x",
+            self.assertIn("연결했어요", s.get(f"/auth/google/callback?state={state}&code=x",
                                              follow_redirects=True).data.decode())
             # 이제 Google 로 로그인
             anon = self.app.test_client()
@@ -295,7 +295,7 @@ class BooksTest(unittest.TestCase):
             self.assertTrue(r.headers["Location"].endswith("/s/"))
             # state 가 다르면 거부
             r = anon.get("/auth/google/callback?state=wrong&code=x", follow_redirects=True)
-            self.assertIn("다시 시도", r.data.decode())
+            self.assertIn("Google 로그인을 다시 해 주세요", r.data.decode())
 
     def test_google_hidden_when_not_configured(self):
         os.environ.pop("GOOGLE_CLIENT_ID", None)
