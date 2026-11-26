@@ -2,6 +2,7 @@
 {% from "_macros.html" import help %}
 {% block title %}복습 테스트 첨삭 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
+{% set inbox = 'paper' %}{% include "teacher/_inbox_tabs.html" %}
 <div class="page-head"><div><h1>복습 테스트 첨삭{% call help('복습 테스트 첨삭') %}<p>학생이 복습 테스트 결과 화면에서 시험지 사진을 올리면 여기에 쌓여요. 틀린 문항은 OMR 결과로 미리 표시돼요.</p>{% endcall %}</h1></div>
   {% set first = rows|first %}{% if status == 'submitted' and first %}<a class="btn primary" href="{{ url_for('care.t_paper', pid=first.id) }}">첨삭 시작</a>{% endif %}</div>
 <nav class="tabs">

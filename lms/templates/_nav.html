@@ -42,15 +42,12 @@
 {%- set groups = [
   (None, [
     ('teacher.dashboard', '대시보드', 'dash', ep == 'teacher.dashboard', 0),
-    ('teacher.questions', '질문답변', 'chat', ep.startswith('teacher.question'), question_wait or 0),
-    ('care.t_lessons', '수업 기록', 'folder', ep == 'care.t_lessons', 0),
+    ('teacher.questions', '질문과 첨삭', 'chat', ep.startswith('teacher.question') or ep in ('care.t_papers', 'care.t_paper') or ep.startswith('feedback.'), (question_wait or 0) + (paper_wait or 0) + (feedback_wait or 0)),
+    ('care.t_lessons', '수업 기록', 'folder', ep in ('care.t_lessons', 'care.t_lesson'), 0),
     ('books.teacher_books', '복테/모의고사', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms'), 0),
     ('teacher.classes', '반', 'users', ep.startswith('teacher.class'), 0),
     ('teacher.students', '학생 검색', 'search', ep.startswith('teacher.student') or ep == 'study.t_report', 0),
     ('cast.cast_list', '태혁쌤의 cast', 'cast', ep.startswith('cast.'), 0)]),
-  ('1:1 관리', [
-    ('care.t_papers', '복습 테스트 첨삭', 'task', ep in ('care.t_papers', 'care.t_paper'), paper_wait or 0),
-    ('feedback.t_list', 'Full 모의고사 피드백', 'pen', ep.startswith('feedback.'), feedback_wait or 0)]),
   ('수업 운영', [
     ('schedule.groups', '수업 일정', 'timetable', ep.startswith('schedule.'), 0),
     ('study.t_timetable', '주요 일정', 'calendar', ep == 'study.t_timetable', 0),
@@ -96,7 +93,7 @@
 {% macro tab_items(ep) %}
 {%- if g.user.role in ('teacher', 'assistant') -%}
 {%- set items = [('teacher.dashboard', '홈', 'dash', ep == 'teacher.dashboard'),
-                 ('teacher.questions', '질문', 'chat', ep.startswith('teacher.question')),
+                 ('teacher.questions', '질문', 'chat', ep.startswith('teacher.question') or ep in ('care.t_papers', 'care.t_paper') or ep.startswith('feedback.')),
                  ('books.teacher_books', '복테/모의', 'book', ep in ('books.teacher_books', 'books.teacher_book', 'books.teacher_mock', 'books.mock_sms')),
                  ('teacher.students', '학생', 'search', ep.startswith('teacher.student'))] -%}
 {%- else -%}

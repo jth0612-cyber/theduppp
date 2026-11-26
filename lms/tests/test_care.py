@@ -133,7 +133,10 @@ class Care(unittest.TestCase):
         page = self.c1.get(f"/s/analysis?mock={rmid}").data.decode()
         self.assertIn('id="h-paper"', page); self.assertNotIn('id="h-fb"', page)       # 복테 회차: 시험지 첨삭 칸만
         nav = self.ta.get("/t/").data.decode()
-        self.assertIn("1:1 관리", nav); self.assertIn("복습 테스트 첨삭", nav); self.assertIn("Full 모의고사 피드백", nav)
+        self.assertIn("질문과 첨삭", nav); self.assertNotIn("1:1 관리", nav)             # 답할 것 세 가지는 한 메뉴
+        for u in ("/t/questions", "/t/papers", "/t/feedback"):                            # 세 목록 위에 서로 오가는 칩
+            page = self.ta.get(u).data.decode()
+            self.assertIn('aria-label="질문과 첨삭"', page); self.assertIn("복습 테스트 첨삭", page); self.assertIn("모의고사 피드백", page)
 
     def test_lessons_by_class(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "TOPIC 24 중화 반응", "day": "2026-11-20",

@@ -3,6 +3,7 @@
 {% block title %}질문답변 | 정태혁 통합과학 lab{% endblock %}
 {% from "_macros.html" import help %}
 {% block content %}
+{% set inbox = 'q' %}{% include "teacher/_inbox_tabs.html" %}
 <header class="ed-head"><h1>질문답변</h1></header>
 <nav class="tabs" aria-label="답변 상태">
   <a href="{{ url_for('teacher.questions', status='open', qtype=qtype or None, unit=unit or None, q=word or None) }}" class="{{ 'active' if status == 'open' }}">답변 대기</a>

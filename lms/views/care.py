@@ -200,6 +200,10 @@ def t_lesson(lid):
 def t_lessons():
     if request.method == "POST":
         cid = request.form.get("class_id", type=int)
+        sess = request.form.get("session", type=int)          # 수업 일정의 수업 칸에서 올렸으면 그 칸으로 돌아간다
+
+        def back(**kw):
+            return redirect(url_for("schedule.session", sid=sess) + "#lesson" if sess else url_for("care.t_lessons", **kw))
         title = request.form.get("title", "").strip()[:120]
         day = request.form.get("day", "") or date.today().isoformat()
         try:
@@ -208,15 +212,15 @@ def t_lessons():
             day = date.today().isoformat()
         if not cid or not title or not query("SELECT 1 FROM classes WHERE id = ?", (cid,), one=True):
             flash("반과 주제를 넣어 주세요.", "error")
-            return redirect(url_for("care.t_lessons"))
+            return back()
         try:
             photos = _photos("image", MAX_LESSON_PHOTOS)
         except ValueError as e:
             flash(str(e), "error")
-            return redirect(url_for("care.t_lessons"))
+            return back()
         if not photos and not request.form.get("body", "").strip():       # 빈 기록이 '0장'으로 쌓이지 않게
             flash("노트 사진 또는 한 줄 정리를 넣어 주세요.", "error")
-            return redirect(url_for("care.t_lessons", c=cid))
+            return back(c=cid)
         lid = execute("INSERT INTO lessons (class_id, day, title, body, created_by) VALUES (?, ?, ?, ?, ?)",
                       (cid, day, title, request.form.get("body", "").strip()[:2000], g.user["id"]))
         for pos, fid in enumerate(photos, start=1):
@@ -227,7 +231,7 @@ def t_lessons():
         if uids:
             notify_users(uids, "수업 기록", f"{title}, 노트 {len(photos)}장" if photos else title, url_for("care.s_lessons"))
         flash("수업 기록을 올렸어요.", "ok")
-        return redirect(url_for("care.t_lessons", c=cid))
+        return back(c=cid)
     rows = query("""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
                     FROM lessons l JOIN classes c ON c.id = l.class_id ORDER BY l.day DESC, l.id DESC LIMIT 200""")
     classes = query("SELECT id, name FROM classes WHERE archived = 0 ORDER BY is_test, name")

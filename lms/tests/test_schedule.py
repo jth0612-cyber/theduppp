@@ -79,6 +79,19 @@ class Schedule(unittest.TestCase):
                                                            "ends": (self.first + timedelta(days=7)).isoformat()})
         self.assertEqual(self.sess(self.sat)["day"], (self.first + timedelta(days=7)).isoformat())
 
+    def test_lesson_note_from_session(self):
+        s = self.sess(self.sat)
+        page = self.ta.get(f"/t/schedule/sessions/{s['id']}").data.decode()
+        self.assertIn('id="lesson"', page); self.assertIn(f'name="session" value="{s["id"]}"', page)
+        r = self.ta.post("/t/lessons", data={"class_id": self.sat, "day": s["day"], "session": s["id"], "title": "TOPIC 01 기본량", "body": "단위 정리"})
+        self.assertTrue(r.headers["Location"].endswith(f"/t/schedule/sessions/{s['id']}#lesson"))     # 올린 뒤 수업 칸으로 돌아온다
+        with self.app.app_context():
+            l = query("SELECT * FROM lessons", one=True)
+        self.assertEqual((l["class_id"], l["day"]), (self.sat, s["day"]))
+        page = self.ta.get(f"/t/schedule/sessions/{s['id']}").data.decode()
+        self.assertIn("TOPIC 01 기본량", page); self.assertIn(f"/t/lessons/{l['id']}", page)
+        self.assertNotIn("TOPIC 01 기본량", self.ta.get(f"/t/schedule/sessions/{self.sess(self.fri)['id']}").data.decode())   # 다른 반 칸에는 안 보인다
+
     def test_handouts_attendance_counts(self):
         sq1, note = self.h["SQ-고체1"], self.h["필기노트 1호"]
         self.ta.post(f"/t/schedule/weeks/{self.w[0]}", data={"action": "save", "starts": self.first.isoformat(),

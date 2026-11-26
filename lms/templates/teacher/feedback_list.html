@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Full 모의고사 피드백 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
+{% set inbox = 'fb' %}{% include "teacher/_inbox_tabs.html" %}
 <div class="page-head"><h1>Full 모의고사 피드백</h1></div>
 <nav class="tabs">
   <a href="{{ url_for('feedback.t_list', status='wait') }}" class="{{ 'active' if status == 'wait' }}">답변 대기 {{ counts.get('wait', 0) }}</a>

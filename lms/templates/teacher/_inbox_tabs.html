@@ -1,0 +1,6 @@
+{# 질문과 첨삭: 답해야 할 세 가지(질문, 복습 테스트 첨삭, 모의고사 피드백)를 한 메뉴에서 오간다. 쓰는 쪽에서 inbox 를 정해 준다. #}
+<nav class="chip-links inbox-tabs" aria-label="질문과 첨삭">
+  <a href="{{ url_for('teacher.questions') }}" class="{{ 'is-on' if inbox == 'q' }}">질문{% if question_wait %} <b>{{ question_wait }}</b>{% endif %}</a>
+  <a href="{{ url_for('care.t_papers') }}" class="{{ 'is-on' if inbox == 'paper' }}">복습 테스트 첨삭{% if paper_wait %} <b>{{ paper_wait }}</b>{% endif %}</a>
+  <a href="{{ url_for('feedback.t_list') }}" class="{{ 'is-on' if inbox == 'fb' }}">모의고사 피드백{% if feedback_wait %} <b>{{ feedback_wait }}</b>{% endif %}</a>
+</nav>

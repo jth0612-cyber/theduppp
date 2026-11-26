@@ -437,7 +437,10 @@ def session(sid):
     week_ids = {h["id"] for h in week_handouts([row["week_id"]]).get(row["week_id"], [])}
     allh = sorted(query("SELECT * FROM handouts"), key=hkey)
     have = week_ids | {h["id"] for h in s["handouts"]}
+    lessons = query("""SELECT l.id, l.title, l.body, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
+                       FROM lessons l WHERE l.class_id = ? AND l.day = ? ORDER BY l.id""", (row["class_id"], s["day"]))   # 이 반의 이 날 수업 기록
     return render_template("schedule/session.html", s=s, roster=roster, states=STATES, weekdays=WEEKDAYS, grp=_group(row["group_id"]),
+                           lessons=lessons, class_id=row["class_id"], sid=sid,
                            dropped=[h for h in allh if h["id"] in s["dropped"]], extra=[h for h in allh if h["id"] not in have])
 
 
