@@ -146,6 +146,14 @@ SHOP_ALT = {"lineup": "LINE UP 통합과학 II(빨강)와 I 두 권", "framing":
             "squeeze": "Squeeze Season 1과 Season 2 주간지 두 권", "sweep": "SWEEP 주간지 앞표지와 보라색 뒤표지"}
 
 
+@bp.app_context_processor
+def _shop_ready():
+    """구매 링크를 하나라도 넣었을 때만 학생 메뉴에 '교재 구매'를 보인다 (전부 '준비 중'인 화면은 숨긴다. 운영자 결정 2026-11-27)."""
+    if g.get("user") is None:
+        return {}
+    return {"shop_ready": bool(query("SELECT 1 FROM settings WHERE substr(key, 1, 4) = 'buy_' AND value != '' LIMIT 1", one=True))}
+
+
 def shop_links():
     have = {r["key"][4:]: r["value"] for r in query("SELECT key, value FROM settings WHERE substr(key, 1, 4) = 'buy_'")}
     return {k: have.get(k, "") for k, _, _ in SHOP_BOOKS}
@@ -354,7 +362,7 @@ def mock_review(mid):
                review_by = ?, review_at = datetime('now', 'localtime') WHERE id = ?""",
             (text, level, tm, killer, video, who if filled else "", mid))
     audit("mock_review", f"mock:{mid}")
-    flash("시험 분석을 저장했어요. 학생 화면에 바로 보여요." if filled else "시험 분석을 지웠어요.", "ok")
+    flash("시험 분석을 저장했어요. 학생 화면에 바로 보여요." if filled else "시험 분석을 삭제했어요.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
 
 
@@ -446,7 +454,7 @@ def omr_clear(mid):
     execute("DELETE FROM mock_entries WHERE mock_id = ?", (mid,))
     analysis.invalidate(mid)
     audit("omr_clear", f"mock:{mid}")
-    flash("이 회차의 학생 결과를 모두 지웠어요.", "ok")
+    flash("이 회차의 학생 결과를 모두 삭제했어요.", "ok")
     return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
 
 
@@ -459,16 +467,20 @@ def mock_sms(mid):
     if not m["n_items"]:
         abort(404)
     cs = exams.class_stats(mid)
-    out = []
     from views.care import parent_token
     root = request.url_root.rstrip("/")
-    for r in cs["rows"]:
+
+    def head(r):                                   # 목록 한 줄: 문자를 만들지 않는다
+        phone = decrypt(r["parent_phone_enc"])
+        return {"r": r, "phone": phone, "state": "수신미동의" if not r["sms_ok"] else ("연락처없음" if not phone else "")}
+
+    def full(r):                                   # 한 명의 문자 원문 (문안 형식은 exams.compose_sms 그대로)
         text = exams.sms_for(mid, r["student_id"], cs)
         text += f"\n\n학생 리포트: {root}{url_for('care.parent_page', token=parent_token(r['student_id']))}"
-        phone = decrypt(r["parent_phone_enc"])
-        state = "수신미동의" if not r["sms_ok"] else ("연락처없음" if not phone else "")
-        out.append({"r": r, "text": text, "phone": phone, "state": state, "bytes": exams.sms_bytes(text)})
+        return dict(head(r), text=text, bytes=exams.sms_bytes(text))
+
     if request.args.get("csv"):
+        out = [full(r) for r in cs["rows"]]
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["반", "이름", "학부모연락처", "상태", "문자"])
@@ -478,8 +490,22 @@ def mock_sms(mid):
         from urllib.parse import quote
         return Response("\ufeff" + buf.getvalue(), mimetype="text/csv",
                         headers={"Content-Disposition": f"attachment; filename=sms.csv; filename*=UTF-8''{quote('문자_' + exams.exam_title(m) + '.csv')}"})
+    # 화면: 학생을 찾아 한 명씩 연다. 예전에는 전원의 문자를 한 화면에 펼쳐 179명이면 높이가 27만 px 이었다.
+    word, cls = request.args.get("q", "").strip()[:20], request.args.get("cls", "")
+    rows = [r for r in cs["rows"] if (not cls or r["cls"] == cls)
+            and (not word or word in r["name"] or word in (r["student_no"] or ""))]
+    keep = {"q": word or None, "cls": cls or None}
+    sid = request.args.get("sid", type=int)
+    if sid:
+        r = next((x for x in cs["rows"] if x["student_id"] == sid), None) or abort(404)
+        i = next((k for k, x in enumerate(rows) if x["student_id"] == sid), None)
+        nxt = rows[i + 1] if i is not None and i + 1 < len(rows) else None
+        audit("sms_view", f"mock:{mid} student:{sid}")
+        return render_template("teacher/mock_sms.html", m=m, one=full(r), nxt=nxt, keep=keep, title=exams.exam_title(m))
+    n = max(20, min(request.args.get("n", 20, type=int), 2000))
     audit("sms_view", f"mock:{mid}")
-    return render_template("teacher/mock_sms.html", m=m, rows=out, title=exams.exam_title(m))
+    return render_template("teacher/mock_sms.html", m=m, one=None, rows=[head(r) for r in rows[:n]], total=len(rows), all_n=len(cs["rows"]), n=n,
+                           classes=sorted({r["cls"] for r in cs["rows"]}), word=word, cls=cls, keep=keep, title=exams.exam_title(m))
 
 
 @bp.route("/t/mocks/<int:mid>/practice.xlsx")
@@ -505,8 +531,8 @@ def ta_note(mid, sid):
     execute("UPDATE exam_results SET ta_note = ?, ta_by = ?, ta_at = datetime('now', 'localtime') WHERE mock_id = ? AND student_id = ?",
             (text, g.user["id"], mid, sid))
     audit("ta_note", f"mock:{mid} student:{sid}")
-    flash("피드백을 저장했어요. 문자에 바로 들어가요." if text else "피드백을 지웠어요.", "ok")
-    return redirect(url_for("books.mock_sms", mid=mid) + f"#s{sid}")
+    flash("피드백을 저장했어요. 문자에 바로 들어가요." if text else "피드백을 삭제했어요.", "ok")
+    return redirect(url_for("books.mock_sms", mid=mid, sid=sid, q=request.form.get("q") or None, cls=request.form.get("cls") or None))
 
 
 @bp.route("/t/feedback-notes.csv")

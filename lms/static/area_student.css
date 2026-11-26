@@ -91,3 +91,9 @@
 .tt-form-actions { display: flex; gap: 8px; margin-top: 12px; }
 .tt-form-actions .btn { min-height: 52px; font-size: 16px; }
 .tt-form-actions .btn.primary { flex: 1; margin-left: 0; }
+/* 학습 진도: 아직 안 푼 TOPIC 은 접어 둔다 */
+.prog-rest { margin-top: 4px; }
+.prog-rest > summary { list-style: none; cursor: pointer; padding: 14px 0 6px; color: var(--muted); font-size: 14px; }
+.prog-rest > summary::-webkit-details-marker { display: none; }
+.prog-rest > summary::after { content: " ›"; color: var(--faint); }
+.prog-rest[open] > summary::after { content: ""; }

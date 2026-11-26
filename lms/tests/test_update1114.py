@@ -52,7 +52,11 @@ class Update1114(unittest.TestCase):
         self.assertEqual(tasks.status_code, 200); self.assertNotIn('type="file"', tasks.data.decode())
         self.assertEqual(self.t.get("/t/tasks").status_code, 404)
         home = self.s.get("/s/").data.decode()
-        self.assertIn("공지", home); self.assertIn("질답 게시판", home); self.assertIn("교재 구매", home)
+        self.assertIn("공지", home); self.assertIn("질답 게시판", home)
+        self.assertNotIn("교재 구매", home)                                   # 구매 링크가 하나도 없으면 메뉴에서 숨긴다
+        with self.app.app_context():
+            execute("INSERT INTO settings (key, value) VALUES ('buy_lineup', 'https://example.com/buy')")
+        self.assertIn("교재 구매", self.s.get("/s/").data.decode())
         self.assertNotIn("안 낸 과제", home)
         self.assertIn("data-back", self.s.get("/s/notices").data.decode())     # 뒤로 버튼
 

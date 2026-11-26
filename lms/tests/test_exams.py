@@ -311,7 +311,7 @@ class Upload(unittest.TestCase):
             sid = query("SELECT student_id FROM exam_results WHERE mock_id = ? LIMIT 1", (pm,), one=True)["student_id"]
         # 조교 피드백: 저장하면 문자 총평 자리에 들어가고, 모음 CSV 에는 학생코드만
         self.ta.post(f"/t/mocks/{pm}/note/{sid}", data={"note": "보기 판단 근거를 한 줄로 적는 연습을 시작했습니다."})
-        page = self.ta.get(f"/t/mocks/{pm}/sms").data.decode()
+        page = self.ta.get(f"/t/mocks/{pm}/sms?sid={sid}").data.decode()
         self.assertIn("보기 판단 근거를 한 줄로 적는 연습을 시작했습니다.", page)
         csv = self.ta.get("/t/feedback-notes.csv").data.decode("utf-8-sig")
         self.assertIn("TEST0", csv); self.assertIn("보기 판단 근거", csv)

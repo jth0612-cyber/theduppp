@@ -22,7 +22,7 @@
     <tr><th>구분</th><th>교재</th><th>배정한 주차</th><th></th></tr>
     {% for h in rows %}
     <tr><td>{{ h.kind }}</td><td>{{ h.title }}</td><td class="num">{{ h.n_week }}</td>
-      <td class="num"><form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ h.id }}"><button class="btn small danger" data-confirm="이 교재를 지우면 주차 배정과 배부 기록에서도 빠져요. 지울까요?">삭제</button></form></td></tr>
+      <td class="num"><form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ h.id }}"><button class="btn small danger" data-confirm="이 교재를 삭제하면 주차 배정과 배부 기록에서도 빠져요. 삭제할까요?">삭제</button></form></td></tr>
     {% endfor %}
   </table></div>
   {% else %}<p class="small muted">아직 교재가 없어요.</p>{% endif %}

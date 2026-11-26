@@ -1,26 +1,50 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}학부모 문자 | {{ title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
+{% if one %}
+{# 한 명의 문자 원문. 문안 형식은 그대로 두고 복사만 한다. #}
+<p class="crumb"><a href="{{ url_for('books.mock_sms', mid=m.id, q=keep.q, cls=keep.cls) }}">← 학부모 문자</a></p>
+<div class="page-head">
+  <div><h1>{{ one.r.name }} <span class="small muted">{{ one.r.cls }}</span></h1>
+    <p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ one.phone or '연락처 없음' }}<span class="sep" aria-hidden="true"></span>{{ one.bytes }}바이트{% if one.state %}<span class="sep" aria-hidden="true"></span>{{ one.state }}{% endif %}</p></div>
+  <button type="button" class="btn primary" data-copy="sms-{{ one.r.student_id }}">문자 복사</button>
+</div>
+<div class="card sms-item">
+  <pre class="sms-text" id="sms-{{ one.r.student_id }}">{{ one.text }}</pre>
+</div>
+<form method="post" action="{{ url_for('books.ta_note', mid=m.id, sid=one.r.student_id) }}" class="card ta-note">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="q" value="{{ keep.q or '' }}"><input type="hidden" name="cls" value="{{ keep.cls or '' }}">
+  <label for="n{{ one.r.student_id }}"><b>조교 피드백</b>{% call help('조교 피드백') %}<p>적으면 문자의 총평 자리에 들어가요.</p>{% endcall %}{% if one.r.ta_at %} <span class="small muted">{{ one.r.ta_at|dt }} 저장</span>{% endif %}</label>
+  <textarea id="n{{ one.r.student_id }}" name="note" rows="3" maxlength="1500">{{ one.r.ta_note }}</textarea>
+  <button class="btn">저장</button>
+</form>
+{% if nxt %}<p><a class="btn" href="{{ url_for('books.mock_sms', mid=m.id, sid=nxt.student_id, q=keep.q, cls=keep.cls) }}">다음 학생: {{ nxt.name }}</a></p>{% endif %}
+{% else %}
 <p class="crumb"><a href="{{ url_for('books.teacher_mock', mid=m.id) }}">← {{ title }}</a></p>
 <div class="page-head">
-  <div><h1>학부모 문자</h1><p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ rows|length }}명<span class="sep" aria-hidden="true"></span>반 통계 기준<span class="sep" aria-hidden="true"></span>2000바이트 이내</p></div>
+  <div><h1>학부모 문자{% call help('학부모 문자') %}<p>학생을 누르면 그 학생의 문자가 열려요. 반 통계 기준이고 2000바이트 이내로 만들어요.</p><p>전원의 문자를 한 번에 받으려면 CSV로 받기를 눌러 주세요.</p>{% endcall %}</h1>
+    <p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ all_n }}명</p></div>
   <div class="row"><a class="btn" href="{{ url_for('books.ta_notes_csv') }}">피드백 모음 받기</a>
-    <a class="btn primary" href="{{ url_for('books.mock_sms', mid=m.id, csv=1) }}">CSV로 받기</a></div>
+    <a class="btn" href="{{ url_for('books.mock_sms', mid=m.id, csv=1) }}">CSV로 받기</a></div>
 </div>
-<ul class="sms-list">
-  {% for x in rows %}
-  <li class="card sms-item" id="s{{ x.r.student_id }}">
-    <div class="sms-head"><b>{{ x.r.name }}</b><span class="small muted">{{ x.r.cls }}<span class="sep" aria-hidden="true"></span>{{ x.phone or '연락처 없음' }}<span class="sep" aria-hidden="true"></span>{{ x.bytes }}바이트</span>
-      {% if x.state %}<span class="badge gray">{{ x.state }}</span>{% endif %}
-      <button type="button" class="btn small" data-copy="sms-{{ x.r.student_id }}">복사</button></div>
-    <pre class="sms-text" id="sms-{{ x.r.student_id }}">{{ x.text }}</pre>
-    <form method="post" action="{{ url_for('books.ta_note', mid=m.id, sid=x.r.student_id) }}" class="ta-note">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label class="small" for="n{{ x.r.student_id }}">조교 피드백 <span class="muted">문자 총평 자리에 들어가요{% if x.r.ta_at %}<span class="sep" aria-hidden="true"></span>{{ x.r.ta_at|dt }} 저장{% endif %}</span></label>
-      <textarea id="n{{ x.r.student_id }}" name="note" rows="2" maxlength="1500">{{ x.r.ta_note }}</textarea>
-      <button class="btn small">저장</button>
-    </form>
-  </li>
-  {% endfor %}
-</ul>
+<form method="get" class="find find-wide" role="search">
+  <input type="search" name="q" value="{{ word }}" placeholder="이름이나 아이디로 찾기" aria-label="학생 찾기" enterkeyhint="search">
+  {% if classes|length > 1 %}<select name="cls" aria-label="반" data-autosubmit-select><option value="">모든 반</option>{% for c in classes %}<option value="{{ c }}"{{ ' selected' if c == cls }}>{{ c }}</option>{% endfor %}</select>{% endif %}
+  <button class="btn small">찾기</button>
+</form>
+<section class="card">
+  {% if rows %}
+  <ul class="list-rows">
+    {% for x in rows %}
+    <li><a href="{{ url_for('books.mock_sms', mid=m.id, sid=x.r.student_id, q=keep.q, cls=keep.cls) }}">
+      <span class="lr-main"><b class="lr-title">{{ x.r.name }}</b><span class="lr-sub">{{ x.r.cls }}<span class="sep" aria-hidden="true"></span>{{ x.phone or '연락처 없음' }}</span></span>
+      <span class="lr-end">{% if x.state %}<span class="badge danger">{{ x.state }}</span>{% elif x.r.ta_note %}<span class="badge answered">피드백 있음</span>{% endif %}</span></a></li>
+    {% endfor %}
+  </ul>
+  {% if total > rows|length %}<p class="center mt"><a class="btn" href="{{ url_for('books.mock_sms', mid=m.id, q=keep.q, cls=keep.cls, n=n + 20) }}">20명 더 보기 <span class="small muted">{{ rows|length }}/{{ total }}</span></a></p>{% endif %}
+  {% else %}<p class="list-empty">찾는 학생이 없어요.</p>{% endif %}
+</section>
+{% endif %}
 {% endblock %}

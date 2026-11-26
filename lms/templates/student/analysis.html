@@ -89,7 +89,7 @@
   <form method="post" action="{{ url_for('care.s_paper', mid=mock.id) }}" enctype="multipart/form-data" class="card mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field"><input type="file" id="pp-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="drop-input">
-      <label for="pp-image" class="drop"><b>시험지 사진 올리기</b><span>PNG, JPG 6장까지{% if paper %}<span class="sep" aria-hidden="true"></span>다시 올리면 이전 사진은 지워져요{% endif %}</span></label></div>
+      <label for="pp-image" class="drop"><b>시험지 사진 올리기</b><span>PNG, JPG 6장까지{% if paper %}<span class="sep" aria-hidden="true"></span>다시 올리면 이전 사진은 삭제돼요{% endif %}</span></label></div>
     <div class="field"><label for="pp-note">조교에게 한 줄</label><input type="text" id="pp-note" name="note" maxlength="1000" placeholder="선택" value="{{ paper.note if paper else '' }}"></div>
     <button class="btn primary">{{ '다시 올리기' if paper else '시험지 올리기' }}</button>
   </form>
@@ -108,7 +108,7 @@
     {% for a in rep.wrongs %}
     <li class="wa-item">
       <h3>{{ a.no }}번{% if a.type %} <span class="badge">{{ a.type }}</span>{% endif %}
-        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ pct1(a.rate) }}%{% endif %}{% if a.unit %}<span class="sep" aria-hidden="true"></span>{{ a.unit }}{% endif %}</span></h3>
+        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ pct1(a.rate) }}%<span class="sep" aria-hidden="true"></span>전체 {{ pct1(a.rate_all) }}%{% endif %}{% if a.unit %}<span class="sep" aria-hidden="true"></span>{{ a.unit }}{% endif %}</span></h3>
       {% if a.trap %}<p>{{ a.trap }}</p>{% elif a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
       {% set pm = paper_marks.get(a.no) %}{% if pm and paper.status == 'done' %}<p class="ta-mark"><b>{{ paper.reviewer }} 첨삭</b>{% if pm.reason %} <span class="badge">{{ pm.reason }}</span>{% endif %} {{ pm.memo }}</p>{% endif %}
       {% if rep.enough and a.dist %}<p class="muted">반 선택 비율: {{ a.dist }}</p>{% endif %}

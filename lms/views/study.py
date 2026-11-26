@@ -115,7 +115,12 @@ def wrong_list(user_id, only_open=False):
         if not wrong:
             continue
         stats = _stats({**dict(e), "id": e["mid"]})
-        rates = {it["no"]: it["wrong_pct"] for it in stats["items"]}      # 그 회차를 본 전체 학생 기준 (화면에 '전체 오답률'로 적는다)
+        rates = {it["no"]: it["wrong_pct"] for it in stats["items"]}      # 그 회차를 본 전체 학생 기준
+        # 반 오답률을 앞에 둔다 (운영자 결정 2026-11-27). 반 응시자가 적으면 exams 의 기준대로 보여 주지 않는다.
+        cs = exams.class_stats(e["mid"])
+        mine_row = next((x for x in cs["rows"] if u and x["student_id"] == u["student_id"]), None)
+        st = cs["cls"].get(mine_row["cls"]) if mine_row else None
+        cls_rates = st["wrong"] if st and st["n"] >= exams.SET["min_n"] else None
         info = (exams.load_mock(e["mid"]) or {}).get("info", {})
         items = []
         for no in wrong:
@@ -125,7 +130,7 @@ def wrong_list(user_id, only_open=False):
                 continue
             items.append({"no": no, "mine": e["answers"][no - 1], "points": points[no - 1],
                           "answer": key[no - 1], "unit": info.get(no, {}).get("unit", ""),
-                          "rate": rates.get(no), "reason": n["reason"] if n else "",
+                          "rate": rates.get(no), "rate_cls": round(cls_rates[no - 1]) if cls_rates else None, "reason": n["reason"] if n else "",
                           "memo": n["memo"] if n else "", "reviewed": reviewed})
         groups.append({"mock_id": e["mid"], "kind": e["kind"], "title": f"{e['book_title']} {e['round_no']}회", "score": e["score"],
                        "full": e["full_score"], "rows": items, "total": len(wrong),
@@ -141,10 +146,14 @@ def wrong_notes():
     kind = analysis.kind_arg(request.args.get("kind"), groups[0]["kind"] if groups else "복습 테스트")   # 탭: 복습 테스트 / 모의고사
     kind_counts = {k: sum(1 for gr in groups if gr["kind"] == k) for k in analysis.KIND_KEYS.values()}
     groups = [gr for gr in groups if gr["kind"] == kind]
-    rounds = [(gr["mock_id"], gr["title"]) for gr in groups]       # 회차 고르기 (한 회차만 정리할 때)
+    if only_open:
+        groups = [gr for gr in groups if gr["rows"]]                # '복습 전만'에 다 끝낸 회차는 남기지 않는다
+    # 한 번에 한 회차만 펼친다 (고르지 않았으면 가장 최근). 나머지 회차는 제목 줄로만 보여 주고 누르면 그 회차가 열린다.
     pick = request.args.get("mock", type=int)
-    if pick:
-        groups = [gr for gr in groups if gr["mock_id"] == pick]
+    if not any(gr["mock_id"] == pick for gr in groups):
+        pick = groups[0]["mock_id"] if groups else None
+    rounds = [gr for gr in groups if gr["mock_id"] != pick]
+    groups = [gr for gr in groups if gr["mock_id"] == pick]
     reasons = query("""SELECT w.reason, COUNT(*) AS n FROM wrong_notes w JOIN mocks m ON m.id = w.mock_id JOIN books b ON b.id = m.book_id
                        WHERE w.user_id = ? AND w.reason != '' AND b.kind = ? GROUP BY w.reason ORDER BY n DESC""", (g.user["id"], kind))
     import sysdata

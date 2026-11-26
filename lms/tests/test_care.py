@@ -216,7 +216,7 @@ class Care(unittest.TestCase):
             page = re.sub(r"<(script|style)[^>]*>.*?</>|<[^>]+>", " ", c.get(u).data.decode(), flags=re.S)
             self.assertIsNone(re.search(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}", page), u)   # 화면 글에 ISO 시각이 없다
         w = self.c1.get("/s/wrong").data.decode()
-        self.assertIn("전체 오답률", w); self.assertIn("정답 3", w); self.assertIn("산과 염기", w)   # 오답 노트: 기준, 정답, 단원
+        self.assertIn("전체 ", w); self.assertIn("정답 3", w); self.assertIn("산과 염기", w)   # 오답 노트: 기준, 정답, 단원
 
     def test_lesson_needs_photo_or_note(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})
@@ -309,8 +309,12 @@ class Care(unittest.TestCase):
         self.assertIn("noindex", page)
         self.assertEqual(anon.get("/p/" + "x" * 24).status_code, 404)
         self.assertEqual(anon.get("/p/short").status_code, 404)
-        sms = self.ta.get(f"/t/mocks/{mid}/sms").data.decode()
-        self.assertIn(f"/p/{tok}", sms)
+        lst = self.ta.get(f"/t/mocks/{mid}/sms").data.decode()                      # 목록에는 문자 원문이 없고, 학생을 눌러야 열린다
+        self.assertIn(f"sid={self.s1}", lst); self.assertNotIn(f"/p/{tok}", lst)
+        sms = self.ta.get(f"/t/mocks/{mid}/sms?sid={self.s1}").data.decode()
+        self.assertIn(f"/p/{tok}", sms); self.assertIn("문자 복사", sms)
+        self.assertIn("찾는 학생이 없어요", self.ta.get(f"/t/mocks/{mid}/sms?q=없는이름").data.decode())
+        self.assertEqual(self.ta.get(f"/t/mocks/{mid}/sms?sid=99999").status_code, 404)
 
 if __name__ == "__main__":
     unittest.main()

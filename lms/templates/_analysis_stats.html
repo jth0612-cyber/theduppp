@@ -5,7 +5,7 @@
   <section class="panel" aria-labelledby="h-cuts">
     <div class="sec-head"><h2 id="h-cuts">등급 기준표{% call help('등급 기준표') %}<p>수능 9등급 누적 비율(4, 11, 23, 40, 60, 77, 89, 96%)을 이 회차에 적용한 추정이에요. 표준점수는 평균 50, 표준편차 10 기준이에요.</p>{% endcall %}</h2><span>응시 {{ stats.n }}명 기준</span></div>
     {% if stats.cuts %}
-    <div class="table-wrap"><table class="ledger" data-rc="off">
+    <div class="table-wrap"><table class="ledger cmp" data-rc="off">
       <thead><tr><th>등급</th><th class="num">원점수</th><th class="num">표준점수</th>{% if staff_view %}<th class="num">백분위</th>{% endif %}<th class="num">오차 범위</th></tr></thead>
       <tbody>
       {% for r in stats.cuts %}

@@ -33,7 +33,7 @@
   <div class="card">
     <div class="sec-head"><h2>최근 회차</h2><a href="{{ url_for('books.teacher_books') }}">전체</a></div>
     {% if recent_exams %}
-    <div class="table-wrap"><table data-rc-title="0">
+    <div class="table-wrap"><table class="cmp" data-rc-title="0">
       <tr><th>회차</th><th class="num">응시</th><th class="num">평균</th></tr>
       {% for e in recent_exams %}
       <tr>

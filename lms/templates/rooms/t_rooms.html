@@ -21,14 +21,14 @@
   <h2>노천탕 칠판 (화롯가 채팅)</h2>
   {% if chat %}<div class="table-wrap"><table data-rc-title="0"><thead><tr><th>글</th><th>작성</th><th></th></tr></thead><tbody>
   {% for c in chat %}<tr><td>{{ c.body }}</td><td class="small muted">{% if role_caption(c) %}<span class="cap">{{ role_caption(c) }}</span> {{ shown_name(c) }}{% else %}{{ c.name or '' }} ({{ c.nickname }}){% endif %}<span class="sep" aria-hidden="true"></span>{{ c.created_at|dt }}</td>
-    <td class="num"><form method="post" action="{{ url_for('rooms.t_chat_delete', cid=c.id) }}" class="inline-form">{{ csrf() }}<button class="btn small" data-confirm="이 글을 삭제할까요?">지우기</button></form></td></tr>{% endfor %}
+    <td class="num"><form method="post" action="{{ url_for('rooms.t_chat_delete', cid=c.id) }}" class="inline-form">{{ csrf() }}<button class="btn small" data-confirm="이 글을 삭제할까요?">삭제</button></form></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">없음</p>{% endif %}
 </div>
 <div class="card">
   <h2>남긴 글</h2>
   {% if notes %}<div class="table-wrap"><table data-rc-title="1"><thead><tr><th>장소</th><th>글</th><th>작성</th><th></th></tr></thead><tbody>
   {% for n in notes %}<tr><td>{{ places[n.place][0] }}</td><td>{{ n.body }}</td><td class="small muted">{% if role_caption(n) %}<span class="cap">{{ role_caption(n) }}</span> {{ shown_name(n) }}{% else %}{{ n.name or '' }} ({{ n.nickname }}){% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at|dt }}</td>
-    <td class="num"><form method="post" action="{{ url_for('rooms.t_note_delete', nid=n.id) }}" class="inline-form">{{ csrf() }}<button class="btn small" data-confirm="이 글을 삭제할까요?">지우기</button></form></td></tr>{% endfor %}
+    <td class="num"><form method="post" action="{{ url_for('rooms.t_note_delete', nid=n.id) }}" class="inline-form">{{ csrf() }}<button class="btn small" data-confirm="이 글을 삭제할까요?">삭제</button></form></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">없음</p>{% endif %}
 </div>
 {% endblock %}

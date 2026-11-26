@@ -63,7 +63,7 @@ def cast_edit(cid):
         if request.form.get("action") == "delete":
             execute("DELETE FROM casts WHERE id = ?", (cid,))
             audit("cast_delete", f"cast:{cid}")
-            flash("글을 지웠어요.", "ok")
+            flash("글을 삭제했어요.", "ok")
             return redirect(url_for("cast.cast_list"))
         title, body, video, err = _form()
         if err:

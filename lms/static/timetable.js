@@ -41,7 +41,7 @@
       subEl.appendChild(document.createTextNode(t));
     });
     var act = document.createElement("div"); act.className = "sd-act sd-act-3";
-    [["닫기", "btn", "close"], ["지우기", "btn danger", "del"], ["고치기", "btn primary", "edit"]].forEach(function (b) {
+    [["닫기", "btn", "close"], ["삭제", "btn danger", "del"], ["고치기", "btn primary", "edit"]].forEach(function (b) {
       var x = document.createElement("button"); x.type = "button"; x.className = b[1]; x.value = b[2]; x.textContent = b[0]; act.appendChild(x);
     });
     box.appendChild(p); box.appendChild(subEl); box.appendChild(act); d.appendChild(box); document.body.appendChild(d);

@@ -3,7 +3,6 @@
 {% block content %}
 <header class="ed-head"><h1>수업 기록</h1><p class="ed-lede">{{ me.class_name }}<span class="sep" aria-hidden="true"></span>선생님이 올린 수업 노트</p></header>
 {% if rows %}
-{% if rows|length > 3 %}<p class="row small" aria-label="날짜 바로가기">{% for l in rows|reverse %}<a class="badge gray" href="#l-{{ l.id }}">{{ l.day|d }}</a> {% endfor %}</p>{% endif %}
 <ol class="lesson-list">
   {% for l in rows %}
   <li class="card" id="l-{{ l.id }}">
@@ -14,5 +13,15 @@
   </li>
   {% endfor %}
 </ol>
+{% if others %}
+<section class="card" aria-labelledby="h-past">
+  <div class="sec-head"><h2 id="h-past">지난 수업</h2><span>{{ others|length }}개</span></div>
+  <ul class="list-rows">
+    {% for l in others %}
+    <li><a href="{{ url_for('care.s_lessons', l=l.id) }}"><span class="lr-main"><b class="lr-title">{{ l.title }}</b><span class="lr-sub">{{ l.day|d }}{% if l.files %}<span class="sep" aria-hidden="true"></span>노트 {{ l.files|length }}장{% endif %}{% if l.videos %}<span class="sep" aria-hidden="true"></span>강의 영상{% endif %}</span></span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% else %}<section class="quiet-box"><p>아직 올라온 수업 기록이 없어요.</p></section>{% endif %}
 {% endblock %}

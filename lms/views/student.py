@@ -179,7 +179,7 @@ def erase_request():
     qid = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, ?, ?, '행정문의')",
                   (me["id"], ERASE_TITLE, "계정과 모든 기록(성적, 질문, 사진, 공부 기록)을 지워 주세요."))
     audit("erase_request", f"student:{me['id']} question:{qid}")
-    flash("삭제를 요청했어요. 선생님이 확인한 뒤 지워요.", "ok")
+    flash("삭제를 요청했어요. 선생님이 확인한 뒤 삭제해요.", "ok")
     return redirect(url_for("student.question_detail", qid=qid))
 
 

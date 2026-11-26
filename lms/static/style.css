@@ -2886,3 +2886,8 @@ main .legal table.legal-table :is(th, td) { text-align: left; vertical-align: to
 }
 /* 학생이 직접 쓴 제목(질문)은 앞머리가 길어 한 줄로는 구별이 안 된다: 두 줄까지 */
 .list-rows.lr-wrap .lr-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; }
+
+/* 숫자를 견주는 표(급여, 등급 기준, 반별 결과, 성적표)는 숫자 칸을 오른쪽으로 맞춘다 (운영자 결정 2026-11-27).
+   그 밖의 표는 머리행과 칸 모두 가운데 그대로. 표에 class="cmp" 를 붙인다. */
+main table.cmp th.num, main table.cmp td.num { text-align: right; font-variant-numeric: tabular-nums; }
+main table.cmp th:first-child, main table.cmp td:first-child { text-align: left; }

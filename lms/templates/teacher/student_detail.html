@@ -63,7 +63,7 @@
   <h2>{{ kind }} <span class="small muted">학부모 리포트와 같은 내용</span></h2>
   {{ kind_tabs(kind, 'teacher.student_detail', kind_counts, sid=s.id, _anchor='mocks') }}
   {% if k.exams %}
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="cmp" data-rc-title="0">
     <tr><th>시험</th><th class="num">점수</th><th class="num">반 평균</th><th class="num">득점률</th><th class="num">틀린 문항</th></tr>
     {% for e in k.exams[:14] %}
     <tr><td>{{ e.title }}{% if e.date %}<br><span class="small muted">{{ e.date|d }}</span>{% endif %}</td>

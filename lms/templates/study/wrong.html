@@ -12,14 +12,6 @@
   </nav>
 </header>
 {% if only_open %}{{ kind_tabs(kind, 'study.wrong_notes', kind_counts, view='open') }}{% else %}{{ kind_tabs(kind, 'study.wrong_notes', kind_counts) }}{% endif %}
-{% if rounds|length > 1 %}
-<form method="get" class="pick" data-autosubmit>
-  {% if only_open %}<input type="hidden" name="view" value="open">{% endif %}<input type="hidden" name="kind" value="{{ kind_key }}">
-  <label for="wr-mock" class="sr-only">회차</label>
-  <select id="wr-mock" name="mock"><option value="">전체 회차</option>{% for mid, t in rounds %}<option value="{{ mid }}"{{ ' selected' if pick == mid }}>{{ t }}</option>{% endfor %}</select>
-  <button class="btn small js-hide" type="submit">보기</button>
-</form>
-{% endif %}
 
 {% if not code %}{% include "sys/_link_box.html" %}{% elif sys_groups or sys_types %}{% include "sys/_wrong.html" %}{% endif %}
 {% if (groups or reason_counts) and (sys_groups or sys_types) %}<h2 class="sec-title">복테 및 모의고사 오답</h2>{% endif %}
@@ -43,7 +35,7 @@
         {{ csrf() }}
         <div class="w-head">
           <a class="w-no" href="{{ url_for('books.analysis_home', mock=gr.mock_id, item=it.no) }}#map" aria-label="{{ it.no }}번 선지 비율 보기">{{ it.no }}번</a>
-          <span class="muted small">{% if it.unit %}{{ it.unit }}<span class="sep" aria-hidden="true"></span>{% endif %}내 답 {{ it.mine if it.mine != "0" else "무응답" }} → 정답 {{ it.answer }}{% if it.rate is not none %}<span class="sep" aria-hidden="true"></span>전체 오답률 {{ it.rate }}%{% endif %}</span>
+          <span class="muted small">{% if it.unit %}{{ it.unit }}<span class="sep" aria-hidden="true"></span>{% endif %}내 답 {{ it.mine if it.mine != "0" else "무응답" }} → 정답 {{ it.answer }}{% if it.rate_cls is not none %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ it.rate_cls }}%{% endif %}{% if it.rate is not none %}<span class="sep" aria-hidden="true"></span>전체 {{ it.rate }}%{% endif %}</span>
         </div>
         <div class="w-reasons" role="radiogroup" aria-label="{{ it.no }}번 틀린 이유">
           {% for r in reasons %}<label class="chip"><input type="radio" name="reason" value="{{ r }}" {{ 'checked' if it.reason == r }}><span>{{ r }}</span></label>{% endfor %}
@@ -65,4 +57,16 @@
   <a class="btn" href="{{ url_for('books.analysis_home') }}">시험 분석으로</a>
 </div>
 {% endif %}{% endfor %}
+{% if rounds %}
+<section class="panel" aria-labelledby="h-rounds">
+  <div class="sec-head"><h2 id="h-rounds">다른 회차</h2><span>{{ rounds|length }}회</span></div>
+  <ul class="list-rows">
+    {% for gr in rounds %}
+    <li><a href="{{ url_for('study.wrong_notes', kind=kind_key, mock=gr.mock_id, view='open' if only_open else None) }}">
+      <span class="lr-main"><b class="lr-title">{{ gr.title }}</b><span class="lr-sub">틀린 문항 {{ gr.total }}개<span class="sep" aria-hidden="true"></span>복습 {{ gr.done }}/{{ gr.total }}</span></span>
+      <span class="lr-end">{% if gr.done < gr.total %}<span class="badge open">남음 {{ gr.total - gr.done }}</span>{% else %}<span class="badge answered">복습 끝</span>{% endif %}</span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

@@ -181,7 +181,12 @@ def s_lessons():
     for r in rows:
         end = (date.fromisoformat(r["day"]) + timedelta(days=6)).isoformat()
         r["videos"] = [v for v in vids if r["day"] <= v["created_at"][:10] <= end]
-    return render_template("care/s_lessons.html", me=me, rows=rows, new_since=week_ago)
+    # 한 번에 하나만 펼친다 (고르지 않았으면 가장 최근). 노트 사진이 주차마다 쌓여 화면이 끝없이 길어지지 않게.
+    pick = request.args.get("l", type=int)
+    if not any(r["id"] == pick for r in rows):
+        pick = rows[0]["id"] if rows else None
+    return render_template("care/s_lessons.html", me=me, rows=[r for r in rows if r["id"] == pick],
+                           others=[r for r in rows if r["id"] != pick], new_since=week_ago)
 
 
 @bp.route("/t/lessons/<int:lid>")
@@ -232,11 +237,15 @@ def t_lessons():
             notify_users(uids, "수업 기록", f"{title}, 노트 {len(photos)}장" if photos else title, url_for("care.s_lessons"))
         flash("수업 기록을 올렸어요.", "ok")
         return back(c=cid)
-    rows = query("""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
-                    FROM lessons l JOIN classes c ON c.id = l.class_id ORDER BY l.day DESC, l.id DESC LIMIT 200""")
+    cid = request.args.get("c", type=int)
+    n = max(20, min(request.args.get("n", 20, type=int), 1000))
+    where, args = ("WHERE l.class_id = ?", (cid,)) if cid else ("", ())
+    total = query(f"SELECT COUNT(*) AS n FROM lessons l {where}", args, one=True)["n"]
+    rows = query(f"""SELECT l.*, c.name AS cls, (SELECT COUNT(*) FROM lesson_files f WHERE f.lesson_id = l.id) AS n_files
+                     FROM lessons l JOIN classes c ON c.id = l.class_id {where} ORDER BY l.day DESC, l.id DESC LIMIT ?""", args + (n,))
     classes = query("SELECT id, name FROM classes WHERE archived = 0 ORDER BY is_test, name")
     return render_template("care/t_lessons.html", rows=rows, classes=classes, today=date.today().isoformat(),
-                           last_cid=request.args.get("c", type=int))      # 방금 올린 반을 그대로 골라 둔다
+                           last_cid=cid, total=total, n=n)      # 방금 올린 반을 그대로 골라 둔다 (목록도 그 반만)
 
 
 @bp.route("/t/lessons/<int:lid>/delete", methods=["POST"])
@@ -245,7 +254,7 @@ def t_lesson_delete(lid):
     for r in query("SELECT file_id FROM lesson_files WHERE lesson_id = ?", (lid,)):
         delete_file(r["file_id"])
     execute("DELETE FROM lessons WHERE id = ?", (lid,))
-    flash("수업 기록을 지웠어요.", "ok")
+    flash("수업 기록을 삭제했어요.", "ok")
     return redirect(url_for("care.t_lessons"))
 
 

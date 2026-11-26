@@ -375,7 +375,7 @@ def t_rooms():
 def t_chat_delete(cid):
     execute("DELETE FROM room_chat WHERE id = ?", (cid,))
     audit("room_chat_delete", f"chat:{cid}")
-    flash("칠판 글을 지웠어요.", "ok")
+    flash("칠판 글을 삭제했어요.", "ok")
     return redirect(url_for("rooms.t_rooms"))
 
 
@@ -384,5 +384,5 @@ def t_chat_delete(cid):
 def t_note_delete(nid):
     execute("DELETE FROM room_notes WHERE id = ?", (nid,))
     audit("room_note_deleted", f"note:{nid}")
-    flash("글을 지웠어요.", "ok")
+    flash("글을 삭제했어요.", "ok")
     return redirect(url_for("rooms.t_rooms"))

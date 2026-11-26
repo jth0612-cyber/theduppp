@@ -44,10 +44,10 @@
   </section>
 </div>
 
-<section class="panel" aria-label="바로가기">
+{% if cast or shop_ready %}<section class="panel" aria-label="바로가기">
   <ul class="list-rows">
     {% if cast %}<li><a href="{{ url_for('cast.cast_detail', cid=cast.id) }}"><span class="lr-main"><b class="lr-title">{{ cast.title }}</b><span class="lr-sub">태혁쌤의 cast<span class="sep" aria-hidden="true"></span>{{ cast.created_at|d }}</span></span></a></li>{% endif %}
-    <li><a href="{{ url_for('books.shop') }}"><span class="lr-main"><b class="lr-title">교재 구매</b><span class="lr-sub">LINE UP, FRAMING, Squeeze, SWEEP</span></span></a></li>
+    {% if shop_ready %}<li><a href="{{ url_for('books.shop') }}"><span class="lr-main"><b class="lr-title">교재 구매</b><span class="lr-sub">LINE UP, FRAMING, Squeeze, SWEEP</span></span></a></li>{% endif %}
   </ul>
-</section>
+</section>{% endif %}
 {% endblock %}

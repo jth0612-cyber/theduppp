@@ -64,8 +64,8 @@
   (None, [
     ('student.home', '홈', 'home', ep == 'student.home', 0),
     ('student.notices', '공지', 'notice', ep in ('student.notices', 'student.notice_detail'), 0),
-    ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0),
-    ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0),
+    ('student.questions', '질답 게시판', 'chat', ep.startswith('student.question'), 0)] + ([
+    ('books.shop', '교재 구매', 'book', ep == 'books.shop', 0)] if shop_ready else []) + [
     ('rooms.rooms', '소도시 명상', 'torii', ep in ('rooms.rooms', 'rooms.room', 'rooms.rank'), 0),
     ('books.analysis_home', '시험 분석', 'chart', ep.startswith('books.analysis') or (ep.startswith('feedback.') and ep != 'feedback.s_list'), 0)]),
   ('수업', [

@@ -269,7 +269,7 @@
     <tr><th>요일</th><th>교시</th><th>시간</th><th>관</th><th>교실</th><th></th></tr>
     {% for t in slots %}
     <tr><td>{{ weekdays[t.weekday] }}</td><td>{{ t.period or '–' }}</td><td class="nowrap">{{ t.starts }}–{{ t.ends }}</td><td>{{ t.hall or '–' }}</td><td>{{ t.room or '–' }}</td>
-      <td class="num"><form method="post" action="{{ url_for('schedule.slots', cid=cls.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ t.id }}"><button class="btn small danger" data-confirm="이 시간을 지우면 이 시간의 수업 칸과 출석 기록도 지워져요. 지울까요?">삭제</button></form></td></tr>
+      <td class="num"><form method="post" action="{{ url_for('schedule.slots', cid=cls.id) }}" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ t.id }}"><button class="btn small danger" data-confirm="이 시간을 삭제하면 이 시간의 수업 칸과 출석 기록도 삭제돼요. 삭제할까요?">삭제</button></form></td></tr>
     {% endfor %}
   </table></div>
   {% else %}<p class="small muted">아직 수업 시간이 없어요.</p>{% endif %}

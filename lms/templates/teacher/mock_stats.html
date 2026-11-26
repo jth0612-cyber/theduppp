@@ -34,7 +34,7 @@
     <button class="btn primary">올리기</button>
   </form>
   {% if item_nos %}<ul class="item-grid">{% for n in item_nos %}<li><a href="{{ url_for('items.image', mid=mock.id, no=n) }}" target="_blank" rel="noopener"><img src="{{ url_for('items.image', mid=mock.id, no=n) }}" alt="{{ n }}번 문항" loading="lazy"></a>
-    <form method="post" action="{{ url_for('items.remove', mid=mock.id, no=n) }}">{{ '' }}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><span>{{ n }}번</span><button class="btn small danger" data-confirm="{{ n }}번 문항 그림을 지울까요?">지우기</button></form></li>{% endfor %}</ul>{% endif %}
+    <form method="post" action="{{ url_for('items.remove', mid=mock.id, no=n) }}">{{ '' }}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><span>{{ n }}번</span><button class="btn small danger" data-confirm="{{ n }}번 문항 그림을 삭제할까요?">삭제</button></form></li>{% endfor %}</ul>{% endif %}
 </section>
 {% endif %}
 
@@ -64,7 +64,7 @@
 {% if m.n_items %}
 <section class="card" aria-labelledby="h-cls">
   <h2 id="h-cls">반별 결과</h2>
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="cmp" data-rc-title="0">
     <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>오답률 높은 문항 <span class="small muted">30% 이상, 높은 순 5개</span></th></tr></thead>
     <tbody>{% for c, st in cs.cls|dictsort %}<tr><td class="nowrap">{{ c }}</td><td class="num nowrap">{{ st.n }}명</td><td class="num nowrap">{{ fmt(st.avg) }}</td>
       <td class="small">{% if st.n >= min_n %}{% set hi = [] %}{% for w in st.wrong %}{% if w >= 30 %}{% set _ = hi.append((w, loop.index)) %}{% endif %}{% endfor %}{% for w, i in (hi|sort(reverse=true))[:5] %}{{ i }}번({{ pct1(w) }}%) {% else %}<span class="muted">없음</span>{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
@@ -91,7 +91,7 @@
       <td class="answer-key small">{% for ch in e.answers %}{{ '-' if ch == '0' else ('○' if ch == 'R' else ch) }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
   </table></div>
   <form method="post" action="{{ url_for('books.omr_clear', mid=mock.id) }}" class="mt" data-confirm="이 회차 학생 결과 {{ entries|length }}명을 모두 삭제할까요?">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 지우기</button></form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">결과 모두 삭제</button></form>
   </details>
 </section>
 

@@ -311,7 +311,7 @@ def group_edit(gid):
         db.execute("DELETE FROM course_groups WHERE id = ?", (gid,))
         db.commit()
         audit("group_delete", f"group:{gid}")
-        flash("진도 그룹을 지웠어요. 반은 그대로 있어요.", "ok")
+        flash("진도 그룹을 삭제했어요. 반은 그대로 있어요.", "ok")
         return redirect(url_for("schedule.groups"))
     db.commit()
     sync_group(gid)

@@ -43,7 +43,7 @@ document.addEventListener("submit", function (e) {
   askSheet(msg, function () {
     f._confirmed = true;
     if (f.requestSubmit) f.requestSubmit(sub && sub.form === f ? sub : undefined); else f.submit();
-  }, /삭제|지우|초기화/.test(msg), (function (t) { return t && t.length <= 14 ? t : ""; })(sub ? sub.textContent.replace(/\s+/g, " ").trim() : ""));
+  }, /삭제|초기화/.test(msg), (function (t) { return t && t.length <= 14 ? t : ""; })(sub ? sub.textContent.replace(/\s+/g, " ").trim() : ""));
 }, true);
 
 // 점수 입력표: Enter 로 다음 칸 이동
