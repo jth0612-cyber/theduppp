@@ -216,7 +216,7 @@
     // 분류하기: 항목마다 칸을 고른다
     var renderSort = function (item, box) {
       var chosen = item.items.map(function () { return null; }), rows = [];
-      var ok = el("button", "btn primary", "확인"); ok.type = "button"; ok.disabled = true;
+      var ok = el("button", "btn primary", "모두 고르면 확인"); ok.type = "button"; ok.disabled = true;
       var long = item.bins.join("").length > 14 || item.bins.length > 3;
       var list = el("div", "so-list" + (long ? " is-long" : ""));
       item.items.forEach(function (label, r) {
@@ -227,7 +227,7 @@
           s.addEventListener("click", function () {
             chosen[r] = b;
             segs.querySelectorAll(".so-seg").forEach(function (x, k) { x.classList.toggle("is-on", k === b); x.setAttribute("aria-pressed", k === b); });
-            ok.disabled = chosen.indexOf(null) >= 0;
+            ok.disabled = chosen.indexOf(null) >= 0; ok.textContent = ok.disabled ? "모두 고르면 확인" : "확인";
           });
           segs.appendChild(s);
         });
@@ -280,6 +280,7 @@
         }
         chips.forEach(function (c, k) { c.disabled = seq.indexOf(k) >= 0; });
         ok.disabled = seq.length < item.items.length - 1;      // 한 칸만 남았으면 확인할 때 남은 것을 채운다
+        ok.textContent = ok.disabled ? "순서를 채우면 확인" : "확인";
       };
       box.appendChild(slots); box.appendChild(pool); box.appendChild(ok);
       ok.addEventListener("click", function () {
@@ -305,7 +306,7 @@
           slots.appendChild(el("span", "sp-slot" + (typed[k] ? " is-on" : ""), ch || "\u00a0"));
         }
         tiles.querySelectorAll("button").forEach(function (b, k) { b.disabled = used.indexOf(k) >= 0 || typed.length >= item.n; });
-        ok.disabled = typed.length !== item.n;
+        ok.disabled = typed.length !== item.n; ok.textContent = ok.disabled ? "글자를 채우면 확인" : "확인";
       };
       item.tiles.forEach(function (c, k) {
         var b = el("button", "sp-tile", c); b.type = "button"; b.setAttribute("lang", "en");

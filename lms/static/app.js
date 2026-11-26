@@ -10,10 +10,11 @@ document.addEventListener("change", function (e) {
   b.textContent = n ? "사진 " + n + "장 (다시 누르면 바꾸기)" : b.getAttribute("data-base");
 });
 // 확인 시트: window.confirm 대신 아래에서 올라오는 시트. ok() 는 '확인'을 눌렀을 때만 부른다.
-function askSheet(msg, ok, danger) {
+function askSheet(msg, ok, danger, label) {
   var d = document.createElement("dialog");
   d.className = "sheet-dlg" + (danger ? " is-danger" : "");
   d.innerHTML = '<div class="sd-box"><p></p><div class="sd-act"><button type="button" class="btn" value="no">닫기</button><button type="button" class="btn primary" value="yes">확인</button></div></div>';
+  if (label) d.querySelector("button[value=yes]").textContent = label;
   var cut = msg.search(/[?.]\s/);                      // 첫 문장은 제목, 나머지는 회색 설명 (토스 확인 시트)
   var p = d.querySelector("p");
   if (cut > 0 && cut < msg.length - 2) {
@@ -42,7 +43,7 @@ document.addEventListener("submit", function (e) {
   askSheet(msg, function () {
     f._confirmed = true;
     if (f.requestSubmit) f.requestSubmit(sub && sub.form === f ? sub : undefined); else f.submit();
-  }, /삭제|지우|초기화/.test(msg));
+  }, /삭제|지우|초기화/.test(msg), (function (t) { return t && t.length <= 14 ? t : ""; })(sub ? sub.textContent.replace(/\s+/g, " ").trim() : ""));
 }, true);
 
 // 점수 입력표: Enter 로 다음 칸 이동
