@@ -1,6 +1,7 @@
 """역할별 전 화면 캡처(wireflow/roles3, tools/wireflow_crawl.js)로 앱 작동 흐름 캔버스를 만든다: docs/ux/workflow/index.html + img/
 
     python tools/make_workflow.py
+    python tools/make_workflow.py 1,2 workflow-12   (1번과 2번 흐름만 docs/ux/workflow-12/ 에)
 
 단계 = (역할, 주소, 제목, 설명, 보여 줄 버튼 글자 또는 높이(px), 앞 단계 번호). 앞 단계 번호를 주면 그 카드에서 갈라져 나온다 (-1 = 새 출발점).
 카드에는 버튼 글자가 있는 곳을 잘라 넣고, 누르면 화면 전체가 열린다.
@@ -10,6 +11,7 @@ import json
 import os
 import re
 import shutil
+import sys
 
 from PIL import Image
 
@@ -175,6 +177,12 @@ if os.path.exists(HELP_PATH):
                 rest.append(card(roles[0], None if not rest else -1))
     if rest:
         FLOWS.append(("그 밖의 설명 창", "제목 옆 물음표를 누르면 열려요. 다른 흐름에 나오지 않는 화면의 설명을 모았어요.", rest))
+
+# 흐름 몇 개만 따로 뽑기: python tools/make_workflow.py 1,2 workflow-12  → docs/ux/workflow-12/ 에 1번과 2번 흐름만
+if len(sys.argv) > 2:
+    FLOWS = [FLOWS[int(n) - 1] for n in sys.argv[1].split(",")]
+    OUT = os.path.join(ROOT, "docs", "ux", sys.argv[2])
+    os.makedirs(OUT, exist_ok=True)
 
 CARD_W, FULL_W = 1320, 1920          # 캡처는 2배율(2560px). 카드는 440px 칸에 3배, 전체 화면은 1920px
 if os.path.isdir(os.path.join(OUT, "img")):
