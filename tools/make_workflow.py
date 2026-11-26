@@ -4,6 +4,7 @@
 
 단계 = (역할, 주소, 제목, 설명, 보여 줄 버튼 글자 또는 높이(px), 앞 단계 번호). 앞 단계 번호를 주면 그 카드에서 갈라져 나온다 (-1 = 새 출발점).
 카드에는 버튼 글자가 있는 곳을 잘라 넣고, 누르면 화면 전체가 열린다.
+설명 버튼(원 안 물음표)을 눌러 연 설명 창은 help.json 이 있으면 저절로 붙는다.
 """
 import json
 import os
@@ -146,6 +147,34 @@ FLOWS = [
         ("학생", "/s/games/play/neutral", "중화 반응 (TOPIC 24)", "", None, 4),
     ]),
 ]
+
+# 설명 창: 화면의 설명 버튼(원 안 물음표)을 눌러 연 모습 (tools/wireflow_help.js → help.json).
+# 같은 화면이 나오는 흐름이 있으면 그 카드에서 갈라져 나오고, 없으면 맨 끝 '그 밖의 설명 창'에 모은다.
+HELP_PATH = os.path.join(SHOTS, "help.json")
+if os.path.exists(HELP_PATH):
+    norm = lambda u, q=True: re.sub(r"/\d+(?=/|$|\?)", "/*", u if q else u.split("?")[0])
+    rest, seen = [], set()
+    for cap, roles in (("student", ("학생",)), ("teacher", ("선생님", "조교"))):
+        for h in json.load(open(HELP_PATH, encoding="utf-8")).get(cap, []):
+            if h["title"] in seen:                       # 학생 화면과 같은 설명은 한 번만
+                continue
+            seen.add(h["title"])
+            key = "help:" + h["name"]
+            for c in ((cap,) if cap == "student" else ("teacher", "assistant")):
+                BOX[c][key] = {"name": h["name"], "W": 1280, "H": 800, "links": [], "forms": []}
+            hit = None
+            for q in (True, False):                      # 주소가 똑같은 카드 먼저, 없으면 탭(?tab=) 을 뗀 주소로
+                for t, sub, steps in FLOWS:
+                    k = next((i for i, st in enumerate(steps) if st[0] in roles and norm(st[1], q) == norm(h["path"], q)), None)
+                    if k is not None and hit is None:
+                        hit = (steps, k)
+            card = lambda role, frm: (role, key, "설명 창: " + h["title"], h["text"], None, frm)
+            if hit:
+                hit[0].append(card(hit[0][hit[1]][0], hit[1]))
+            else:
+                rest.append(card(roles[0], None if not rest else -1))
+    if rest:
+        FLOWS.append(("그 밖의 설명 창", "제목 옆 물음표를 누르면 열려요. 다른 흐름에 나오지 않는 화면의 설명을 모았어요.", rest))
 
 CARD_W, FULL_W = 1320, 1920          # 캡처는 2배율(2560px). 카드는 440px 칸에 3배, 전체 화면은 1920px
 if os.path.isdir(os.path.join(OUT, "img")):
