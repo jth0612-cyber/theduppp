@@ -721,11 +721,15 @@ CREATE TABLE IF NOT EXISTS notice_likes (
 
 
 
+BUSY_SECONDS = 15     # 다른 쓰기가 끝나기를 기다리는 시간 (기본 5초는 몰릴 때 'database is locked' 가 난다)
+
+
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(current_app.config["DATABASE"])
+        g.db = sqlite3.connect(current_app.config["DATABASE"], timeout=BUSY_SECONDS)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON")
+        g.db.execute("PRAGMA synchronous = NORMAL")      # WAL 에서 권장: 정전에도 DB 는 안 깨지고 마지막 몇 건만 잃을 수 있다
     return g.db
 
 
@@ -765,7 +769,10 @@ CREATE TABLE IF NOT EXISTS sys_redo (
 def init_db(path):
     from nickname import generate_nickname
 
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=BUSY_SECONDS)
+    # WAL: 쓰는 동안에도 읽기가 막히지 않는다. DB 파일에 남는 설정이라 한 번만 켜면 된다.
+    # 옆에 -wal, -shm 파일이 생긴다: 백업하거나 옮길 때는 세 파일을 함께, 또는 서버를 멈춘 뒤에.
+    conn.execute("PRAGMA journal_mode = WAL")
     conn.executescript(SCHEMA)
     conn.executescript(SYS_SCHEMA)
     # 단과/재종 구분: 반에 붙인다 (학생은 가입한 반을 따른다)

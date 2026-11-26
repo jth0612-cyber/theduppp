@@ -154,7 +154,7 @@ def _send(subs, payload, db_path, vapid_path):
         except Exception:  # noqa: BLE001 - 알림 실패가 앱을 멈추면 안 된다
             pass
     if gone:
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(db_path, timeout=15)
         conn.executemany("DELETE FROM push_subs WHERE endpoint = ?", [(e,) for e in gone])
         conn.commit()
         conn.close()

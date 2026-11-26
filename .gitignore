@@ -20,3 +20,6 @@ testfile/
 # LAB-JTH 슬랙 봇 토큰 (비밀, 저장소에 올리지 않음)
 .slack-labjth
 .slack-labjth.txt
+
+# 내부 검토 기록 (구멍 목록이 들어 있어 공개 저장소에 올리지 않는다)
+docs/review/

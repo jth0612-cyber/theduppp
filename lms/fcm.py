@@ -77,7 +77,7 @@ def _send(tokens, title, body, url, key_file, db_path):
         except Exception:  # noqa: BLE001
             pass
     if gone:
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(db_path, timeout=15)
         conn.executemany("DELETE FROM app_tokens WHERE token = ?", [(t,) for t in gone])
         conn.commit()
         conn.close()

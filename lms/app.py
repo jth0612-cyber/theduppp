@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 import db
@@ -130,6 +130,26 @@ def create_app(test_config=None):
     from content import file_kind, host_of, video_source, youtube_id
     app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id, video_source=video_source)
 
+    # 정적 파일 주소 끝에 수정 시각(?v=)을 붙인다: 파일이 바뀌면 주소가 바뀌므로 오래 보관해도 옛 파일이 남지 않는다
+    static_mtime = {}
+
+    @app.url_defaults
+    def static_version(endpoint, values):
+        if endpoint != "static" or "v" in values or not values.get("filename"):
+            return
+        name = values["filename"]
+        if name.startswith("fonts/"):          # 글꼴은 CSS 안의 주소와 같아야 두 번 받지 않는다. 대신 아래에서 오래 보관
+            return
+        path = os.path.join(app.static_folder, name)
+        try:
+            m = int(os.path.getmtime(path)) if os.path.isfile(path) else None
+        except OSError:
+            m = None
+        if app.debug or app.testing:
+            static_mtime.pop(name, None)
+        if m is not None:
+            values["v"] = static_mtime.setdefault(name, m)
+
     @app.after_request
     def security_headers(resp):
         resp.headers["Content-Security-Policy"] = (
@@ -142,7 +162,15 @@ def create_app(test_config=None):
         # same-origin: 외부 사이트로는 주소를 보내지 않되, HTTPS 에서 CSRF 검사에 필요한 같은 사이트 Referer 는 보낸다
         resp.headers["Referrer-Policy"] = "same-origin"
         resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        if g.get("user") is not None:
+        if request.endpoint == "static":
+            # 글꼴, CSS, 스크립트는 누구에게나 같은 파일이다. 로그인 후에도 보관하게 해 화면마다 다시 받지 않는다.
+            # ?v= 가 붙은 주소는 1년, 안 붙은 주소(CSS 안의 글꼴, 스크립트가 직접 부르는 파일)는 바뀌었는지만 묻는다(304)
+            # 글꼴은 같은 이름으로 내용이 바뀌지 않는다 (바꿀 때는 파일 이름을 바꾼다)
+            if (request.args.get("v") or request.path.startswith("/static/fonts/")) and resp.status_code == 200:
+                resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            else:
+                resp.headers["Cache-Control"] = "no-cache"
+        elif g.get("user") is not None and not resp.headers.pop("X-Private-Cache", None):
             # 로그인 후 화면은 브라우저/프록시에 캐시하지 않는다
             resp.headers["Cache-Control"] = "no-store"
         if app.config["SESSION_COOKIE_SECURE"]:

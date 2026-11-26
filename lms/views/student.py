@@ -510,8 +510,14 @@ def download(fid):
     if not os.path.exists(path):
         abort(404)
     inline = (f["mime"].startswith("image/") or f["mime"] == "application/pdf") and request.args.get("inline") == "1"
-    audit("file_download", f"file:{fid}")
+    if not inline:
+        audit("file_download", f"file:{fid}")         # 내려받을 때만 남긴다. 화면에 뜬 사진마다 쓰면 목록 한 번에 DB 쓰기가 수십 번이다
     resp = send_file(path, mimetype=f["mime"], as_attachment=not inline,
                      download_name=f["original_name"], max_age=0)
-    resp.headers["Cache-Control"] = "no-store"
+    if inline:
+        # 본인 브라우저에만 두고, 볼 때마다 서버에 물어본다(로그인과 권한 검사 후 304). 로그아웃하면 다시 열리지 않는다.
+        resp.headers["Cache-Control"] = "private, no-cache"
+        resp.headers["X-Private-Cache"] = "1"
+    else:
+        resp.headers["Cache-Control"] = "no-store"
     return resp
