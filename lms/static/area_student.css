@@ -19,6 +19,7 @@
 .my-parts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
 .my-parts dt { font-size: 12.5px; color: var(--muted); }
 .my-parts dd { margin: 2px 0 0; font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.my-parts dd.is-none { font-size: 12.5px; font-weight: 400; color: var(--muted); word-break: keep-all; }
 .my-stats.my-stats-2 { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 560px) {
   .my-parts { grid-template-columns: repeat(2, 1fr); gap: 10px 8px; }

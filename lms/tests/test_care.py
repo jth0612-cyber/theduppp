@@ -167,6 +167,7 @@ class Care(unittest.TestCase):
             uid = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
         page = self.c1.get("/s/my").data.decode()
         self.assertIn("측정 시작", page); self.assertIn("00:00:00", page); self.assertIn("직접 측정", page)
+        self.assertIn("오늘은 기록이 없어요", page); self.assertNotIn("0초", page)
         self.c1.post("/s/my/timer", data={"action": "start"})
         self.assertIn("측정 끝내기", self.c1.get("/s/my").data.decode())
         with self.app.app_context():                                   # 1분이 안 되면 기록하지 않는다
