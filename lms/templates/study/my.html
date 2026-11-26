@@ -3,7 +3,7 @@
 {% block title %}내 공부 | 정태혁 통합과학 lab{% endblock %}
 {% macro hm(m) %}{% if m >= 60 %}{{ m // 60 }}시간 {% endif %}{{ m % 60 }}분{% endmacro %}
 {% block content %}
-<header class="ed-head"><h1>내 공부</h1></header>
+<header class="ed-head"><h1>내 공부{% call help('공부 시간') %}<p>소도시 명상에서 집중한 시간과 통과 Quiz, 영단어를 푼 시간을 더해요.</p><p>집중은 5분 이상일 때만 기록해요.</p><p>문제를 푼 시간은 답을 낼 때마다 더해요. 문제 사이가 3분을 넘으면 3분까지만 더해요.</p>{% endcall %}</h1></header>
 
 <section class="my-card" aria-label="오늘 요약">
   <div class="my-who"><b>{{ me.nickname or me.name }}</b><span>{{ me.class_name or '' }}{% if me.nickname and me.name %}<span class="sep" aria-hidden="true"></span>{{ me.name }}{% endif %}</span></div>

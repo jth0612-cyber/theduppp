@@ -7,6 +7,8 @@
 .rank-no { width: 24px; text-align: center; font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
 .card > .find { margin-bottom: 8px; }
 .card > .find input { width: 100%; }
+/* 아래 시트의 버튼 세 개 (시간표 칸: 닫기, 지우기, 고치기) */
+.sheet-dlg .sd-act.sd-act-3 { grid-template-columns: repeat(3, 1fr); }
 .chip-links { display: flex; gap: 8px; margin: 4px 0 8px; }
 .chip-links a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--raised); color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
 .chip-links a.is-on { background: var(--accent-soft); color: var(--accent-ink); }

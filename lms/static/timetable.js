@@ -1,4 +1,4 @@
-// 내 시간표: 빈 칸을 누르면 그 요일·시간으로 추가, 칸을 누르면 고치기·지우기
+// 내 시간표: 빈 칸을 누르면 그 요일·시간으로 추가, 칸을 누르면 아래에서 시트가 올라와 내용을 보여 주고 고치기·지우기
 (function () {
   "use strict";
   var grid = document.querySelector("[data-tt]"), sheet = document.querySelector("[data-tt-sheet]");
@@ -29,13 +29,44 @@
   }
   function close() { sheet.hidden = true; document.body.classList.remove("tt-open"); if (lastFocus) lastFocus.focus(); }
 
+  // 칸을 눌렀을 때: 내용을 먼저 보여 주는 시트. '고치기'를 눌러야 입력 화면이 열린다.
+  var WD = ["월", "화", "수", "목", "금", "토", "일"];
+  function info(opts) {
+    var d = document.createElement("dialog"); d.className = "sheet-dlg tt-info";
+    var box = document.createElement("div"); box.className = "sd-box";
+    var p = document.createElement("p"); p.textContent = opts.title;
+    var subEl = document.createElement("span"); subEl.className = "sd-sub";
+    [WD[opts.days[0]] + " " + opts.starts + "–" + opts.ends, opts.room].filter(Boolean).forEach(function (t, i) {
+      if (i) { var s = document.createElement("span"); s.className = "sep"; s.setAttribute("aria-hidden", "true"); subEl.appendChild(s); }
+      subEl.appendChild(document.createTextNode(t));
+    });
+    var act = document.createElement("div"); act.className = "sd-act sd-act-3";
+    [["닫기", "btn", "close"], ["지우기", "btn danger", "del"], ["고치기", "btn primary", "edit"]].forEach(function (b) {
+      var x = document.createElement("button"); x.type = "button"; x.className = b[1]; x.value = b[2]; x.textContent = b[0]; act.appendChild(x);
+    });
+    box.appendChild(p); box.appendChild(subEl); box.appendChild(act); d.appendChild(box); document.body.appendChild(d);
+    var shut = function () { d.close(); d.remove(); };
+    d.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) { if (e.target === d) shut(); return; }
+      shut();
+      if (b.value === "edit") open(opts);
+      if (b.value === "del") {          // 지우기는 확인 창을 거친다 (지우기 버튼의 data-confirm)
+        form.action = form.dataset.edit.replace(/\/0$/, "/" + opts.id);
+        if (form.requestSubmit) form.requestSubmit(del); else open(opts);
+      }
+    });
+    d.addEventListener("cancel", function () { d.remove(); });
+    d.showModal();
+  }
+
   document.querySelector("[data-tt-new]").addEventListener("click", function () {
     var wd = (new Date().getDay() + 6) % 7; open({ days: [wd] });
   });
   grid.addEventListener("click", function (e) {
     var b = e.target.closest("[data-tt-edit]");
     if (b) {
-      return open({ id: b.dataset.ttEdit, days: [parseInt(b.dataset.day, 10)], starts: b.dataset.starts, ends: b.dataset.ends,
+      return info({ id: b.dataset.ttEdit, days: [parseInt(b.dataset.day, 10)], starts: b.dataset.starts, ends: b.dataset.ends,
                     title: b.dataset.title, room: b.dataset.room, tone: b.dataset.tone });
     }
     var col = e.target.closest("[data-tt-day]");
