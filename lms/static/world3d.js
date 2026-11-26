@@ -878,7 +878,7 @@ function tap(cx, cy) {
     return;
   }
   if (o.userData.action) return act(o.userData.action, o);
-  if (state === "focus") return whisper("집중 중에는 자리에 머물러요. 일어나려면 '그만하기'를 눌러 주세요.");
+  if (state === "focus") return whisper("집중 중이에요. 먼저 '그만하기'를 눌러 주세요.");
   const pts = P.planWalk(me.pos, h.point, o);
   if (!pts || !pts.length) return;
   standUp(true);
@@ -922,7 +922,7 @@ function nearestFreeSeat() {
   return best;
 }
 function goSit(id) {
-  if (state === "focus") return whisper("집중 중이에요. 자리를 옮기려면 먼저 '그만하기'를 눌러 주세요.");
+  if (state === "focus") return whisper("집중 중이에요. 먼저 '그만하기'를 눌러 주세요.");
   if (occupiedSeats().has(id)) return whisper(`그 ${P.seatNoun}에는 이미 다른 사람이 있어요.`);
   standUp(true);
   const path = P.planSeat(me.pos, id);
@@ -1045,8 +1045,8 @@ function render() {
   $("[data-timer]").hidden = state !== "focus";
   stage.classList.toggle("is-focus", state === "focus");
   stage.classList.toggle("is-seated", state !== "free");
-  $("[data-hint]").textContent = state === "free" ? (isTouch ? `바닥을 누르면 이동, 끌어서 둘러보기, ${josa(P.seatNoun, "을", "를")} 누르면 착석` : `바닥을 누르면 이동, 끌어서 둘러보기, ${josa(P.seatNoun, "을", "를")} 누르면 착석, 스페이스는 점프`)
-    : state === "sitting" ? "" : "화면을 닫아도 여기까지 기록돼요";
+  facts($("[data-hint]"), state === "free" ? ["바닥을 누르면 이동", "끌어서 둘러보기", `${josa(P.seatNoun, "을", "를")} 누르면 앉기`, isTouch ? "" : "스페이스는 점프"]
+    : state === "sitting" ? [] : ["화면을 닫아도 여기까지 기록돼요"]);
 }
 actionsEl.addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act); });
 const ctaEl = $("[data-cta]"), ctaMin = $("[data-cta-min]");
@@ -1070,7 +1070,7 @@ function act(id, obj) {
     stopArmed = Date.now() + 4000;
     const b = actionsEl.querySelector('[data-act="stop"]'), min = Math.floor((Date.now() - focusStart) / 60000);
     if (b) { b.classList.add("is-armed"); b.querySelector("span").textContent = "한 번 더"; setTimeout(() => { if (Date.now() >= stopArmed && state === "focus") render(); }, 4100); }
-    return whisper(min < 5 ? "아직 5분이 안 돼서 지금 끝내면 기록되지 않아요. 끝내려면 한 번 더 눌러 주세요." : `지금 끝내면 ${min}분이 기록돼요. 끝내려면 한 번 더 눌러 주세요.`, 4000);
+    return whisper(min < 5 ? "5분이 안 돼서 지금 끝내면 기록되지 않아요." : `지금 끝내면 ${min}분이 기록돼요.`, 4000);
   }
 }
 
@@ -1107,6 +1107,16 @@ function act(id, obj) {
   box.addEventListener("click", (e) => { if (e.target === box || e.target.closest("[data-photo-close]")) box.hidden = true; });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") box.hidden = true; });
 })();
+
+// 사실을 나란히 둘 때: 쉼표 대신 얇은 세로 줄(.sep)
+function facts(node, parts) {
+  node.textContent = "";
+  parts.filter(Boolean).forEach((t, i) => {
+    if (i) { const s = document.createElement("span"); s.className = "sep"; s.setAttribute("aria-hidden", "true"); node.append(s); }
+    node.append(t);
+  });
+  return node;
+}
 
 // ---------------------------------------------------------------- 속삭임(화면 위 안내 문장)
 const whisperEl = $("[data-whisper]"); let whisperTimer = 0;
@@ -1246,7 +1256,7 @@ function drawList(ms) {
     b.append(m.nick + (m.me ? " (나)" : ""));
     if (m.king) { const k = document.createElement("small"); k.className = "here-tag is-king"; k.textContent = "터줏대감"; b.append(" ", k); }
     const s = document.createElement("span");
-    s.textContent = (m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중") + `, 오늘 ${m.today}분`;
+    facts(s, [m.status === "focus" ? `집중 ${m.elapsed}/${m.plan}분` : m.seat !== null && m.seat !== undefined ? `${P.seatNoun}에 앉음` : "산책 중", `오늘 ${m.today}분`]);
     li.append(seat, b, s); listEl.appendChild(li);
   });
 }

@@ -25,6 +25,16 @@
     return e;
   }
 
+  // 사실을 나란히 둘 때: 쉼표 대신 얇은 세로 줄(.sep)
+  function facts(node, parts) {
+    node.textContent = "";
+    parts.filter(Boolean).forEach(function (t, i) {
+      if (i) { var s = el("span", "sep"); s.setAttribute("aria-hidden", "true"); node.appendChild(s); }
+      node.appendChild(document.createTextNode(t));
+    });
+    return node;
+  }
+
   function show(root, role) {
     root.querySelectorAll("[data-role=start],[data-role=play],[data-role=result],[data-role=loading]")
       .forEach(function (n) { n.classList.toggle("hidden", n.getAttribute("data-role") !== role); });
@@ -57,10 +67,9 @@
         .then(function (res) {
           state.results = res.results;
           renderStrands();
-          q("result-title").textContent = res.timeout ? "시간 초과!" :
+          q("result-title").textContent = res.timeout ? "시간 초과" :
             (res.correct + " / " + res.total + (res.correct === res.total ? " 만점" : ""));
-          q("result-detail").textContent = "걸린 시간 " + res.elapsed + "초" +
-            (res.correct < res.total ? " (정답: " + res.answer + ")" : "");
+          facts(q("result-detail"), ["걸린 시간 " + res.elapsed + "초", res.correct < res.total ? "정답 " + res.answer : ""]);
           q("result").classList.remove("hidden");
         })
         .catch(function (e) { alert(e.message); });
@@ -81,10 +90,10 @@
           show(dna, "play");
           renderStrands();
           var limit = res.time_limit;
-          q("timer").textContent = "⏱ " + limit + "초";
+          q("timer").textContent = limit + "초";
           timer = setInterval(function () {
             var left = limit - Math.floor((Date.now() - state.started) / 1000);
-            q("timer").textContent = "⏱ " + Math.max(0, left) + "초";
+            q("timer").textContent = Math.max(0, left) + "초";
             if (left <= 0) finish();
           }, 250);
         }).catch(function (e) { alert(e.message); });
@@ -325,7 +334,7 @@
       var fb = m("feedback");
       fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong");
       fb.textContent = "";
-      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (note ? ", " + note : rightLabel ? ", 정답 " + rightLabel : "")));
+      fb.appendChild(facts(el("b", ""), res.correct ? ["정답"] : ["오답", note || (rightLabel ? "정답 " + rightLabel : "")]));
       if (res.explanation) res.explanation.split(" / ").forEach(function (t) { fb.appendChild(el("p", "", t)); });
       var last = game.i + 1 >= game.questions.length;
       var next = el("button", "btn primary", last ? "결과 보기" : "다음 문제");
@@ -458,7 +467,7 @@
       post(sp.dataset.start.replace(/\/start$/, "/" + run.id + "/submit"), { picks: run.picks })
         .then(function (res) {
           sq("result-title").textContent = res.score + "개 정답";
-          sq("result-detail").textContent = res.tried + "개 중 " + res.score + "개" + (res.best ? ", 최고 " + res.best + "개" : "");
+          facts(sq("result-detail"), [res.tried + "문제 풀이", res.best ? "최고 " + res.best + "개" : ""]);
           var rv = sq("review"); rv.textContent = "";
           if (res.missed.length) rv.appendChild(el("p", "small muted", "틀린 문제"));
           res.missed.forEach(function (x) {
@@ -535,7 +544,7 @@
       post(mt.dataset.start.replace(/\/start$/, "/" + st.id + "/submit"), { wrong: st.wrong, seconds: secs })
         .then(function (res) {
           mq("result-title").textContent = res.score + " / " + res.total + (res.score === res.total ? " 만점" : "");
-          mq("result-detail").textContent = secs.toFixed(1) + "초" + (res.wrong.length ? ", 복습할 것: " + res.wrong.join(", ") : "");
+          facts(mq("result-detail"), [secs.toFixed(1) + "초", res.wrong.length ? "복습 " + res.wrong.join(", ") : ""]);
           show(mt, "result");
         }).catch(function (e) { alert(e.message); show(mt, "start"); });
     };
@@ -560,7 +569,7 @@
     var feedback = function (res, extra) {
       var fb = pq("feedback");
       fb.className = "mc-feedback " + (res.correct ? "ok" : "wrong"); fb.textContent = "";
-      fb.appendChild(el("b", "", res.correct ? "정답" : "오답" + (extra ? ", " + extra : "")));
+      fb.appendChild(facts(el("b", ""), res.correct ? ["정답"] : ["오답", extra]));
       fb.appendChild(el("p", "", res.explanation));
       var last = pg.i + 1 >= pg.stages.length;
       var nx = el("button", "btn primary", last ? "결과 보기" : "다음"); nx.type = "button";

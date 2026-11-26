@@ -327,7 +327,7 @@ export function buildEggs(K, { dark }) {
     let got = []; try { got = JSON.parse(localStorage.getItem("kissa-eggs") || "[]"); } catch (_) {}
     const first = !got.includes(id); if (first) { got.push(id); try { localStorage.setItem("kissa-eggs", JSON.stringify(got)); } catch (_) {} }
     const n = got.filter((k) => TEXT[k]).length, all = Object.keys(TEXT).length;
-    return first ? (n === all ? ` 골목의 비밀 ${all}개를 모두 찾았어요!` : ` (골목의 비밀 ${n}/${all})`) : "";
+    return first ? (n === all ? ` 골목의 비밀 ${all}개를 모두 찾았어요.` : ` (골목의 비밀 ${n}/${all})`) : "";
   }
   return {
     picks,

@@ -388,7 +388,7 @@ export default {
         if (a && a !== b && (nz < DOOR.z0 || nz > DOOR.z1)) return [x, z];
         return [nx, nz];
       },
-      welcome: "비 오는 골목 찻집 / 창가 자리나 바 자리에 앉으세요",
+      welcome: "창가 자리나 바 자리에 앉으세요",
       board(lines) { drawMemo(lines); },
       chat: { can: (s) => !!s && s.kind === "tatami", placeholder: "메모판에 한 줄 (다다미방 친구들에게)", done: "메모판에 꽂았어요.", hint: "보라색 방석에 앉으면 메모판에 작성할 수 있어요." },
       sitText: (s) => s.kind === "window" ? "창가 자리예요. 유리창에 빗방울이 맺혀요." : s.kind === "tatami" ? "보라색 방석에 앉았어요. 상 위에 책을 펼쳐요." : "바 자리에 앉았어요. 주전자에서 김이 올라와요.",

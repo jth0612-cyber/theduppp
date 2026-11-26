@@ -2647,6 +2647,8 @@ form label:has(> input[type=checkbox], > input[type=radio]):not(td *) { display:
 .room.is-focus .st-state::before { background: var(--accent); }
 .p-week a.is-on .p-dots s.f { background: var(--accent); }
 .w3-cta:hover { background: color-mix(in srgb, var(--accent) 85%, #000); }
+.w3-pill[aria-pressed="true"] { background: #fff; color: #1d1b18; border-color: #fff; font-weight: 700; }
+.w3-hud-fg { stroke: #a9c8f5; }
 
 /* 예전 '1px 테두리 상자'를 토스식으로: 회색 바탕 위는 테두리 없는 흰 카드, 작은 칩은 회색 칸 (2026-11-26) */
 .todo, .shelf li, .play-list a, .points-box, .deck-list li > a:first-child, .place, .tk-row,

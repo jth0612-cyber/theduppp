@@ -42,7 +42,9 @@ function initRoom(room) {
       if (m.cap) { var cp = document.createElement("span"); cp.className = "cap"; cp.textContent = m.cap; b.appendChild(cp); b.appendChild(document.createTextNode(" ")); }
       b.appendChild(document.createTextNode(m.nick + (m.me ? " (나)" : "")));
       var s = document.createElement("span");
-      s.textContent = (m.status === "focus" ? "집중 " + m.elapsed + "/" + m.plan + "분" : "쉬는 중") + ", 오늘 " + m.today + "분";
+      s.textContent = m.status === "focus" ? "집중 " + m.elapsed + "/" + m.plan + "분" : "쉬는 중";
+      var sp = document.createElement("span"); sp.className = "sep"; sp.setAttribute("aria-hidden", "true");
+      s.appendChild(sp); s.appendChild(document.createTextNode("오늘 " + m.today + "분"));
       li.appendChild(seat); li.appendChild(b); li.appendChild(s); list.appendChild(li);
     });
     count.textContent = ms.length + "명";
