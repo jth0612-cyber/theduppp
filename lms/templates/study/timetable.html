@@ -11,10 +11,10 @@
 </header>
 
 {% if wk %}
-<p class="tt-break week-now"><b>{{ wk.w.week_no }}주차</b>{{ wk.w.starts[5:]|replace('-', '/') }}~{{ wk.w.ends[5:]|replace('-', '/') }}{% if wk.w.off %}<span class="sep" aria-hidden="true"></span>휴강 주{% else %}{% if wk.w.topic %}<span class="sep" aria-hidden="true"></span>{{ wk.w.topic }}{% endif %}{% if wk.handouts %}<span class="sep" aria-hidden="true"></span>받을 교재 {{ wk.handouts|map(attribute='title')|join(', ') }}{% endif %}{% if wk.w.review_round %}<span class="sep" aria-hidden="true"></span>복습 테스트 {{ wk.w.review_round }}회{% endif %}{% if wk.w.mock_round %}<span class="sep" aria-hidden="true"></span>모의고사 {{ wk.w.mock_round }}회{% endif %}{% endif %}</p>
+<p class="tt-break week-now"><b>{{ wk.w.week_no }}주차</b>{{ wk.w.starts|d }}~{{ wk.w.ends|d }}{% if wk.w.off %}<span class="sep" aria-hidden="true"></span>휴강 주{% else %}{% if wk.w.topic %}<span class="sep" aria-hidden="true"></span>{{ wk.w.topic }}{% endif %}{% if wk.handouts %}<span class="sep" aria-hidden="true"></span>받을 교재 {{ wk.handouts|map(attribute='title')|join(', ') }}{% endif %}{% if wk.w.review_round %}<span class="sep" aria-hidden="true"></span>복습 테스트 {{ wk.w.review_round }}회{% endif %}{% if wk.w.mock_round %}<span class="sep" aria-hidden="true"></span>모의고사 {{ wk.w.mock_round }}회{% endif %}{% endif %}</p>
 {% endif %}
 {% for b in brks %}
-<p class="tt-break"><b>{{ '휴강 중' if b.now else '휴강 예정' }}</b>{{ b.starts[5:]|replace('-', '/') }}~{{ b.ends[5:]|replace('-', '/') }}{% if b.note %}<span class="sep" aria-hidden="true"></span>{{ b.note }}{% endif %}{% if b.now %}<span class="sep" aria-hidden="true"></span>수업 재개 {{ b.back[5:]|replace('-', '/') }} (D-{{ b.back_left }}){% endif %}</p>
+<p class="tt-break"><b>{{ '휴강 중' if b.now else '휴강 예정' }}</b>{{ b.starts|d }}~{{ b.ends|d }}{% if b.note %}<span class="sep" aria-hidden="true"></span>{{ b.note }}{% endif %}{% if b.now %}<span class="sep" aria-hidden="true"></span>수업 재개 {{ b.back|d }} (D-{{ b.back_left }}){% endif %}</p>
 {% endfor %}
 {% if class_has %}
 <form method="post" action="{{ url_for('study.timetable_import') }}" class="tt-import">

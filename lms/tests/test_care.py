@@ -202,6 +202,22 @@ class Care(unittest.TestCase):
             self.assertIsNone(query("SELECT 1 FROM study_timers", one=True))
         self.assertIn("집중 중이에요", self.c1.post("/s/my/timer", data={"action": "start"}, follow_redirects=True).data.decode())
 
+    def test_date_filters_and_no_iso_on_screen(self):
+        from datetime import date
+        f = self.app.jinja_env.filters
+        y = date.today().year
+        self.assertEqual(f["d"](f"{y}-08-09"), "08.09")                       # 올해는 월.일
+        self.assertEqual(f["d"](f"{y - 1}-11-15 09:05:33"), f"{y - 1}.11.15")  # 다른 해는 연도까지
+        self.assertEqual(f["dt"](f"{y}-11-15T09:05:33"), "11.15 09:05")        # 시각은 분까지, T 와 초는 내지 않는다
+        self.assertEqual(f["dt"](f"{y}-11-15"), "11.15"); self.assertEqual(f["t"](f"{y}-11-15 09:05"), "09:05")
+        self.assertEqual(f["d"](None), ""); self.assertEqual(f["d"]("미정"), "미정")
+        mid = self._exam()
+        for c, u in ((self.c1, "/s/scores"), (self.c1, f"/s/analysis?mock={mid}"), (self.c1, "/s/wrong"), (self.ta, f"/t/mocks/{mid}"), (self.ta, "/t/audit")):
+            page = re.sub(r"<(script|style)[^>]*>.*?</>|<[^>]+>", " ", c.get(u).data.decode(), flags=re.S)
+            self.assertIsNone(re.search(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}", page), u)   # 화면 글에 ISO 시각이 없다
+        w = self.c1.get("/s/wrong").data.decode()
+        self.assertIn("전체 오답률", w); self.assertIn("정답 3", w); self.assertIn("산과 염기", w)   # 오답 노트: 기준, 정답, 단원
+
     def test_lesson_needs_photo_or_note(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "글만", "day": "2026-11-20", "body": "중화 반응 정리"})

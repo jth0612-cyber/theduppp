@@ -3,11 +3,11 @@
 {% block content %}
 <header class="ed-head"><h1>수업 기록</h1><p class="ed-lede">{{ me.class_name }}<span class="sep" aria-hidden="true"></span>선생님이 올린 수업 노트</p></header>
 {% if rows %}
-{% if rows|length > 3 %}<p class="row small" aria-label="날짜 바로가기">{% for l in rows|reverse %}<a class="badge gray" href="#l-{{ l.id }}">{{ l.day[5:7]|int }}/{{ l.day[8:]|int }}</a> {% endfor %}</p>{% endif %}
+{% if rows|length > 3 %}<p class="row small" aria-label="날짜 바로가기">{% for l in rows|reverse %}<a class="badge gray" href="#l-{{ l.id }}">{{ l.day|d }}</a> {% endfor %}</p>{% endif %}
 <ol class="lesson-list">
   {% for l in rows %}
   <li class="card" id="l-{{ l.id }}">
-    <p class="lesson-head"><b>{{ l.title }}</b>{% if l.day >= new_since %} <span class="badge">NEW</span>{% endif %}<span class="small muted">{{ l.day[5:7]|int }}월 {{ l.day[8:]|int }}일{% if l.files %}<span class="sep" aria-hidden="true"></span>노트 {{ l.files|length }}장{% endif %}</span></p>
+    <p class="lesson-head"><b>{{ l.title }}</b>{% if l.day >= new_since %} <span class="badge">NEW</span>{% endif %}<span class="small muted">{{ l.day|d }}{% if l.files %}<span class="sep" aria-hidden="true"></span>노트 {{ l.files|length }}장{% endif %}</span></p>
     {% if l.body %}<div class="pre small">{{ l.body }}</div>{% endif %}
     {% for v in l.videos %}<p class="small">강의 영상: <a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ v.title }}</a></p>{% endfor %}
     {% if l.files %}<div class="q-photos mt">{% for fid in l.files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ l.title }} 노트 {{ loop.index }}" loading="lazy"></a>{% endfor %}</div>{% endif %}

@@ -485,7 +485,10 @@ document.addEventListener("click", function (e) {
 
 // 좁은 화면의 표: 칸마다 머리글을 달아 두면 CSS(.rowcards)가 한 줄씩 묶음으로 바꿔 보여 준다.
 // 칸을 합친 표(rowspan, colspan)와 따로 이름을 붙인 표는 건드리지 않는다.
-document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(.mark-table)").forEach(function (t) {
+// 제목 칸은 표에 적어 둔다: <table data-rc-title="열 번호(0부터)">. 추측은 번호가 없는 표에서만 한다.
+// 숫자를 견주는 표는 <table data-rc="off">: 묶음으로 바꾸지 않고 가로로 민다.
+document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(.mark-table):not([data-rc=off])").forEach(function (t) {
+  var fixed = t.getAttribute("data-rc-title");
   var rows = t.querySelectorAll("tr"), heads = rows.length ? rows[0].children : [];
   if (rows.length < 2 || rows[0].querySelector("td") || t.querySelector("[rowspan], [colspan]") || t.querySelectorAll("tr th:first-child").length > 1) return;
   rows[0].classList.add("rc-head");
@@ -495,9 +498,10 @@ document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(
       if (heads[i]) td.setAttribute("data-th", heads[i].innerHTML.replace(/<br\s*\/?>/g, " ").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim());
       if (!title && td.querySelector("a[href]") && !td.querySelector("form, button")) title = td;
       if (td.textContent.trim().length > 28) td.classList.add("rc-wide");
-      if (td.children.length === 1 && td.firstElementChild.classList.contains("badge") && td.textContent.trim() === td.firstElementChild.textContent.trim()) td.classList.add("rc-tag");
+      if (String(i) !== fixed && td.children.length === 1 && td.firstElementChild.classList.contains("badge") && td.textContent.trim() === td.firstElementChild.textContent.trim()) td.classList.add("rc-tag");
       if (!td.textContent.trim() && !td.querySelector("input, select, button, img, svg")) td.classList.add("rc-none");
     });
+    if (fixed !== null && tr.children[+fixed]) title = tr.children[+fixed];
     if (!title) Array.prototype.slice.call(tr.children, 0, 3).forEach(function (td) {   // 링크가 없으면 앞 세 칸 중 글이 가장 긴 칸이 제목
       if (!td.querySelector("input, select, button, .badge") && (!title || td.textContent.trim().length > title.textContent.trim().length)) title = td;
     });

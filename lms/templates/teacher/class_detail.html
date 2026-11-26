@@ -59,14 +59,14 @@
   <details{{ ' open' if unused == codes|length }}><summary class="small">코드 목록 {{ codes|length }}개<span class="sep" aria-hidden="true"></span>미사용 {{ unused }}개</summary>
   <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
     {{ csrf() }}<input type="hidden" name="action" value="delete">
-    <div class="table-wrap codes-table"><table>
+    <div class="table-wrap codes-table"><table data-rc-title="1">
       <tr><th></th><th>코드</th><th>메모</th><th>가입</th></tr>
       {% for c in codes %}
       <tr>
         <td>{% if not c.student_id %}<input type="checkbox" name="ids" value="{{ c.id }}" aria-label="{{ c.code }} 고르기">{% endif %}</td>
         <td><code>{{ c.code }}</code></td>
         <td class="small">{{ c.memo }}</td>
-        <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }}<span class="sep" aria-hidden="true"></span>{{ c.s_no }}<span class="sep" aria-hidden="true"></span>{{ c.used_at[5:16] }}{% else %}<span class="muted">아직</span>{% endif %}</td>
+        <td class="small">{% if c.student_id %}<span class="badge">가입</span> {{ c.s_name }}<span class="sep" aria-hidden="true"></span>{{ c.s_no }}<span class="sep" aria-hidden="true"></span>{{ c.used_at|dt }}{% else %}<span class="muted">아직</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </table></div>
@@ -122,7 +122,7 @@
     </form>
   </div>
   {% if students %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>이름</th><th>아이디</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">
@@ -131,7 +131,7 @@
       <td class="muted">{{ s.target }}</td>
       <td class="num">{{ s.avg_pct ~ '%' if s.avg_pct is not none else '-' }}</td>
       <td>{% if s.open_q %}<span class="badge open">대기 {{ s.open_q }}</span>{% endif %}</td>
-      <td class="small muted">{% if s.account_id %}{{ '최근 ' ~ s.last_login_at[5:16] if s.last_login_at else '미접속' }}{% else %}없음{% endif %}</td>
+      <td class="small muted">{% if s.account_id %}{{ '최근 ' ~ s.last_login_at|dt if s.last_login_at else '미접속' }}{% else %}없음{% endif %}</td>
     </tr>
     {% endfor %}
   </table></div>
@@ -164,7 +164,7 @@
 <div class="card">
   <div class="page-head">
     <div><h3>{% if n.pinned %}<span class="badge">고정</span> {% endif %}{{ tag_badge(n.tag) }} {{ n.title }}</h3>
-      <span class="small muted">{% if n.textbook %}{{ n.textbook }}<span class="sep" aria-hidden="true"></span>{% endif %}{{ n.created_at[:16] }}<span class="sep" aria-hidden="true"></span><b>{{ n.readers }}/{{ n.members }}명 읽음</b><span class="sep" aria-hidden="true"></span>좋아요 {{ n.likes }}{% if n.renotified_at %}<span class="sep" aria-hidden="true"></span>안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at[5:16] }}){% endif %}</span></div>
+      <span class="small muted">{% if n.textbook %}{{ n.textbook }}<span class="sep" aria-hidden="true"></span>{% endif %}{{ n.created_at|dt }}<span class="sep" aria-hidden="true"></span><b>{{ n.readers }}/{{ n.members }}명 읽음</b><span class="sep" aria-hidden="true"></span>좋아요 {{ n.likes }}{% if n.renotified_at %}<span class="sep" aria-hidden="true"></span>안 읽은 학생에게 다시 알림 보냄 ({{ n.renotified_at|dt }}){% endif %}</span></div>
     <div class="row">
       <form method="post" action="{{ url_for('teacher.notice_pin', nid=n.id) }}">{{ csrf() }}<button class="btn small">{{ '고정 해제' if n.pinned else '맨 위 고정' }}</button></form>
       <form method="post" action="{{ url_for('teacher.notice_delete', nid=n.id) }}" data-confirm="이 공지를 삭제할까요?">
@@ -202,14 +202,14 @@
 </div>
 <div class="card">
   {% if materials %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>제목</th><th>파일</th><th class="num">크기</th><th>올린 날</th><th></th></tr>
     {% for m in materials %}
     <tr>
       <td>{{ m.title }}</td>
       <td>{{ kind_badge(m.original_name) }} <a href="{{ url_for('student.file', fid=m.file_id) }}">{{ m.original_name }}</a></td>
       <td class="num small">{{ filesize(m.size) }}</td>
-      <td class="small muted">{{ m.created_at[:10] }}</td>
+      <td class="small muted">{{ m.created_at|d }}</td>
       <td><form method="post" action="{{ url_for('teacher.material_delete', mid=m.id) }}" data-confirm="이 자료를 삭제할까요?">
         {{ csrf() }}<button class="btn small danger">삭제</button></form></td>
     </tr>
@@ -236,14 +236,14 @@
 </div>
 <div class="card">
   {% if videos %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>영상</th><th>길이</th><th>등록</th><th>만료</th><th></th></tr>
     {% for v in videos %}
     <tr class="{{ 'inactive' if v.expires_on and v.expires_on < today }}">
       <td><a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ v.title }}</a><br><span class="small muted">{{ v.url|video_source }}</span></td>
       <td class="small">{{ v.duration or '-' }}</td>
-      <td class="small muted">{{ v.created_at[:10] }}</td>
-      <td class="small">{% if v.expires_on %}{{ v.expires_on }}{% if v.expires_on < today %} <span class="badge gray">만료</span>{% endif %}{% else %}-{% endif %}</td>
+      <td class="small muted">{{ v.created_at|d }}</td>
+      <td class="small">{% if v.expires_on %}{{ v.expires_on|d }}{% if v.expires_on < today %} <span class="badge gray">만료</span>{% endif %}{% else %}-{% endif %}</td>
       <td><form method="post" action="{{ url_for('teacher.video_delete', vid=v.id) }}" data-confirm="이 영상을 목록에서 삭제할까요?">
         {{ csrf() }}<button class="btn small danger">삭제</button></form></td>
     </tr>
@@ -265,7 +265,7 @@
     <div class="field shrink"><button class="btn primary">넣기</button></div>
   </form>
   {% if slots %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>요일</th><th>교시</th><th>시간</th><th>관</th><th>교실</th><th></th></tr>
     {% for t in slots %}
     <tr><td>{{ weekdays[t.weekday] }}</td><td>{{ t.period or '–' }}</td><td class="nowrap">{{ t.starts }}–{{ t.ends }}</td><td>{{ t.hall or '–' }}</td><td>{{ t.room or '–' }}</td>

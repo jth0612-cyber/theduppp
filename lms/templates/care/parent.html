@@ -40,7 +40,7 @@
 
   {% if k.exams %}
   <section class="pr-card"><h2>{{ kind }} 결과</h2>
-    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date[5:]|replace('-', '.') if e.date }}<span class="sep" aria-hidden="true"></span>반 평균 {{ e.avg }}</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}</small></b></li>{% endfor %}</ul>
+    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date|d if e.date }}<span class="sep" aria-hidden="true"></span>반 평균 {{ e.avg }}</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}</small></b></li>{% endfor %}</ul>
   </section>
   {% endif %}
 
@@ -60,7 +60,7 @@
 
   {% if r.comment %}<section class="pr-card"><h2>선생님 코멘트</h2><p class="pre">{{ r.comment.text }}</p></section>{% endif %}
 
-  {% if r.att %}<section class="pr-card"><h2>출결</h2><ul class="pr-att">{% for a in r.att[:7] %}<li><span>{{ a.day[5:] }}</span><b>{{ a.status }}</b><small class="muted">{{ a.arrived }}</small></li>{% endfor %}</ul></section>{% endif %}
+  {% if r.att %}<section class="pr-card"><h2>출결</h2><ul class="pr-att">{% for a in r.att[:7] %}<li><span>{{ a.day|d }}</span><b>{{ a.status }}</b><small class="muted">{{ a.arrived }}</small></li>{% endfor %}</ul></section>{% endif %}
 
 </main>
 </body>

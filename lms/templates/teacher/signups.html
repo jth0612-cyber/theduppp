@@ -17,7 +17,7 @@
   {% if requests %}
   <form method="post">
     {{ csrf() }}
-    <div class="table-wrap"><table>
+    <div class="table-wrap"><table data-rc-title="2">
       <tr><th></th><th>신청 반</th><th>이름</th><th>아이디</th><th>Google 이메일</th><th>명단 확인</th><th>신청 시각</th></tr>
       {% for r in requests %}
       <tr>
@@ -32,7 +32,7 @@
           {% elif r.roster_class_id != r.class_id %}<span class="badge open">명단은 {{ r.roster_class_name }}</span>
           {% else %}<span class="badge answered">명단과 일치</span>{% endif %}
         </td>
-        <td class="small muted">{{ r.created_at[5:16] }}</td>
+        <td class="small muted">{{ r.created_at|dt }}</td>
       </tr>
       {% endfor %}
     </table></div>

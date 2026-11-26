@@ -180,7 +180,7 @@ def rooms():
     for i in range(4):
         mon = start + timedelta(days=7 * i)
         days = [(mon + timedelta(days=k)).isoformat() for k in range(7)]
-        weeks.append({"label": "이번 주" if i == 3 else f"{mon.month}/{mon.day}~", "m": sum(sums.get(d, 0) for d in days)})
+        weeks.append({"label": "이번 주" if i == 3 else f"{mon.month:02d}.{mon.day:02d}~", "m": sum(sums.get(d, 0) for d in days)})
     return render_template("rooms/index.html", places=PLACES, counts=_counts(),
                            today=_my_today(g.user["id"]), week=week, weeks=weeks[::-1], kings=kings, poster=POSTER)
 

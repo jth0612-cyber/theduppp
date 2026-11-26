@@ -2846,3 +2846,43 @@ main .legal table.legal-table :is(th, td) { text-align: left; vertical-align: to
 .skip-link:focus { top: 12px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .side .nav .count { color: #0f1012; } }
 :root[data-theme="dark"] .side .nav .count { color: #0f1012; }
+
+/* ===== 상태 색 통일 (2026-11-27, docs/review 방향서 7번) =====
+   할 일 남음 = 연한 파랑 바탕에 파랑 글자, 문제(지각, 결석, 오답, 기한 지남) = 빨강, 끝남과 분류 이름표 = 회색.
+   초록, 노랑, 주황, 보라는 쓰지 않는다. 정답도 파랑. 진한 파랑 채움은 주요 버튼에만. */
+:root { --wait: #2a67ba; --wait-soft: #edf4ff; --ok: #2a67ba; --ok-soft: #edf4ff; --warn: #d02028; --warn-soft: #fdecec; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --wait: #a9c8f5; --wait-soft: #1a2a40; --ok: #a9c8f5; --ok-soft: #1a2a40; --warn: #ff6b6b; --warn-soft: #3a1e20; }
+}
+:root[data-theme="dark"] { --wait: #a9c8f5; --wait-soft: #1a2a40; --ok: #a9c8f5; --ok-soft: #1a2a40; --warn: #ff6b6b; --warn-soft: #3a1e20; }
+.badge.open, .fb-state.is-wait { background: var(--wait-soft); color: var(--wait); }
+.badge.answered, .fb-state.is-done, .badge.type, .badge.tag-notice, .badge.tag-schedule, .badge.tag-exam, .badge.tag-material,
+.att-tag.att-1 { background: var(--raised); color: var(--muted); }
+.badge.tag-errata, .badge.danger { background: var(--danger-soft); color: var(--danger); }
+.att-sum .att-1 b { color: var(--ink); }
+.notice-box { background: var(--raised); color: var(--ink); }
+/* 꾸밈 아이콘은 한 가지 색조 (보라, 초록, 주황 없음) */
+.my-ico, .ico-time, .ico-solve, .ico-fire { background: var(--accent-soft); color: var(--accent-ink); }
+.qi-match, .qi-speed, .qi-mix { background: var(--accent); }
+.w3-act.is-armed, .sp-btn.sp-x { background: var(--danger); }
+.here-tag::before { content: none; }
+.here-tag { margin-left: 6px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .my-ico { background: var(--accent-soft); color: var(--accent-ink); } }
+:root[data-theme="dark"] .my-ico { background: var(--accent-soft); color: var(--accent-ink); }
+.sp-o { background: var(--accent); }
+.mc-choice.ox-o:not(.is-right):not(.is-wrong) { color: var(--accent); } .mc-choice.ox-x:not(.is-right):not(.is-wrong) { color: var(--danger); }
+
+/* ===== 목록 행 (2026-11-27, 방향서 1번) =====
+   굵은 제목 한 줄(넘치면 말줄임) + 회색 보조 한 줄 + 오른쪽 끝에 상태나 값 하나. 누르면 이동하는 행에만 끝에 › */
+.list-rows > li > a::after { content: "›"; flex: none; margin-left: 2px; color: var(--faint); font-size: 20px; line-height: 1; }
+.list-rows .lr-main { min-width: 0; flex: 1 1 auto; }
+.list-rows .lr-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-rows .lr-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-rows .lr-end { flex: none; }
+.list-rows.prog-rows > li > a::after, .list-rows.track-pick > li > a::after { content: none; }
+@media (max-width: 720px) {
+  /* 조교 휴대폰의 표 묶음: 제목이 링크면 그 행은 열 수 있다 */
+  main table.rowcards td.rc-title > a:only-child::after { content: " ›"; color: var(--faint); font-weight: 400; }
+}
+/* 학생이 직접 쓴 제목(질문)은 앞머리가 길어 한 줄로는 구별이 안 된다: 두 줄까지 */
+.list-rows.lr-wrap .lr-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; }

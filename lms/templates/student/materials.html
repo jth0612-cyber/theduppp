@@ -8,7 +8,7 @@
   {% for m in materials %}
   <li><a href="{{ url_for('student.file', fid=m.file_id) }}">
     <span class="lr-lead">{{ kind_badge(m.original_name) }}</span>
-    <span class="lr-main"><b class="lr-title">{{ m.title }}</b><span class="lr-sub">{{ m.created_at[5:10]|replace('-', '.') }}<span class="sep" aria-hidden="true"></span>{{ filesize(m.size) }}</span></span>
+    <span class="lr-main"><b class="lr-title">{{ m.title }}</b><span class="lr-sub">{{ m.created_at|d }}<span class="sep" aria-hidden="true"></span>{{ filesize(m.size) }}</span></span>
   </a></li>
   {% endfor %}
 </ul></section>

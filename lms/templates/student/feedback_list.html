@@ -8,7 +8,7 @@
   {% for r in rows %}
     <li class="{{ 'is-new' if r.unread }}"><a href="{{ url_for('books.analysis_home', mock=r.mock_id) }}#{{ 'feedback' if r.kind == 'feedback' else 'paper' }}">
       <span class="lr-main"><b class="lr-title">{{ r.book }} {{ r.round_no }}회</b>
-        <span class="lr-sub">{{ '모의고사 피드백' if r.kind == 'feedback' else '시험지 첨삭' }}<span class="sep" aria-hidden="true"></span>{{ (r.at or '')[5:10]|replace('-', '.') }}</span></span>
+        <span class="lr-sub">{{ '모의고사 피드백' if r.kind == 'feedback' else '시험지 첨삭' }}<span class="sep" aria-hidden="true"></span>{{ (r.at or '')|d }}</span></span>
       <span class="lr-end">{% if r.kind == 'feedback' %}<span class="badge {{ 'answered' if r.status == 'done' else 'open' }}">{{ '답변 완료' if r.status == 'done' else '답변 대기' }}</span>{% else %}<span class="badge {{ 'answered' if r.status == 'done' else 'open' }}">{{ '첨삭 완료' if r.status == 'done' else '검사 중' }}</span>{% endif %}</span>
     </a></li>
   {% endfor %}

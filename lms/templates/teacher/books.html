@@ -17,14 +17,14 @@
 
 <div class="card">
   {% if books %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="1">
     <thead><tr><th>종류</th><th>교재</th><th>이용 기간</th><th class="num">회차</th></tr></thead>
     <tbody>
     {% for b in books %}
       <tr class="{{ 'inactive' if b.expires_on < today }}">
         <td class="muted">{{ b.kind }}</td>
         <td><a href="{{ url_for('books.teacher_book', bid=b.id) }}"><b>{{ b.title }}</b></a>{% if b.is_free %} <span class="small muted">배포본</span>{% endif %}{% if b.subject %} <span class="small muted">{{ b.subject }}</span>{% endif %}</td>
-        <td>{{ b.expires_on }}까지</td>
+        <td>{{ b.expires_on|d }}까지</td>
         <td class="num">{{ b.mocks }}</td>
       </tr>
     {% endfor %}

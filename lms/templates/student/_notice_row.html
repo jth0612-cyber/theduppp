@@ -1,5 +1,5 @@
 <li><a href="{{ url_for('student.notice_detail', nid=n.id) }}">
   <span class="lr-main"><b class="lr-title">{{ n.title }}</b>
-    <span class="lr-sub">{{ '정오표' if n.tag == '정오' else n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at[5:10]|replace('-', '.') }}</span></span>
+    <span class="lr-sub">{{ '정오표' if n.tag == '정오' else n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at|d }}</span></span>
   {% if n.pinned %}<span class="lr-end"><span class="badge gray">고정</span></span>{% endif %}
 </a></li>

@@ -7,7 +7,7 @@
   {% endif %}
   {% for gr in sys_groups %}
   <article class="panel sw-exam">
-    <div class="sec-head"><h3>{{ gr.exam }}</h3><span class="small muted">{{ gr.day[5:]|replace('-', '.') }}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ gr['items']|length }}개{% if gr.open is defined and not only_open %}<span class="sep" aria-hidden="true"></span>다시 풀기 남음 {{ gr.open }}{% endif %}</span></div>
+    <div class="sec-head"><h3>{{ gr.exam }}</h3><span class="small muted">{{ gr.day|d }}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ gr['items']|length }}개{% if gr.open is defined and not only_open %}<span class="sep" aria-hidden="true"></span>다시 풀기 남음 {{ gr.open }}{% endif %}</span></div>
     <ul class="sw-list">
       {% for it in gr['items'] %}
       <li class="sw-item{{ ' is-done' if it.redo == '맞힘' }}">

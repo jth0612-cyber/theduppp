@@ -115,7 +115,8 @@ def wrong_list(user_id, only_open=False):
         if not wrong:
             continue
         stats = _stats({**dict(e), "id": e["mid"]})
-        rates = {it["no"]: it["wrong_pct"] for it in stats["items"]}
+        rates = {it["no"]: it["wrong_pct"] for it in stats["items"]}      # 그 회차를 본 전체 학생 기준 (화면에 '전체 오답률'로 적는다)
+        info = (exams.load_mock(e["mid"]) or {}).get("info", {})
         items = []
         for no in wrong:
             n = notes.get((e["mid"], no))
@@ -123,6 +124,7 @@ def wrong_list(user_id, only_open=False):
             if only_open and reviewed:
                 continue
             items.append({"no": no, "mine": e["answers"][no - 1], "points": points[no - 1],
+                          "answer": key[no - 1], "unit": info.get(no, {}).get("unit", ""),
                           "rate": rates.get(no), "reason": n["reason"] if n else "",
                           "memo": n["memo"] if n else "", "reviewed": reviewed})
         groups.append({"mock_id": e["mid"], "kind": e["kind"], "title": f"{e['book_title']} {e['round_no']}회", "score": e["score"],

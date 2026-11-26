@@ -3,7 +3,7 @@
 <ol class="fb-thread">
   {% for m in msgs %}
   <li class="fb-msg{{ ' is-staff' if m.staff else '' }}">
-    <p class="fb-who"><b>{{ m.who if (me_staff or m.staff) else '나' }}</b><time>{{ m.created_at[5:16] }}</time></p>
+    <p class="fb-who"><b>{{ m.who if (me_staff or m.staff) else '나' }}</b><time>{{ m.created_at|dt }}</time></p>
     {% if m.body %}<div class="pre">{{ m.body }}</div>{% endif %}
     {% if m.photos %}<div class="q-photos">{% for fid in m.photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ m.who }} 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
   </li>

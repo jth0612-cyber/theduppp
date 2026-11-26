@@ -63,10 +63,10 @@
   <h2>{{ kind }} <span class="small muted">학부모 리포트와 같은 내용</span></h2>
   {{ kind_tabs(kind, 'teacher.student_detail', kind_counts, sid=s.id, _anchor='mocks') }}
   {% if k.exams %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>시험</th><th class="num">점수</th><th class="num">반 평균</th><th class="num">득점률</th><th class="num">틀린 문항</th></tr>
     {% for e in k.exams[:14] %}
-    <tr><td>{{ e.title }}{% if e.date %}<br><span class="small muted">{{ e.date }}</span>{% endif %}</td>
+    <tr><td>{{ e.title }}{% if e.date %}<br><span class="small muted">{{ e.date|d }}</span>{% endif %}</td>
       <td class="num">{{ '%g'|format(e.score) }} / {{ '%g'|format(e.full) }}</td><td class="num">{{ e.avg }}</td>
       <td class="num">{{ e.rate if e.rate is not none else '-' }}%</td><td class="num">{{ e.n_wrong }} / {{ e.n }}</td></tr>
     {% endfor %}
@@ -79,7 +79,7 @@
   <h3 class="mt">학부모 리포트에 나가는 코멘트</h3>
   {% if rep.comment %}
   <p class="pre">{{ rep.comment.text }}</p>
-  <p class="small muted">{{ rep.comment.src }}<span class="sep" aria-hidden="true"></span>{{ (rep.comment.at or '')[:16] }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
+  <p class="small muted">{{ rep.comment.src }}<span class="sep" aria-hidden="true"></span>{{ (rep.comment.at or '')|dt }} / 고치려면 {% if rep.comment.mock_id %}<a href="{{ url_for('books.teacher_mock', mid=rep.comment.mock_id) }}">그 회차 화면</a>{% else %}그 화면{% endif %}에서 수정</p>
   {% else %}<div class="help-inline">아직 없음{% call help('학부모 리포트 코멘트') %}<p>회차 화면의 학생 메모나 복습 테스트 첨삭 코멘트 중 가장 최근 것이 나가요.</p>{% endcall %}</div>{% endif %}
 </div>
 
@@ -98,7 +98,7 @@
   {% for n in notes %}
     <div class="note">
       <div class="page-head">
-        <span class="small"><span class="badge">{{ n.category }}</span> <span class="muted">{{ n.created_at[:16] }}</span></span>
+        <span class="small"><span class="badge">{{ n.category }}</span> <span class="muted">{{ n.created_at|dt }}</span></span>
         <form method="post" action="{{ url_for('teacher.note_delete', nid=n.id) }}" data-confirm="이 메모를 삭제할까요?">
           {{ csrf() }}<button class="btn link small">삭제</button></form>
       </div>
@@ -116,7 +116,7 @@
     <tr>
       <td><a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a></td>
       <td>{{ status_badge(q.status) }}</td>
-      <td class="small muted num">{{ q.created_at[:16] }}</td>
+      <td class="small muted num">{{ q.created_at|dt }}</td>
     </tr>
     {% endfor %}
   </table></div>

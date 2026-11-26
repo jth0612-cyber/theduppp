@@ -23,7 +23,7 @@
       <button class="btn small">보기</button>
       <a class="btn small" href="{{ url_for('teacher.staff_answers_csv', month=month) }}">엑셀로 받기</a></form></div>
   {% if staff %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc="off">
     <tr><th>조교</th><th class="num">Main 답변</th><th class="num">부가 답변</th><th class="num">질문 합계</th><th class="num">학습상담(건)</th><th class="num">복습 테스트 첨삭(건)</th></tr>
     {% for a in staff %}<tr class="{{ 'inactive' if a.disabled }}"><td>{{ a.display_name }} <span class="small muted">{{ a.username }}</span></td>
       <td class="num"><b>{{ a.main }}</b></td><td class="num">{{ a.extra }}</td><td class="num">{{ a.main + a.extra }}</td><td class="num"><b>{{ a.consult }}</b></td><td class="num"><b>{{ a.hw }}</b></td></tr>{% endfor %}
@@ -32,14 +32,14 @@
 </div>
 <div class="card">
   {% if staff %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>이름</th><th>아이디</th><th class="num">전체 답변</th><th>최근 접속</th><th>상태</th><th></th></tr>
     {% for a in staff %}
     <tr class="{{ 'inactive' if a.disabled }}">
       <td>{{ a.display_name }}</td>
       <td>{{ a.username }}</td>
       <td class="num">{{ a.answer_count }}</td>
-      <td class="small muted">{{ a.last_login_at[:16] if a.last_login_at else '-' }}</td>
+      <td class="small muted">{{ a.last_login_at|dt if a.last_login_at else '-' }}</td>
       <td>{% if a.disabled %}<span class="badge gray">사용 중지</span>{% elif a.must_change_pw %}<span class="badge open">임시 비밀번호</span>{% else %}<span class="badge answered">사용 중</span>{% endif %}</td>
       <td><div class="row">
         <form method="post" action="{{ url_for('teacher.staff_reset', uid=a.id) }}" data-confirm="{{ a.display_name }} 조교의 비밀번호를 초기화할까요?">

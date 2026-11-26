@@ -6,6 +6,8 @@
 - /s/link          가입 전부터 있던 학생 계정을 학생코드와 잇기.
 - /s/attendance    내 출결.
 """
+from datetime import date
+
 from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template, request, url_for
 
 import sysdata
@@ -157,7 +159,7 @@ def s_tasks():
     code = sysdata.code_of_student(g.user["student_id"])
     rows = sysdata.tasks(code)
     left = [r for r in rows if r["submit"] not in ("O", "o", "제출", "완료", "1")]
-    return render_template("student/tasks.html", code=code, rows=rows, left=len(left))
+    return render_template("student/tasks.html", code=code, rows=rows, left=len(left), today=date.today().isoformat())   # 기한이 지난 '안 냄'만 빨강
 
 
 @bp.route("/s/attendance")

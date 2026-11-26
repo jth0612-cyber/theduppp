@@ -9,7 +9,7 @@
   <text class="rc-name" x="{{ chart.l - 8 }}" y="{{ chart.t - 12 }}">득점률</text>
   {% for p in chart.pts %}{% if loop.index0 % chart.every == 0 or loop.last %}
   <text class="rc-xtick" x="{{ p.x }}" y="{{ chart.b + 18 }}">{{ p.lab }}</text>
-  <text class="rc-xdate" x="{{ p.x }}" y="{{ chart.b + 33 }}">{{ p.date }}</text>
+  <text class="rc-xdate" x="{{ p.x }}" y="{{ chart.b + 33 }}">{{ p.date|d }}</text>
   {% endif %}{% endfor %}
   {% if chart.avg_poly %}<polyline class="rc-avg" points="{{ chart.avg_poly }}"></polyline>{% endif %}
   <polyline class="rc-line" points="{{ chart.poly }}"></polyline>

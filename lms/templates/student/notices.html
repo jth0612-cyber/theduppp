@@ -20,7 +20,7 @@
     <div class="sec-head"><h2>{{ book or '교재 미지정' }}</h2><span>{{ items|length }}건</span></div>
     <ul class="list-rows">
     {% for n in items %}
-      <li><a href="{{ url_for('student.notice_detail', nid=n.id) }}"><span class="lr-main"><b class="lr-title">{{ n.title }}</b><span class="lr-sub">{{ n.created_at[5:10]|replace('-', '.') }}</span></span></a></li>
+      <li><a href="{{ url_for('student.notice_detail', nid=n.id) }}"><span class="lr-main"><b class="lr-title">{{ n.title }}</b><span class="lr-sub">{{ n.created_at|d }}</span></span></a></li>
     {% endfor %}
     </ul>
   </section>

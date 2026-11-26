@@ -3,7 +3,7 @@
 {% block content %}
 <p class="crumb"><a href="{{ url_for('care.t_lessons') }}">← 수업 기록</a></p>
 <div class="page-head"><div><h1>{{ l.title }}</h1>
-  <p class="muted small">{{ l.day }}<span class="sep" aria-hidden="true"></span>{{ l.cls }}<span class="sep" aria-hidden="true"></span>{{ ('노트 ' ~ files|length ~ '장') if files else '사진 없음' }}</p></div>
+  <p class="muted small">{{ l.day|d }}<span class="sep" aria-hidden="true"></span>{{ l.cls }}<span class="sep" aria-hidden="true"></span>{{ ('노트 ' ~ files|length ~ '장') if files else '사진 없음' }}</p></div>
   <form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 삭제할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form>
 </div>
 <div class="card">

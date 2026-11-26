@@ -4,14 +4,14 @@
 {% block content %}
 <p class="crumb"><a href="{{ url_for('books.teacher_books') }}">← 교재/모의고사</a></p>
 <div class="page-head">
-  <div><h1>{{ book.title }}{% call help('학생 화면에 보이는 회차') %}<p>학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>{% endcall %}</h1><p class="muted small">{{ book.kind }}<span class="sep" aria-hidden="true"></span>{{ book.expires_on }}까지{% if book.is_free %}<span class="sep" aria-hidden="true"></span>배포본{% endif %}</p></div>
+  <div><h1>{{ book.title }}{% call help('학생 화면에 보이는 회차') %}<p>학생 화면에 보이는 회차: '열림' 상태이고 그 학생 답안이 OMR로 올라왔거나 시험 평가가 있는 회차</p>{% endcall %}</h1><p class="muted small">{{ book.kind }}<span class="sep" aria-hidden="true"></span>{{ book.expires_on|d }}까지{% if book.is_free %}<span class="sep" aria-hidden="true"></span>배포본{% endif %}</p></div>
 </div>
 
 <div>
   <section class="card" aria-labelledby="h-mocks">
     <h2 id="h-mocks">회차</h2>
     {% if mocks %}
-    <div class="table-wrap"><table>
+    <div class="table-wrap"><table data-rc-title="0">
       <thead><tr><th>회차</th><th class="num">문항/만점</th><th class="num">채점</th><th></th></tr></thead>
       <tbody>
       {% for m in mocks %}

@@ -18,7 +18,7 @@
 <section class="card">
   <h2>목록 {{ rows|length }}권</h2>
   {% if rows %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="1">
     <tr><th>구분</th><th>교재</th><th>배정한 주차</th><th></th></tr>
     {% for h in rows %}
     <tr><td>{{ h.kind }}</td><td>{{ h.title }}</td><td class="num">{{ h.n_week }}</td>

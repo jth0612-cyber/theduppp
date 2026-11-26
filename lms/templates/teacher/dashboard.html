@@ -3,7 +3,7 @@
 <div class="page-head">
   <div>
     <h1>안녕하세요, {{ shown_name(g.user) }} {{ '선생님' if g.user.role == 'teacher' else '조교' }}</h1>
-    <p class="muted small">마지막 로그인 {{ (g.user.last_login_at or '-')[:16]|replace('T', ' ') }}</p>
+    <p class="muted small">마지막 로그인 {{ (g.user.last_login_at or '-')|dt }}</p>
   </div>
   <form method="get" action="{{ url_for('teacher.students') }}" class="row">
     <input type="search" name="q" placeholder="학생 이름 또는 아이디">
@@ -24,7 +24,7 @@
     {% if open_questions %}
     <ul class="list-rows">
       {% for q in open_questions %}
-      <li><a href="{{ url_for('teacher.question_detail', qid=q.id) }}"><span class="lr-main"><b class="lr-title">{{ q.title }}</b><span class="lr-sub">{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.name }}<span class="sep" aria-hidden="true"></span>{{ q.created_at[5:10]|replace('-', '.') }} {{ q.created_at[11:16] }}</span></span></a></li>
+      <li><a href="{{ url_for('teacher.question_detail', qid=q.id) }}"><span class="lr-main"><b class="lr-title">{{ q.title }}</b><span class="lr-sub">{{ q.class_name }}<span class="sep" aria-hidden="true"></span>{{ q.name }}<span class="sep" aria-hidden="true"></span>{{ q.created_at|d }} {{ q.created_at|t }}</span></span></a></li>
       {% endfor %}
     </ul>
     {% else %}<div class="list-empty">밀린 질문이 없어요.</div>{% endif %}
@@ -33,7 +33,7 @@
   <div class="card">
     <div class="sec-head"><h2>최근 회차</h2><a href="{{ url_for('books.teacher_books') }}">전체</a></div>
     {% if recent_exams %}
-    <div class="table-wrap"><table>
+    <div class="table-wrap"><table data-rc-title="0">
       <tr><th>회차</th><th class="num">응시</th><th class="num">평균</th></tr>
       {% for e in recent_exams %}
       <tr>
@@ -50,7 +50,7 @@
 <div class="card">
   <div class="sec-head"><h2>담당 반</h2><a href="{{ url_for('teacher.classes') }}">반 관리</a></div>
   {% if classes %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>반</th><th>설명</th><th class="num">학생 수</th></tr>
     {% for c in classes %}
     <tr>

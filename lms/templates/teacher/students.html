@@ -16,7 +16,7 @@
 </form>
 <div class="card">
   {% if students %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="1">
     <tr><th>구분</th><th>이름</th><th>아이디</th><th>반</th><th>목표</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">

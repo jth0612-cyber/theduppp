@@ -33,7 +33,7 @@
 
 <section class="card">
   <h2>반</h2>
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>반</th><th>재원생</th><th>수업 시간</th><th></th></tr>
     {% for m in members %}
     <tr><td><a href="{{ url_for('teacher.class_detail', cid=m.id, tab='times') }}">{{ m.name }}</a></td><td class="num">{{ m.n }}명</td>
@@ -58,7 +58,7 @@
   {% for w in weeks %}
   <tr id="w{{ w.week_no }}" class="{{ 'is-off' if w.off }}{{ ' is-now' if w.starts <= today <= w.ends }}">
     <th class="sched-week">
-      <b>{{ w.week_no }}주차</b> <span class="small muted">{{ w.starts[5:] }}~{{ w.ends[5:] }}</span>
+      <b>{{ w.week_no }}주차</b> <span class="small muted">{{ w.starts|d }}~{{ w.ends|d }}</span>
       {% if w.off %}<div><span class="badge gray">휴강 주</span></div>{% else %}
       <div class="small">{{ w.topic or '' }}</div>
       <div>{{ hchips(wh.get(w.id, [])) }}</div>
@@ -83,7 +83,7 @@
     {% for t in slots %}{% set s = cell.get((w.id, t.id)) %}
     <td class="sched-cell{{ ' is-off' if s and s.off }}">
       {% if s %}<a href="{{ url_for('schedule.session', sid=s.id) }}" class="sched-link">
-        <span class="small">{{ s.day[5:] }}</span>
+        <span class="small">{{ s.day|d }}</span>
         {% if s.off %}<span class="badge gray">휴강</span>{% if s.brk and s.brk.note %} <span class="small muted">{{ s.brk.note }}</span>{% endif %}
         {% else %}{% if s.status == '보강' %}<span class="badge open">보강</span>{% endif %}
         <span class="num small">{{ s.present if s.checked else '–' }}/{{ s.roster }}</span>
@@ -103,7 +103,7 @@
   <tr class="{{ 'is-off' if r.w.off }}{{ ' is-now' if r.w.starts <= today <= r.w.ends }}">
     <th><b>{{ r.w.week_no }}주차</b><div class="small">{{ r.w.topic if not r.w.off else '휴강 주' }}</div><div>{{ hchips(wh.get(r.w.id, [])) }}</div></th>
     {% for d in r.days[:7] %}
-    <td class="{{ 'is-today' if d.day == today }}"><div class="small muted">{{ d.day[5:] }}{% if d.label != '토일월화수목금'[loop.index0] %} ({{ d.label }}){% endif %}</div>
+    <td class="{{ 'is-today' if d.day == today }}"><div class="small muted">{{ d.day|d }}{% if d.label != '토일월화수목금'[loop.index0] %} ({{ d.label }}){% endif %}</div>
       {% for s in d.sess %}<a href="{{ url_for('schedule.session', sid=s.id) }}" class="cal-item{{ ' is-off' if s.off }}"><b>{{ s.class_name }}</b> <span class="small">{{ s.starts }}</span>{% if s.off %} <span class="badge gray">휴강</span>{% else %} <span class="small num">{{ s.present if s.checked else '–' }}/{{ s.roster }}</span>{% endif %}</a>{% endfor %}
     </td>{% endfor %}
   </tr>

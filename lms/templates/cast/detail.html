@@ -3,7 +3,7 @@
 {% block content %}
 <p class="crumb"><a href="{{ url_for('cast.cast_list') }}">태혁쌤의 cast</a> /</p>
 <header class="ed-head ed-head-split">
-  <div><h1>{{ c.title }}</h1><p class="ed-lede">정태혁 선생님<span class="sep" aria-hidden="true"></span>{{ c.created_at[:16] }}</p></div>
+  <div><h1>{{ c.title }}</h1><p class="ed-lede">정태혁 선생님<span class="sep" aria-hidden="true"></span>{{ c.created_at|dt }}</p></div>
   {% if g.user.role in ('teacher', 'assistant') %}<a class="btn" href="{{ url_for('cast.cast_edit', cid=c.id) }}">고치기</a>{% endif %}
 </header>
 {% if yt %}<div class="cast-video"><iframe src="https://www.youtube-nocookie.com/embed/{{ yt }}" title="{{ c.title }}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>{% endif %}

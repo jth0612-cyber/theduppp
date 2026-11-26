@@ -4,7 +4,7 @@
 <p class="crumb"><a href="{{ url_for('student.notices') }}">공지</a> /</p>
 <header class="ed-head">
   <h1>{{ n.title }}</h1>
-  <p class="ed-lede">{{ '정오표' if n.tag == '정오' else n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at[5:10]|replace('-', '.') }}</p>
+  <p class="ed-lede">{{ '정오표' if n.tag == '정오' else n.tag }}{% if n.textbook %}<span class="sep" aria-hidden="true"></span>{{ n.textbook }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ n.created_at|d }}</p>
 </header>
 <article class="card article">
   <div class="pre article-body">{{ n.body }}</div>

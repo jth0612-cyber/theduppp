@@ -11,12 +11,12 @@
 </nav>
 <div class="card">
   {% if rows %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <thead><tr><th>학생</th><th>반</th><th>시험</th><th class="num">점수</th><th class="num">사진</th><th class="num">{{ '제출' if status == 'submitted' else '첨삭' }}</th></tr></thead>
     <tbody>{% for p in rows %}<tr><td><a href="{{ url_for('care.t_paper', pid=p.id) }}">{{ p.name }}</a> <span class="small muted">{{ p.student_no }}</span></td>
       <td class="muted">{{ p.cls }}</td><td>{{ p.book_title }} {{ p.round_no }}회</td>
       <td class="num">{% if p.score is not none %}{{ fmt(p.score) }}<span class="muted">/{{ fmt(p.full_score) }}</span>{% endif %}</td>
-      <td class="num">{{ p.n_files }}</td><td class="small muted num nowrap">{{ (p.submitted_at if status == 'submitted' else p.reviewed_at)[5:16] }}</td></tr>{% endfor %}</tbody>
+      <td class="num">{{ p.n_files }}</td><td class="small muted num nowrap">{{ (p.submitted_at if status == 'submitted' else p.reviewed_at)|dt }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p class="muted">{{ '첨삭을 기다리는 시험지가 없어요.' if status == 'submitted' else '첨삭한 시험지가 없어요.' }}</p>{% endif %}
 </div>

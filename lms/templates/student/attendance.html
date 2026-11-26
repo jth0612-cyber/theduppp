@@ -7,7 +7,7 @@
 {% else %}
 <div class="att-sum">{% for k in ['출석', '지각', '조퇴', '결석'] %}<div class="att-{{ loop.index }}"><b>{{ count.get(k, 0) }}</b><span>{{ k }}</span></div>{% endfor %}</div>
 <div class="card"><ul class="att-list att-3">
-  {% for r in rows %}<li><time datetime="{{ r.day }}">{{ r.day[5:]|replace('-', '.') }}</time><span class="att-tag att-{{ {'출석': 1, '지각': 2, '조퇴': 3, '결석': 4}.get(r.status, 0) }}">{{ r.status or '미확인' }}</span><span class="small muted">{% if r.arrived %}도착 {{ r.arrived }}{% endif %}</span></li>{% endfor %}
+  {% for r in rows %}<li><time datetime="{{ r.day }}">{{ r.day|d }}</time><span class="att-tag att-{{ {'출석': 1, '지각': 2, '조퇴': 3, '결석': 4}.get(r.status, 0) }}">{{ r.status or '미확인' }}</span><span class="small muted">{% if r.arrived %}도착 {{ r.arrived }}{% endif %}</span></li>{% endfor %}
 </ul></div>
 {% endif %}
 {% endblock %}

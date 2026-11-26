@@ -39,7 +39,7 @@
 {% endif %}
 <div class="card">
   {% if questions %}
-  <div class="table-wrap"><table class="q-table">
+  <div class="table-wrap"><table class="q-table" data-rc-title="0">
     <tr><th>제목</th><th>학생</th><th>반</th><th>상태</th><th class="num">등록</th></tr>
     {% for q in questions %}
     <tr>
@@ -50,7 +50,7 @@
       <td>{{ q.name }}<br><span class="small muted">{{ q.nickname or '' }}</span></td>
       <td class="muted">{{ q.class_name }}</td>
       <td>{{ status_badge(q.status) }}</td>
-      <td class="small muted num">{{ q.created_at[5:16] }}</td>
+      <td class="small muted num">{{ q.created_at|dt }}</td>
     </tr>
     {% endfor %}
   </table></div>

@@ -16,8 +16,8 @@
   <button class="btn primary">올리기</button>
 </form>
 <div class="card">
-  {% if rows %}<div class="table-wrap"><table><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th><th></th></tr></thead><tbody>
-  {% for l in rows %}<tr><td class="nowrap">{{ l.day }}</td><td class="muted">{{ l.cls }}</td><td><a href="{{ url_for('care.t_lesson', lid=l.id) }}">{{ l.title }}</a></td><td class="num">{{ (l.n_files ~ "장") if l.n_files else "사진 없음" }}</td>
+  {% if rows %}<div class="table-wrap"><table data-rc-title="2"><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th><th></th></tr></thead><tbody>
+  {% for l in rows %}<tr><td class="nowrap">{{ l.day|d }}</td><td class="muted">{{ l.cls }}</td><td><a href="{{ url_for('care.t_lesson', lid=l.id) }}">{{ l.title }}</a></td><td class="num">{{ (l.n_files ~ "장") if l.n_files else "사진 없음" }}</td>
     <td class="num"><form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 삭제할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">아직 올린 수업 기록이 없어요.</p>{% endif %}
 </div>

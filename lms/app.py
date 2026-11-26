@@ -130,6 +130,32 @@ def create_app(test_config=None):
     from content import file_kind, host_of, video_source, youtube_id
     app.jinja_env.filters.update(file_kind=file_kind, host_of=host_of, youtube_id=youtube_id, video_source=video_source)
 
+    # 날짜 표기는 여기 한 곳에서: 올해 11.15 / 다른 해 2025.11.15 / 시각 포함 11.15 09:05. 화면에 ISO 모양을 내지 않는다.
+    import re as _re
+    from datetime import date as _date
+
+    def _when(v):
+        return _re.match(r"(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?", str(v or "").strip())
+
+    def fmt_d(v):
+        m = _when(v)
+        if not m:
+            return v or ""
+        y, mo, da = m.group(1, 2, 3)
+        return f"{mo}.{da}" if int(y) == _date.today().year else f"{y}.{mo}.{da}"
+
+    def fmt_dt(v):
+        m = _when(v)
+        if not m:
+            return v or ""
+        return fmt_d(v) + (f" {m.group(4)}:{m.group(5)}" if m.group(4) else "")
+
+    def fmt_t(v):
+        m = _when(v)
+        return f"{m.group(4)}:{m.group(5)}" if m and m.group(4) else ""
+
+    app.jinja_env.filters.update(d=fmt_d, dt=fmt_dt, t=fmt_t)
+
     # 정적 파일 주소 끝에 수정 시각(?v=)을 붙인다: 파일이 바뀌면 주소가 바뀌므로 오래 보관해도 옛 파일이 남지 않는다
     static_mtime = {}
 

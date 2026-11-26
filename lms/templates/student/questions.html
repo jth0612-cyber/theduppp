@@ -79,7 +79,7 @@
 {% if best %}
 <section class="panel" aria-labelledby="h-best">
   <div class="sec-head"><h2 id="h-best">이번 주 많이 본 질문</h2></div>
-  <ul class="list-rows">
+  <ul class="list-rows lr-wrap">
     {% for b in best %}<li><a href="{{ url_for('student.question_detail', qid=b.id) }}"><span class="lr-lead rank-no">{{ loop.index }}</span>
       <span class="lr-main"><b class="lr-title">{{ b.title }}</b><span class="lr-sub">조회 {{ b.views }}<span class="sep" aria-hidden="true"></span>{{ '답변 ' ~ b.answer_count if b.answer_count else '답변 대기' }}</span></span></a></li>{% endfor %}
   </ul>
@@ -89,7 +89,7 @@
 {% if faqs %}
 <section class="panel" aria-labelledby="h-faq">
   <div class="sec-head"><h2 id="h-faq">자주 묻는 질문</h2></div>
-  <ul class="list-rows">
+  <ul class="list-rows lr-wrap">
     {% for f in faqs %}<li><a href="{{ url_for('student.question_detail', qid=f.id) }}"><span class="lr-main"><b class="lr-title">{{ f.title }}</b></span></a></li>{% endfor %}
   </ul>
 </section>
@@ -114,11 +114,11 @@
   <p class="chip-links">{% for st, label in [('', '전체'), ('open', '답변 대기'), ('answered', '답변 완료')] %}<a href="{{ url_for('student.questions', view='mine', status=st or None) }}" class="{{ 'is-on' if (request.args.get('status') or '') == st }}">{{ label }}</a>{% endfor %}</p>
   {% endif %}
   {% if questions %}
-  <ul class="list-rows">
+  <ul class="list-rows lr-wrap">
     {% for item in questions %}
     <li><a href="{{ url_for('student.question_detail', qid=item.id) }}">
       <span class="lr-main"><b class="lr-title">{{ item.title }}</b>
-        <span class="lr-sub">{{ item.qtype }}<span class="sep" aria-hidden="true"></span>{{ '나' if item.is_mine else item.nickname }}<span class="sep" aria-hidden="true"></span>{{ item.created_at[5:10]|replace('-', '.') }}{% if item.answer_count > 1 %}<span class="sep" aria-hidden="true"></span>답변 {{ item.answer_count }}{% endif %}</span></span>
+        <span class="lr-sub">{{ item.qtype }}<span class="sep" aria-hidden="true"></span>{{ '나' if item.is_mine else item.nickname }}<span class="sep" aria-hidden="true"></span>{{ item.created_at|d }}{% if item.answer_count > 1 %}<span class="sep" aria-hidden="true"></span>답변 {{ item.answer_count }}{% endif %}</span></span>
       <span class="lr-end">{{ status_badge(item.status) }}</span>
     </a></li>
     {% endfor %}

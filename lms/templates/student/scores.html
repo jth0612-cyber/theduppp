@@ -15,7 +15,7 @@
     <li class="ss-row">
       <div class="ss-main">
         <b>{{ r.name }}</b>
-        <span class="small muted">{{ r.day[5:]|replace('-', '.') }}{% if r.kind %}<span class="sep" aria-hidden="true"></span>{{ r.kind }}{% endif %}{% if r.wrong and r.wrong != '없음' %}{% set nos = wrong_nos(r.wrong) %}<span class="sep" aria-hidden="true"></span>틀린 문항 {% if nos %}{{ nos|length }}개<span class="sep" aria-hidden="true"></span>{{ nos|join(', ') }}{% else %}{{ r.wrong }}{% endif %}{% endif %}</span>
+        <span class="small muted">{{ r.day|d }}{% if r.kind %}<span class="sep" aria-hidden="true"></span>{{ r.kind }}{% endif %}{% if r.wrong and r.wrong != '없음' %}{% set nos = wrong_nos(r.wrong) %}<span class="sep" aria-hidden="true"></span>틀린 문항 {% if nos %}{{ nos|length }}개<span class="sep" aria-hidden="true"></span>{{ nos|join(', ') }}{% else %}{{ r.wrong }}{% endif %}{% endif %}</span>
       </div>
       <div class="ss-num">
         <span class="ss-score"><b>{{ fmt(r.score) }}</b>{% if r.full %}<small> / {{ fmt(r.full) }}</small>{% endif %}</span>
@@ -40,7 +40,7 @@
   <ul class="ss-list">
     {% for e in o.exams %}
     <li class="ss-row">
-      <div class="ss-main"><b>{{ e.title }}</b><span class="small muted">{{ (e.date or '')[5:]|replace('-', '.') }}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ e.n_wrong }}개{% if e.wrong_nos %}<span class="sep" aria-hidden="true"></span>{{ e.wrong_nos|join(', ') }}{% endif %}</span></div>
+      <div class="ss-main"><b>{{ e.title }}</b><span class="small muted">{{ (e.date or '')|d }}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ e.n_wrong }}개{% if e.wrong_nos %}<span class="sep" aria-hidden="true"></span>{{ e.wrong_nos|join(', ') }}{% endif %}</span></div>
       <div class="ss-num"><span class="ss-score"><b>{{ fmt(e.score) }}</b><small> / {{ fmt(e.full) }}</small></span><span class="small muted">반 평균 {{ fmt(e.avg) }}</span></div>
     </li>
     {% endfor %}

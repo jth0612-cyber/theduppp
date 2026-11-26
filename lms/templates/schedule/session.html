@@ -7,7 +7,7 @@
   <div>
     <p class="crumb"><a href="{{ url_for('schedule.groups') }}">수업 일정</a> / <a href="{{ url_for('schedule.group', gid=grp.id) }}#w{{ s.week_no }}">{{ grp.name }}</a> /</p>
     <h1>{{ s.class_name }}<span class="sep" aria-hidden="true"></span>{{ s.week_no }}주차</h1>
-    <p class="muted small">{{ s.day }} ({{ weekdays[s.weekday] }}){% if s.period %} {{ s.period }}{% endif %} {{ s.starts }}–{{ s.ends }}{% if s.hall or s.room %}<span class="sep" aria-hidden="true"></span>{{ s.hall }} {{ s.room }}{% endif %}</p>
+    <p class="muted small">{{ s.day|d }} ({{ weekdays[s.weekday] }}){% if s.period %} {{ s.period }}{% endif %} {{ s.starts }}–{{ s.ends }}{% if s.hall or s.room %}<span class="sep" aria-hidden="true"></span>{{ s.hall }} {{ s.room }}{% endif %}</p>
   </div>
 </div>
 
@@ -43,7 +43,7 @@
 
 <section class="card">
   <h2>배부 교재{% call help('배부 교재') %}<p>주차에 배정한 교재가 기본으로 이 수업에 들어가요. 이 수업만 빼거나 더 넣을 수 있어요. 출석한 학생 수만큼 세어요.</p>{% endcall %}</h2>
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table data-rc-title="0">
     <tr><th>교재</th><th>구분</th><th>배부</th><th></th></tr>
     {% for h in s.handouts %}
     <tr><td>{{ h.title }}{% if h.extra %} <span class="badge open">이 수업만</span>{% endif %}</td><td>{{ h.kind }}</td><td class="num">{{ s.present if s.checked else s.roster }}{% if not s.checked %} <span class="small muted">(예정)</span>{% endif %}</td>
@@ -68,7 +68,7 @@
     <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="sys"><button class="btn small">조교 시스템 출결 다시 가져오기</button></form>
   </div>
   <form method="post">{{ csrf() }}<input type="hidden" name="action" value="attend">
-    <div class="table-wrap"><table>
+    <div class="table-wrap"><table data-rc-title="0">
       <tr><th>이름</th><th>아이디</th>{% for v in states %}<th>{{ v }}</th>{% endfor %}<th>미체크</th><th></th></tr>
       {% for r in roster %}
       <tr><td>{{ r.name }}{% if r.guest %} <span class="badge open">{{ r.from_class }}</span>{% endif %}</td><td class="small">{{ r.student_no }}{% if r.src == '시트' %} <span class="badge gray">시트</span>{% endif %}</td>

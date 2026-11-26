@@ -10,7 +10,7 @@
     {% if yt %}<img class="lr-lead thumb" src="https://i.ytimg.com/vi/{{ yt }}/mqdefault.jpg" alt="" loading="lazy">
     {% else %}<span class="lr-lead thumb thumb-empty" aria-hidden="true">▶</span>{% endif %}
     <span class="lr-main"><b class="lr-title">{{ v.title }}</b>
-      <span class="lr-sub">{{ v.created_at[5:10]|replace('-', '.') }}{% if v.duration %}<span class="sep" aria-hidden="true"></span>{{ v.duration }}{% endif %}{% if v.expires_on %}<span class="sep" aria-hidden="true"></span>{{ v.expires_on[5:]|replace("-", ".") }}까지{% endif %}</span></span>
+      <span class="lr-sub">{{ v.created_at|d }}{% if v.duration %}<span class="sep" aria-hidden="true"></span>{{ v.duration }}{% endif %}{% if v.expires_on %}<span class="sep" aria-hidden="true"></span>{{ v.expires_on|d }}까지{% endif %}</span></span>
   </a></li>
   {% endfor %}
 </ul></section>

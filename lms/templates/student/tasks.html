@@ -8,8 +8,8 @@
 <section class="card"><ul class="list-rows">
   {% for r in rows %}{% set ok = r.submit in ('O', 'o', '제출', '완료', '1') %}
   <li><div class="lr-row">
-    <span class="lr-main"><b class="lr-title">{{ r.book }}</b><span class="lr-sub">{{ r.day[5:]|replace('-', '.') }}까지{% if r.range %}<span class="sep" aria-hidden="true"></span>{{ r.range }}{% endif %}</span></span>
-    <span class="lr-end">{% if ok %}{% if r.right is not none and r.total %}<b>{{ r.right|int }}<small>/{{ r.total|int }}</small></b>{% else %}<span class="badge answered">제출</span>{% endif %}{% else %}<span class="badge open">안 냄</span>{% endif %}</span>
+    <span class="lr-main"><b class="lr-title">{{ r.book }}</b><span class="lr-sub">{{ r.day|d }}까지{% if r.range %}<span class="sep" aria-hidden="true"></span>{{ r.range }}{% endif %}</span></span>
+    <span class="lr-end">{% if ok %}{% if r.right is not none and r.total %}<b>{{ r.right|int }}<small>/{{ r.total|int }}</small></b>{% else %}<span class="badge answered">제출</span>{% endif %}{% elif r.day and r.day < today %}<span class="badge danger">안 냄</span>{% else %}<span class="badge gray">안 냄</span>{% endif %}</span>
   </div></li>
   {% endfor %}
 </ul></section>
