@@ -595,6 +595,19 @@ CREATE TABLE IF NOT EXISTS focus_logs (
     ended_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_focus_user ON focus_logs(user_id, ended_at);
+-- 내 공부 화면에서 직접 재는 공부 시간. 돌고 있는 타이머는 학생마다 하나, 끝내면 timer_logs 에 초 단위로 남긴다.
+-- (소도시 명상 집중 기록 focus_logs 와 섞지 않는다: 장소별 순위와 명상 현황에 들어가면 안 된다)
+CREATE TABLE IF NOT EXISTS study_timers (
+    user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    started_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS timer_logs (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    seconds     INTEGER NOT NULL,
+    ended_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_timer_user ON timer_logs(user_id, ended_at);
 -- 플래너: 하루 할 일 한 줄씩 (학생 본인만 본다)
 CREATE TABLE IF NOT EXISTS planner_items (
     id          INTEGER PRIMARY KEY,

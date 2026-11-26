@@ -161,6 +161,43 @@ class Care(unittest.TestCase):
         q = self.ta.get("/t/questions?status=all&qtype=학습질문").data.decode()
         self.assertIn('<details class="filter-fold">', q); self.assertIn("모든 단원", q)
 
+    def test_my_study_timer_counts_seconds(self):
+        import progress
+        with self.app.app_context():
+            uid = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
+        page = self.c1.get("/s/my").data.decode()
+        self.assertIn("측정 시작", page); self.assertIn("00:00:00", page); self.assertIn("직접 측정", page)
+        self.c1.post("/s/my/timer", data={"action": "start"})
+        self.assertIn("측정 끝내기", self.c1.get("/s/my").data.decode())
+        with self.app.app_context():                                   # 1분이 안 되면 기록하지 않는다
+            execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-20 seconds') WHERE user_id = ?", (uid,))
+        self.assertIn("1분이 안 돼서", self.c1.post("/s/my/timer", data={"action": "stop"}, follow_redirects=True).data.decode())
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM timer_logs", one=True))
+        self.c1.post("/s/my/timer", data={"action": "start"})
+        with self.app.app_context():                                   # 1분 35초 잰 것으로
+            execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-95 seconds') WHERE user_id = ?", (uid,))
+        self.assertIn("1분 3", self.c1.post("/s/my/timer", data={"action": "stop"}, follow_redirects=True).data.decode())
+        with self.app.app_context():
+            sec = query("SELECT seconds FROM timer_logs WHERE user_id = ?", (uid,), one=True)["seconds"]
+            self.assertTrue(95 <= sec <= 99)
+            s = progress.today_summary(uid)
+            self.assertEqual(s["seconds"], sec); self.assertEqual(s["minutes"], 2); self.assertEqual(s["streak"], 1)
+            self.assertEqual(progress.weekly_ranking(uid)["me"]["minutes"], 2)
+            self.assertIsNone(query("SELECT 1 FROM focus_logs", one=True))        # 소도시 명상 기록과 섞이지 않는다
+        self.assertIn("00:01:3", self.c1.get("/s/my").data.decode())
+        # 한 번에 3시간까지만
+        self.c1.post("/s/my/timer", data={"action": "start"})
+        with self.app.app_context():
+            execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-5 hours') WHERE user_id = ?", (uid,))
+            self.assertEqual(progress.timer_stop(uid), 3 * 3600)
+        # 소도시 명상에서 집중을 시작하면 직접 측정은 거기서 끝난다, 집중 중에는 측정을 시작할 수 없다
+        self.c1.post("/s/my/timer", data={"action": "start"})
+        self.c1.post("/s/rooms/sento/beat", data={"action": "start", "plan": "40"})
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM study_timers", one=True))
+        self.assertIn("집중 중이에요", self.c1.post("/s/my/timer", data={"action": "start"}, follow_redirects=True).data.decode())
+
     def test_lesson_needs_photo_or_note(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "글만", "day": "2026-11-20", "body": "중화 반응 정리"})

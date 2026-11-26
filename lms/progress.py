@@ -1,10 +1,11 @@
 """내 공부: 공부 시간·푼 문제·연속 학습, 주간 공부 순위, 일별 이용 시간, 학습 진도.
 
-공부 시간 = 소도시 명상 집중 기록(focus_logs) + 퀴즈·게임을 실제로 푼 시간(game_rounds.active_sec).
+공부 시간 = 직접 잰 시간(timer_logs) + 소도시 명상 집중 기록(focus_logs) + 퀴즈·게임을 실제로 푼 시간(game_rounds.active_sec).
+직접 잰 시간은 일별 그래프와 순위에서 '집중'에 넣는다.
 일별 이용 시간은 '집중 / 통과 Quiz / 영단어' 세 가지로 나눈다.
 학습 진도: TOPIC마다 진술 문장 중 마지막으로 맞힌 것의 비율. 초기화하면 그 뒤에 푼 것만 센다."""
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from db import execute, query
 
@@ -38,6 +39,10 @@ def daily(uid, days=7):
         if r["d"] in out:
             out[r["d"]]["focus"] += r["m"] or 0
     sec = {}
+    for r in query("""SELECT date(ended_at) AS d, SUM(seconds) AS s FROM timer_logs
+                      WHERE user_id = ? AND ended_at >= ? GROUP BY d""", (uid, first.isoformat())):
+        if r["d"] in out:
+            sec[(r["d"], "focus")] = r["s"] or 0
     for r in query("""SELECT date(started_at) AS d, game, SUM(active_sec) AS s FROM game_rounds
                       WHERE user_id = ? AND started_at >= ? GROUP BY d, game""", (uid, first.isoformat())):
         if r["d"] in out:
@@ -60,6 +65,10 @@ def class_average(days=7):
                       JOIN users x ON x.id = gr.user_id AND x.role = 'student'
                       WHERE gr.started_at >= ? GROUP BY u, d""", (first,)):
         per[(r["u"], r["d"])] = per.get((r["u"], r["d"]), 0) + (r["s"] or 0) / 60
+    for r in query("""SELECT t.user_id AS u, date(t.ended_at) AS d, SUM(t.seconds) AS s FROM timer_logs t
+                      JOIN users x ON x.id = t.user_id AND x.role = 'student'
+                      WHERE t.ended_at >= ? GROUP BY u, d""", (first,)):
+        per[(r["u"], r["d"])] = per.get((r["u"], r["d"]), 0) + (r["s"] or 0) / 60
     by_day = {}
     for (u, d), m in per.items():
         if m >= 1:
@@ -68,17 +77,54 @@ def class_average(days=7):
 
 
 def today_summary(uid):
-    """오늘 공부 시간(분), 오늘 푼 문제 수, 연속 학습 일수."""
+    """오늘 공부 시간(분, 초), 종류별 초, 돌고 있는 타이머, 오늘 푼 문제 수, 연속 학습 일수."""
     today = date.today().isoformat()
     day = daily(uid, 1)[0]
     solved = sum(_solved(r) for r in query("""SELECT picks, total, finished_at FROM game_rounds
                                                WHERE user_id = ? AND started_at >= ?""", (uid, today)))
-    return {"minutes": day["total"], "solved": solved, "streak": streak(uid)}
+    one = lambda sql: query(sql, (uid, today), one=True)["s"] or 0
+    game = {"quiz": 0, "vocab": 0}
+    for r in query("SELECT game, SUM(active_sec) AS s FROM game_rounds WHERE user_id = ? AND started_at >= ? GROUP BY game", (uid, today)):
+        game[_kind(r["game"])] += r["s"] or 0
+    parts = [("직접 측정", one("SELECT SUM(seconds) AS s FROM timer_logs WHERE user_id = ? AND ended_at >= ?")),
+             ("소도시 명상", 60 * one("SELECT SUM(minutes) AS s FROM focus_logs WHERE user_id = ? AND ended_at >= ?")),
+             ("통과 Quiz", game["quiz"]), ("영단어", game["vocab"])]
+    return {"minutes": day["total"], "seconds": sum(s for _, s in parts), "parts": parts,
+            "running": timer_elapsed(uid), "timer_max": TIMER_MAX_SEC, "solved": solved, "streak": streak(uid)}
+
+
+# ---------------------------------------------------------------- 직접 재는 타이머 (서버가 잰 시간만 인정)
+TIMER_MIN_SEC = 60            # 이보다 짧으면 기록하지 않는다
+TIMER_MAX_SEC = 3 * 3600      # ponytail: 켜 둔 채 잊어도 한 번에 3시간까지만. 순위 악용이 보이면 줄이거나 중간 확인을 넣는다
+
+
+def timer_elapsed(uid):
+    """돌고 있는 타이머가 지금까지 잰 초 (없으면 None)."""
+    r = query("SELECT started_at FROM study_timers WHERE user_id = ?", (uid,), one=True)
+    if r is None:
+        return None
+    return max(0, min(TIMER_MAX_SEC, int((datetime.now() - datetime.fromisoformat(r["started_at"])).total_seconds())))
+
+
+def timer_start(uid):
+    execute("INSERT OR IGNORE INTO study_timers (user_id) VALUES (?)", (uid,))
+
+
+def timer_stop(uid):
+    """타이머를 끝낸다. 돌려주는 값: 잰 초(돌고 있지 않았으면 None). TIMER_MIN_SEC 이상일 때만 기록한다."""
+    sec = timer_elapsed(uid)
+    if sec is None:
+        return None
+    execute("DELETE FROM study_timers WHERE user_id = ?", (uid,))
+    if sec >= TIMER_MIN_SEC:
+        execute("INSERT INTO timer_logs (user_id, seconds) VALUES (?, ?)", (uid, sec))
+    return sec
 
 
 def streak(uid):
     """오늘(오늘 기록이 없으면 어제)부터 거꾸로, 공부 기록이 있는 날이 끊기지 않고 이어진 일수."""
     days = {r["d"] for r in query("SELECT DISTINCT date(ended_at) AS d FROM focus_logs WHERE user_id = ?", (uid,))}
+    days |= {r["d"] for r in query("SELECT DISTINCT date(ended_at) AS d FROM timer_logs WHERE user_id = ?", (uid,))}
     days |= {r["d"] for r in query("""SELECT DISTINCT date(started_at) AS d FROM game_rounds
                                       WHERE user_id = ? AND (active_sec > 0 OR finished_at IS NOT NULL)""", (uid,))}
     d = date.today()
@@ -99,6 +145,8 @@ def weekly_ranking(uid, top=3):
     for r in query("""SELECT f.user_id AS u, SUM(f.minutes) AS m FROM focus_logs f WHERE f.ended_at >= ? GROUP BY u""", (since,)):
         total[r["u"]] = total.get(r["u"], 0) + (r["m"] or 0)
     for r in query("SELECT user_id AS u, SUM(active_sec) AS s FROM game_rounds WHERE started_at >= ? GROUP BY u", (since,)):
+        total[r["u"]] = total.get(r["u"], 0) + (r["s"] or 0) / 60
+    for r in query("SELECT user_id AS u, SUM(seconds) AS s FROM timer_logs WHERE ended_at >= ? GROUP BY u", (since,)):
         total[r["u"]] = total.get(r["u"], 0) + (r["s"] or 0) / 60
     users = {r["id"]: r for r in query("""SELECT id, nickname, username FROM users
                                           WHERE role = 'student' AND disabled = 0""")}

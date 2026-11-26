@@ -7,6 +7,25 @@
 .rank-no { width: 24px; text-align: center; font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
 .card > .find { margin-bottom: 8px; }
 .card > .find input { width: 100%; }
+/* 내 공부: 공부 시간은 한 행을 통째로 (합계, 측정 버튼, 아래에 종류별 시간) */
+.my-time { margin-top: 20px; padding: 16px; border-radius: 16px; background: var(--raised); }
+.my-time-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.my-time-main .t { flex: 1 1 auto; min-width: 0; }
+.my-time .k { display: block; font-size: 13.5px; color: var(--muted); }
+.my-time .v { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.my-timer { display: flex; align-items: center; gap: 12px; margin: 0; }
+.my-run b { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.my-timer .btn:not(.primary) { background: var(--sheet); }      /* 회색 칸 위에서도 버튼으로 보이게 */
+.my-parts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.my-parts dt { font-size: 12.5px; color: var(--muted); }
+.my-parts dd { margin: 2px 0 0; font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.my-stats.my-stats-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 560px) {
+  .my-parts { grid-template-columns: repeat(2, 1fr); gap: 10px 8px; }
+  .my-time .v { font-size: 26px; }
+  .my-timer { flex: 1 1 100%; }
+  .my-timer .btn { flex: 1; }
+}
 /* 아래 시트의 버튼 세 개 (시간표 칸: 닫기, 지우기, 고치기) */
 .sheet-dlg .sd-act.sd-act-3 { grid-template-columns: repeat(3, 1fr); }
 .chip-links { display: flex; gap: 8px; margin: 4px 0 8px; }

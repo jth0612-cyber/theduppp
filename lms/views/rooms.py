@@ -231,6 +231,8 @@ def beat(place):
     uid = g.user["id"]
     db = get_db()
     if action == "start":
+        import progress
+        progress.timer_stop(uid)                       # 내 공부 화면에서 재던 시간은 여기까지 기록
         plan = request.form.get("plan", type=int)
         plan = plan if plan in PLAN_CHOICES else PLAN_DEFAULT
         db.execute("""INSERT INTO room_presence (user_id, place, status, focus_since, plan_min)

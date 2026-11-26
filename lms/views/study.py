@@ -503,6 +503,28 @@ def s_my():
     return render_template("study/my.html", me=me, m=my_study(g.user["id"]))
 
 
+@bp.route("/s/my/timer", methods=["POST"])
+@student_required
+def s_my_timer():
+    """내 공부 화면에서 직접 재는 공부 시간: 시작, 끝내기. 시간은 서버가 잰다."""
+    import progress
+    uid = g.user["id"]
+    if request.form.get("action") == "start":
+        focusing = query("""SELECT 1 FROM room_presence WHERE user_id = ? AND status = 'focus'
+                             AND (julianday('now', 'localtime') - julianday(focus_since)) * 1440 < plan_min""", (uid,), one=True)
+        if focusing:                                   # 같은 시간을 두 번 세지 않는다
+            flash("소도시 명상에서 집중 중이에요. 집중을 끝낸 뒤 측정해 주세요.", "error")
+        else:
+            progress.timer_start(uid)
+    else:
+        sec = progress.timer_stop(uid)
+        if sec is not None:
+            h, m, s = sec // 3600, sec // 60 % 60, sec % 60
+            took = (f"{h}시간 " if h else "") + (f"{m}분 " if h or m else "") + f"{s}초"
+            flash(f"{took} 기록했어요." if sec >= progress.TIMER_MIN_SEC else "1분이 안 돼서 기록하지 않았어요.", "ok")
+    return redirect(url_for("study.s_my"))
+
+
 @bp.route("/s/my/reset", methods=["POST"])
 @student_required
 def s_my_reset():
