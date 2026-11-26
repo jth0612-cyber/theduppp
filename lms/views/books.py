@@ -380,6 +380,21 @@ def teacher_mock(mid):
     return render_template("teacher/mock_stats.html", **ctx)
 
 
+@bp.route("/t/mocks/<int:mid>/omr/<int:sid>")
+@staff_required
+def teacher_mock_omr(mid, sid):
+    """학생 한 명의 OMR (회차 화면의 학생 이름에서 온다). 현장에서 학생에게 보여 주는 용도."""
+    import exams
+    mock = _mock_or_404(mid)
+    r = next((x for x in exams.class_stats(mid)["rows"] if x["student_id"] == sid), None) if mock["n_items"] else None
+    if r is None:
+        abort(404)
+    key, points = json.loads(mock["answer_key"]), json.loads(mock["points"])
+    marks = ((r["answers"] or "") + "0" * mock["n_items"])[:mock["n_items"]]
+    return render_template("teacher/mock_omr.html", mock=mock, r=r, title=exams.exam_title(mock), key=key, points=points,
+                           marks=marks, my_wrong=set(analysis.wrong_items(marks, key)), item_nos=(), fmt=analysis._fmt)
+
+
 @bp.route("/t/mocks/<int:mid>/omr", methods=["POST"])
 @staff_required
 def omr_upload(mid):

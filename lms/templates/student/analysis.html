@@ -49,14 +49,7 @@
   <section class="omr is-view" aria-labelledby="h-omr">
     <div class="sec-head"><h2 id="h-omr">내 답안{% call help('내 답안') %}<p>검은 원은 내가 고른 답, 빨간 테두리는 틀린 문항의 정답이에요.</p><p>번호가 빨간색이면 틀린 문항이고, 번호 밑의 숫자는 배점이에요.</p>{% if item_nos %}<p>번호를 누르면 그 문항을 볼 수 있어요.</p>{% endif %}{% endcall %}</h2></div>
     <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 </p>
-    <div class="omr-cols">
-      {% for i in range(1, mock.n_items + 1) %}{% set mine = marks[i - 1] %}
-      <div class="omr-row{{ ' is-wrong' if i in my_wrong }}" role="group" aria-label="{{ i }}번 {{ fmt(points[i - 1]) }}점, 내 답 {{ mine if mine != '0' else '무응답' }}, 정답 {{ key[i - 1] }}{{ ', 오답' if i in my_wrong }}">
-        <span class="legend"{{ '' if i in item_nos else ' aria-hidden="true"' }}>{% if i in item_nos %}<a href="{{ url_for('items.view', mid=mock.id, no=i) }}" aria-label="{{ i }}번 문항 보기">{{ '%02d'|format(i) }}</a>{% else %}{{ '%02d'|format(i) }}{% endif %}<small class="pt pt-{{ 'hi' if points[i - 1] > 2 else ('lo' if points[i - 1] < 2 else 'mid') }}">{{ fmt(points[i - 1]) }}</small></span>
-        {% for c in range(1, 6) %}<span class="bubble-v{{ ' is-mine' if mine == c|string }}{{ ' is-key' if key[i - 1] == c and i in my_wrong }}" aria-hidden="true">{{ c }}</span>{% endfor %}
-      </div>
-      {% endfor %}
-    </div>
+    {% include "_omr_cols.html" %}
   </section>
 
   <section class="report" id="result" aria-labelledby="h-report">

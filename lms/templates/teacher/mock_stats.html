@@ -86,7 +86,7 @@
   <details><summary><h2 id="h-res" class="inline">학생 결과 <span class="small muted">{{ entries|length }}명<span class="sep" aria-hidden="true"></span>눌러서 펼치기</span></h2></summary>
   <div class="table-wrap"><table>
     <thead><tr><th>학생</th><th>반</th><th class="num">점수</th><th class="num">오답</th><th>답안</th></tr></thead>
-    <tbody>{% for e in entries %}<tr><td>{{ e.name }} <span class="small muted">{{ e.student_no }}</span>{% if e.note %} <span class="badge open" title="{{ e.note }}">확인</span>{% endif %}</td><td class="muted">{{ e.cls }}</td>
+    <tbody>{% for e in entries %}<tr><td><a href="{{ url_for('books.teacher_mock_omr', mid=mock.id, sid=e.student_id) }}">{{ e.name }}</a> <span class="small muted">{{ e.student_no }}</span>{% if e.note %} <span class="badge open" title="{{ e.note }}">확인</span>{% endif %}</td><td class="muted">{{ e.cls }}</td>
       <td class="num">{{ fmt(e.score) }}</td><td class="num">{{ e.wrong }}</td>
       <td class="answer-key small">{% for ch in e.answers %}{{ '-' if ch == '0' else ('○' if ch == 'R' else ch) }}{% if loop.index % 5 == 0 %} {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
   </table></div>

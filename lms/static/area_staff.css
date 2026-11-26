@@ -19,6 +19,25 @@
   main .table-wrap:has(> table.rowcards) { overflow: visible; }
 }
 
+/* 질문답변 목록: 휴대폰에서 상태 배지는 늘 제목 줄 오른쪽 끝 (학생 이름과 반 길이에 따라 자리가 바뀌지 않게) */
+@media (max-width: 720px) {
+  main table.rowcards.q-table td.rc-title { flex: 1 1 calc(100% - 96px); display: block; text-align: left; }
+  main table.rowcards.q-table td.rc-tag { order: -1; margin-left: auto; align-self: flex-start; }
+}
+
+/* 고르는 칩이 여러 줄일 때: 한 줄로 접어 두고, 고른 값은 접힌 채로 보여 준다 */
+.filter-fold { margin: 4px 0 12px; }
+.filter-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin: 0; border-radius: 12px; background: var(--sheet); color: var(--ink); font-size: 14px; }
+.filter-fold > summary::-webkit-details-marker { display: none; }
+.filter-fold > summary b { font-weight: 700; }
+.filter-fold > summary > span { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-fold > summary em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--danger); white-space: nowrap; }
+.filter-fold > summary::after { content: ""; flex: none; margin-left: auto; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform .15s ease; }
+.filter-fold[open] > summary::after { transform: rotate(-135deg) translateY(-2px); }
+.filter-fold[open] > summary { margin-bottom: 10px; }
+.filter-fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .filter-fold > summary::after { transition: none; } }
+
 /* 이름표와 값 줄 (학생 기본 정보 등): 이름표는 왼쪽 흐리게, 값은 오른쪽 */
 .kv { margin: 0; }
 .kv > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }

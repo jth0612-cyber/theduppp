@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ l.title }} | 수업 기록 | 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('care.t_lessons') }}">← 수업 기록</a></p>
+<div class="page-head"><div><h1>{{ l.title }}</h1>
+  <p class="muted small">{{ l.day }}<span class="sep" aria-hidden="true"></span>{{ l.cls }}<span class="sep" aria-hidden="true"></span>{{ ('노트 ' ~ files|length ~ '장') if files else '사진 없음' }}</p></div>
+  <form method="post" action="{{ url_for('care.t_lesson_delete', lid=l.id) }}" data-confirm="이 수업 기록을 삭제할까요?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small danger">삭제</button></form>
+</div>
+<div class="card">
+  {% if l.body %}<div class="pre">{{ l.body }}</div>{% endif %}
+  {% if files %}<div class="q-photos{{ ' mt' if l.body }}">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ l.title }} 노트 {{ loop.index }}" loading="lazy"></a>{% endfor %}</div>{% endif %}
+</div>
+{% endblock %}

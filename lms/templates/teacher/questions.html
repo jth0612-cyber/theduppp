@@ -11,6 +11,8 @@
   <a href="{{ url_for('teacher.questions', status='all', faq=1) }}" class="{{ 'active' if faq }}">자주 묻는 질문</a>
   {% if g.user.role == 'assistant' %}<a href="{{ url_for('teacher.questions', status='all', mine=1) }}" class="{{ 'active' if mine }}">나를 지정한 상담</a>{% endif %}
 </nav>
+<details class="filter-fold">
+<summary><b>필터</b><span>{{ qtype or '모든 유형' }}{% if qtype in ('', '학습질문') %}<span class="sep" aria-hidden="true"></span>{{ unit or '모든 단원' }}{% endif %}</span>{% set wait_n = waiting.values()|sum %}{% if wait_n and not qtype %}<em>대기 {{ wait_n }}</em>{% endif %}</summary>
 <p class="chip-links" aria-label="질문 유형">
   <a href="{{ url_for('teacher.questions', status=status) }}" class="{{ 'is-on' if not qtype }}">모든 유형</a>
   {% for t in qtypes %}<a href="{{ url_for('teacher.questions', status=status, qtype=t) }}" class="{{ 'is-on' if qtype == t }}">{{ t }}{% if waiting.get(t) %} <b>{{ waiting[t] }}</b>{% endif %}</a>{% endfor %}
@@ -21,6 +23,7 @@
   {% for u in units %}<a href="{{ url_for('teacher.questions', status=status, qtype=qtype or None, unit=u, q=word or None) }}" class="{{ 'is-on' if unit == u }}">{{ u }}</a>{% endfor %}
 </p>
 {% endif %}
+</details>
 <form method="get" class="find find-wide" role="search">
   <input type="hidden" name="status" value="{{ status }}">{% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}{% if unit %}<input type="hidden" name="unit" value="{{ unit }}">{% endif %}
   <input type="search" name="q" value="{{ word }}" placeholder="제목과 내용에서 찾기" aria-label="질문 찾기" enterkeyhint="search">
@@ -35,7 +38,7 @@
 {% endif %}
 <div class="card">
   {% if questions %}
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table class="q-table">
     <tr><th>제목</th><th>학생</th><th>반</th><th>상태</th><th class="num">등록</th></tr>
     {% for q in questions %}
     <tr>

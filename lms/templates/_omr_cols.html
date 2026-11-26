@@ -1,0 +1,9 @@
+{# OMR 답안 칸 (학생 시험 분석, 선생님 화면의 학생 OMR이 함께 쓴다). 필요한 값: mock, marks, key, points, my_wrong, item_nos, fmt #}
+    <div class="omr-cols">
+      {% for i in range(1, mock.n_items + 1) %}{% set mine = marks[i - 1] %}
+      <div class="omr-row{{ ' is-wrong' if i in my_wrong }}" role="group" aria-label="{{ i }}번 {{ fmt(points[i - 1]) }}점, 내 답 {{ mine if mine != '0' else '무응답' }}, 정답 {{ key[i - 1] }}{{ ', 오답' if i in my_wrong }}">
+        <span class="legend"{{ '' if i in item_nos else ' aria-hidden="true"' }}>{% if i in item_nos %}<a href="{{ url_for('items.view', mid=mock.id, no=i) }}" aria-label="{{ i }}번 문항 보기">{{ '%02d'|format(i) }}</a>{% else %}{{ '%02d'|format(i) }}{% endif %}<small class="pt pt-{{ 'hi' if points[i - 1] > 2 else ('lo' if points[i - 1] < 2 else 'mid') }}">{{ fmt(points[i - 1]) }}</small></span>
+        {% for c in range(1, 6) %}<span class="bubble-v{{ ' is-mine' if mine == c|string }}{{ ' is-key' if key[i - 1] == c and i in my_wrong }}" aria-hidden="true">{{ c }}</span>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>

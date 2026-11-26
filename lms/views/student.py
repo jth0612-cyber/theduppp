@@ -2,6 +2,7 @@
 성적·자료·공지·영상은 본인/본인 반으로 제한한다. 질답 게시판은 학습질문만 전체 공개(작성자는 닉네임)하고,
 행정문의는 본인과 선생님만 본다."""
 import os
+import re
 from datetime import date, timedelta
 
 from flask import (Blueprint, abort, current_app, flash, g, redirect, render_template, request,
@@ -216,6 +217,7 @@ def scores():
     kind = analysis.kind_arg(request.args.get("kind"), omr[0]["kind"] if omr else "복습 테스트")   # 탭: 복습 테스트 / 모의고사
     counts = {o["kind"]: len(o["exams"]) for o in omr}
     return render_template("student/scores.html", me=me, code=code, sys_scores=sysdata.scores(code), fmt=sysdata.fmt,
+                           wrong_nos=lambda s: re.findall(r"\d+", s or ""),      # 조교 시스템의 '틀린문항' 글에서 번호만
                            omr=[o for o in omr if o["kind"] == kind], kind=kind, kind_counts=counts, has_omr=bool(omr))
 
 
@@ -380,7 +382,15 @@ def question_thread(qid):
                       WHERE a.question_id = ?""", (qid,))]
     items += [dict(r, kind="followup") for r in
               query("SELECT body, created_at, image_id FROM followups WHERE question_id = ?", (qid,))]
-    return sorted(items, key=lambda r: r["created_at"])
+    items.sort(key=lambda r: r["created_at"])
+    # 메인 답변 → 추가 질문과 그 뒤에 달린 답변 → 추가 질문 전에 달린 부가 답변.
+    # 부가 답변이 사이에 끼어 추가 질문이 메인 답변에서 멀어지지 않게 한다.
+    main = [r for r in items if r["kind"] == "answer" and r["is_main"]]
+    rest = [r for r in items if r not in main]
+    first_fu = next((i for i, r in enumerate(rest) if r["kind"] == "followup"), None)
+    if first_fu is not None:
+        items = main + rest[first_fu:] + rest[:first_fu]
+    return items
 
 
 @bp.route("/questions/<int:qid>")

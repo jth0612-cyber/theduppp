@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ r.name }} OMR | {{ title }} | 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('books.teacher_mock', mid=mock.id) }}">← {{ title }}</a></p>
+<div class="page-head"><div><h1>{{ r.name }} <span class="small muted">{{ r.cls }}<span class="sep" aria-hidden="true"></span>{{ r.student_no }}</span></h1>
+  <p class="muted small">{{ fmt(r.score) }}/{{ fmt(mock.full_score) }}점<span class="sep" aria-hidden="true"></span>틀린 문항 {{ my_wrong|length }}개{% if my_wrong %}<span class="sep" aria-hidden="true"></span>{{ my_wrong|sort|join(', ') }}{% endif %}</p></div>
+</div>
+<section class="omr is-view is-solo" aria-label="{{ r.name }} 답안">
+  <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>학생 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답</p>
+{% include "_omr_cols.html" %}
+</section>
+{% endblock %}

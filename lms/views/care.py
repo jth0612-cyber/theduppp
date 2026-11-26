@@ -184,6 +184,17 @@ def s_lessons():
     return render_template("care/s_lessons.html", me=me, rows=rows, new_since=week_ago)
 
 
+@bp.route("/t/lessons/<int:lid>")
+@staff_required
+def t_lesson(lid):
+    """올린 수업 기록 한 건 (목록의 주제에서 온다)."""
+    l = query("SELECT l.*, c.name AS cls FROM lessons l JOIN classes c ON c.id = l.class_id WHERE l.id = ?", (lid,), one=True)
+    if l is None:
+        abort(404)
+    files = [x["file_id"] for x in query("SELECT file_id FROM lesson_files WHERE lesson_id = ? ORDER BY pos", (lid,))]
+    return render_template("care/t_lesson.html", l=l, files=files)
+
+
 @bp.route("/t/lessons", methods=["GET", "POST"])
 @staff_required
 def t_lessons():
@@ -315,7 +326,7 @@ def parent_report(student_id, limit=6):
         full = rep["mock"]["full_score"]
         exams_out.append({"title": exams.exam_title(rep["mock"]), "kind": rep["mock"].get("kind") or "", "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
                           "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
-                          "n_wrong": len(rep["wrong"]), "n": rep["mock"]["n_items"], "whys": whys})
+                          "n_wrong": len(rep["wrong"]), "wrong_nos": list(rep["wrong"]), "n": rep["mock"]["n_items"], "whys": whys})
     last = exams_out[0] if exams_out else None
     prev = next((e for e in exams_out[1:] if e["kind"] == last["kind"]), None) if last else None   # 같은 종류끼리 비교
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None

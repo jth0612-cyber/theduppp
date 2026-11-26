@@ -93,6 +93,31 @@ class Care(unittest.TestCase):
             uid = query("SELECT id FROM users WHERE username = 'ta'", one=True)["id"]
             self.assertEqual(paper_review_counts(date.today().strftime("%Y-%m")), {uid: 1})
 
+    def test_staff_opens_student_omr_and_scores_show_wrong_numbers(self):
+        mid = self._exam()
+        page = self.ta.get(f"/t/mocks/{mid}").data.decode()
+        self.assertIn(f"/t/mocks/{mid}/omr/{self.s1}", page)                              # 회차 화면의 학생 이름이 OMR로 간다
+        omr = self.ta.get(f"/t/mocks/{mid}/omr/{self.s1}").data.decode()
+        self.assertIn("김하나", omr); self.assertIn("틀린 문항 2개", omr); self.assertIn("3, 4", omr)
+        self.assertEqual(self.ta.get(f"/t/mocks/{mid}/omr/{self.s2}").status_code, 404)   # 결과 없는 학생
+        self.assertNotEqual(self.c1.get(f"/t/mocks/{mid}/omr/{self.s1}").status_code, 200)  # 학생은 못 본다
+        mine = self.c1.get("/s/scores").data.decode()
+        self.assertIn("틀린 문항 2개", mine); self.assertIn("3, 4", mine)
+
+    def test_followup_comes_right_after_main_answer(self):
+        with self.app.app_context():
+            from views.student import question_thread
+            uid = query("SELECT id FROM users WHERE username = 'ta'", one=True)["id"]
+            q = execute("INSERT INTO questions (student_id, title, body) VALUES (?, 't', 'b')", (self.s1,))
+            for body, at in (("메인", "2026-11-01 10:00:00"), ("부가", "2026-11-01 11:00:00"), ("추가 답변", "2026-11-01 13:00:00")):
+                execute("INSERT INTO answers (question_id, author_id, body, created_at) VALUES (?, ?, ?, ?)", (q, uid, body, at))
+            execute("INSERT INTO followups (question_id, body, created_at) VALUES (?, '추가 질문', '2026-11-01 12:00:00')", (q,))
+            self.assertEqual([m["body"] for m in question_thread(q)], ["메인", "추가 질문", "추가 답변", "부가"])
+            # 메인 답변의 시각이 추가 질문보다 늦게 찍혀 있어도 메인 답변이 먼저
+            execute("UPDATE answers SET created_at = '2026-11-01 12:30:00' WHERE question_id = ? AND body = '메인'", (q,))
+            execute("DELETE FROM answers WHERE question_id = ? AND body = '부가'", (q,))
+            self.assertEqual([m["body"] for m in question_thread(q)], ["메인", "추가 질문", "추가 답변"])
+
     def test_one_to_one_split_by_kind(self):
         """1:1 관리: 복습 테스트는 시험지 첨삭만, 모의고사는 1:1 피드백만."""
         rmid = self._exam()
@@ -119,6 +144,19 @@ class Care(unittest.TestCase):
             fid = query("SELECT file_id FROM lesson_files", one=True)["file_id"]
         self.assertEqual(self.c1.get(f"/s/file/{fid}").status_code, 200)
         self.assertNotEqual(self.c2.get(f"/s/file/{fid}").status_code, 200)
+
+    def test_staff_opens_lesson_and_question_filters_fold(self):
+        self.ta.post("/t/lessons", data={"class_id": self.a, "title": "TOPIC 24 중화 반응", "body": "몰 비 1:1", "image": [(io.BytesIO(PNG), "n.png")]},
+                     content_type="multipart/form-data")
+        with self.app.app_context():
+            lid = query("SELECT id FROM lessons", one=True)["id"]
+        self.assertIn(f'href="/t/lessons/{lid}"', self.ta.get("/t/lessons").data.decode())
+        page = self.ta.get(f"/t/lessons/{lid}").data.decode()
+        self.assertIn("몰 비 1:1", page); self.assertIn("노트 1장", page); self.assertIn("question-img", page)
+        self.assertEqual(self.ta.get("/t/lessons/9999").status_code, 404)
+        self.assertNotEqual(self.c1.get(f"/t/lessons/{lid}").status_code, 200)
+        q = self.ta.get("/t/questions?status=all&qtype=학습질문").data.decode()
+        self.assertIn('<details class="filter-fold">', q); self.assertIn("모든 단원", q)
 
     def test_lesson_needs_photo_or_note(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})
