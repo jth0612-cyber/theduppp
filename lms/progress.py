@@ -94,8 +94,8 @@ def today_summary(uid):
 
 
 # ---------------------------------------------------------------- 직접 재는 타이머 (서버가 잰 시간만 인정)
-TIMER_MIN_SEC = 60            # 이보다 짧으면 기록하지 않는다
-TIMER_MAX_SEC = 3 * 3600      # ponytail: 켜 둔 채 잊어도 한 번에 3시간까지만. 순위 악용이 보이면 줄이거나 중간 확인을 넣는다
+TIMER_MIN_SEC = 1             # 최소 제한 없음 (사용자 결정, 2026-11-27). 0초만 남기지 않는다
+TIMER_MAX_SEC = 100 * 60      # 한 번에 100분까지 (사용자 결정, 2026-11-27. 소도시 명상의 가장 긴 집중 시간과 같다)
 
 
 def timer_elapsed(uid):
@@ -111,7 +111,7 @@ def timer_start(uid):
 
 
 def timer_stop(uid):
-    """타이머를 끝낸다. 돌려주는 값: 잰 초(돌고 있지 않았으면 None). TIMER_MIN_SEC 이상일 때만 기록한다."""
+    """타이머를 끝낸다. 돌려주는 값: 잰 초(돌고 있지 않았으면 None). 1초 이상이면 기록한다."""
     sec = timer_elapsed(uid)
     if sec is None:
         return None

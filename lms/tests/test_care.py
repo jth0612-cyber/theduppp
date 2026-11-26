@@ -170,11 +170,12 @@ class Care(unittest.TestCase):
         self.assertIn("오늘은 기록이 없어요", page); self.assertNotIn("0초", page)
         self.c1.post("/s/my/timer", data={"action": "start"})
         self.assertIn("측정 끝내기", self.c1.get("/s/my").data.decode())
-        with self.app.app_context():                                   # 1분이 안 되면 기록하지 않는다
+        with self.app.app_context():                                   # 최소 제한 없음: 20초도 기록한다
             execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-20 seconds') WHERE user_id = ?", (uid,))
-        self.assertIn("1분이 안 돼서", self.c1.post("/s/my/timer", data={"action": "stop"}, follow_redirects=True).data.decode())
+        self.assertIn("초 기록했어요", self.c1.post("/s/my/timer", data={"action": "stop"}, follow_redirects=True).data.decode())
         with self.app.app_context():
-            self.assertIsNone(query("SELECT 1 FROM timer_logs", one=True))
+            self.assertTrue(20 <= query("SELECT seconds FROM timer_logs", one=True)["seconds"] <= 24)
+            execute("DELETE FROM timer_logs")
         self.c1.post("/s/my/timer", data={"action": "start"})
         with self.app.app_context():                                   # 1분 35초 잰 것으로
             execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-95 seconds') WHERE user_id = ?", (uid,))
@@ -187,11 +188,13 @@ class Care(unittest.TestCase):
             self.assertEqual(progress.weekly_ranking(uid)["me"]["minutes"], 2)
             self.assertIsNone(query("SELECT 1 FROM focus_logs", one=True))        # 소도시 명상 기록과 섞이지 않는다
         self.assertIn("00:01:3", self.c1.get("/s/my").data.decode())
-        # 한 번에 3시간까지만
+        # 한 번에 100분까지만
         self.c1.post("/s/my/timer", data={"action": "start"})
         with self.app.app_context():
             execute("UPDATE study_timers SET started_at = datetime('now', 'localtime', '-5 hours') WHERE user_id = ?", (uid,))
-            self.assertEqual(progress.timer_stop(uid), 3 * 3600)
+        self.assertIn("100분까지만", self.c1.post("/s/my/timer", data={"action": "stop"}, follow_redirects=True).data.decode())
+        with self.app.app_context():
+            self.assertEqual(query("SELECT MAX(seconds) AS s FROM timer_logs", one=True)["s"], 100 * 60)
         # 소도시 명상에서 집중을 시작하면 직접 측정은 거기서 끝난다, 집중 중에는 측정을 시작할 수 없다
         self.c1.post("/s/my/timer", data={"action": "start"})
         self.c1.post("/s/rooms/sento/beat", data={"action": "start", "plan": "40"})

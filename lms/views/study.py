@@ -521,7 +521,8 @@ def s_my_timer():
         if sec is not None:
             h, m, s = sec // 3600, sec // 60 % 60, sec % 60
             took = (f"{h}시간 " if h else "") + (f"{m}분 " if h or m else "") + f"{s}초"
-            flash(f"{took} 기록했어요." if sec >= progress.TIMER_MIN_SEC else "1분이 안 돼서 기록하지 않았어요.", "ok")
+            if sec >= progress.TIMER_MIN_SEC:
+                flash(f"{took} 기록했어요." + (" 한 번에 100분까지만 기록해요." if sec >= progress.TIMER_MAX_SEC else ""), "ok")
     return redirect(url_for("study.s_my"))
 
 
