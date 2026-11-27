@@ -2906,3 +2906,5 @@ main table.cmp :is(th, td).num { width: 1%; white-space: nowrap; }
   main table:not(.sched, .sched-cal, .mark-table) :is(th, td) { padding-inline: 18px; }
   main table:not(.sched, .sched-cal, .mark-table) :is(th, td) + :is(th, td) { border-left: 1px solid var(--rule); }
 }
+/* 내 답과 정답을 나란히 적을 때 정답은 밑줄과 짙은 글씨로 (2026-11-27 사용자 지시). 화살표는 쓰지 않는다. */
+.ans-key { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }

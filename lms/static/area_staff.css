@@ -63,3 +63,29 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
   main .row > .field:not(.shrink) { flex: 1 1 100%; min-width: 0; }
   main .row.nowrap { flex-wrap: wrap; }
 }
+
+/* 처리 화면(질문 답변, 복습 테스트 첨삭, 모의고사 피드백). 데스크톱은 왼쪽에 자료, 오른쪽에 입력.
+   휴대폰은 사진이 머리줄 아래에 붙어 있고(옆으로 넘김, 누르면 크게) 그 아래로 입력이 흐른다: 키보드를 열어도 사진과 입력칸이 함께 보인다. */
+.work { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.work-ref { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; display: grid; gap: 12px; }
+.work-photos { display: grid; gap: 10px; }
+.work-photos a { display: block; }
+.work-photos img { display: block; width: 100%; border-radius: 12px; background: var(--raised); }
+.work-do { display: grid; gap: 14px; min-width: 0; }
+.work-do > * { margin: 0; }
+@media (max-width: 900px) {
+  .work { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .work-ref { display: contents; }
+  .work-photos { order: -1; position: sticky; top: 52px; z-index: 5; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin-inline: -16px; padding: 8px 16px; background: var(--frame); -webkit-overflow-scrolling: touch; }
+  .work-photos a { flex: 0 0 auto; scroll-snap-align: center; }
+  .work-photos img { width: auto; height: min(32vh, 260px); max-width: 84vw; object-fit: contain; }
+  .work-do .btn.primary { width: 100%; min-height: 52px; }
+  /* 채점표: 문항마다 한 묶음 (번호와 답, 오답 유형, 메모) */
+  .work .mark-table thead { display: none; }
+  .work .mark-table, .work .mark-table tbody { display: block; }
+  .work .mark-table tr { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .work .mark-table td { padding: 0; border: 0; }
+  .work .mark-table td:last-child { grid-column: 1 / -1; }
+  .work .mark-table :is(input[type=text], select) { font-size: 16px; min-height: 44px; }
+}

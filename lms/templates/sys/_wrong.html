@@ -14,7 +14,7 @@
         <div class="sw-head">
           <span class="w-no">{{ it.no }}번</span>
           {% if it.type %}<span class="badge type">{{ it.type }}{% if it.guess %} 추정{% endif %}</span>{% endif %}
-          <span class="small muted">{% if it.mine %}내 답 {{ it.mine }} → {% endif %}정답 {{ it.answer }}{% if it.rate is not none %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ sfmt(it.rate) }}%{% endif %}{% if it.unit %}<span class="sep" aria-hidden="true"></span>{{ it.unit }}{% endif %}</span>
+          <span class="small muted">{% if it.mine %}내 답 {{ it.mine }}<span class="sep" aria-hidden="true"></span>{% endif %}정답 <u class="ans-key">{{ it.answer }}</u>{% if it.rate is not none %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ sfmt(it.rate) }}%{% endif %}{% if it.unit %}<span class="sep" aria-hidden="true"></span>{{ it.unit }}{% endif %}</span>
         </div>
         {% if it.analysis %}<p class="sw-text">{{ it.analysis }}</p>{% endif %}
         {% if it.confused or it.same is not none %}<p class="small muted">{% if it.confused %}헷갈린 보기 {{ it.confused }}{% endif %}{% if it.confused and it.same is not none %}<span class="sep" aria-hidden="true"></span>{% endif %}{% if it.same is not none %}같은 답을 고른 반 학생 {{ sfmt(it.same) }}%{% endif %}</p>{% endif %}

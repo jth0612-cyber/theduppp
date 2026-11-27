@@ -6,21 +6,21 @@
   <p class="muted small">{{ title }}<span class="sep" aria-hidden="true"></span>{{ rep.r.score|round(1)|replace('.0', '') }}/{{ rep.full|round(1)|replace('.0', '') }}점<span class="sep" aria-hidden="true"></span>틀린 문항 {{ rep.wrong|length }}개<span class="sep" aria-hidden="true"></span>제출 {{ p.submitted_at|dt }}{% if p.status == 'done' %}<span class="sep" aria-hidden="true"></span>첨삭 {{ p.reviewed_at|dt }} {{ reviewer }}{% endif %}</p></div></div>
 {% if p.note %}<p class="aside-note"><span>학생</span>{{ p.note }}</p>{% endif %}
 {% if fb %}<p class="small">같은 회차 Full 모의고사 피드백: <a href="{{ url_for('feedback.t_detail', tid=fb.id) }}">{{ '답변 완료' if fb.status == 'done' else '답변 대기' }}</a></p>{% endif %}
-<div class="review-grid">
-  <div class="review-photos">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="시험지 사진 {{ loop.index }}"></a>{% endfor %}</div>
-  <form method="post" class="review-form-hw">
+<div class="work">
+  <div class="work-ref"><div class="work-photos">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="시험지 사진 {{ loop.index }}"></a>{% endfor %}</div></div>
+  <form method="post" class="review-form-hw work-do">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% if rep.wrongs %}
-    <table class="mark-table"><thead><tr><th class="num">번</th><th>내 답 → 정답</th><th>오답 유형</th><th>메모</th></tr></thead><tbody>
+    <table class="mark-table"><thead><tr><th class="num">번</th><th>학생 답 / 정답</th><th>오답 유형</th><th>메모</th></tr></thead><tbody>
     {% for a in rep.wrongs %}{% set k = marks.get(a.no, {}) %}
     <tr><td class="num"><b>{{ a.no }}</b></td>
-      <td class="small nowrap">{{ a.mine or '-' }} → {{ a.key }}{% if rep.enough %}<br><span class="muted">반 오답률 {{ pct1(a.rate) }}%</span>{% endif %}</td>
+      <td class="small nowrap">{{ a.mine or '-' }} / <u class="ans-key">{{ a.key }}</u>{% if rep.enough %}<br><span class="muted">반 오답률 {{ pct1(a.rate) }}%</span>{% endif %}</td>
       <td><select name="r{{ a.no }}" aria-label="{{ a.no }}번 오답 유형"><option value="">-</option>{% for t in err_types %}<option {{ 'selected' if (k.reason or a.auto_type) == t }}>{{ t }}</option>{% endfor %}</select></td>
       <td><input type="text" name="m{{ a.no }}" value="{{ k.memo or '' }}" maxlength="500" aria-label="{{ a.no }}번 메모" placeholder="예: 조건 하나를 놓침"></td></tr>
     {% endfor %}</tbody></table>
     {% else %}<p class="muted">틀린 문항이 없어요.</p>{% endif %}
     <div class="field mt"><label for="rv-comment">코멘트</label><textarea id="rv-comment" name="comment" rows="3" maxlength="1500" placeholder="학생 화면과 학부모 리포트에 보여요">{{ p.comment }}</textarea></div>
-    <button class="btn primary">{{ '저장' if p.status == 'done' else '저장하고 다음' }}</button>
+    <button class="btn primary">{{ '저장' if p.status == 'done' else ('저장하고 다음' if has_next else '저장하고 마치기') }}</button>
   </form>
 </div>
 {% endblock %}

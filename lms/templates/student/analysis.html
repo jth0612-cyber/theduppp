@@ -113,7 +113,7 @@
     {% for a in rep.wrongs %}
     <li class="wa-item">
       <h3>{{ a.no }}번{% if a.type %} <span class="badge">{{ a.type }}</span>{% endif %}
-        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }} → {% endif %}정답 {{ a.key }}{% if rep.enough %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ pct1(a.rate) }}%<span class="sep" aria-hidden="true"></span>전체 {{ pct1(a.rate_all) }}%{% endif %}{% if a.unit %}<span class="sep" aria-hidden="true"></span>{{ a.unit }}{% endif %}</span></h3>
+        <span class="small muted">{% if a.mine %}내 답 {{ a.mine }}<span class="sep" aria-hidden="true"></span>{% endif %}정답 <u class="ans-key">{{ a.key }}</u>{% if rep.enough %}<span class="sep" aria-hidden="true"></span>반 오답률 {{ pct1(a.rate) }}%<span class="sep" aria-hidden="true"></span>전체 {{ pct1(a.rate_all) }}%{% endif %}{% if a.unit %}<span class="sep" aria-hidden="true"></span>{{ a.unit }}{% endif %}</span></h3>
       {% if a.trap %}<p>{{ a.trap }}</p>{% elif a.analysis %}<p>{{ a.analysis }}</p>{% endif %}
       {% set pm = paper_marks.get(a.no) %}{% if pm and paper.status == 'done' %}<p class="ta-mark"><b>{{ paper.reviewer }} 첨삭</b>{% if pm.reason %} <span class="badge">{{ pm.reason }}</span>{% endif %} {{ pm.memo }}</p>{% endif %}
       {% if rep.enough and a.dist %}<p class="muted">반 선택 비율: {{ a.dist }}</p>{% endif %}

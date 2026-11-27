@@ -1,11 +1,12 @@
-{# 1:1 첨삭 대화와 입력칸. 필요: msgs, action, me_staff(강사·조교 화면이면 true), submit_label #}
+{# 1:1 첨삭 대화와 입력칸. 필요: msgs, action, me_staff(강사·조교 화면이면 true), submit_label. ref_photos 가 참이면 학생 사진은 위쪽 자료 칸에 모아 보여 주므로 여기서는 장수만 적는다. #}
 {% if msgs %}
 <ol class="fb-thread">
   {% for m in msgs %}
   <li class="fb-msg{{ ' is-staff' if m.staff else '' }}">
     <p class="fb-who"><b>{{ m.who if (me_staff or m.staff) else '나' }}</b><time>{{ m.created_at|dt }}</time></p>
     {% if m.body %}<div class="pre">{{ m.body }}</div>{% endif %}
-    {% if m.photos %}<div class="q-photos">{% for fid in m.photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ m.who }} 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
+    {% if m.photos and ref_photos and not m.staff %}<p class="small muted">사진 {{ m.photos|length }}장</p>
+    {% elif m.photos %}<div class="q-photos">{% for fid in m.photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="{{ m.who }} 사진 {{ loop.index }}"></a>{% endfor %}</div>{% endif %}
   </li>
   {% endfor %}
 </ol>
@@ -13,7 +14,7 @@
 <form method="post" action="{{ action }}" enctype="multipart/form-data" class="fb-form" id="reply">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="field"><label for="fb-body">{{ body_label }}</label>
-    <textarea id="fb-body" name="body" rows="4" maxlength="2000" placeholder="{{ placeholder }}"></textarea></div>
+    <textarea id="fb-body" name="body" rows="4" maxlength="2000" placeholder="{{ placeholder }}">{{ request.form.get('body', '') }}</textarea></div>
   <div class="field photo-field" data-photo>
     <input type="file" id="fb-image" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="drop-input">
     <label for="fb-image" class="drop"><b>사진 올리기</b><span>PNG, JPG 3장까지, 한 장 20MB 이하</span></label>

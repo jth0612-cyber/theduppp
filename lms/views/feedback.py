@@ -158,15 +158,18 @@ def t_detail(tid):
         try:
             body, photos = _read_form()
         except ValueError as e:
-            flash(str(e), "error")
-            return redirect(url_for("feedback.t_detail", tid=tid) + "#reply")
-        _post(tid, body, photos)
-        execute("""UPDATE feedback_threads SET status = 'done', unread = 1, staff_id = ?, updated_at = datetime('now', 'localtime')
-                   WHERE id = ?""", (g.user["id"], tid))
-        audit("feedback_reply", f"feedback:{tid}")
-        flash("답변을 보냈어요.", "ok")
-        nxt = query("SELECT id FROM feedback_threads WHERE status = 'wait' AND id != ? ORDER BY updated_at LIMIT 1", (tid,), one=True)
-        return redirect(url_for("feedback.t_detail", tid=nxt["id"]) if nxt else url_for("feedback.t_list"))
+            flash(str(e), "error")                              # 적던 글과 지금 학생을 그대로 둔다 (아래에서 같은 화면을 다시 그린다)
+        else:
+            was_done = t["status"] == "done"
+            _post(tid, body, photos)
+            execute("""UPDATE feedback_threads SET status = 'done', unread = 1, staff_id = ?, updated_at = datetime('now', 'localtime')
+                       WHERE id = ?""", (g.user["id"], tid))
+            audit("feedback_reply", f"feedback:{tid}")
+            flash("답변을 보냈어요.", "ok")
+            if was_done:                                          # 끝난 건에 덧붙인 답변은 그 자리에
+                return redirect(url_for("feedback.t_detail", tid=tid))
+            nxt = query("SELECT id FROM feedback_threads WHERE status = 'wait' AND id != ? ORDER BY updated_at LIMIT 1", (tid,), one=True)
+            return redirect(url_for("feedback.t_detail", tid=nxt["id"]) if nxt else url_for("feedback.t_list"))
     entry = query("SELECT * FROM mock_entries WHERE mock_id = ? AND user_id = ?", (t["mock_id"], t["user_id"]), one=True)
     key, points = json.loads(t["answer_key"]), json.loads(t["points"])
     wrong = []
@@ -175,7 +178,8 @@ def t_detail(tid):
     # 같은 학생·같은 회차의 시험지 첨삭 (둘이 따로 쌓여 한쪽을 놓치지 않게)
     paper = query("""SELECT p.id, p.status FROM exam_papers p JOIN users u ON u.student_id = p.student_id
                      WHERE p.mock_id = ? AND u.id = ?""", (t["mock_id"], t["user_id"]), one=True)
-    return render_template("teacher/feedback_detail.html", paper=paper, t=t, msgs=messages(tid), entry=entry, wrong=wrong,
+    has_next = query("SELECT 1 FROM feedback_threads WHERE status = 'wait' AND id != ? LIMIT 1", (tid,), one=True) is not None
+    return render_template("teacher/feedback_detail.html", has_next=has_next, paper=paper, t=t, msgs=messages(tid), entry=entry, wrong=wrong,
                            points=points, key=key, fmt=analysis._fmt)
 
 

@@ -606,16 +606,21 @@ def question_detail(qid):
                     (qid, g.user["id"], body))
             execute("UPDATE questions SET status = 'answered' WHERE id = ?", (qid,))
             audit("question_answer", f"question:{qid}")
-            flash("답변을 등록했어요.", "ok")
+            flash("답변을 보냈어요.", "ok")
             from views.pwa import notify_student
             notify_student(q["sid"], "질문에 답변이 달렸어요", q["title"], url_for("student.question_detail", qid=qid))
-            nxt = query("""SELECT id FROM questions WHERE status = 'open' AND NOT (? = 'assistant' AND qtype = '학습상담'
-                           AND assignee_id IS NOT NULL AND assignee_id != ?) ORDER BY created_at LIMIT 1""",
-                        (g.user["role"], g.user["id"]), one=True)
-            if request.form.get("go_next") == "1" and nxt:
-                return redirect(url_for("teacher.question_detail", qid=nxt["id"]))
-            return redirect(url_for("teacher.question_detail", qid=qid))
-    return render_template("teacher/question_detail.html", q=q, thread=question_thread(qid))
+            if q["status"] == "answered":                          # 끝난 질문에 덧붙인 답변은 그 자리에
+                return redirect(url_for("teacher.question_detail", qid=qid))
+            nxt = _next_open(qid)
+            return redirect(url_for("teacher.question_detail", qid=nxt["id"]) if nxt else url_for("teacher.questions"))
+    return render_template("teacher/question_detail.html", q=q, thread=question_thread(qid), has_next=_next_open(qid) is not None)
+
+
+def _next_open(qid):
+    """이 질문 다음에 답할 대기 질문 (다른 조교를 지정한 학습상담은 건너뛴다)."""
+    return query("""SELECT id FROM questions WHERE status = 'open' AND id != ? AND NOT (? = 'assistant' AND qtype = '학습상담'
+                    AND assignee_id IS NOT NULL AND assignee_id != ?) ORDER BY created_at LIMIT 1""",
+                 (qid, g.user["role"], g.user["id"]), one=True)
 
 
 @bp.route("/questions/<int:qid>/reopen", methods=["POST"])

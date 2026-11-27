@@ -12,10 +12,18 @@
   <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="reopen"><button class="btn small">대기로 되돌리기</button></form>
   {% endif %}
 </header>
+<div class="work">
+<div class="work-ref">
+{% set ns = namespace(n=0) %}{% for m in msgs if not m.staff %}{% set ns.n = ns.n + m.photos|length %}{% endfor %}
+{% if ns.n %}<div class="work-photos">{% for m in msgs if not m.staff %}{% for fid in m.photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="학생 사진 {{ loop.index }}"></a>{% endfor %}{% endfor %}</div>{% endif %}
 <dl class="report-lines fb-facts">
   <div><dt>원점수</dt><dd>{% if entry and entry.score is not none %}{{ fmt(entry.score) }} / {{ fmt(t.full_score) }}{% elif entry %}채점 전{% else %}답안 없음{% endif %}</dd></div>
   {% if wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in wrong %}{{ n }}번<small>({{ fmt(points[n - 1]) }}점, 정답 {{ key[n - 1] }}, 고른 답 {{ entry.answers[n - 1] if entry.answers[n - 1] != "0" else "무응답" }})</small>{% if not loop.last %}<span class="sep" aria-hidden="true"></span>{% endif %}{% endfor %}</dd></div>{% endif %}
 </dl>
-{% with msgs=msgs, action=url_for('feedback.t_detail', tid=t.id), me_staff=true, body_label='답변',
-        placeholder='', submit_label='답변 보내기' %}{% include "_feedback_thread.html" %}{% endwith %}
+</div>
+<div class="work-do">
+{% with ref_photos=true, msgs=msgs, action=url_for('feedback.t_detail', tid=t.id), me_staff=true, body_label='답변',
+        placeholder='', submit_label=('답변 보내기' if t.status == 'done' else ('보내고 다음' if has_next else '보내고 마치기')) %}{% include "_feedback_thread.html" %}{% endwith %}
+</div>
+</div>
 {% endblock %}

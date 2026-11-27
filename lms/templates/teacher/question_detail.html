@@ -19,12 +19,14 @@
   {% endif %}
   </div>
 </div>
-<div class="card">
-  <div class="pre">{{ q.body }}</div>
+<div class="work">
+<div class="work-ref">
+  <div class="card"><div class="pre">{{ q.body }}</div></div>
   {% set photos = question_photos(q) %}{% if photos %}
-    <div class="q-photos mt">{% for fid in photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img class="question-img" src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="질문 첨부 사진 {{ loop.index }}"></a>{% endfor %}</div>
+    <div class="work-photos">{% for fid in photos %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="질문 첨부 사진 {{ loop.index }}"></a>{% endfor %}</div>
   {% endif %}
 </div>
+<div class="work-do">
 {% for m in thread %}
   {% if m.kind == 'answer' %}
   <div class="answer"><div class="small muted answer-by"><span class="cap">{{ '조교' if m.author_role == 'assistant' else '선생님' }}</span> {{ m.author_name or ('조교' if m.author_role == 'assistant' else '선생님') }} 답변<span class="sep" aria-hidden="true"></span>{{ m.created_at|dt }} <span class="badge {{ '' if m.is_main else 'gray' }}">{{ 'Main' if m.is_main else '부가' }}</span></div><div class="pre">{{ m.body }}</div></div>
@@ -39,12 +41,11 @@
   <form method="post">
     {{ csrf() }}
     {% if g.user.role == 'assistant' %}{% set tpl = "안녕하세요 :) " ~ shown_name(g.user) ~ " 조교예요.\n\n질문 남겨주셔서 고마워요.\n\n\n\n혹여나 더 궁금하신 게 있으시다면 편하게 질문 남겨주세요!\n\n고마워요 :)" %}{% endif %}
-    <div class="field"><textarea name="body" maxlength="5000" required rows="{{ 13 if tpl else 6 }}"{% if tpl %} data-answer-tpl{% endif %}>{{ tpl or '' }}</textarea></div>
-    <div class="row">
-      <button class="btn primary">답변 등록</button>
-      <label class="small"><input type="checkbox" name="go_next" value="1" checked> 등록 후 다음 대기 질문으로 이동</label>
-    </div>
+    <div class="field"><textarea name="body" maxlength="5000" required rows="{{ 13 if tpl else 6 }}"{% if tpl %} data-answer-tpl{% endif %}>{{ request.form.get('body') or tpl or '' }}</textarea></div>
+    <button class="btn primary">{{ '답변 보내기' if q.status == 'answered' else ('보내고 다음' if has_next else '보내고 마치기') }}</button>
   </form>
   {% if q.status == 'answered' %}</details>{% endif %}
+</div>
+</div>
 </div>
 {% endblock %}
