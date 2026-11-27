@@ -34,8 +34,8 @@
   ('link.s_tasks', '과제', 'task', a.badge.task), ('student.materials', '자료실', 'folder', 0),
   ('student.videos', '강의 영상', 'video', 0), ('student.questions', '질답', 'chat', a.badge.chat),
   ('rooms.rooms', '소도시 명상', 'torii', 0), ('games.sci_hub', '통과 Quiz', 'game', 0),
-  ('study.wrong_notes', '오답 노트', 'wrong', a.badge.wrong), ('books.analysis_home', '시험 분석', 'chart', 0),
-  ('student.scores', '내 성적', 'score', 0), ('study.s_report', '내 리포트', 'report', 0)] %}
+  ('books.analysis_home', '시험', 'chart', a.badge.wrong),
+  ] %}
 <nav class="ah-apps" aria-label="기능">
   {% for ep, label, ic, n in apps %}
   <a href="{{ url_for(ep) }}"><span class="ah-ico">{{ nav.icon(ic) }}{% if n %}<i class="ah-badge" aria-label="{{ n }}개">{{ n if n < 100 else '99+' }}</i>{% endif %}</span><span>{{ label }}</span></a>

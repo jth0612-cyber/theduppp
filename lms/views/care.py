@@ -337,7 +337,7 @@ def parent_report(student_id, limit=6):
                 text = k.get("memo") or re.sub(r"^\d+번은 (?:\S+ )*?오류(?:입니다|로,)\s*\(?", "", a["analysis"] or "").rstrip(").")
                 whys.append({"no": a["no"], "type": a["type"], "text": "" if text == f"{a['no']}번" else text})
         full = rep["mock"]["full_score"]
-        exams_out.append({"title": exams.exam_title(rep["mock"]), "kind": rep["mock"].get("kind") or "", "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
+        exams_out.append({"mock_id": r["mock_id"], "title": exams.exam_title(rep["mock"]), "kind": rep["mock"].get("kind") or "", "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
                           "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
                           "n_wrong": len(rep["wrong"]), "wrong_nos": list(rep["wrong"]), "n": rep["mock"]["n_items"], "whys": whys})
     last = exams_out[0] if exams_out else None

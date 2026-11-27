@@ -11,7 +11,7 @@
 {% if groups %}
 <section class="card">
   <h2>진도 그룹</h2>
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="tl-3" data-rc-title="0">
     <tr><th>그룹</th><th>구분</th><th>반</th><th>재원생</th><th>주차</th><th>기간</th></tr>
     {% for x in groups %}
     <tr><td><a href="{{ url_for('schedule.group', gid=x.id) }}">{{ x.name }}</a></td><td>{{ x.track }}</td><td class="num">{{ x.n_class }}</td>

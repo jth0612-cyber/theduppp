@@ -2,9 +2,10 @@
 {% from "_macros.html" import csrf, kind_tabs %}
 {% block title %}오답 노트 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
+{% set exam_tab = 'wrong' %}{% include "student/_exam_tabs.html" %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>오답 노트</h1>
+    <h1>오답 모음</h1>
   </div>
   <nav class="seg" aria-label="보기">
     <a href="{{ url_for('study.wrong_notes', kind=kind_key) }}" class="{{ 'is-on' if not only_open }}">전체</a>

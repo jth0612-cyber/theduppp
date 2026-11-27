@@ -3,7 +3,7 @@
 {% block body_class %}print-page{% endblock %}
 {% block content %}
 <div class="row no-print mb">
-  {% if teacher %}<a class="small" href="{{ url_for('teacher.student_detail', sid=r.s.id) }}">← {{ r.s.name }}</a>{% endif %}
+  {% if teacher %}<a class="small" href="{{ url_for('teacher.student_detail', sid=r.s.id) }}">← {{ r.s.name }}</a>{% else %}<a class="small" href="{{ url_for('student.scores') }}">← 추이</a>{% endif %}
   <button class="btn primary" type="button" data-print>인쇄<span class="sep" aria-hidden="true"></span>PDF 저장</button>
 </div>
 <article class="report-sheet">
@@ -73,7 +73,7 @@
     <h2>복테 및 모의고사</h2>
     {% for kd in r.kinds %}
     <h3 class="rs-sub">{{ kd.kind }}</h3>
-    <table class="ledger compact cmp" data-rc-title="0"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
+    <table class="ledger compact cmp tl-4" data-rc-title="0"><thead><tr><th>회차</th><th class="num">원점수</th><th class="num">예상 등급</th><th>틀린 문항</th></tr></thead>
       <tbody>{% for m in kd.rows %}<tr><td>{{ m.title }}</td><td class="num">{{ fmt(m.score) }} / {{ fmt(m.full) }}</td><td class="num">{{ m.grade or '–' }}</td><td class="small">{{ m.wrong|join(', ') or '없음' }}</td></tr>{% endfor %}</tbody></table>
     {% else %}<p class="muted">채점한 복테 및 모의고사가 없어요.</p>{% endfor %}
   </section>

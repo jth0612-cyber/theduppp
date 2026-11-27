@@ -16,7 +16,7 @@
 
 <section class="card">
   <div class="sec-head"><h2>받은 표{% call help('받은 표') %}<p>학생이 웹에서 표시한 '다시 풀기' 결과 {{ redo_n }}건은 시트가 가져갈 수 있어요(아래 코드의 <code>pullRedoFromWeb</code>).</p>{% endcall %}</h2><span class="small muted">학생코드 연결 {{ linked }}명<span class="sep" aria-hidden="true"></span>기록이 있는 코드 {{ with_data }}개</span></div>
-  <div class="table-wrap"><table class="ledger compact" data-rc-title="0">
+  <div class="table-wrap"><table class="ledger compact tl-2 tl-5" data-rc-title="0">
     <thead><tr><th>표</th><th>내용</th><th class="num">줄</th><th>마지막 반영</th><th>방법</th></tr></thead>
     <tbody>{% for t in tables %}<tr><td><b>{{ t.key }}</b></td><td class="small muted">{{ t.label }}</td>
       <td class="num">{{ t.row.n_rows if t.row else '–' }}</td><td class="small">{{ t.row.synced_at if t.row else '아직 없음' }}</td><td class="small muted">{{ t.row.source if t.row else '' }}</td></tr>{% endfor %}</tbody>

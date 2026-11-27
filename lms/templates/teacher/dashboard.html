@@ -50,7 +50,7 @@
 <div class="card">
   <div class="sec-head"><h2>담당 반</h2><a href="{{ url_for('teacher.classes') }}">반 관리</a></div>
   {% if classes %}
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="tl-2" data-rc-title="0">
     <tr><th>반</th><th>설명</th><th class="num">학생 수</th></tr>
     {% for c in classes %}
     <tr>

@@ -59,7 +59,7 @@
   <details{{ ' open' if unused == codes|length }}><summary class="small">코드 목록 {{ codes|length }}개<span class="sep" aria-hidden="true"></span>미사용 {{ unused }}개</summary>
   <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
     {{ csrf() }}<input type="hidden" name="action" value="delete">
-    <div class="table-wrap codes-table"><table data-rc-title="1">
+    <div class="table-wrap codes-table"><table class="tl-3" data-rc-title="1">
       <tr><th></th><th>코드</th><th>메모</th><th>가입</th></tr>
       {% for c in codes %}
       <tr>
@@ -122,7 +122,7 @@
     </form>
   </div>
   {% if students %}
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="tl-2" data-rc-title="0">
     <tr><th>이름</th><th>아이디</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
     {% for s in students %}
     <tr class="{{ 'inactive' if not s.active }}">

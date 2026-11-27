@@ -25,7 +25,7 @@
     <div class="field"><label for="b-note">사유 (선택)</label><input type="text" id="b-note" name="note" maxlength="40" placeholder="예: 중간고사"></div>
     <div class="field shrink"><button class="btn primary">넣기</button></div></form>
   {% if breaks %}
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="tl-3" data-rc-title="0">
     <tr><th>반</th><th>기간</th><th>사유</th><th></th></tr>
     {% for b in breaks %}
     <tr><td>{{ b.class_name or '모든 반' }}</td><td class="nowrap">{{ b.starts }} ~ {{ b.ends }}</td><td>{{ b.note }}</td>

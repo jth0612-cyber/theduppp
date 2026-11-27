@@ -13,7 +13,7 @@
 </div>
 <div class="card">
   <h2>최근 7일 집중 시간</h2>
-  {% if week %}<div class="table-wrap"><table data-rc-title="0"><thead><tr><th>학생</th><th>반</th><th class="num">집중 횟수</th><th class="num">합계</th></tr></thead><tbody>
+  {% if week %}<div class="table-wrap"><table class="tl-2" data-rc-title="0"><thead><tr><th>학생</th><th>반</th><th class="num">집중 횟수</th><th class="num">합계</th></tr></thead><tbody>
   {% for r in week %}<tr><td><a href="{{ url_for('teacher.student_detail', sid=r.sid) }}">{{ r.name }}</a> <span class="muted small">{{ r.student_no }}</span></td><td>{{ r.class_name }}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.m // 60 }}시간 {{ r.m % 60 }}분</td></tr>{% endfor %}
   </tbody></table></div>{% else %}<p class="muted">아직 기록이 없어요.</p>{% endif %}
 </div>

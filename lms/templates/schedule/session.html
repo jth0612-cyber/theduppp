@@ -68,7 +68,7 @@
     <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="sys"><button class="btn small">조교 시스템 출결 다시 가져오기</button></form>
   </div>
   <form method="post">{{ csrf() }}<input type="hidden" name="action" value="attend">
-    <div class="table-wrap"><table data-rc-title="0">
+    <div class="table-wrap"><table class="tl-2" data-rc-title="0">
       <tr><th>이름</th><th>아이디</th>{% for v in states %}<th>{{ v }}</th>{% endfor %}<th>미체크</th><th></th></tr>
       {% for r in roster %}
       <tr><td>{{ r.name }}{% if r.guest %} <span class="badge open">{{ r.from_class }}</span>{% endif %}</td><td class="small">{{ r.student_no }}{% if r.src == '시트' %} <span class="badge gray">시트</span>{% endif %}</td>

@@ -2889,5 +2889,15 @@ main .legal table.legal-table :is(th, td) { text-align: left; vertical-align: to
 
 /* 숫자를 견주는 표(급여, 등급 기준, 반별 결과, 성적표)는 숫자 칸을 오른쪽으로 맞춘다 (운영자 결정 2026-11-27).
    그 밖의 표는 머리행과 칸 모두 가운데 그대로. 표에 class="cmp" 를 붙인다. */
-main table.cmp th.num, main table.cmp td.num { text-align: right; font-variant-numeric: tabular-nums; }
-main table.cmp th:first-child, main table.cmp td:first-child { text-align: left; }
+main table.cmp td.num { text-align: right !important; font-variant-numeric: tabular-nums; }
+main table.cmp td:first-child { text-align: left !important; }
+
+/* 표 정렬 (2026-11-27 운영자 결정으로 고침): 기본은 가운데. 제목 열과 긴 글이 들어가는 열은 왼쪽, 숫자를 견주는 표의 숫자 칸은 오른쪽.
+   제목 열은 표의 data-rc-title(0부터)이 가리키는 열이고, 그 밖에 왼쪽으로 둘 열은 표에 class="tl-열번호"(1부터)로 적는다. */
+main table[data-rc-title="0"] td:nth-child(1), main table[data-rc-title="1"] td:nth-child(2),
+main table[data-rc-title="2"] td:nth-child(3),
+main table.tl-2 td:nth-child(2), main table.tl-3 td:nth-child(3), main table.tl-4 td:nth-child(4),
+main table.tl-5 td:nth-child(5), main table.tl-6 td:nth-child(6), main table.tl-7 td:nth-child(7) { text-align: left !important; }
+/* 머리행은 어느 표든 가운데 (2026-11-27 토론 결론). 왼쪽(글, 이름, 반, 아이디)과 오른쪽(견주는 수)은 칸에만 건다.
+   견주는 수 열은 내용 폭으로 좁혀 머리와 값이 멀어지지 않게 한다. */
+main table.cmp :is(th, td).num { width: 1%; white-space: nowrap; }

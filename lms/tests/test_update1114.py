@@ -119,7 +119,12 @@ class Update1114(unittest.TestCase):
             execute("INSERT INTO users (role, username, password_hash, display_name) VALUES ('assistant', 'ta1', ?, '박조교')", (hash_password(PW),))
             execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', 'other', ?, NULL)", (hash_password("Other!2026xx"),))
         page = self.s.get(f"/s/analysis?mock={mid}").data.decode()
-        self.assertIn("시험 분석", page); self.assertIn("Full 모의고사 피드백", page)
+        self.assertIn('aria-label="시험"', page); self.assertIn("Full 모의고사 피드백", page)
+        for u, tab in (("/s/analysis", "회차별"), ("/s/wrong", "오답 모음"), ("/s/scores", "추이")):       # 시험 하나 안의 세 탭
+            p2 = self.s.get(u).data.decode()
+            self.assertIn('aria-label="시험"', p2); self.assertRegex(p2, r'class="is-on" aria-current="page">' + tab)
+        self.assertLess(page.index('id="h-report"'), page.index('id="h-omr"'))                              # 점수가 답안표보다 먼저
+        self.assertIn('<details class="fold-sec" id="omr">', page)
         # 빈 요청은 거절
         self.s.post(f"/s/analysis/{mid}/feedback", data={"body": ""})
         with self.app.app_context():
@@ -154,7 +159,8 @@ class Update1114(unittest.TestCase):
 
     def test_student_menu_folds(self):
         html = self.s.get("/s/notices").data.decode()
-        self.assertIn("시험 분석", html)
+        for gone in ("내 성적", "내 리포트", "오답 노트", "시험 분석"):                                       # 시험 메뉴 넷은 '시험' 하나로
+            self.assertNotIn(">" + gone + "<", html)
         self.assertIn('<details class="nav-fold"', html)
         self.assertIn("태혁쌤의 cast", html); self.assertNotIn("TH캐스트", html)
 

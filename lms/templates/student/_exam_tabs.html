@@ -1,0 +1,6 @@
+{# 시험: 회차별(한 회차의 점수, 틀린 문항, 첨삭) / 오답 모음(회차를 가로질러) / 추이(점수 흐름, 리포트 인쇄). 쓰는 쪽에서 exam_tab 을 정해 준다. #}
+<nav class="chip-links exam-tabs" aria-label="시험">
+  <a href="{{ url_for('books.analysis_home') }}" class="{{ 'is-on' if exam_tab == 'round' }}"{% if exam_tab == 'round' %} aria-current="page"{% endif %}>회차별</a>
+  <a href="{{ url_for('study.wrong_notes') }}" class="{{ 'is-on' if exam_tab == 'wrong' }}"{% if exam_tab == 'wrong' %} aria-current="page"{% endif %}>오답 모음</a>
+  <a href="{{ url_for('student.scores') }}" class="{{ 'is-on' if exam_tab == 'trend' }}"{% if exam_tab == 'trend' %} aria-current="page"{% endif %}>추이</a>
+</nav>

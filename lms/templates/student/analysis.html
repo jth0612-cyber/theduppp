@@ -4,14 +4,16 @@
 {% block title %}시험 분석 | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 {% if not mock %}
+{% set exam_tab = 'round' %}{% include "student/_exam_tabs.html" %}
 <header class="ed-head">
-  <h1>시험 분석</h1>
+  <h1>시험</h1>
 </header>
 <section class="quiet-box"><p>아직 올라온 결과가 없어요.</p></section>
 {% else %}
+{% set exam_tab = 'round' %}{% include "student/_exam_tabs.html" %}
 <header class="ed-head ed-head-split">
   <div>
-    <h1>시험 분석</h1>
+    <h1>{{ mock.book_title }} {{ mock.round_no }}회</h1>
     {{ kind_tabs(mock.kind, 'books.analysis_home', kind_counts) }}
     {% if mock.n_items or why_open %}<p class="ed-lede">{% if mock.n_items %}{{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if mock.n_items and why_open %}<span class="sep" aria-hidden="true"></span>{% endif %}{% if why_open %}<b>{{ why_open }}</b>{% endif %}</p>{% endif %}
   </div>
@@ -45,13 +47,7 @@
 {% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
 
 {% if entry %}
-<div class="sheet-grid">
-  <section class="omr is-view" aria-labelledby="h-omr">
-    <div class="sec-head"><h2 id="h-omr">내 답안{% call help('내 답안') %}<p>검은 원은 내가 고른 답, 빨간 테두리는 틀린 문항의 정답이에요.</p><p>번호가 빨간색이면 틀린 문항이고, 번호 밑의 숫자는 배점이에요.</p>{% if item_nos %}<p>번호를 누르면 그 문항을 볼 수 있어요.</p>{% endif %}{% endcall %}</h2></div>
-    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 </p>
-    {% include "_omr_cols.html" %}
-  </section>
-
+<div class="sheet-stack">
   <section class="report" id="result" aria-labelledby="h-report">
     <div class="sec-head"><h2 id="h-report">성적표</h2></div>
     <div class="report-main">
@@ -72,6 +68,15 @@
       <div><dt>함께 응시</dt><dd>{{ stats.n }}명</dd></div>
     </dl>
   </section>
+
+  <details class="fold-sec" id="omr">
+    <summary>답안표 보기 <span class="small muted">{{ mock.n_items }}문항{% if my_wrong %}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ my_wrong|length }}개{% endif %}</span></summary>
+  <section class="omr is-view" aria-labelledby="h-omr">
+    <div class="sec-head"><h2 id="h-omr">내 답안{% call help('내 답안') %}<p>검은 원은 내가 고른 답, 빨간 테두리는 틀린 문항의 정답이에요.</p><p>번호가 빨간색이면 틀린 문항이고, 번호 밑의 숫자는 배점이에요.</p>{% if item_nos %}<p>번호를 누르면 그 문항을 볼 수 있어요.</p>{% endif %}{% endcall %}</h2></div>
+    <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 </p>
+    {% include "_omr_cols.html" %}
+  </section>
+  </details>
 </div>
 
 {# 1:1 관리: 복습 테스트는 시험지 첨삭, 모의고사는 1:1 피드백 (예전에 쌓인 것은 종류와 상관없이 보인다) #}

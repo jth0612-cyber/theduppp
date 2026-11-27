@@ -20,7 +20,7 @@
   <button class="btn small js-hide" type="submit">보기</button>
 </form>
 <div class="card">
-  {% if rows %}<div class="table-wrap"><table data-rc-title="2"><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th></tr></thead><tbody>
+  {% if rows %}<div class="table-wrap"><table class="tl-2" data-rc-title="2"><thead><tr><th>날짜</th><th>반</th><th>주제</th><th class="num">노트</th></tr></thead><tbody>
   {% for l in rows %}<tr><td class="nowrap">{{ l.day|d }}</td><td class="muted">{{ l.cls }}</td><td><a href="{{ url_for('care.t_lesson', lid=l.id) }}">{{ l.title }}</a></td><td class="num">{{ (l.n_files ~ "장") if l.n_files else "사진 없음" }}</td></tr>{% endfor %}
   </tbody></table></div>
   {% if total > rows|length %}<p class="center mt"><a class="btn" href="{{ url_for('care.t_lessons', c=last_cid, n=n + 20) }}">20개 더 보기 <span class="small muted">{{ rows|length }}/{{ total }}</span></a></p>{% endif %}

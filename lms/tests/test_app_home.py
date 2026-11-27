@@ -45,7 +45,7 @@ class AppHome(unittest.TestCase):
         self.assertNotIn("ah-apps", web)                                  # 웹 홈은 그대로
         page = self.c.get("/s/", headers=APP_UA).data.decode()
         self.assertIn("ah-apps", page)
-        for word in ("김하나", "남은 과제", "복습할 오답", "통과 Quiz", "시험 분석", "토요일 특강 안내", "has-shell"):
+        for word in ("김하나", "남은 과제", "복습할 오답", "통과 Quiz", "토요일 특강 안내", "has-shell"):
             self.assertIn(word, page)
         self.assertIn('aria-label="1개"', page)                           # 안 읽은 공지 1, 안 낸 과제 1
         self.assertIn("ah-apps", self.c.get("/s/?view=app").data.decode())

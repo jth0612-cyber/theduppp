@@ -33,7 +33,7 @@
 
 <section class="card">
   <h2>반</h2>
-  <div class="table-wrap"><table data-rc-title="0">
+  <div class="table-wrap"><table class="tl-3" data-rc-title="0">
     <tr><th>반</th><th>재원생</th><th>수업 시간</th><th></th></tr>
     {% for m in members %}
     <tr><td><a href="{{ url_for('teacher.class_detail', cid=m.id, tab='times') }}">{{ m.name }}</a></td><td class="num">{{ m.n }}명</td>
