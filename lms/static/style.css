@@ -2940,3 +2940,6 @@ li.weak line.pb-fg { stroke: var(--danger); }
 .acct-del { margin-top: 12px; }
 .acct-del > summary { cursor: pointer; color: var(--muted); }
 .acct-del .field { max-width: 320px; }
+
+/* 통과 Quiz: 문제 글자 크기를 문제 종류와 상관없이 하나로 (2026-11-27 슬랙 의견). 큰 글자는 영단어 한 낱말을 보여 줄 때만 쓴다 */
+#mc-game:not([data-game^="vocab"]) .mc-question .mc-main { font-size: 18px; line-height: 1.5; letter-spacing: 0; }
