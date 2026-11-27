@@ -96,3 +96,30 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
 .pick-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 0 16px; }
 .pick-list label { display: flex; align-items: center; gap: 8px; min-height: 44px; border-bottom: 1px solid var(--rule); cursor: pointer; }
 .pick-list input { width: 18px; height: 18px; flex: none; }
+
+/* 진도 일정표의 휴대폰 배치 (2026-11-27, GPT와 Gemini 의견으로 정함): 주차마다 카드, 이번 주만 펼침, 교재는 주차에 한 번 */
+.sched-m { display: none; }
+@media (max-width: 720px) {
+  .sched-wrap { display: none; }
+  .sched-m { display: grid; gap: 10px; }
+  .sm-week { margin: 0; padding: 0 16px; }
+  .sm-week > summary { list-style: none; cursor: pointer; display: grid; gap: 6px; padding: 14px 0; }
+  .sm-week > summary::-webkit-details-marker { display: none; }
+  .sm-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sm-head b { font-size: 16px; color: var(--ink); }
+  .sm-head::after { content: "›"; margin-left: auto; color: var(--faint); font-size: 20px; transform: rotate(90deg); }
+  .sm-week[open] .sm-head::after { transform: rotate(-90deg); }
+  .sm-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; font-size: 12.5px; color: var(--muted); }
+  .sm-sum span { display: flex; justify-content: space-between; gap: 8px; min-width: 0; }
+  .sm-sum b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .sm-week[open] > summary .sm-sum { display: none; }
+  .sm-week.is-now { box-shadow: inset 3px 0 0 var(--accent); }
+  .sm-week.is-off > summary { color: var(--muted); }
+  .sm-topic { margin: 0 0 4px; font-weight: 600; }
+  .sm-week .list-rows { margin: 8px 0; }
+  .sm-week .lr-end { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sm-h { margin: 4px 0 12px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .sm-tot { padding: 10px 0 14px; border-top: 1px solid var(--rule); }
+  .sm-tot > summary { cursor: pointer; color: var(--muted); }
+  .sm-tot div { padding: 3px 0; }
+}
