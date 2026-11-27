@@ -167,8 +167,7 @@ class BooksTest(unittest.TestCase):
         with self.app.app_context():
             self.assertEqual(query("SELECT score FROM mock_entries WHERE mock_id = ?", (m["id"],), one=True)["score"], 46)
         page = self.student(0).get(f"/s/analysis?mock={m['id']}").data.decode()
-        self.assertIn("놓친 점수", page)
-        self.assertIn("4점", page)
+        self.assertNotIn("놓친 점수", page); self.assertNotIn("채점 결과", page); self.assertIn("전체 응시자", page)
         self.assertNotIn("점수대 분포", page)                          # 학생에게는 석차를 짐작할 분포·백분위 비공개
         self.assertNotIn("백분위", page)
 

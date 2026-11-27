@@ -62,10 +62,8 @@
     </div>
     <dl class="report-lines">
       {% if rep %}<div><dt>{{ rep.cls }} 평균</dt><dd>{{ fmt(rep.st.avg) }}점<span class="sep" aria-hidden="true"></span>응시 {{ rep.st.n }}명</dd></div>{% endif %}
-      <div><dt>채점 결과</dt><dd>{% if my_wrong %}{{ my_wrong|length }}문항 오답{% else %}모두 정답{% endif %}</dd></div>
-      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %}<span class="sep" aria-hidden="true"></span>{% endif %}{% endfor %}</dd></div>
-      <div><dt>놓친 점수</dt><dd>{{ fmt(lost) }}점</dd></div>{% endif %}{% if not stats.cuts %}<div><dt>예상 등급</dt><dd>응시 {{ min_for_cuts }}명부터 표시</dd></div>{% endif %}
-      <div><dt>함께 응시</dt><dd>{{ stats.n }}명</dd></div>
+      {% if my_wrong %}<div><dt>틀린 문항</dt><dd class="nums">{% for n in my_wrong|sort %}{{ n }}번<small>({{ fmt(points[n - 1]) }})</small>{% if not loop.last %}<span class="sep" aria-hidden="true"></span>{% endif %}{% endfor %}</dd></div>{% else %}<div><dt>틀린 문항</dt><dd>없음</dd></div>{% endif %}{% if not stats.cuts %}<div><dt>예상 등급</dt><dd>응시 {{ min_for_cuts }}명부터 표시</dd></div>{% endif %}
+      <div><dt>전체 응시자</dt><dd>{{ stats.n }}명</dd></div>
     </dl>
   </section>
 

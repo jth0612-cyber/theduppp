@@ -16,8 +16,8 @@
   <form method="post" enctype="multipart/form-data" data-qform data-draft-key="q-draft-{{ g.user.id }}"{% if draft %} data-has-draft{% endif %}>
     {{ csrf() }}
     {# 안내는 칸 밖에 따로 두지 않고 칸 안(흐린 글씨)에 넣는다 (2026-11-25). 유형마다 내용 칸·사진 칸 글이 바뀐다 (app.js) #}
-    {% set body_ph = {'': '어디서 막혔는지 적어 주세요. 이름과 연락처는 쓰지 않아요',
-                      '학습질문': '어디서 막혔는지 적어 주세요. 닉네임 ' ~ g.user.nickname ~ '(으)로 공개, 이름과 연락처는 쓰지 않아요',
+    {% set body_ph = {'': '막힌 부분을 적어 주세요. 이름과 연락처는 쓰지 마세요.',
+                      '학습질문': '막힌 부분을 적어 주세요. 닉네임(' ~ g.user.nickname ~ ')으로 공개돼요. 이름과 연락처는 쓰지 마세요.',
                       '학습상담': '공부 방법과 계획 상담 내용. 나와 고른 조교만 봐요',
                       '행정문의': '문의 내용. 비공개로 접수돼요'} %}
     {% set photo_ph = {'학습질문': '문제 사진 필수 (해설 질문이면 해설 사진도), PNG, JPG 3장까지'} %}
@@ -38,7 +38,7 @@
     </div>
     <fieldset class="field ta-pick" data-consult {{ '' if dq == '학습상담' else 'hidden' }}>
       <legend>상담 조교</legend>
-      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>누구든 먼저</b><small>먼저 본 조교가 답해요</small></span></label>
+      <label class="ta-card"><input type="radio" name="assignee" value="" {{ 'checked' if not (draft and draft.assignee) }}><span><b>담당 조교 무관</b><small>먼저 확인한 조교가 답해요</small></span></label>
       {% for t in tas %}
       <label class="ta-card"><input type="radio" name="assignee" value="{{ t.id }}"><span><b>{{ t.name }} 조교</b>
         {% if t.intro %}<small>{{ t.intro }}</small>{% endif %}
