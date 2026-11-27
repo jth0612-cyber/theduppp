@@ -10,7 +10,7 @@
   <a class="qz-today" href="{{ url_for('games.vocab_page') }}">
     <span class="qz-k">오늘의 20단어</span>
     <b>Day {{ v.today.day_no if v.today else v.days_done + 1 }}</b>
-    <span class="qz-s">{% if prog %}오늘 {{ prog.done }}/{{ prog.total }} 풀이 중<span class="sep" aria-hidden="true"></span>맞힘 {{ prog.score }}{% elif v.today and v.today.done_at %}오늘 {{ v.today.score }}/{{ v.today.total }}{% else %}카드 20장<span class="sep" aria-hidden="true"></span>20문제{% endif %}</span>
+    <span class="qz-s">{% if prog %}오늘 {{ prog.done }}/{{ prog.total }} 풀이 중<span class="sep" aria-hidden="true"></span>정답 {{ prog.score }}{% elif v.today and v.today.done_at %}오늘 {{ v.today.score }}/{{ v.today.total }}{% else %}카드 20장<span class="sep" aria-hidden="true"></span>20문제{% endif %}</span>
     <span class="qz-bar" aria-hidden="true">{% if prog %}{% set pp = prog.done * 20 // prog.total if prog.total else 0 %}{% elif v.today and v.today.done_at %}{% set pp = 20 %}{% else %}{% set pp = 0 %}{% endif %}<i class="qz-fill qz-p{{ pp }}"></i></span>
     <span class="qz-s">누적 {{ v.seen }}단어<span class="sep" aria-hidden="true"></span>{{ v.days_done }}일</span>
   </a>

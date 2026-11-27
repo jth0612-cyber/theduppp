@@ -121,7 +121,7 @@
     var renderQuestion = function () {
       var item = game.questions[game.i], kind = item.kind || "mc";
       m("progress").textContent = (game.i + 1) + " / " + game.questions.length;
-      m("score").textContent = game.i ? "맞힌 문제 " + game.score : "";
+      m("score").textContent = game.i ? "정답 " + game.score : "";
       var qEl = m("question");
       qEl.textContent = ""; qEl.className = "mc-question kind-" + kind;
       if (item.tag) qEl.appendChild(el("span", "mc-tag", item.tag));
@@ -346,7 +346,7 @@
         if (game.i < game.questions.length) renderQuestion(); else submit();
       });
       fb.appendChild(next);
-      m("score").textContent = "맞힌 문제 " + res.score;
+      m("score").textContent = "정답 " + res.score;
       if (res.correct && /^vocab/.test(mc.dataset.game || "")) {        // 영단어: 맞히면 자동으로 다음 문제
         var at = game.i;
         fb.classList.add("is-auto");
@@ -576,7 +576,7 @@
       var nx = el("button", "btn primary", last ? "결과 보기" : "다음"); nx.type = "button";
       nx.addEventListener("click", function () { pg.i++; if (pg.i < pg.stages.length) stage(); else finish(); });
       fb.appendChild(nx);
-      pq("score").textContent = "맞힘 " + res.score;
+      pq("score").textContent = "정답 " + res.score;
       nx.focus({ preventScroll: true }); fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
     };
     var send = function (pick) {
