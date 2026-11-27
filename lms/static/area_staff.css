@@ -89,3 +89,4 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
   .work .mark-table td:last-child { grid-column: 1 / -1; }
   .work .mark-table :is(input[type=text], select) { font-size: 16px; min-height: 44px; }
 }
+.work .mark-table select { min-width: 112px; }

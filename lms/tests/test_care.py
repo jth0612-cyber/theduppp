@@ -216,7 +216,7 @@ class Care(unittest.TestCase):
             page = re.sub(r"<(script|style)[^>]*>.*?</>|<[^>]+>", " ", c.get(u).data.decode(), flags=re.S)
             self.assertIsNone(re.search(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}", page), u)   # 화면 글에 ISO 시각이 없다
         w = self.c1.get("/s/wrong").data.decode()
-        self.assertIn("전체 ", w); self.assertIn("정답 3", w); self.assertIn("산과 염기", w)   # 오답 노트: 기준, 정답, 단원
+        self.assertIn("전체 ", w); self.assertIn('정답 <u class="ans-key">3</u>', w); self.assertIn("산과 염기", w)   # 오답 노트: 기준, 정답, 단원
 
     def test_lesson_needs_photo_or_note(self):
         self.ta.post("/t/lessons", data={"class_id": str(self.a), "title": "빈 기록", "day": "2026-11-20"})

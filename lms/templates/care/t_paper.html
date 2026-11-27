@@ -11,10 +11,10 @@
   <form method="post" class="review-form-hw work-do">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% if rep.wrongs %}
-    <table class="mark-table"><thead><tr><th class="num">번</th><th>학생 답 / 정답</th><th>오답 유형</th><th>메모</th></tr></thead><tbody>
+    <table class="mark-table"><thead><tr><th class="num">번</th><th>답</th><th>오답 유형</th><th>메모</th></tr></thead><tbody>
     {% for a in rep.wrongs %}{% set k = marks.get(a.no, {}) %}
     <tr><td class="num"><b>{{ a.no }}</b></td>
-      <td class="small nowrap">{{ a.mine or '-' }} / <u class="ans-key">{{ a.key }}</u>{% if rep.enough %}<br><span class="muted">반 오답률 {{ pct1(a.rate) }}%</span>{% endif %}</td>
+      <td class="small nowrap"><span class="muted">학생 답</span> {{ a.mine or '-' }}<span class="sep" aria-hidden="true"></span><span class="muted">정답</span> <u class="ans-key">{{ a.key }}</u>{% if rep.enough %}<br><span class="muted">반 오답률 {{ pct1(a.rate) }}%</span>{% endif %}</td>
       <td><select name="r{{ a.no }}" aria-label="{{ a.no }}번 오답 유형"><option value="">-</option>{% for t in err_types %}<option {{ 'selected' if (k.reason or a.auto_type) == t }}>{{ t }}</option>{% endfor %}</select></td>
       <td><input type="text" name="m{{ a.no }}" value="{{ k.memo or '' }}" maxlength="500" aria-label="{{ a.no }}번 메모" placeholder="예: 조건 하나를 놓침"></td></tr>
     {% endfor %}</tbody></table>
