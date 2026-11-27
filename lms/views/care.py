@@ -336,7 +336,8 @@ def parent_report(student_id, limit=6):
             if k.get("reason") or k.get("memo") or a["type"]:
                 # 번호·유형은 앞에 따로 나오니 분석 문장의 '4번은 ○○ 오류입니다(…)' 머리는 떼고 고른 선지 설명만 남긴다
                 text = k.get("memo") or re.sub(r"^\d+번은 (?:\S+ )*?오류(?:입니다|로,)\s*\(?", "", a["analysis"] or "").rstrip(").")
-                whys.append({"no": a["no"], "type": a["type"], "text": "" if text == f"{a['no']}번" else text})
+                whys.append({"no": a["no"], "type": a["type"], "text": "" if text == f"{a['no']}번" else text,
+                             "unit": a.get("unit") or "", "mine": a.get("mine") or "", "key": a.get("key") or ""})
         full = rep["mock"]["full_score"]
         exams_out.append({"mock_id": r["mock_id"], "title": exams.exam_title(rep["mock"]), "kind": rep["mock"].get("kind") or "", "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],
                           "date": rep["mock"]["exam_date"], "rate": round(100 * rep["r"]["score"] / full) if full else None,
@@ -358,7 +359,8 @@ def parent_report(student_id, limit=6):
         if delta:
             lines.append(f"득점률이 이전 {last['kind'] or '시험'}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}어요.")
     if weak:
-        lines.append(f"최근 시험에서 득점률이 가장 낮은 단원은 {weak['unit']['unit']}({weak['unit']['pct']}%)예요.")
+        low = [u["unit"] for u in units[:6] if u["pct"] == weak["unit"]["pct"]] or [weak["unit"]["unit"]]   # 아래 막대에 보이는 단원 중 같은 값은 모두
+        lines.append(f"최근 시험에서 가장 많이 틀린 단원: {', '.join(low)} (정답률 {weak['unit']['pct']}%)")
     return {"s": s, "exams": exams_out, "last": last, "delta": delta, "comment": comment, "units": units[:6], "weak": weak,
             "att": att, "lines": lines}
 
@@ -400,12 +402,14 @@ def kind_view(exams_out, kind, n=6):
     last = ex[0] if ex else None
     prev = ex[1] if len(ex) > 1 else None
     delta = (last["rate"] - prev["rate"]) if last and prev and last["rate"] is not None and prev["rate"] is not None else None
-    lines = []
-    if last:
-        lines.append(f"{last['title']} {num_fmt(last['score'])}/{num_fmt(last['full'])}점, 반 평균 {last['avg']}점이에요.")
-        if delta:
-            lines.append(f"득점률이 이전 {kind}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}어요.")
-    return {"exams": ex, "last": last, "delta": delta, "chart": rate_chart(ex), "lines": lines}
+    # 위 카드에 적는 변화: 만점이 같으면 점수 차이로, 다르면 100점 환산 차이로 (학부모에게는 '%p'보다 점수가 읽힌다)
+    change = None
+    if last and prev and last["full"] == prev["full"] and last["score"] != prev["score"]:
+        d = last["score"] - prev["score"]
+        change = {"up": d > 0, "text": f"지난 회차보다 {num_fmt(abs(d))}점 {'올랐어요' if d > 0 else '내려갔어요'}"}
+    elif delta:
+        change = {"up": delta > 0, "text": f"지난 회차보다 100점 환산 {abs(delta)}점 {'올랐어요' if delta > 0 else '내려갔어요'}"}
+    return {"exams": ex, "last": last, "delta": delta, "change": change, "chart": rate_chart(ex), "lines": []}
 
 
 @bp.route("/p/<token>")

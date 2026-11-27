@@ -360,7 +360,7 @@ class Care(unittest.TestCase):
         resp = anon.get(f"/p/{tok}")
         self.assertEqual(resp.headers["Cache-Control"], "no-store")
         page = resp.data.decode()
-        for word in ("김하나", "득점률", "40", "자료 해석", "x축을 시간으로 읽음", "그래프 축부터 확인", "산과 염기", "복습 테스트 1회"):
+        for word in ("김하나", "100점 환산", "40", "자료 해석", "x축을 시간으로 읽음", "그래프 축부터 확인", "산과 염기", "복습 테스트 1회"):
             self.assertIn(word, page)
         self.assertIn("noindex", page)
         self.assertEqual(anon.get("/p/" + "x" * 24).status_code, 404)

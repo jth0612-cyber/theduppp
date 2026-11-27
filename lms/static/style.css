@@ -2908,3 +2908,17 @@ main table.tl-5 td:nth-child(5), main table.tl-6 td:nth-child(6), main table.tl-
 }
 /* 내 답과 정답을 나란히 적을 때 정답은 밑줄과 짙은 글씨로 (2026-11-27 사용자 지시). 화살표는 쓰지 않는다. */
 .ans-key { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+
+/* 학부모 리포트 (2026-11-27): 큰 숫자는 점수, 변화는 문장으로. 문제(내려감, 결석, 지각, 정답률 50% 미만)만 빨강 */
+.pr-big em { font-size: 14.5px; } .pr-big em.up { color: var(--muted); } .pr-big em.down { color: var(--danger); }
+.pr-big b small { font-weight: 500; color: var(--muted); }
+.pr-tiles dd small { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.pr-card h2 small { font-size: 12.5px; font-weight: 400; }
+.pr-units li { grid-template-columns: minmax(96px, 34%) 1fr 44px; word-break: keep-all; }
+.pr-att li { grid-template-columns: 64px 1fr auto; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.pr-att li:last-child { border-bottom: 0; }
+.pr-att li.is-bad b { color: var(--danger); }
+.pr-why li small { font-size: 13px; }
+.parent-page .rc-ytick, .parent-page .rc-xtick, .parent-page .rc-name { font-size: 19px; }
+.parent-page .rc-xdate { font-size: 16px; }
+.parent-page .rc-name { display: none; }

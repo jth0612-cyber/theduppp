@@ -13,54 +13,56 @@
 <body class="no-shell parent-page">
 <main class="pr-wrap">
   <header class="pr-head">
-    <p class="small muted">정태혁 통합과학<span class="sep" aria-hidden="true"></span>학부모 리포트</p>
+    <p class="small muted">정태혁 통합과학 lab<span class="sep" aria-hidden="true"></span>학부모 리포트{% if k.last and k.last.date %}<span class="sep" aria-hidden="true"></span>{{ k.last.date|d }} 시험까지{% endif %}</p>
     <h1>{{ r.s.name }} <span>{{ r.s.cls }}</span></h1>
   </header>
   {{ kind_tabs(kind, 'care.parent_page', kind_counts, token=token) }}
 
   {% if k.last %}
   <section class="pr-card pr-top">
-    <div class="pr-big"><span>{{ k.last.title }} 득점률</span><b>{{ k.last.rate }}<small>%</small></b>
-      {% if k.delta %}<em class="{{ 'up' if k.delta > 0 else 'down' }}">{{ '+' if k.delta > 0 }}{{ k.delta }}%p</em>{% endif %}</div>
+    <div class="pr-big"><span>{{ k.last.title }}</span><b>{{ fmt(k.last.score) }}<small>/{{ fmt(k.last.full) }}점</small></b>
+      {% if k.change %}<em class="{{ 'up' if k.change.up else 'down' }}">{{ k.change.text }}</em>{% endif %}</div>
     <dl class="pr-tiles">
-      <div><dt>점수</dt><dd>{{ fmt(k.last.score) }}/{{ fmt(k.last.full) }}</dd></div>
-      <div><dt>반 평균</dt><dd>{{ k.last.avg }}</dd></div>
-      <div><dt>오답</dt><dd>{{ k.last.n_wrong }}/{{ k.last.n }}</dd></div>
+      <div><dt>반 평균</dt><dd>{{ k.last.avg }}<small>점</small></dd></div>
+      <div><dt>틀린 문항</dt><dd>{{ k.last.n_wrong }}<small>/{{ k.last.n }}문항</small></dd></div>
+      <div><dt>100점 환산</dt><dd>{{ k.last.rate }}<small>점</small></dd></div>
     </dl>
   </section>
   {% else %}<section class="pr-card"><p>아직 올라온 {{ kind }} 결과가 없어요.</p></section>{% endif %}
 
+  {% if r.comment %}<section class="pr-card"><h2>선생님 코멘트{% if r.comment.at %} <small class="muted">{{ r.comment.at|d }}</small>{% endif %}</h2><p class="pre">{{ r.comment.text }}</p></section>{% endif %}
+
   {% if k.lines %}<section class="pr-card"><h2>요약</h2>{% for l in k.lines %}<p>{{ l }}</p>{% endfor %}</section>{% endif %}
 
   {% if chart.pts|length > 1 %}
-  <section class="pr-card"><h2>득점률 변화</h2>
-    {% with label = kind %}{% include "_rate_chart.html" %}{% endwith %}
-  </section>
-  {% endif %}
-
-  {% if k.exams %}
-  <section class="pr-card"><h2>{{ kind }} 결과</h2>
-    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date|d if e.date }}<span class="sep" aria-hidden="true"></span>반 평균 {{ e.avg }}</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}</small></b></li>{% endfor %}</ul>
-  </section>
-  {% endif %}
-
-  {% if r.units %}
-  <section class="pr-card"><h2>단원별 성취도</h2>
-    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
-      <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
-      <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
+  <section class="pr-card"><h2>점수 변화 <small class="muted">100점 환산</small></h2>
+    {% with label = kind, rate_word = '100점 환산', me_word = r.s.name %}{% include "_rate_chart.html" %}{% endwith %}
   </section>
   {% endif %}
 
   {% if k.last and k.last.whys %}
-  <section class="pr-card"><h2>틀린 이유 <small class="muted">{{ k.last.title }}</small></h2>
-    <ul class="pr-why">{% for a in k.last.whys %}<li><span class="pr-no">{{ a.no }}번</span><span><b>{{ a.type or '오답' }}</b>{% if a.text %}<br><small>{{ a.text }}</small>{% endif %}</span></li>{% endfor %}</ul>
+  <section class="pr-card"><h2>틀린 문항 <small class="muted">{{ k.last.title }}</small></h2>
+    <ul class="pr-why">{% for a in k.last.whys %}<li><span class="pr-no">{{ a.no }}번</span><span><b>{{ a.type or '오답' }}</b>{% if a.unit %} <small class="muted">{{ a.unit }}</small>{% endif %}
+      {% if a.mine or a.key %}<br><small class="muted">{% if a.mine %}학생 답 {{ a.mine }}<span class="sep" aria-hidden="true"></span>{% endif %}정답 <u class="ans-key">{{ a.key }}</u></small>{% endif %}
+      {% if a.text %}<br><small>{{ a.text }}</small>{% endif %}</span></li>{% endfor %}</ul>
   </section>
   {% endif %}
 
-  {% if r.comment %}<section class="pr-card"><h2>선생님 코멘트</h2><p class="pre">{{ r.comment.text }}</p></section>{% endif %}
+  {% if r.units %}
+  <section class="pr-card"><h2>단원별 정답률 <small class="muted">최근 시험, 낮은 순</small></h2>
+    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 50 }}"><span>{{ u.unit }}</span>
+      <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect>{% if u.pct %}<rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect>{% endif %}</svg>
+      <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
 
-  {% if r.att %}<section class="pr-card"><h2>출결</h2><ul class="pr-att">{% for a in r.att[:7] %}<li><span>{{ a.day|d }}</span><b>{{ a.status }}</b><small class="muted">{{ a.arrived }}</small></li>{% endfor %}</ul></section>{% endif %}
+  {% if k.exams|length > 1 %}
+  <section class="pr-card"><h2>지난 {{ kind }}</h2>
+    <ul class="pr-exams">{% for e in k.exams %}<li><span>{{ e.title }}<small>{{ e.date|d if e.date }}<span class="sep" aria-hidden="true"></span>반 평균 {{ e.avg }}점</small></span><b>{{ fmt(e.score) }}<small>/{{ fmt(e.full) }}점</small></b></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if r.att %}<section class="pr-card"><h2>출결 <small class="muted">최근 {{ r.att[:7]|length }}회</small></h2><ul class="pr-att">{% for a in r.att[:7] %}<li class="{{ 'is-bad' if a.status in ('결석', '지각', '조퇴') }}"><span>{{ a.day|d }}</span><b>{{ a.status or '미확인' }}</b><small class="muted">{% if a.arrived %}등원 {{ a.arrived }}{% endif %}</small></li>{% endfor %}</ul></section>{% endif %}
 
 </main>
 </body>

@@ -6,7 +6,7 @@
   <text class="rc-ytick" x="{{ chart.l - 8 }}" y="{{ t.y + 4 }}">{{ t.v }}%</text>
   {% endfor %}
   <line class="rc-axis" x1="{{ chart.l }}" x2="{{ chart.l }}" y1="{{ chart.t }}" y2="{{ chart.b }}"></line>
-  <text class="rc-name" x="{{ chart.l - 8 }}" y="{{ chart.t - 12 }}">득점률</text>
+  <text class="rc-name" x="{{ chart.l - 8 }}" y="{{ chart.t - 12 }}">{{ rate_word or '득점률' }}</text>
   {% for p in chart.pts %}{% if loop.index0 % chart.every == 0 or loop.last %}
   <text class="rc-xtick" x="{{ p.x }}" y="{{ chart.b + 18 }}">{{ p.lab }}</text>
   <text class="rc-xdate" x="{{ p.x }}" y="{{ chart.b + 33 }}">{{ p.date|d }}</text>
@@ -25,5 +25,5 @@
   </g>
   {% endfor %}
 </svg>
-<figcaption class="rc-legend"><span class="rc-key rc-key-me"></span>득점률{% if chart.avg_poly %}<span class="rc-key rc-key-avg"></span>반 평균{% endif %}</figcaption>
+<figcaption class="rc-legend"><span class="rc-key rc-key-me"></span>{{ me_word or '득점률' }}{% if chart.avg_poly %}<span class="rc-key rc-key-avg"></span>반 평균{% endif %}</figcaption>
 </figure>
