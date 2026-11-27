@@ -49,7 +49,7 @@
 </nav>
 
 {% if view == 'table' %}
-<div class="help-inline">표 읽는 법{% call help('표 읽는 법') %}<p>한 주차는 토요일부터 금요일까지예요. 칸을 누르면 그 수업의 교재와 출석을 고칠 수 있어요.</p><p>칸 숫자는 출석/명단이에요. <span class="badge open">주황</span> 교재는 그 수업에만 더 넣은 교재예요.</p><p>배부 수는 출석을 체크한 칸이면 출석(지각, 조퇴 포함) 수, 아직 체크하지 않은 칸이면 명단 수(예정)예요.</p>{% endcall %}</div>
+<div class="help-inline sched-help">표 읽는 법{% call help('표 읽는 법') %}<p>수업 칸의 교재 이름표는 그 수업에만 더 넣은 교재예요. 주차에 배정한 교재는 주차 칸에 한 번만 적어요.</p><p>한 주차는 토요일부터 금요일까지예요. 칸을 누르면 그 수업의 교재와 출석을 고칠 수 있어요.</p><p>칸 숫자는 출석/명단이에요. <span class="badge open">주황</span> 교재는 그 수업에만 더 넣은 교재예요.</p><p>배부 수는 출석을 체크한 칸이면 출석(지각, 조퇴 포함) 수, 아직 체크하지 않은 칸이면 명단 수(예정)예요.</p>{% endcall %}</div>
 {# 휴대폰: 주차마다 카드 한 장. 이번 주(없으면 가장 가까운 주차)만 펼치고, 교재는 주차에 한 번만 적는다. 고치기 폼은 데스크톱 표에만 있다. #}
 {% macro mweek(w, opened) %}{% set now = w.starts <= today <= w.ends %}
 <details class="card sm-week{{ ' is-now' if now }}{{ ' is-off' if w.off }}" id="mw{{ w.week_no }}"{{ ' open' if opened }}>
@@ -112,7 +112,7 @@
         {% if s.off %}<span class="badge gray">휴강</span>{% if s.brk and s.brk.note %} <span class="small muted">{{ s.brk.note }}</span>{% endif %}
         {% else %}{% if s.status == '보강' %}<span class="badge open">보강</span>{% endif %}
         <span class="num small">{{ s.present if s.checked else '–' }}/{{ s.roster }}</span>
-        <div>{{ hchips(s.handouts) }}</div>{% if s.dropped %}<div class="small muted">교재 {{ s.dropped|length }}권 뺌</div>{% endif %}{% endif %}
+        {% set extras = [] %}{% for h in s.handouts if h.extra is defined and h.extra %}{% set _ = extras.append(h) %}{% endfor %}{% if extras %}<div>{{ hchips(extras) }}</div>{% endif %}{% if s.dropped %}<div class="small muted">교재 {{ s.dropped|length }}권 뺌</div>{% endif %}{% endif %}
       </a>{% else %}<span class="small muted">–</span>{% endif %}
     </td>{% endfor %}
     <td class="sched-tot small">{% for t in week_tot[w.id] %}<div>{{ t.h.title }}{% if t.given %} <b class="num">{{ t.given }}</b>{% endif %}{% if t.plan %} <span class="muted">예정 {{ t.plan }}</span>{% endif %}</div>{% endfor %}</td>

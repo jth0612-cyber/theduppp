@@ -129,3 +129,11 @@ main fieldset.field.qtype-pick { background: none; padding: 0; }
 .qtype-pick .chip-opt span { width: 100%; justify-content: center; padding: 0 8px; border-radius: 14px; background: var(--raised); color: var(--ink); font-weight: 600; }
 .qtype-pick .chip-opt input:checked + span { background: var(--accent); color: var(--on-accent); }
 .prog-rows .pbar line.pb-fg { stroke-width: 8px; }
+
+/* 시험 회차 화면 위쪽 (3차 토론 2026-11-27): 회차 선택이 곧 제목. 그 아래 바로 성적표 */
+.exam-pick { margin: 0 0 12px; }
+.exam-pick .pick, .exam-pick .pick-row { width: 100%; }
+.exam-pick select { width: 100%; min-height: 52px; font-size: 18px; font-weight: 700; background-color: var(--sheet); border-radius: 14px; }
+.jump-links { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.jump-links::-webkit-scrollbar { display: none; }
+.jump-links a { flex: none; }

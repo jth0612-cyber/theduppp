@@ -11,22 +11,24 @@
 <section class="quiet-box"><p>아직 올라온 결과가 없어요.</p></section>
 {% else %}
 {% set exam_tab = 'round' %}{% include "student/_exam_tabs.html" %}
-<header class="ed-head ed-head-split">
-  <div>
-    <h1>{{ mock.book_title }} {{ mock.round_no }}회</h1>
-    {{ kind_tabs(mock.kind, 'books.analysis_home', kind_counts) }}
-    {% if mock.n_items or why_open %}<p class="ed-lede">{% if mock.n_items %}{{ mock.n_items }}문항 {{ fmt(mock.full_score) }}점{% endif %}{% if mock.n_items and why_open %}<span class="sep" aria-hidden="true"></span>{% endif %}{% if why_open %}<b>{{ why_open }}</b>{% endif %}</p>{% endif %}
-  </div>
+<header class="ed-head exam-pick">
+  <h1 class="sr-only">{{ mock.book_title }} {{ mock.round_no }}회</h1>
   <form method="get" class="pick" data-autosubmit>
     <label for="mock" class="sr-only">회차</label>
     <div class="pick-row">
       <select id="mock" name="mock">
-        {% for m in mocks if m.kind == mock.kind %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' (미응시)' if m.uploaded else ' (평가만)') }}</option>{% endfor %}
+        {% for k in ('복습 테스트', '모의고사') %}{% if kind_counts.get(k) %}<optgroup label="{{ k }}">
+        {% for m in mocks if m.kind == k %}<option value="{{ m.id }}" {{ 'selected' if m.id == mock.id }}>{{ m.book_title }} {{ m.round_no }}회{{ '' if m.mine else (' (미응시)' if m.uploaded else ' (평가만)') }}</option>{% endfor %}
+        </optgroup>{% endif %}{% endfor %}
       </select>
       <button class="btn small js-hide" type="submit">이동</button>
     </div>
   </form>
+  {% if why_open %}<p class="ed-lede"><b>{{ why_open }}</b></p>{% endif %}
 </header>
+{% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
+
+{% if not entry %}
 {% if ev.n or mock.eval_killer or mock.review or ev.yt %}
 {# 시험 분석 요약: 난이도와 주요 문항만. 총평·해설 영상은 접어 둔다 (학생 의견 2026-11-25) #}
 <section class="exam-eval" aria-label="이 회차 난이도와 주요 문항">
@@ -44,16 +46,8 @@
   {% endif %}
 </section>
 {% endif %}
-{% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
-
+{% endif %}
 {% if entry %}
-<nav class="chip-links jump-links" aria-label="이 회차에서 바로 가기">
-  <a href="#result">성적표</a>
-  {% if rep and (rep.wrongs or prof) %}<a href="#h-wa">오답 분석</a>{% endif %}
-  {% if units %}<a href="#h-unit">단원별 성취도</a>{% endif %}
-  {% if mock.kind == '복습 테스트' or paper %}<a href="#paper">첨삭</a>{% endif %}
-  {% if mock.kind == '모의고사' or fb %}<a href="#feedback">피드백</a>{% endif %}
-</nav>
 <div class="sheet-stack">
   <section class="report" id="result" aria-labelledby="h-report">
     <div class="sec-head"><h2 id="h-report">성적표</h2></div>
@@ -83,6 +77,30 @@
   </section>
   </details>
 </div>
+<nav class="chip-links jump-links" aria-label="이 회차에서 바로 가기">
+  {% if rep and (rep.wrongs or prof) %}<a href="#h-wa">오답 분석</a>{% endif %}
+  {% if units %}<a href="#h-unit">단원별 성취도</a>{% endif %}
+  {% if mock.kind == '복습 테스트' or paper %}<a href="#paper">첨삭</a>{% endif %}
+  {% if mock.kind == '모의고사' or fb %}<a href="#feedback">피드백</a>{% endif %}
+</nav>
+{# 난이도와 주요 문항은 점수 아래 #}
+{% if ev.n or mock.eval_killer or mock.review or ev.yt %}
+{# 시험 분석 요약: 난이도와 주요 문항만. 총평·해설 영상은 접어 둔다 (학생 의견 2026-11-25) #}
+<section class="exam-eval" aria-label="이 회차 난이도와 주요 문항">
+  {% if ev.n or mock.eval_killer %}
+  <dl class="ev-facts">
+    {% if ev.n %}<div><dt>난이도</dt><dd><span class="ev-dots" aria-hidden="true">{% for i in range(1, 6) %}<i class="{{ 'on' if i <= ev.n }}"></i>{% endfor %}</span>{{ ev.level }}</dd></div>{% endif %}
+    {% if mock.eval_killer %}<div><dt>주요 문항</dt><dd>{{ mock.eval_killer }}번</dd></div>{% endif %}
+  </dl>
+  {% endif %}
+  {% if mock.review or ev.yt %}
+  <details class="ev-more"><summary>{{ '총평' if mock.review }}{{ ', ' if mock.review and ev.yt }}{{ '해설 영상' if ev.yt }}</summary>
+    {% if mock.review %}<div class="pre">{{ mock.review }}</div>{% endif %}
+    {% if ev.yt %}<div class="cast-video mt"><iframe src="https://www.youtube-nocookie.com/embed/{{ ev.yt }}" title="{{ mock.book_title }} {{ mock.round_no }}회 해설 영상" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>{% endif %}
+  </details>
+  {% endif %}
+</section>
+{% endif %}
 
 {# 1:1 관리: 복습 테스트는 시험지 첨삭, 모의고사는 1:1 피드백 (예전에 쌓인 것은 종류와 상관없이 보인다) #}
 {% if mock.kind == '복습 테스트' or paper %}
@@ -133,7 +151,7 @@
 {% if units %}
 <section class="unit-sec" aria-labelledby="h-unit">
   <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 6회</span></div>
-  <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 50 }}"><span>{{ u.unit }}</span>
+  <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 50 and loop.index <= 3 }}"><span>{{ u.unit }}<small class="muted"> {{ fmt(u.got) }}/{{ fmt(u.total) }}점</small></span>
     <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><line class="pb-fg" x1="2" y1="4" x2="{{ [u.pct, 3]|max }}" y2="4"></line></svg>
     <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   {% if weak %}
@@ -141,7 +159,7 @@
     <p><b>{{ weak.unit.unit }}</b> {{ weak.unit.got|round(1)|replace('.0', '') }}/{{ weak.unit.total|round(1)|replace('.0', '') }}점<span class="sep" aria-hidden="true"></span>{{ weak.unit.pct }}%</p>
     {% if weak.wrongs %}<p class="small">틀린 문항: {% for t, no in weak.wrongs[:8] %}{{ t }} {{ no }}번{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
     <div class="row">
-      <a class="btn small" href="{{ url_for('study.wrong_notes', kind='mock' if mock.kind == '모의고사' else 'review') }}">오답 노트</a>
+      <a class="btn small" href="{{ url_for('study.wrong_notes', kind='mock' if mock.kind == '모의고사' else 'review') }}">오답 모음</a>
       {% if weak.topic %}<a class="btn small primary" href="{{ url_for('games.quiz', topic=weak.topic.code) }}">TOPIC {{ weak.topic.code }} {{ weak.topic.title }} Quiz</a>{% endif %}
     </div>
   </div>

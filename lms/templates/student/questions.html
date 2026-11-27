@@ -100,9 +100,8 @@
   {% for t in qtypes %}
   <a href="{{ url_for('student.questions', qtype=t) }}" class="{{ 'active' if qtype == t and view == 'all' }}">{{ t }}</a>
   {% endfor %}
-  <a href="{{ url_for('student.questions', view='mine') }}" class="{{ 'active' if view == 'mine' }}">내 질문</a>
-  <a href="{{ url_for('student.questions', view='scrap') }}" class="{{ 'active' if view == 'scrap' }}">스크랩</a>
 </nav>
+<nav class="chip-links" aria-label="범위">{% for v, label in (('all', '모든 질문'), ('mine', '내 질문'), ('scrap', '스크랩')) %}<a href="{{ url_for('student.questions', view=v if v != 'all' else None) }}" class="{{ 'is-on' if view == v }}"{% if view == v %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
 
 <section class="card" aria-label="질문 목록">
   <form method="get" class="find" role="search">

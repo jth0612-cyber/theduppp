@@ -30,7 +30,7 @@
     <a class="btn" href="{{ url_for('books.mock_sms', mid=m.id, csv=1) }}">CSV로 받기</a></div>
 </div>
 <form method="get" class="find find-wide" role="search">
-  <input type="search" name="q" value="{{ word }}" placeholder="이름이나 아이디로 찾기" aria-label="학생 찾기" enterkeyhint="search">
+  <input type="search" name="q" value="{{ word }}" placeholder="이름, 아이디" aria-label="학생 찾기" enterkeyhint="search">
   {% if classes|length > 1 %}<select name="cls" aria-label="반" data-autosubmit-select><option value="">모든 반</option>{% for c in classes %}<option value="{{ c }}"{{ ' selected' if c == cls }}>{{ c }}</option>{% endfor %}</select>{% endif %}
   <button class="btn small">찾기</button>
 </form>

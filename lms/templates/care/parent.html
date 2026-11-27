@@ -42,7 +42,7 @@
 
   {% if k.last and k.last.whys %}
   <section class="pr-card"><h2>틀린 문항 <small class="muted">{{ k.last.title }}</small></h2>
-    <ul class="pr-why">{% for a in k.last.whys %}<li><span class="pr-no">{{ a.no }}번</span><span><b>{{ a.type or '오답' }}</b>{% if a.unit %} <small class="muted">{{ a.unit }}</small>{% endif %}
+    <ul class="pr-why">{% for a in k.last.whys %}<li><span class="pr-no">{{ a.no }}번</span><span><b>{{ {'찍음': '추측해서 풂'}.get(a.type, a.type) or '오답' }}</b>{% if a.unit %} <small class="muted">{{ a.unit }}</small>{% endif %}
       {% if a.mine or a.key %}<br><small class="muted">{% if a.mine %}학생 답 {{ a.mine }}<span class="sep" aria-hidden="true"></span>{% endif %}정답 <u class="ans-key">{{ a.key }}</u></small>{% endif %}
       {% if a.text %}<br><small>{{ a.text }}</small>{% endif %}</span></li>{% endfor %}</ul>
   </section>
@@ -50,7 +50,7 @@
 
   {% if r.units %}
   <section class="pr-card"><h2>단원별 정답률 <small class="muted">최근 시험, 낮은 순</small></h2>
-    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 50 }}"><span>{{ u.unit }}</span>
+    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 50 and loop.index <= 3 }}"><span>{{ u.unit }}<small class="muted"> {{ fmt(u.got) }}/{{ fmt(u.total) }}점</small></span>
       <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect>{% if u.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [u.pct, 3]|max }}" y2="4"></line>{% endif %}</svg>
       <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   </section>

@@ -7,7 +7,7 @@
 <div class="page-head">
   <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %}<span class="sep" aria-hidden="true"></span>{{ mock.title }}{% endif %}</h1>
     <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항<span class="sep" aria-hidden="true"></span>{{ fmt(m.full_score) }}점<span class="sep" aria-hidden="true"></span>응시 {{ cs.all.n }}명{% if cs.all.avg is not none %}<span class="sep" aria-hidden="true"></span>평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %}<span class="sep" aria-hidden="true"></span>{{ m.exam_date|d }}{% endif %}{% else %}결과 없음<span class="sep" aria-hidden="true"></span>엑셀을 올리면 문항 수, 정답, 배점이 정해져요{% endif %}</p></div>
-  {% if step == 'missing' and tab == 'omr' %}{% elif step == 'missing' %}<a class="btn primary" href="{{ url_for('books.teacher_mock', mid=mock.id, tab='omr') }}#missing">누락 학생 확인</a>
+  {% if step == 'missing' and tab == 'omr' %}{% elif step == 'missing' %}<a class="btn primary" href="{{ url_for('books.teacher_mock', mid=mock.id, tab='omr') }}#missing">누락 학생 {{ missing|length }}명 확인</a>
   {% elif step == 'sms' %}<a class="btn primary" href="{{ url_for('books.mock_sms', mid=mock.id) }}">학부모 문자 보기</a>
   {% elif tab != 'omr' %}<a class="btn primary" href="{{ url_for('books.teacher_mock', mid=mock.id, tab='omr') }}#omr">채점 파일 올리기</a>{% endif %}
 </div>
@@ -52,8 +52,13 @@
   {% if missing %}
   <form method="post" action="{{ url_for('books.mock_absent', mid=mock.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <ul class="pick-list">{% for s in missing %}<li><label><input type="checkbox" name="sid" value="{{ s.id }}" checked> <b class="nowrap">{{ s.name }}</b> <span class="small muted">{{ s.cls }}<span class="sep" aria-hidden="true"></span>{{ s.student_no }}</span></label></li>{% endfor %}</ul>
-    <div class="row mt"><button class="btn{{ ' primary' if step == 'missing' }}">결시로 확인</button><button class="btn" name="kind" value="makeup">보강 예정으로 두기</button></div>
+    {% for cls, grp in missing|groupby('cls') %}
+    <fieldset class="pick-group" data-pick-group>
+      <legend><label><input type="checkbox" checked data-pick-all> <b>{{ cls }}</b> <span class="small muted">{{ grp|length }}명</span></label></legend>
+      <ul class="pick-list">{% for s in grp %}<li><label><input type="checkbox" name="sid" value="{{ s.id }}" checked> <b class="nowrap">{{ s.name }}</b> <span class="small muted">{{ s.student_no }}</span></label></li>{% endfor %}</ul>
+    </fieldset>
+    {% endfor %}
+    <div class="pick-bar" data-pick-bar><button class="btn{{ ' primary' if step == 'missing' }}"><span><span data-pick-n>{{ missing|length }}</span>명 결시로 확인</span></button><button class="btn" name="kind" value="makeup">보강 예정으로 두기</button></div>
   </form>
   {% else %}<p class="muted">확인할 학생이 없어요.</p>{% endif %}
   {% if makeup %}<p class="small mt"><b>보강 예정 {{ makeup|length }}명</b> <span class="muted">{% for s in makeup %}{{ s.name }} ({{ s.cls }}){% if not loop.last %}, {% endif %}{% endfor %}</span></p>{% endif %}
@@ -102,9 +107,9 @@
 {% endif %}
 {% else %}
 <section class="card" aria-labelledby="h-cls">
-  <h2 id="h-cls">반별 결과</h2>
+  <h2 id="h-cls">반별 결과 <span class="small muted">많이 틀린 문항은 오답률 30% 이상, 높은 순 5개</span></h2>
   <div class="table-wrap"><table class="cmp tl-4" data-rc-title="0">
-    <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>오답률 높은 문항 <span class="small muted">30% 이상, 높은 순 5개</span></th></tr></thead>
+    <thead><tr><th>반</th><th class="num">응시</th><th class="num">평균</th><th>많이 틀린 문항</th></tr></thead>
     <tbody>{% for c, st in cs.cls|dictsort %}<tr><td class="nowrap">{{ c }}</td><td class="num nowrap">{{ st.n }}명</td><td class="num nowrap">{{ fmt(st.avg) }}</td>
       <td class="small">{% if st.n >= min_n %}{% set hi = [] %}{% for w in st.wrong %}{% if w >= 30 %}{% set _ = hi.append((w, loop.index)) %}{% endif %}{% endfor %}{% for w, i in (hi|sort(reverse=true))[:5] %}{{ i }}번({{ pct1(w) }}%) {% else %}<span class="muted">없음</span>{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>

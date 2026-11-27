@@ -526,3 +526,16 @@ document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(
     if (name) c.setAttribute("aria-label", name);
   });
 })();
+// 고르는 목록(모의고사 상세의 누락 학생): 반 전체 고르기, 버튼에 고른 인원
+(function () {
+  var bar = document.querySelector("[data-pick-bar]");
+  if (!bar) return;
+  var form = bar.closest("form"), n = bar.querySelector("[data-pick-n]");
+  var count = function () { if (n) n.textContent = form.querySelectorAll('input[name="sid"]:checked').length; };
+  form.addEventListener("change", function (e) {
+    var g = e.target.closest("[data-pick-group]");
+    if (g && e.target.hasAttribute("data-pick-all")) g.querySelectorAll('input[name="sid"]').forEach(function (c) { c.checked = e.target.checked; });
+    else if (g) g.querySelector("[data-pick-all]").checked = !g.querySelector('input[name="sid"]:not(:checked)');
+    count();
+  });
+})();

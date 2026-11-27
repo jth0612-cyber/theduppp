@@ -72,16 +72,16 @@ class Care(unittest.TestCase):
         with self.app.app_context():
             s3 = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, '박세나', '270003')", (self.a,))
         page = self.ta.get(f"/t/mocks/{mid}").data.decode()
-        self.assertIn("누락 학생 확인", page); self.assertNotIn("학부모 문자 보기", page)
+        self.assertIn("누락 학생 1명 확인", page); self.assertNotIn("학부모 문자 보기", page)
         omr = self.ta.get(f"/t/mocks/{mid}?tab=omr").data.decode()
         self.assertIn("박세나", omr); self.assertNotIn("이두리", omr)                      # 결과가 없는 B반 학생은 누락이 아니다
         self.ta.post(f"/t/mocks/{mid}/absent", data={"sid": [str(s3), str(self.s2)]})    # 누락이 아닌 학생은 무시한다
         with self.app.app_context():
             self.assertEqual([r["student_id"] for r in query("SELECT student_id FROM exam_absent WHERE mock_id = ?", (mid,))], [s3])
         page = self.ta.get(f"/t/mocks/{mid}").data.decode()
-        self.assertIn("학부모 문자 보기", page); self.assertNotIn("누락 학생 확인", page)
+        self.assertIn("학부모 문자 보기", page); self.assertNotIn("명 확인", page)
         self.ta.post(f"/t/mocks/{mid}/absent", data={"undo": "1"})
-        self.assertIn("누락 학생 확인", self.ta.get(f"/t/mocks/{mid}").data.decode())
+        self.assertIn("누락 학생 1명 확인", self.ta.get(f"/t/mocks/{mid}").data.decode())
         self.assertNotEqual(self.c1.post(f"/t/mocks/{mid}/absent", data={"sid": str(s3)}).status_code, 302)   # 학생은 못 한다
         # 보강 예정: 다른 반 수업에서 보기로 한 학생. 누락에서 빠지고, 결과가 올라오면 보강 예정에서도 사라진다
         self.ta.post(f"/t/mocks/{mid}/absent", data={"sid": str(s3), "kind": "makeup"})

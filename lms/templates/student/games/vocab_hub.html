@@ -26,8 +26,8 @@
   <ul class="qz-modes">
     {% set m = best.get('vocab_match:') %}{% set sp = best.get('vocab_speed:') %}
     <li><a href="{{ url_for('games.vocab_match') }}"><span class="qz-ico qi-match" aria-hidden="true"></span><b>조합 맞추기</b><span>단어–뜻 5쌍씩 4판</span>{% if m %}<em>최고 {{ m.top }}/20<span class="sep" aria-hidden="true"></span>{{ m.plays }}판</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.speed', kind='vocab_speed') }}"><span class="qz-ico qi-speed" aria-hidden="true"></span><b>스피드 O/X</b><span>60초, 맞으면 O 틀리면 X</span>{% if sp %}<em>최고 {{ sp.top }}개</em>{% endif %}</a></li>
-    <li><a href="{{ url_for('games.vocab_page') }}#quiz"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>퀴즈</b><span>뜻<span class="sep" aria-hidden="true"></span>단어<span class="sep" aria-hidden="true"></span>듣기<span class="sep" aria-hidden="true"></span>O/X<span class="sep" aria-hidden="true"></span>철자</span></a></li>
+    <li><a href="{{ url_for('games.speed', kind='vocab_speed') }}"><span class="qz-ico qi-speed" aria-hidden="true"></span><b>O/X 스피드</b><span>60초, 맞으면 O 틀리면 X</span>{% if sp %}<em>최고 {{ sp.top }}개</em>{% endif %}</a></li>
+    <li><a href="{{ url_for('games.vocab_page') }}#quiz"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>단어 퀴즈</b><span>뜻<span class="sep" aria-hidden="true"></span>단어<span class="sep" aria-hidden="true"></span>듣기<span class="sep" aria-hidden="true"></span>O/X<span class="sep" aria-hidden="true"></span>철자</span></a></li>
   </ul>
 </section>
 {% endblock %}

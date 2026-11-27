@@ -2943,3 +2943,13 @@ li.weak line.pb-fg { stroke: var(--danger); }
 
 /* 통과 Quiz: 문제 글자 크기를 문제 종류와 상관없이 하나로 (2026-11-27 슬랙 의견). 큰 글자는 영단어 한 낱말을 보여 줄 때만 쓴다 */
 #mc-game:not([data-game^="vocab"]) .mc-question .mc-main { font-size: 18px; line-height: 1.5; letter-spacing: 0; }
+
+/* 3차 토론: 상태 색 남은 곳. 대기 건수는 연한 파랑, 0건은 회색, 순위 표시는 파랑 (알림 숫자 동그라미는 눈에 띄어야 해서 빨강 그대로) */
+.filter-fold > summary em { color: var(--wait); font-style: normal; font-weight: 700; }
+.att-sum div.is-zero b { color: var(--faint) !important; }
+.my-rank .medal { background: var(--accent-soft) !important; color: var(--accent-ink) !important; }
+.my-rank .medal.medal-1 { background: var(--accent) !important; color: var(--on-accent, #fff) !important; }
+/* 10. 휴대폰에서 탭이 잘리지 않게 */
+@media (max-width: 420px) { .tabs a { padding-inline: 10px; font-size: 14px; } }
+.g-board.is-solo { grid-template-columns: 1fr; }
+@media (max-width: 720px) { .sched-help { display: none; } }

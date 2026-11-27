@@ -360,7 +360,7 @@ def parent_report(student_id, limit=6):
             lines.append(f"득점률이 이전 {last['kind'] or '시험'}보다 {abs(delta)}%p {'올랐' if delta > 0 else '내려갔'}어요.")
     if weak:
         low = [u["unit"] for u in units[:6] if u["pct"] == weak["unit"]["pct"]] or [weak["unit"]["unit"]]   # 아래 막대에 보이는 단원 중 같은 값은 모두
-        lines.append(f"최근 시험에서 가장 많이 틀린 단원: {', '.join(low)} (정답률 {weak['unit']['pct']}%)")
+        lines.append(f"최근 시험에서 가장 많이 틀린 단원: {', '.join(low)} ({num_fmt(weak['unit']['total'])}점 중 {num_fmt(weak['unit']['got'])}점)")
     return {"s": s, "exams": exams_out, "last": last, "delta": delta, "comment": comment, "units": units[:6], "weak": weak,
             "att": att, "lines": lines}
 

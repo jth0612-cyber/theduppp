@@ -76,7 +76,7 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
 @media (max-width: 900px) {
   .work { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .work-ref { display: contents; }
-  .work-photos { order: -1; position: sticky; top: 52px; z-index: 5; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+  .work-photos { position: sticky; top: 52px; z-index: 5; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
     margin-inline: -16px; padding: 8px 16px; background: var(--frame); -webkit-overflow-scrolling: touch; }
   .work-photos a { flex: 0 0 auto; scroll-snap-align: center; }
   .work-photos img { width: auto; height: min(32vh, 260px); max-width: 84vw; object-fit: contain; }
@@ -123,3 +123,16 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
   .sm-tot > summary { cursor: pointer; color: var(--muted); }
   .sm-tot div { padding: 3px 0; }
 }
+
+/* 3차 토론: 학생이 물은 글이 사진보다 먼저. 사진이 한 장이면 가운데에 */
+.work-ask { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--sheet); font-weight: 600; line-height: 1.55; word-break: keep-all; }
+.work-ask small { display: block; font-weight: 400; color: var(--muted); margin-bottom: 2px; }
+@media (max-width: 900px) { .work-photos a:only-child { margin-inline: auto; } .work-photos a:only-child img { max-width: 100%; } }
+/* 누락 학생: 반별 묶음, 처리 버튼은 화면 아래에 붙는다 */
+.pick-group { margin: 12px 0 0; }
+main fieldset.pick-group { background: none; padding: 0; }
+.pick-group > legend label { display: flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; }
+.pick-group > legend input, .pick-list input { width: 18px; height: 18px; flex: none; }
+.pick-group .pick-list { margin-top: 0; padding-left: 26px; }
+.pick-bar { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px 0; background: var(--sheet); border-top: 1px solid var(--rule); z-index: 4; }
+@media (max-width: 900px) { .pick-bar { bottom: calc(64px + env(safe-area-inset-bottom)); } .pick-bar .btn { flex: 1 1 auto; min-height: 48px; } }

@@ -117,7 +117,7 @@ def game_board(game, topic=None, pct=False):
 
 def last_study():
     """홈 첫 카드: 마지막으로 하던 학습 (최근 14일). 없으면 None 이고 홈은 오늘의 20단어로 보낸다."""
-    r = query("""SELECT game, topic, score, total, finished_at FROM game_rounds WHERE user_id = ?
+    r = query("""SELECT game, topic, score, total, finished_at, payload, picks FROM game_rounds WHERE user_id = ?
                  AND started_at >= datetime('now', 'localtime', '-14 days') ORDER BY id DESC LIMIT 1""", (g.user["id"],), one=True)
     if r is None:
         return None
@@ -131,11 +131,20 @@ def last_study():
     elif gm.startswith("play_") and gm[5:] in sci_games.GAMES:
         title, url = sci_games.GAMES[gm[5:]]["title"], url_for("games.play", game=gm[5:])
     else:
-        title, url = {"chargaff": ("샤가프 법칙", url_for("games.chargaff")), "mixed": ("퀴즈", url_for("games.mixed")),
+        title, url = {"chargaff": ("샤가프 법칙", url_for("games.chargaff")), "mixed": ("전 범위 퀴즈", url_for("games.mixed")),
                       "vocab_match": ("조합 맞추기", url_for("games.vocab_match")), "vocab_review": ("영단어 복습", url_for("games.vocab_review")),
-                      }.get(gm, ("오늘의 20단어", url_for("games.vocab_page")))
+                      }.get(gm, ("오늘의 20단어 퀴즈", url_for("games.vocab_page") + "#quiz"))
     done = r["finished_at"] is not None and r["total"]
-    return {"title": title, "url": url, "sub": f"지난 기록 {r['score']}/{r['total']}" if done else "학습 중"}
+    area = "수능 영단어" if gm.startswith("vocab") else "통과 Quiz"
+    if done:
+        state = f"지난 기록 {r['score']}/{r['total']}"
+    else:                                                      # 풀다 만 판: 몇 번째까지 풀었는지
+        try:
+            n_all, n_done = len(json.loads(r["payload"] or "[]")), len([p for p in json.loads(r["picks"] or "[]") if p is not None])
+        except (ValueError, TypeError):
+            n_all = n_done = 0
+        state = f"{n_done}/{n_all} 학습 중" if n_all else "학습 중"
+    return {"title": title, "url": url, "area": area, "sub": state}
 
 
 @bp.app_context_processor
@@ -326,7 +335,7 @@ def chargaff_submit(rid):
 @bp.route("/mixed")
 @student_required
 def mixed():
-    return render_template("student/games/mc.html", game="mixed", title="퀴즈", parent="sci",
+    return render_template("student/games/mc.html", game="mixed", title="전 범위 퀴즈", parent="sci",
                            intro="모든 TOPIC에서 10문제가 섞여 나와요.", topics=None, board=("mixed", None, "/10"))
 
 
@@ -347,13 +356,13 @@ def mixed_check(rid):
 @bp.route("/mixed/<int:rid>/submit", methods=["POST"])
 @student_required
 def mixed_submit(rid):
-    return _grade_mc(_open_round(rid, "mixed"), "퀴즈")
+    return _grade_mc(_open_round(rid, "mixed"), "전 범위 퀴즈")
 
 
 # ---------- 스피드 O/X (영단어 · 통과 공통): 60초 동안 많이 맞히기 ----------
 
 SPEED_SECONDS = 60
-SPEED = {"vocab_speed": ("영단어 스피드 O/X", "단어와 뜻이 맞으면 O, 틀리면 X를 골라요. 60초 동안 풀어요.", "vocab"),
+SPEED = {"vocab_speed": ("영단어 O/X 스피드", "단어와 뜻이 맞으면 O, 틀리면 X를 골라요. 60초 동안 풀어요.", "vocab"),
          "sci_speed": ("O/X 스피드", "개념 문장이 옳으면 O, 틀리면 X를 골라요. 60초 동안 풀어요.", "sci")}
 
 
