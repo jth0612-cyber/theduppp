@@ -47,6 +47,13 @@
 {% if mock.notice %}<p class="aside-note"><span>{{ '배포본' if mock.is_free else '알림' }}</span>{{ mock.notice }}</p>{% endif %}
 
 {% if entry %}
+<nav class="chip-links jump-links" aria-label="이 회차에서 바로 가기">
+  <a href="#result">성적표</a>
+  {% if rep and (rep.wrongs or prof) %}<a href="#h-wa">오답 분석</a>{% endif %}
+  {% if units %}<a href="#h-unit">단원별 성취도</a>{% endif %}
+  {% if mock.kind == '복습 테스트' or paper %}<a href="#paper">첨삭</a>{% endif %}
+  {% if mock.kind == '모의고사' or fb %}<a href="#feedback">피드백</a>{% endif %}
+</nav>
 <div class="sheet-stack">
   <section class="report" id="result" aria-labelledby="h-report">
     <div class="sec-head"><h2 id="h-report">성적표</h2></div>
@@ -68,7 +75,7 @@
   </section>
 
   <details class="fold-sec" id="omr">
-    <summary>답안표 보기 <span class="small muted">{{ mock.n_items }}문항{% if my_wrong %}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ my_wrong|length }}개{% endif %}</span></summary>
+    <summary>내 답안 보기 <span class="small muted">{{ mock.n_items }}문항{% if my_wrong %}<span class="sep" aria-hidden="true"></span>틀린 문항 {{ my_wrong|length }}개{% endif %}</span></summary>
   <section class="omr is-view" aria-labelledby="h-omr">
     <div class="sec-head"><h2 id="h-omr">내 답안{% call help('내 답안') %}<p>검은 원은 내가 고른 답, 빨간 테두리는 틀린 문항의 정답이에요.</p><p>번호가 빨간색이면 틀린 문항이고, 번호 밑의 숫자는 배점이에요.</p>{% if item_nos %}<p>번호를 누르면 그 문항을 볼 수 있어요.</p>{% endif %}{% endcall %}</h2></div>
     <p class="omr-legend small"><span class="bubble-v is-mine" aria-hidden="true"></span>내 답 <span class="bubble-v is-key" aria-hidden="true"></span>틀린 문항의 정답 </p>
@@ -126,8 +133,8 @@
 {% if units %}
 <section class="unit-sec" aria-labelledby="h-unit">
   <div class="sec-head"><h2 id="h-unit">단원별 성취도</h2><span>최근 6회</span></div>
-  <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 80 }}"><span>{{ u.unit }}</span>
-    <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect></svg>
+  <ul class="unit-bars">{% for u in units[:8] %}<li class="{{ 'weak' if u.pct < 50 }}"><span>{{ u.unit }}</span>
+    <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect><line class="pb-fg" x1="2" y1="4" x2="{{ [u.pct, 3]|max }}" y2="4"></line></svg>
     <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   {% if weak %}
   <div class="weak-card">

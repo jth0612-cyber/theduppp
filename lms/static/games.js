@@ -160,7 +160,7 @@
       }
       var buttons = [];
       item.choices.forEach(function (c, idx) {
-        var label = kind === "ox" ? (idx === 0 ? "O  " : "X  ") + c : kind === "tf" ? c : kind === "fill" ? c :
+        var label = kind === "ox" ? (idx === 0 ? "O" : "X") : kind === "tf" ? c : kind === "fill" ? c :
           kind === "pick" ? "①②③④⑤".charAt(idx) + " " + c : (idx + 1) + ". " + c;
         var b = el("button", "btn mc-choice" + (kind === "ox" || kind === "tf" ? (idx === 0 ? " ox-o" : " ox-x") : ""), label);
         b.type = "button";

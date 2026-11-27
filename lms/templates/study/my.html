@@ -68,16 +68,16 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic" value="all">
       <button class="btn small">진도 초기화</button></form></div>
   <div class="card"><ul class="list-rows prog-rows">
-    <li><a href="{{ url_for('games.hub') }}"><span class="lr-main"><b class="lr-title">수능 영단어</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if m.vocab.pct %}<rect class="pb-fg" width="{{ [m.vocab.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></span><span class="lr-end"><b>{{ m.vocab.pct }}<small>%</small></b></span></a></li>
+    <li><a href="{{ url_for('games.hub') }}"><span class="lr-main"><b class="lr-title">수능 영단어</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if m.vocab.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [m.vocab.pct, 4]|max }}" y2="4"></line>{% endif %}</svg></span><span class="lr-end"><b>{{ m.vocab.pct }}<small>%</small></b></span></a></li>
     {% set started = m.topics|selectattr('pct')|list %}{% set rest = m.topics|rejectattr('pct')|list %}
     {% for t in started %}
-    <li><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="lr-main"><b class="lr-title"><span class="prog-code">{{ t.code }}</span> {{ t.title }}</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></span><span class="lr-end"><b>{{ t.pct }}<small>%</small></b></span></a></li>
+    <li><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="lr-main"><b class="lr-title"><span class="prog-code">{{ t.code }}</span> {{ t.title }}</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [t.pct, 4]|max }}" y2="4"></line>{% endif %}</svg></span><span class="lr-end"><b>{{ t.pct }}<small>%</small></b></span></a></li>
     {% endfor %}
   </ul>
   {% if rest %}<details class="prog-rest"><summary>{{ '아직 안 푼 TOPIC ' ~ rest|length ~ '개' if started else 'TOPIC ' ~ rest|length ~ '개 보기' }}</summary>
   <ul class="list-rows prog-rows">
     {% for t in rest %}
-    <li><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="lr-main"><b class="lr-title"><span class="prog-code">{{ t.code }}</span> {{ t.title }}</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<rect class="pb-fg" width="{{ [t.pct, 4]|max }}" height="8" rx="4"></rect>{% endif %}</svg></span><span class="lr-end"><b>{{ t.pct }}<small>%</small></b></span></a></li>
+    <li><a href="{{ url_for('games.quiz', topic=t.code) }}"><span class="lr-main"><b class="lr-title"><span class="prog-code">{{ t.code }}</span> {{ t.title }}</b><svg class="pbar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-bg" width="100" height="8" rx="4"></rect>{% if t.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [t.pct, 4]|max }}" y2="4"></line>{% endif %}</svg></span><span class="lr-end"><b>{{ t.pct }}<small>%</small></b></span></a></li>
     {% endfor %}
   </ul></details>{% endif %}
   </div>

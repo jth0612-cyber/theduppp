@@ -121,3 +121,11 @@
 .thumb-play img { display: block; }
 .thumb-play::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
   background: rgba(0, 0, 0, .55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M9 7v10l8-5z'/%3E%3C/svg%3E") center / 18px no-repeat; }
+
+/* 질문 유형: 제목, 내용 칸과 같은 모양의 칸 셋 (2026-11-27 슬랙 의견) */
+main fieldset.field.qtype-pick { background: none; padding: 0; }
+.qtype-pick .chip-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.qtype-pick .chip-opt { display: flex; min-height: 52px; }
+.qtype-pick .chip-opt span { width: 100%; justify-content: center; padding: 0 8px; border-radius: 14px; background: var(--raised); color: var(--ink); font-weight: 600; }
+.qtype-pick .chip-opt input:checked + span { background: var(--accent); color: var(--on-accent); }
+.prog-rows .pbar line.pb-fg { stroke-width: 8px; }

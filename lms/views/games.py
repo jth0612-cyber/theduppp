@@ -131,11 +131,11 @@ def last_study():
     elif gm.startswith("play_") and gm[5:] in sci_games.GAMES:
         title, url = sci_games.GAMES[gm[5:]]["title"], url_for("games.play", game=gm[5:])
     else:
-        title, url = {"chargaff": ("샤가프 법칙", url_for("games.chargaff")), "mixed": ("섞어 풀기", url_for("games.mixed")),
+        title, url = {"chargaff": ("샤가프 법칙", url_for("games.chargaff")), "mixed": ("퀴즈", url_for("games.mixed")),
                       "vocab_match": ("조합 맞추기", url_for("games.vocab_match")), "vocab_review": ("영단어 복습", url_for("games.vocab_review")),
                       }.get(gm, ("오늘의 20단어", url_for("games.vocab_page")))
     done = r["finished_at"] is not None and r["total"]
-    return {"title": title, "url": url, "sub": f"지난 기록 {r['score']}/{r['total']}" if done else "풀던 중"}
+    return {"title": title, "url": url, "sub": f"지난 기록 {r['score']}/{r['total']}" if done else "학습 중"}
 
 
 @bp.app_context_processor
@@ -326,7 +326,7 @@ def chargaff_submit(rid):
 @bp.route("/mixed")
 @student_required
 def mixed():
-    return render_template("student/games/mc.html", game="mixed", title="섞어 풀기", parent="sci",
+    return render_template("student/games/mc.html", game="mixed", title="퀴즈", parent="sci",
                            intro="모든 TOPIC에서 10문제가 섞여 나와요.", topics=None, board=("mixed", None, "/10"))
 
 
@@ -347,7 +347,7 @@ def mixed_check(rid):
 @bp.route("/mixed/<int:rid>/submit", methods=["POST"])
 @student_required
 def mixed_submit(rid):
-    return _grade_mc(_open_round(rid, "mixed"), "섞어 풀기")
+    return _grade_mc(_open_round(rid, "mixed"), "퀴즈")
 
 
 # ---------- 스피드 O/X (영단어 · 통과 공통): 60초 동안 많이 맞히기 ----------

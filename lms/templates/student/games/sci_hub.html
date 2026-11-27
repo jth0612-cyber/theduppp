@@ -9,7 +9,7 @@
 <section class="qz-sec" aria-labelledby="h-play">
   <ul class="qz-modes">
     {% set mx = best.get('mixed:') %}{% set sp = best.get('sci_speed:') %}
-    <li><a href="{{ url_for('games.mixed') }}"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>섞어 풀기</b><span>TOPIC 01~34에서 10문제</span>{% if mx %}<em>최고 {{ mx.best }}점</em>{% endif %}</a></li>
+    <li><a href="{{ url_for('games.mixed') }}"><span class="qz-ico qi-mix" aria-hidden="true"></span><b>퀴즈</b><span>TOPIC 01~34에서 10문제</span>{% if mx %}<em>최고 {{ mx.best }}점</em>{% endif %}</a></li>
     <li><a href="{{ url_for('games.speed', kind='sci_speed') }}"><span class="qz-ico qi-speed" aria-hidden="true"></span><b>O/X 스피드</b><span>60초 동안 개념 O/X</span>{% if sp %}<em>최고 {{ sp.top }}개</em>{% endif %}</a></li>
   </ul>
 </section>

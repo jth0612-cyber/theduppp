@@ -2922,3 +2922,12 @@ main table.tl-5 td:nth-child(5), main table.tl-6 td:nth-child(6), main table.tl-
 .parent-page .rc-ytick, .parent-page .rc-xtick, .parent-page .rc-name { font-size: 19px; }
 .parent-page .rc-xdate { font-size: 16px; }
 .parent-page .rc-name { display: none; }
+
+/* 진행 막대: 가로로 늘어나는 SVG라 둥근 사각형은 끝이 뾰족하게 찌그러진다. 둥근 끝을 가진 선으로 그리고 굵기는 화면 기준으로 둔다 (2026-11-27 슬랙 의견) */
+svg:has(> .pb-bg) { border-radius: 999px; overflow: hidden; }
+line.pb-fg { fill: none; stroke: var(--accent); stroke-width: 8px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+li.weak line.pb-fg { stroke: var(--danger); }
+.pbar line.pb-fg { stroke-width: 10px; }
+/* 한 화면 안에서 구역으로 바로 가는 줄 */
+.jump-links { margin: 0 0 12px; }
+[id] { scroll-margin-top: 72px; }

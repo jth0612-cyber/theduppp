@@ -51,7 +51,7 @@
   {% if r.units %}
   <section class="pr-card"><h2>단원별 정답률 <small class="muted">최근 시험, 낮은 순</small></h2>
     <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 50 }}"><span>{{ u.unit }}</span>
-      <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect>{% if u.pct %}<rect width="{{ [u.pct, 3]|max }}" height="8" rx="4" class="pb-fg"></rect>{% endif %}</svg>
+      <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect>{% if u.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [u.pct, 3]|max }}" y2="4"></line>{% endif %}</svg>
       <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   </section>
   {% endif %}
