@@ -225,11 +225,20 @@ def scores():
 
 QUESTIONS_PER_PAGE = 30
 # 학습질문은 공개, 행정문의는 작성자 본인만 (선생님은 강사 화면에서 모두 봄)
-_VISIBLE = "(q.qtype = '학습질문' OR q.student_id = ?)"
+REPORT_REASONS = ("욕설이나 비방", "광고나 도배", "개인정보 노출", "수업과 무관한 글", "기타")
+
+
+def _visible(me_id):
+    """내가 볼 수 있는 질문: 내 글은 모두. 남의 글은 학습질문 가운데 숨김 처리되지 않았고, 내가 신고하지 않았고, 내가 차단한 학생의 글이 아닌 것.
+    me_id 는 DB 에서 온 학생 번호(정수)라 SQL 에 그대로 넣는다."""
+    m = int(me_id)
+    return f"""(q.student_id = {m} OR (q.qtype = '학습질문' AND q.hidden = 0
+            AND NOT EXISTS (SELECT 1 FROM question_reports r WHERE r.question_id = q.id AND r.student_id = {m})
+            AND NOT EXISTS (SELECT 1 FROM question_blocks b WHERE b.student_id = {m} AND b.blocked_id = q.student_id)))"""
 _PUBLIC_QUESTION_SELECT = """
     SELECT q.id, q.title, q.body, q.image_id, q.qtype, q.status, q.created_at, q.assignee_id, q.rating,
            (SELECT COALESCE(NULLIF(x.display_name, ''), x.username) FROM users x WHERE x.id = q.assignee_id) AS assignee_name,
-           COALESCE(u.nickname, '익명') AS nickname,
+           CASE WHEN u.id IS NULL THEN '탈퇴한 학생' ELSE COALESCE(u.nickname, '익명') END AS nickname, q.hidden, q.student_id,
            (SELECT COUNT(*) FROM answers WHERE question_id = q.id) AS answer_count,
            (SELECT COUNT(*) FROM followups WHERE question_id = q.id) AS followup_count,
            (q.student_id = ?) AS is_mine
@@ -245,7 +254,7 @@ def _week_best():
     return query(f"""SELECT q.id, q.title, q.status, COUNT(*) AS views,
                             (SELECT COUNT(*) FROM answers WHERE question_id = q.id) AS answer_count
                      FROM question_views v JOIN questions q ON q.id = v.question_id
-                     WHERE v.day >= ? AND q.qtype = '학습질문'
+                     WHERE v.day >= ? AND q.qtype = '학습질문' AND q.hidden = 0
                      GROUP BY q.id HAVING views >= 2 ORDER BY views DESC, q.created_at DESC LIMIT {WEEK_BEST}""", (monday,))
 
 
@@ -325,7 +334,7 @@ def questions():
         page = max(1, int(request.args.get("page", 1)))
     except ValueError:
         page = 1
-    where, args = [_VISIBLE], [me["id"]]
+    where, args = [_visible(me["id"])], []
     if view == "mine":
         where.append("q.student_id = ?")
         args.append(me["id"])
@@ -346,7 +355,7 @@ def questions():
     rows = query(f"""{_PUBLIC_QUESTION_SELECT} WHERE {where_sql}
                      ORDER BY q.created_at DESC LIMIT ? OFFSET ?""",
                  [me["id"]] + args + [QUESTIONS_PER_PAGE, (page - 1) * QUESTIONS_PER_PAGE])
-    faqs = query("""SELECT id, title FROM questions WHERE faq = 1 AND qtype = '학습질문'
+    faqs = query("""SELECT id, title FROM questions WHERE faq = 1 AND qtype = '학습질문' AND hidden = 0
                     ORDER BY created_at DESC LIMIT 20""") if page == 1 and not q else []
     best = _week_best() if page == 1 and not q and view == "all" and qtype in ("", "학습질문") else []
     # 문항 불러오기: 시험 분석에서 볼 수 있는 회차 중 문항 그림이 있는 것 → 그 그림 위에 필기해서 질문 (views/items.py)
@@ -369,7 +378,7 @@ def questions():
 
 
 def _get_visible_question(qid, me):
-    q = query(f"{_PUBLIC_QUESTION_SELECT} WHERE q.id = ? AND {_VISIBLE}", (me["id"], qid, me["id"]), one=True)
+    q = query(f"{_PUBLIC_QUESTION_SELECT} WHERE q.id = ? AND {_visible(me['id'])}", (me["id"], qid), one=True)
     if q is None:
         abort(404)
     return q
@@ -405,8 +414,67 @@ def question_detail(qid):
         execute("INSERT OR IGNORE INTO question_views (question_id, user_id, day) VALUES (?, ?, date('now', 'localtime'))",
                 (qid, g.user["id"]))
     can_follow_up = q["is_mine"] and q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
-    return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid),
+    return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid), report_reasons=REPORT_REASONS,
                            can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS)
+
+
+@bp.route("/questions/<int:qid>/report", methods=["POST"])
+@student_required
+def question_report(qid):
+    """남의 글을 신고한다. 신고한 학생에게는 그 글이 바로 안 보이고, 조교와 선생님이 확인해 숨기거나 문제 없음으로 닫는다."""
+    me = _me()
+    q = _get_visible_question(qid, me)
+    if q["is_mine"]:
+        abort(400)
+    reason = request.form.get("reason", "")
+    reason = reason if reason in REPORT_REASONS else "기타"
+    execute("INSERT OR IGNORE INTO question_reports (question_id, student_id, reason) VALUES (?, ?, ?)", (qid, me["id"], reason))
+    execute("DELETE FROM question_scraps WHERE user_id = ? AND question_id = ?", (g.user["id"], qid))
+    audit("question_report", f"question:{qid}")
+    flash("신고했어요. 선생님과 조교가 확인해요. 이 글은 이제 보이지 않아요.", "ok")
+    return redirect(url_for("student.questions"))
+
+
+@bp.route("/questions/<int:qid>/block", methods=["POST"])
+@student_required
+def question_block(qid):
+    """이 글을 쓴 학생을 차단한다 (그 학생의 글이 내 화면에 나오지 않는다). 계정 화면에서 풀 수 있다."""
+    me = _me()
+    q = _get_visible_question(qid, me)
+    if q["is_mine"]:
+        abort(400)
+    execute("INSERT OR IGNORE INTO question_blocks (student_id, blocked_id) VALUES (?, ?)", (me["id"], q["student_id"]))
+    flash("차단했어요. 이 학생의 글은 보이지 않아요. 계정 화면에서 풀 수 있어요.", "ok")
+    return redirect(url_for("student.questions"))
+
+
+@bp.route("/blocks/clear", methods=["POST"])
+@student_required
+def blocks_clear():
+    execute("DELETE FROM question_blocks WHERE student_id = ?", (_me()["id"],))
+    flash("차단을 모두 풀었어요.", "ok")
+    return redirect(url_for("auth.change_password"))
+
+
+@bp.route("/account-delete", methods=["POST"])
+@student_required
+def account_delete():
+    """계정 삭제 (운영자 결정 2026-11-27): 로그인 계정과 앱 활동(닉네임, 게임과 공부 기록, 알림, 스크랩, 시간표)만 바로 지운다.
+    성적, 출결, 올린 질문은 학원 기록으로 남고 질문의 작성자는 '탈퇴한 학생'으로 보인다. 가입 코드는 다시 쓸 수 있게 풀어 준다.
+    성적까지 모두 지우려면 '개인정보 삭제 요청'(erase_request)을 쓴다."""
+    from flask import session
+    from security import verify_password
+    me = _me()
+    if not verify_password(g.user["password_hash"], request.form.get("password", "")):
+        flash("비밀번호가 달라요. 계정은 그대로예요.", "error")
+        return redirect(url_for("auth.change_password") + "#delete")
+    audit("account_delete", f"student:{me['id']}")
+    execute("UPDATE student_codes SET student_id = NULL, used_at = NULL WHERE student_id = ?", (me["id"],))
+    execute("DELETE FROM question_blocks WHERE student_id = ?", (me["id"],))
+    execute("DELETE FROM users WHERE id = ?", (g.user["id"],))     # 계정에 딸린 앱 활동은 함께 지워진다 (ON DELETE CASCADE)
+    session.clear()
+    flash("계정을 삭제했어요.", "ok")
+    return redirect(url_for("auth.login"))
 
 
 def _scrapped(qid):
@@ -450,7 +518,7 @@ def question_followup(qid):
                 err = str(e) + " 작성한 내용은 그대로 남아 있어요."
         if err:   # 적은 내용을 날리지 않고 같은 화면에 그대로 돌려준다
             can_follow_up = q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
-            return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid),
+            return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid), report_reasons=REPORT_REASONS,
                                    can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS,
                                    fu_body=body, fu_err=err), 400
         execute("INSERT INTO followups (question_id, body, image_id) VALUES (?, ?, ?)", (qid, body, image_id))

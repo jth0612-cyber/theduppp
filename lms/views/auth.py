@@ -128,6 +128,21 @@ def privacy():
     return render_template("legal/privacy.html", legal_date=LEGAL_DATE)
 
 
+@bp.route("/account-deletion")
+def account_deletion():
+    """계정 삭제 방법 안내 (로그인 없이 열린다. 앱 스토어의 '계정 삭제 주소'에 적는 곳)."""
+    return render_template("legal/account_deletion.html")
+
+
+@bp.app_context_processor
+def _blocked_count():
+    def blocked_count():
+        if not g.get("user") or not g.user["student_id"]:
+            return 0
+        return query("SELECT COUNT(*) AS n FROM question_blocks WHERE student_id = ?", (g.user["student_id"],), one=True)["n"]
+    return {"blocked_count": blocked_count}
+
+
 @bp.route("/terms")
 def terms():
     return render_template("legal/terms.html", legal_date=LEGAL_DATE)

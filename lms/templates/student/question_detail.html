@@ -11,12 +11,25 @@
   </div>
   <div class="row">
   <form method="post" action="{{ url_for('student.question_scrap', qid=q.id) }}">{{ csrf() }}<button class="btn small{{ ' is-on' if scrapped }}" aria-pressed="{{ 'true' if scrapped else 'false' }}">{{ '스크랩 해제' if scrapped else '스크랩' }}</button></form>
+  {% if not q.is_mine %}
+  <details class="q-flag"><summary class="btn small">신고</summary>
+    <form method="post" action="{{ url_for('student.question_report', qid=q.id) }}" class="q-flag-box">{{ csrf() }}
+      <label for="rp-reason" class="small muted">신고 이유</label>
+      <select id="rp-reason" name="reason">{% for r in report_reasons %}<option>{{ r }}</option>{% endfor %}</select>
+      <button class="btn small danger">신고하기</button>
+    </form>
+    <form method="post" action="{{ url_for('student.question_block', qid=q.id) }}" class="q-flag-box" data-confirm="이 글을 쓴 학생의 글을 모두 안 볼까요?">{{ csrf() }}
+      <button class="btn small">이 학생 글 안 보기</button>
+    </form>
+  </details>
+  {% endif %}
   {% if q.is_mine and q.status == 'open' and not q.answer_count %}
   <form method="post" action="{{ url_for('student.question_delete', qid=q.id) }}" data-confirm="질문을 삭제할까요?">
     {{ csrf() }}<button class="btn small danger">삭제</button></form>
   {% endif %}
   </div>
 </div>
+{% if q.hidden %}<p class="aside-note"><span>숨김</span>신고를 받아 다른 학생에게는 보이지 않는 글이에요.</p>{% endif %}
 <div class="card">
   <div class="pre">{{ q.body }}</div>
   {% set photos = question_photos(q) %}{% if photos %}

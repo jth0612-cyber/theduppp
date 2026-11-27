@@ -19,6 +19,17 @@
   {% endif %}
   </div>
 </div>
+{% if reports or q.hidden %}
+<section class="card" aria-label="신고">
+  <div class="sec-head"><h2>신고 {{ reports|length }}건{% if q.hidden %} <span class="badge gray">숨김</span>{% endif %}</h2></div>
+  {% if reports %}<ul class="plain-list">{% for r in reports %}<li>{{ r.reason }}<span class="small muted">{{ r.name }}<span class="sep" aria-hidden="true"></span>{{ r.created_at|dt }}<span class="sep" aria-hidden="true"></span>{{ {'open': '확인 전', 'hidden': '숨김', 'dismissed': '문제 없음'}[r.state] }}</span></li>{% endfor %}</ul>{% endif %}
+  <form method="post" action="{{ url_for('teacher.question_moderate', qid=q.id) }}" class="row mt">{{ csrf() }}
+    {% if q.hidden %}<button class="btn small" name="action" value="show">숨김 풀기</button>
+    {% else %}<button class="btn small danger" name="action" value="hide" data-confirm="이 글을 다른 학생에게 숨길까요?">글 숨기기</button>
+    {% if reports|selectattr('state', 'equalto', 'open')|list %}<button class="btn small" name="action" value="dismiss">문제 없음</button>{% endif %}{% endif %}
+  </form>
+</section>
+{% endif %}
 <div class="work">
 <div class="work-ref">
   <div class="card"><div class="pre">{{ q.body }}</div></div>

@@ -43,7 +43,7 @@
     <tr><th>제목</th><th>학생</th><th>반</th><th>상태</th><th class="num">등록</th></tr>
     {% for q in questions %}
     <tr>
-      <td>{{ qtype_badge(q.qtype) }} <a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a>
+      <td>{{ qtype_badge(q.qtype) }} <a href="{{ url_for('teacher.question_detail', qid=q.id) }}">{{ q.title }}</a>{% if q.n_reports %} <span class="badge danger">신고 {{ q.n_reports }}</span>{% endif %}{% if q.hidden %} <span class="badge gray">숨김</span>{% endif %}
         {% if q.unit %} <span class="badge gray">{{ q.unit }}</span>{% endif %}{% if q.image_id %} <span class="badge gray">사진</span>{% endif %}
         {% if q.followup_count %} <span class="badge open">추가질문 {{ q.followup_count }}</span>{% endif %}
         {% if q.qtype == '학습상담' %} <span class="badge {{ '' if q.assignee_id == g.user.id else 'gray' }}">{{ (q.assignee_name ~ ' 지정') if q.assignee_name else '누구나' }}</span>{% if q.rating %} <span class="small muted">{{ q.rating }}점</span>{% endif %}{% endif %}</td>

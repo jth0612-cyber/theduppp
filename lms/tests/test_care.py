@@ -136,6 +136,57 @@ class Care(unittest.TestCase):
         self.c1.post(f"/s/questions/{q1}/scrap")
         self.assertIn("스크랩한 질문이 없어요", self.c1.get("/s/questions?view=scrap").data.decode())
 
+    def test_question_report_block_and_moderate(self):
+        """신고하면 신고한 학생에게만 바로 안 보이고, 조교가 숨기면 쓴 학생 말고는 안 보인다. 차단하면 그 학생의 글이 안 보인다."""
+        with self.app.app_context():
+            q1 = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, '이상한 글', '내용', '학습질문')", (self.s2,))
+            q2 = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, '멀쩡한 글', '내용', '학습질문')", (self.s2,))
+            s3 = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, '박세나', '270003')", (self.a,))
+            execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', '270003', ?, ?)", (hash_password(PW), s3))
+        c3 = self.login("270003")
+        self.assertEqual(self.c2.post(f"/s/questions/{q1}/report", data={"reason": "욕설이나 비방"}).status_code, 400)   # 내 글은 신고할 수 없다
+        self.c1.post(f"/s/questions/{q1}/report", data={"reason": "욕설이나 비방"})
+        self.assertNotIn("이상한 글", self.c1.get("/s/questions").data.decode())                 # 신고한 학생에게는 바로 안 보인다
+        self.assertEqual(self.c1.get(f"/s/questions/{q1}").status_code, 404)
+        self.assertIn("이상한 글", c3.get("/s/questions").data.decode())                        # 다른 학생에게는 아직 보인다
+        lst = self.ta.get("/t/questions?status=all").data.decode()
+        self.assertIn("신고 1", lst); self.assertIn("이상한 글", self.ta.get("/t/questions?status=all&reported=1").data.decode())
+        self.assertNotIn("멀쩡한 글", self.ta.get("/t/questions?status=all&reported=1").data.decode())
+        self.assertIn("욕설이나 비방", self.ta.get(f"/t/questions/{q1}").data.decode())
+        self.ta.post(f"/t/questions/{q1}/moderate", data={"action": "hide"})
+        self.assertNotIn("이상한 글", c3.get("/s/questions").data.decode())                     # 숨기면 다른 학생에게 안 보인다
+        self.assertIn("신고를 받아", self.c2.get(f"/s/questions/{q1}").data.decode())            # 쓴 학생에게는 보이고 숨김 안내
+        self.assertNotEqual(self.c1.post(f"/t/questions/{q1}/moderate", data={"action": "show"}).status_code, 302)   # 학생은 못 한다
+        self.c1.post(f"/s/questions/{q2}/block")                                                # 차단: 그 학생의 다른 글도 안 보인다
+        self.assertNotIn("멀쩡한 글", self.c1.get("/s/questions").data.decode())
+        self.assertIn("차단한 학생 1명", self.c1.get("/password").data.decode())
+        self.c1.post("/s/blocks/clear")
+        self.assertIn("멀쩡한 글", self.c1.get("/s/questions").data.decode())
+
+    def test_account_delete_keeps_school_records(self):
+        """계정 삭제: 비밀번호 확인 뒤 로그인 계정과 앱 활동만 지운다. 성적과 질문은 남고 가입 코드는 다시 쓸 수 있다."""
+        mid = self._exam()
+        with self.app.app_context():
+            uid = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
+            q1 = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, '남는 질문', '내용', '학습질문')", (self.s1,))
+            execute("""INSERT INTO game_rounds (user_id, game, topic, payload, answer, score, total, started_at)
+                       VALUES (?, 'mixed', '', '[]', '[]', 3, 10, datetime('now'))""", (uid,))
+            code = execute("INSERT INTO student_codes (class_id, code, student_id, used_at) VALUES (?, 'ABCD2345', ?, datetime('now'))", (self.a, self.s1))
+        self.assertEqual(self.app.test_client().get("/account-deletion").status_code, 200)      # 안내는 로그인 없이 열린다
+        self.c1.post("/s/account-delete", data={"password": "틀린비밀번호"})
+        with self.app.app_context():
+            self.assertIsNotNone(query("SELECT 1 FROM users WHERE id = ?", (uid,), one=True))   # 비밀번호가 다르면 그대로
+        r = self.c1.post("/s/account-delete", data={"password": PW})
+        self.assertIn("/login", r.headers["Location"])
+        with self.app.app_context():
+            self.assertIsNone(query("SELECT 1 FROM users WHERE id = ?", (uid,), one=True))
+            self.assertIsNone(query("SELECT 1 FROM game_rounds WHERE user_id = ?", (uid,), one=True))
+            self.assertIsNotNone(query("SELECT 1 FROM exam_results WHERE mock_id = ? AND student_id = ?", (mid, self.s1), one=True))
+            self.assertIsNotNone(query("SELECT 1 FROM questions WHERE id = ?", (q1,), one=True))
+            self.assertIsNone(query("SELECT student_id FROM student_codes WHERE id = ?", (code,), one=True)["student_id"])
+        self.assertNotEqual(self.c1.get("/s/").status_code, 200)                                # 로그인이 풀린다
+        self.assertIn("탈퇴한 학생", self.c2.get(f"/s/questions/{q1}").data.decode())
+
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()
         self.assertEqual(self.c1.get("/s/homework").status_code, 404)                    # 숙제 사진 제출은 없앰

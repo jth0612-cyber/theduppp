@@ -550,6 +550,9 @@ def questions():
     faq = request.args.get("faq") == "1"
     if faq:
         where += " AND q.faq = 1"
+    reported = request.args.get("reported") == "1"             # 신고가 들어와 확인을 기다리는 글
+    if reported:
+        where += " AND EXISTS (SELECT 1 FROM question_reports r WHERE r.question_id = q.id AND r.state = 'open')"
     if request.args.get("mine") == "1":                        # 나를 지정한 학습상담
         where += " AND q.assignee_id = ?"
         args = args + [g.user["id"]]
@@ -559,7 +562,8 @@ def questions():
     total = query(f"SELECT COUNT(*) AS n FROM questions q WHERE {where}", args, one=True)["n"]
     rows = query(f"""SELECT q.*, s.name, s.student_no, c.name AS class_name, u.nickname,
                             (SELECT COALESCE(NULLIF(x.display_name, ''), x.username) FROM users x WHERE x.id = q.assignee_id) AS assignee_name,
-                            (SELECT COUNT(*) FROM followups WHERE question_id = q.id) AS followup_count
+                            (SELECT COUNT(*) FROM followups WHERE question_id = q.id) AS followup_count,
+                            (SELECT COUNT(*) FROM question_reports r WHERE r.question_id = q.id AND r.state = 'open') AS n_reports
                      FROM questions q
                      JOIN students s ON s.id = q.student_id JOIN classes c ON c.id = s.class_id
                      LEFT JOIN users u ON u.student_id = s.id
@@ -613,7 +617,31 @@ def question_detail(qid):
                 return redirect(url_for("teacher.question_detail", qid=qid))
             nxt = _next_open(qid)
             return redirect(url_for("teacher.question_detail", qid=nxt["id"]) if nxt else url_for("teacher.questions"))
-    return render_template("teacher/question_detail.html", q=q, thread=question_thread(qid), has_next=_next_open(qid) is not None)
+    reports = query("""SELECT r.reason, r.state, r.created_at, s.name FROM question_reports r JOIN students s ON s.id = r.student_id
+                       WHERE r.question_id = ? ORDER BY r.created_at""", (qid,))
+    return render_template("teacher/question_detail.html", q=q, thread=question_thread(qid), has_next=_next_open(qid) is not None, reports=reports)
+
+
+@bp.route("/questions/<int:qid>/moderate", methods=["POST"])
+@staff_required
+def question_moderate(qid):
+    """신고된 글 처리: hide(다른 학생에게 숨김), dismiss(문제 없음), show(숨김 해제)."""
+    query("SELECT 1 FROM questions WHERE id = ?", (qid,), one=True) or abort(404)
+    act = request.form.get("action")
+    if act == "hide":
+        execute("UPDATE questions SET hidden = 1, faq = 0 WHERE id = ?", (qid,))
+        execute("UPDATE question_reports SET state = 'hidden' WHERE question_id = ? AND state = 'open'", (qid,))
+        flash("글을 숨겼어요. 쓴 학생과 선생님, 조교에게만 보여요.", "ok")
+    elif act == "dismiss":
+        execute("UPDATE question_reports SET state = 'dismissed' WHERE question_id = ? AND state = 'open'", (qid,))
+        flash("신고를 문제 없음으로 닫았어요.", "ok")
+    elif act == "show":
+        execute("UPDATE questions SET hidden = 0 WHERE id = ?", (qid,))
+        flash("숨김을 풀었어요.", "ok")
+    else:
+        abort(400)
+    audit("question_moderate", f"question:{qid} {act}")
+    return redirect(url_for("teacher.question_detail", qid=qid))
 
 
 def _next_open(qid):

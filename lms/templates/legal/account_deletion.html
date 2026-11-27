@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}계정 삭제 방법 | 정태혁 통합과학 lab{% endblock %}
+{% block content %}
+<article class="legal">
+  <h1>계정 삭제 방법</h1>
+  <h2>앱과 웹에서 바로 삭제</h2>
+  <p>로그인한 뒤 계정 화면(비밀번호 바꾸기)의 <b>계정 삭제</b>를 누르고 비밀번호를 확인하면 바로 삭제돼요.</p>
+  <p>지워지는 것: 로그인 계정, 닉네임, 공부와 게임 기록, 알림 설정, 스크랩, 시간표.</p>
+  <p>남는 것: 성적과 출결, 올린 질문. 수업 관리에 필요한 학원 기록이라 수강이 끝난 뒤 1년까지 보관하고, 질문의 작성자는 '탈퇴한 학생'으로 보여요.</p>
+  <h2>성적과 질문까지 모두 삭제</h2>
+  <p>같은 화면의 <b>개인정보 삭제 요청</b>을 누르면 선생님이 확인한 뒤 모든 기록을 지워요. 로그인할 수 없으면 담당 조교나 선생님에게 말씀해 주세요.</p>
+  <p class="small"><a href="{{ url_for('auth.privacy') }}">개인정보처리방침</a><span class="sep" aria-hidden="true"></span><a href="{{ url_for('auth.terms') }}">이용약관</a></p>
+</article>
+{% endblock %}

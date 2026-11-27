@@ -2931,3 +2931,12 @@ li.weak line.pb-fg { stroke: var(--danger); }
 /* 한 화면 안에서 구역으로 바로 가는 줄 */
 .jump-links { margin: 0 0 12px; }
 [id] { scroll-margin-top: 72px; }
+
+/* 질문 신고와 차단, 계정 삭제 */
+.q-flag { position: relative; }
+.q-flag > summary { list-style: none; cursor: pointer; }
+.q-flag > summary::-webkit-details-marker { display: none; }
+.q-flag-box { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.acct-del { margin-top: 12px; }
+.acct-del > summary { cursor: pointer; color: var(--muted); }
+.acct-del .field { max-width: 320px; }

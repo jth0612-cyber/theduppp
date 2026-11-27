@@ -692,6 +692,22 @@ CREATE TABLE IF NOT EXISTS question_views (
     PRIMARY KEY (question_id, user_id, day)
 );
 CREATE INDEX IF NOT EXISTS idx_question_views_day ON question_views(day);
+-- 질답 게시판 신고: 학생이 다른 학생의 글을 신고한다. 조교와 선생님이 보고 숨기거나(hidden) 문제 없음(dismissed)으로 닫는다
+CREATE TABLE IF NOT EXISTS question_reports (
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    reason      TEXT NOT NULL DEFAULT '',
+    state       TEXT NOT NULL DEFAULT 'open' CHECK (state IN ('open', 'hidden', 'dismissed')),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (question_id, student_id)
+);
+-- 질답 게시판 차단: 차단한 학생의 글은 내 화면에 나오지 않는다
+CREATE TABLE IF NOT EXISTS question_blocks (
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    blocked_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (student_id, blocked_id)
+);
 -- 질답 게시판 스크랩: 다시 보고 싶은 질문을 모아 둔다 (본인만 본다)
 CREATE TABLE IF NOT EXISTS question_scraps (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -861,6 +877,7 @@ def init_db(path):
     _add_column(conn, "mocks", "eval_video", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "exam_absent", "kind", "TEXT NOT NULL DEFAULT 'absent'")
+    _add_column(conn, "questions", "hidden", "INTEGER NOT NULL DEFAULT 0")     # 신고를 받아 조교가 숨긴 글 (쓴 학생과 조교에게만 보인다)
     # 학습상담: 학생이 조교를 지정(없으면 누구나), 답변 뒤 학생이 1~5점 평가. 조교 소개 한 줄
     _add_column(conn, "questions", "assignee_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
     _add_column(conn, "questions", "rating", "INTEGER")
