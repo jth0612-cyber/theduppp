@@ -122,6 +122,20 @@ class Care(unittest.TestCase):
                     self.assertEqual(r.status_code, 200, (game, u)); self.assertIn("이어서 학습하기", r.data.decode())
         self.assertIn('class="ah-go" href="/s/games/mixed"', self.c1.get("/s/").data.decode())
 
+    def test_question_scrap(self):
+        """질답 스크랩: 볼 수 있는 질문만 켜고 끌 수 있고, 스크랩 탭에는 내 것만 모인다."""
+        with self.app.app_context():
+            q1 = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, '공개 질문', '내용', '학습질문')", (self.s2,))
+            q2 = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, '남의 행정문의', '내용', '행정문의')", (self.s2,))
+        self.assertIn("스크랩한 질문이 없어요", self.c1.get("/s/questions?view=scrap").data.decode())
+        self.c1.post(f"/s/questions/{q1}/scrap")
+        self.assertIn("공개 질문", self.c1.get("/s/questions?view=scrap").data.decode())
+        self.assertIn("스크랩 해제", self.c1.get(f"/s/questions/{q1}").data.decode())
+        self.assertNotIn("공개 질문", self.c2.get("/s/questions?view=scrap").data.decode())      # 남의 스크랩은 안 보인다
+        self.assertEqual(self.c1.post(f"/s/questions/{q2}/scrap").status_code, 404)             # 볼 수 없는 질문
+        self.c1.post(f"/s/questions/{q1}/scrap")
+        self.assertIn("스크랩한 질문이 없어요", self.c1.get("/s/questions?view=scrap").data.decode())
+
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()
         self.assertEqual(self.c1.get("/s/homework").status_code, 404)                    # 숙제 사진 제출은 없앰

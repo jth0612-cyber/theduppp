@@ -101,11 +101,12 @@
   <a href="{{ url_for('student.questions', qtype=t) }}" class="{{ 'active' if qtype == t and view == 'all' }}">{{ t }}</a>
   {% endfor %}
   <a href="{{ url_for('student.questions', view='mine') }}" class="{{ 'active' if view == 'mine' }}">내 질문</a>
+  <a href="{{ url_for('student.questions', view='scrap') }}" class="{{ 'active' if view == 'scrap' }}">스크랩</a>
 </nav>
 
 <section class="card" aria-label="질문 목록">
   <form method="get" class="find" role="search">
-    {% if view == 'mine' %}<input type="hidden" name="view" value="mine">{% endif %}
+    {% if view != 'all' %}<input type="hidden" name="view" value="{{ view }}">{% endif %}
     {% if qtype %}<input type="hidden" name="qtype" value="{{ qtype }}">{% endif %}
     <label for="qq" class="sr-only">질문 찾기</label>
     <input type="search" id="qq" name="q" value="{{ q }}" placeholder="질문 {{ total }}개에서 찾기" enterkeyhint="search">
@@ -123,9 +124,9 @@
     </a></li>
     {% endfor %}
   </ul>
-  {{ pagination(page, pages, 'student.questions', view=view if view == 'mine' else None, qtype=qtype or None, q=q or None) }}
+  {{ pagination(page, pages, 'student.questions', view=view if view != 'all' else None, qtype=qtype or None, q=q or None) }}
   {% else %}
-  <div class="list-empty">{{ '찾는 질문이 없어요.' if q else '아직 질문이 없어요.' }}</div>
+  <div class="list-empty">{{ '찾는 질문이 없어요.' if q else ('스크랩한 질문이 없어요.' if view == 'scrap' else '아직 질문이 없어요.') }}</div>
   {% endif %}
 </section>
 <script src="{{ url_for('static', filename='ink.js') }}" defer></script>

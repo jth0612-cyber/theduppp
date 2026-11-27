@@ -88,7 +88,9 @@ def s_list():
                     SELECT 'paper', p.mock_id, p.status, COALESCE(p.reviewed_at, p.submitted_at), b.title, m.round_no, 0
                     FROM exam_papers p JOIN mocks m ON m.id = p.mock_id JOIN books b ON b.id = m.book_id WHERE p.student_id = ?
                     ORDER BY at DESC""", (g.user["id"], g.user["student_id"]))
-    return render_template("student/feedback_list.html", rows=rows)
+    counts = {k: sum(1 for r in rows if r["kind"] == k) for k in ("paper", "feedback")}
+    kind = request.args.get("kind") if request.args.get("kind") in counts else ""       # 복습 테스트 첨삭 / 모의고사 피드백을 나눠 본다
+    return render_template("student/feedback_list.html", rows=[r for r in rows if not kind or r["kind"] == kind], kind=kind, counts=counts)
 
 
 @bp.route("/s/analysis/<int:mid>/feedback", methods=["POST"])

@@ -318,7 +318,7 @@ def questions():
                 audit("question_create", f"question:{qid}")
                 flash("질문을 등록했어요.", "ok")
                 return redirect(url_for("student.question_detail", qid=qid, posted=1))
-    view = "mine" if request.args.get("view") == "mine" else "all"
+    view = request.args.get("view") if request.args.get("view") in ("mine", "scrap") else "all"
     qtype = request.args.get("qtype", "")
     q = request.args.get("q", "").strip()[:50]
     try:
@@ -332,6 +332,9 @@ def questions():
         if request.args.get("status") in ("open", "answered"):        # 내 질문: 답변 완료 / 대기만
             where.append("q.status = ?")
             args.append(request.args["status"])
+    if view == "scrap":                                               # 내가 스크랩한 질문
+        where.append("q.id IN (SELECT question_id FROM question_scraps WHERE user_id = ?)")
+        args.append(g.user["id"])
     if qtype in QUESTION_TYPES:
         where.append("q.qtype = ?")
         args.append(qtype)
@@ -402,8 +405,26 @@ def question_detail(qid):
         execute("INSERT OR IGNORE INTO question_views (question_id, user_id, day) VALUES (?, ?, date('now', 'localtime'))",
                 (qid, g.user["id"]))
     can_follow_up = q["is_mine"] and q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
-    return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),
+    return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid),
                            can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS)
+
+
+def _scrapped(qid):
+    return query("SELECT 1 FROM question_scraps WHERE user_id = ? AND question_id = ?", (g.user["id"], qid), one=True) is not None
+
+
+@bp.route("/questions/<int:qid>/scrap", methods=["POST"])
+@student_required
+def question_scrap(qid):
+    """스크랩을 켜거나 끈다 (볼 수 있는 질문만). 질답 게시판의 스크랩 탭에 모인다."""
+    _get_visible_question(qid, _me())
+    if _scrapped(qid):
+        execute("DELETE FROM question_scraps WHERE user_id = ? AND question_id = ?", (g.user["id"], qid))
+        flash("스크랩에서 뺐어요.", "ok")
+    else:
+        execute("INSERT OR IGNORE INTO question_scraps (user_id, question_id) VALUES (?, ?)", (g.user["id"], qid))
+        flash("스크랩했어요.", "ok")
+    return redirect(url_for("student.question_detail", qid=qid))
 
 
 @bp.route("/questions/<int:qid>/followup", methods=["POST"])
@@ -429,7 +450,7 @@ def question_followup(qid):
                 err = str(e) + " 작성한 내용은 그대로 남아 있어요."
         if err:   # 적은 내용을 날리지 않고 같은 화면에 그대로 돌려준다
             can_follow_up = q["answer_count"] > 0 and q["followup_count"] < MAX_FOLLOWUPS
-            return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid),
+            return render_template("student/question_detail.html", me=me, q=q, thread=question_thread(qid), scrapped=_scrapped(qid),
                                    can_follow_up=can_follow_up, max_followups=MAX_FOLLOWUPS,
                                    fu_body=body, fu_err=err), 400
         execute("INSERT INTO followups (question_id, body, image_id) VALUES (?, ?, ?)", (qid, body, image_id))

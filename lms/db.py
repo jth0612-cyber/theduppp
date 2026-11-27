@@ -692,6 +692,13 @@ CREATE TABLE IF NOT EXISTS question_views (
     PRIMARY KEY (question_id, user_id, day)
 );
 CREATE INDEX IF NOT EXISTS idx_question_views_day ON question_views(day);
+-- 질답 게시판 스크랩: 다시 보고 싶은 질문을 모아 둔다 (본인만 본다)
+CREATE TABLE IF NOT EXISTS question_scraps (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (user_id, question_id)
+);
 
 -- 웹 푸시 구독 (브라우저마다 하나)
 CREATE TABLE IF NOT EXISTS push_subs (
