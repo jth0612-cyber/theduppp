@@ -5,7 +5,7 @@
 import json
 from datetime import datetime, timedelta
 
-from flask import Blueprint, abort, g, jsonify, render_template, request
+from flask import Blueprint, abort, g, jsonify, render_template, request, url_for
 
 import quiz
 import sci_games
@@ -115,9 +115,32 @@ def game_board(game, topic=None, pct=False):
             "rank": 1 + sum(1 for v in by.values() if v > mine) if mine is not None else None}
 
 
+def last_study():
+    """홈 첫 카드: 마지막으로 하던 학습 (최근 14일). 없으면 None 이고 홈은 오늘의 20단어로 보낸다."""
+    r = query("""SELECT game, topic, score, total, finished_at FROM game_rounds WHERE user_id = ?
+                 AND started_at >= datetime('now', 'localtime', '-14 days') ORDER BY id DESC LIMIT 1""", (g.user["id"],), one=True)
+    if r is None:
+        return None
+    gm, tp = r["game"], r["topic"]
+    if gm == "quiz" and tp in quiz.TOPICS:
+        title, url = f"TOPIC {tp} {quiz.TOPICS[tp][0]}", url_for("games.quiz", topic=tp)
+    elif gm == "dna":
+        title, url = ("전사: DNA → RNA" if tp == "rna" else "염기 조합 맞추기"), url_for("games.dna", mode=tp if tp == "rna" else None)
+    elif gm in SPEED:
+        title, url = SPEED[gm][0], url_for("games.speed", kind=gm)
+    elif gm.startswith("play_") and gm[5:] in sci_games.GAMES:
+        title, url = sci_games.GAMES[gm[5:]]["title"], url_for("games.play", game=gm[5:])
+    else:
+        title, url = {"chargaff": ("샤가프 법칙", url_for("games.chargaff")), "mixed": ("섞어 풀기", url_for("games.mixed")),
+                      "vocab_match": ("조합 맞추기", url_for("games.vocab_match")), "vocab_review": ("영단어 복습", url_for("games.vocab_review")),
+                      }.get(gm, ("오늘의 20단어", url_for("games.vocab_page")))
+    done = r["finished_at"] is not None and r["total"]
+    return {"title": title, "url": url, "sub": f"지난 기록 {r['score']}/{r['total']}" if done else "풀던 중"}
+
+
 @bp.app_context_processor
 def _inject_board():
-    return {"game_board": game_board}
+    return {"game_board": game_board, "last_study": last_study}
 
 
 # ---------- 염기 짝 맞추기 ----------

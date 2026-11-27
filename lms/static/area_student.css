@@ -109,3 +109,15 @@
 .ss-go { color: var(--ink); }
 .ss-go::after { content: " ›"; color: var(--faint); font-weight: 400; }
 .my-none { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+
+/* 홈 첫 카드: 이어서 학습하기 */
+.ah-go { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 16px; border-radius: 18px; background: var(--sheet); color: var(--ink); text-decoration: none; }
+.ah-go-main { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.ah-go-main b { font-size: 17px; line-height: 1.35; word-break: keep-all; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.ah-go-main span { font-size: 13px; color: var(--muted); }
+.ah-go-btn { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--on-accent, #fff); font-weight: 700; font-size: 14.5px; }
+/* 강의 영상 썸네일의 재생 표시 */
+.thumb-play { position: relative; display: block; flex: none; }
+.thumb-play img { display: block; }
+.thumb-play::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: rgba(0, 0, 0, .55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M9 7v10l8-5z'/%3E%3C/svg%3E") center / 18px no-repeat; }

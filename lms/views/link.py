@@ -170,4 +170,9 @@ def s_attendance():
     count = {}
     for r in rows:
         count[r["status"] or "미확인"] = count.get(r["status"] or "미확인", 0) + 1
-    return render_template("student/attendance.html", code=code, rows=rows, count=count)
+    # 그날 우리 반 수업이 시작한 시각 (진도표의 수업 칸). 지각인지 한눈에 견줄 수 있게 등원 시각 옆에 적는다
+    starts = {}
+    for r in query("""SELECT x.day, MIN(t.starts) AS starts FROM sessions x JOIN timetable t ON t.id = x.slot_id
+                      WHERE x.class_id = (SELECT class_id FROM students WHERE id = ?) AND x.status != '휴강' GROUP BY x.day""", (g.user["student_id"],)):
+        starts[r["day"]] = r["starts"]
+    return render_template("student/attendance.html", code=code, rows=rows, count=count, starts=starts)

@@ -22,6 +22,13 @@
 </a>
 {% endif %}
 
+{# 첫 카드: 마지막으로 하던 학습을 이어서. 없으면 오늘의 20단어 #}
+{% set ls = last_study() %}
+<a class="ah-go" href="{{ ls.url if ls else url_for('games.vocab_page') }}">
+  <span class="ah-go-main"><b>{{ ls.title if ls else '오늘의 20단어' }}</b>{% if ls %}<span>{{ ls.sub }}</span>{% endif %}</span>
+  <span class="ah-go-btn">{{ '이어서 학습하기' if ls else '시작' }}</span>
+</a>
+
 <div class="ah-stats">
   <a href="{{ url_for('rooms.rooms') }}"><b>{{ a.focus }}<small>분</small></b><span>오늘 집중</span></a>
   <a href="{{ url_for('link.s_tasks') }}"><b>{{ a.tasks if a.has_code else '–' }}</b><span>남은 과제</span></a>

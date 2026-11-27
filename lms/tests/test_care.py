@@ -107,6 +107,21 @@ class Care(unittest.TestCase):
         self.assertNotIn("g-board", self.c1.get("/s/games/chargaff").data.decode())          # 기록 없음: 하는 법 한 줄
         self.assertIn("A=T, G=C 규칙으로", self.c1.get("/s/games/chargaff").data.decode())
 
+    def test_home_first_card_continues_last_study(self):
+        """홈 첫 카드: 하던 학습이 없으면 오늘의 20단어, 있으면 그 학습으로. 웹 홈과 앱 홈이 같다."""
+        for u in ("/s/", "/s/?view=app"):
+            page = self.c1.get(u).data.decode()
+            self.assertIn('class="ah-go" href="/s/games/vocab"', page); self.assertNotIn("이어서 학습하기", page)
+        with self.app.app_context():
+            uid = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
+            for game, topic in (("quiz", "06"), ("dna", "rna"), ("play_shell", ""), ("sci_speed", ""), ("mixed", "")):
+                execute("""INSERT INTO game_rounds (user_id, game, topic, payload, answer, score, total, started_at, finished_at)
+                           VALUES (?, ?, ?, '[]', '[]', 3, 10, datetime('now', 'localtime'), datetime('now', 'localtime'))""", (uid, game, topic))
+                for u in ("/s/", "/s/?view=app"):
+                    r = self.c1.get(u)
+                    self.assertEqual(r.status_code, 200, (game, u)); self.assertIn("이어서 학습하기", r.data.decode())
+        self.assertIn('class="ah-go" href="/s/games/mixed"', self.c1.get("/s/").data.decode())
+
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()
         self.assertEqual(self.c1.get("/s/homework").status_code, 404)                    # 숙제 사진 제출은 없앰
