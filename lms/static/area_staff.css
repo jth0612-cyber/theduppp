@@ -97,7 +97,7 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
 .pick-list label { display: flex; align-items: center; gap: 8px; min-height: 44px; border-bottom: 1px solid var(--rule); cursor: pointer; }
 .pick-list input { width: 18px; height: 18px; flex: none; }
 
-/* 진도 일정표의 휴대폰 배치 (2026-11-27, GPT와 Gemini 의견으로 정함): 주차마다 카드, 이번 주만 펼침, 교재는 주차에 한 번 */
+/* 진도 일정표의 휴대폰 배치: 주차마다 카드, 이번 주만 펼침, 교재는 주차에 한 번 */
 .sched-m { display: none; }
 @media (max-width: 720px) {
   .sched-wrap { display: none; }
