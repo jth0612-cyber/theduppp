@@ -10,11 +10,18 @@
 </header>
 
 {# 첫 카드: 마지막으로 하던 학습을 이어서. 없으면 오늘의 20단어 (앱 홈과 같다) #}
-{% set ls = last_study() %}
+{% set dp = daily_plan() %}{% set ls = last_study() %}
+{% if not dp.done %}
+<a class="ah-go" href="{{ url_for('games.daily') }}">
+  <span class="ah-go-main"><b>취약 단원 복습 5문제</b><span>TOPIC {{ dp.topic }} {{ dp.title }}<span class="sep" aria-hidden="true"></span>{{ dp.why }}</span></span>
+  <span class="ah-go-btn">시작</span>
+</a>
+{% else %}
 <a class="ah-go" href="{{ ls.url if ls else url_for('games.vocab_page') }}">
   <span class="ah-go-main"><b>{{ ls.title if ls else '오늘의 20단어' }}</b>{% if ls %}<span>{{ ls.area }}<span class="sep" aria-hidden="true"></span>{{ ls.sub }}</span>{% endif %}</span>
   <span class="ah-go-btn">{{ '이어서 학습하기' if ls else '시작' }}</span>
 </a>
+{% endif %}
 {% if news and (news.feedback or news.papers or news.answers or news.lessons) %}
 <section class="panel home-news" aria-labelledby="h-news">
   <div class="sec-head"><h2 id="h-news">알림</h2><span>최근 7일</span></div>

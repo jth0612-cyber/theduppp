@@ -708,6 +708,14 @@ CREATE TABLE IF NOT EXISTS question_blocks (
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     PRIMARY KEY (student_id, blocked_id)
 );
+-- 소도시 명상의 칠판 글(chat)과 남긴 글(note) 신고. 신고한 학생에게는 바로 안 보이고 강사와 조교가 보고 지운다
+CREATE TABLE IF NOT EXISTS room_reports (
+    kind        TEXT NOT NULL CHECK (kind IN ('chat', 'note')),
+    item_id     INTEGER NOT NULL,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (kind, item_id, user_id)
+);
 -- 질답 게시판 스크랩: 다시 보고 싶은 질문을 모아 둔다 (본인만 본다)
 CREATE TABLE IF NOT EXISTS question_scraps (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

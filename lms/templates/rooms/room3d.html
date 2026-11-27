@@ -69,6 +69,7 @@
         <p class="small muted">내 캐릭터 색</p>
         {% for c in colors %}<button type="button" class="w3-swatch sw-{{ loop.index0 }}{{ ' is-on' if c == my_color }}" data-color-pick="{{ c }}" aria-label="색 {{ loop.index }}" aria-pressed="{{ 'true' if c == my_color else 'false' }}"></button>{% endfor %}
       </div>
+      {% if board_on %}<p class="small"><a href="{{ url_for('rooms.board_page', place=key) }}">판에 남은 글 보기, 신고</a></p>{% endif %}
       <div class="w3-rank">
         <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
         {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id) }}{% endfor %}</ol>

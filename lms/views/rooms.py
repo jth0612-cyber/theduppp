@@ -303,14 +303,18 @@ def _board(place):
 
 def _board_lines(place, board_no):
     b = BOARDS[place]
+    uid, sid = g.user["id"], g.user["student_id"] or 0
+    # 내가 신고한 글과 내가 차단한 학생의 글은 내 화면에 나오지 않는다
+    mine = """AND NOT EXISTS (SELECT 1 FROM room_reports r WHERE r.kind = '{k}' AND r.item_id = {a}.id AND r.user_id = ?)
+              AND NOT EXISTS (SELECT 1 FROM question_blocks qb WHERE qb.student_id = ? AND qb.blocked_id = u.student_id)"""
     if b["kind"] == "chat":
-        rows = query("""SELECT c.id, c.body, u.nickname, u.role, u.display_name FROM room_chat c JOIN users u ON u.id = c.user_id
-                        WHERE c.place = ? AND c.board = ? AND date(c.created_at) = date('now', 'localtime')
-                        ORDER BY c.id DESC LIMIT ?""", (place, board_no, BOARD_LINES))
+        rows = query(f"""SELECT c.id, c.body, c.user_id, u.student_id, u.nickname, u.role, u.display_name FROM room_chat c JOIN users u ON u.id = c.user_id
+                        WHERE c.place = ? AND c.board = ? AND date(c.created_at) = date('now', 'localtime') {mine.format(k='chat', a='c')}
+                        ORDER BY c.id DESC LIMIT ?""", (place, board_no, uid, sid, BOARD_LINES))
     else:
-        rows = query("""SELECT n.id, n.body, u.nickname, u.role, u.display_name FROM room_notes n JOIN users u ON u.id = n.user_id
-                        WHERE n.place = ? ORDER BY n.created_at DESC, n.id DESC LIMIT ?""", (place, BOARD_LINES))
-    return [{"id": r["id"], "nick": ((role_caption(r) + " ") if role_caption(r) else "") + shown_name(r), "body": r["body"]}
+        rows = query(f"""SELECT n.id, n.body, n.user_id, u.student_id, u.nickname, u.role, u.display_name FROM room_notes n JOIN users u ON u.id = n.user_id
+                        WHERE n.place = ? {mine.format(k='note', a='n')} ORDER BY n.created_at DESC, n.id DESC LIMIT ?""", (place, uid, sid, BOARD_LINES))
+    return [{"id": r["id"], "mine": r["user_id"] == uid, "student": bool(r["student_id"]), "nick": ((role_caption(r) + " ") if role_caption(r) else "") + shown_name(r), "body": r["body"]}
             for r in reversed(rows)]
 
 
@@ -352,6 +356,42 @@ def write(place):
     return jsonify(ok=True, board=_board(place))
 
 
+@bp.route("/s/rooms/<place>/board")
+@member_required
+def board_page(place):
+    """판에 남은 글을 목록으로 (3D 화면의 판은 그림이라 누를 수 없다). 여기서 신고하고 차단한다."""
+    info = _place_or_404(place)
+    b = BOARDS.get(place) or abort(404)
+    lines = _board(place)
+    lines = [x for v in lines.values() for x in v] if isinstance(lines, dict) else lines
+    return render_template("rooms/board.html", place=place, info=info, kind=b["kind"], lines=lines[::-1])
+
+
+@bp.route("/s/rooms/<place>/report", methods=["POST"])
+@member_required
+def board_report(place):
+    """판의 글을 신고(action=report)하거나 쓴 학생을 차단(action=block)한다."""
+    _place_or_404(place)
+    b = BOARDS.get(place) or abort(404)
+    table = "room_chat" if b["kind"] == "chat" else "room_notes"
+    row = query(f"SELECT t.id, t.body, t.user_id, u.student_id FROM {table} t JOIN users u ON u.id = t.user_id WHERE t.id = ? AND t.place = ?",
+                (request.form.get("id", type=int), place), one=True) or abort(404)
+    if row["user_id"] == g.user["id"]:
+        abort(400)
+    if request.form.get("action") == "block":
+        if not (g.user["student_id"] and row["student_id"]):
+            abort(400)
+        execute("INSERT OR IGNORE INTO question_blocks (student_id, blocked_id) VALUES (?, ?)", (g.user["student_id"], row["student_id"]))
+        flash("차단했어요. 이 학생의 글은 보이지 않아요. 계정 화면에서 풀 수 있어요.", "ok")
+    else:
+        execute("INSERT OR IGNORE INTO room_reports (kind, item_id, user_id) VALUES (?, ?, ?)", (b["kind"], row["id"], g.user["id"]))
+        audit("room_report", f"{b['kind']}:{row['id']}")
+        from views.pwa import notify_staff
+        notify_staff("공부방 글 신고", row["body"][:40], url_for("rooms.t_rooms"))
+        flash("신고했어요. 선생님과 조교가 확인해요. 이 글은 이제 보이지 않아요.", "ok")
+    return redirect(url_for("rooms.board_page", place=place))
+
+
 @bp.route("/t/rooms")
 @staff_required
 def t_rooms():
@@ -363,9 +403,13 @@ def t_rooms():
                     JOIN classes c ON c.id = s.class_id
                     WHERE f.ended_at >= date('now', 'localtime', '-6 days')
                     GROUP BY s.id ORDER BY m DESC LIMIT 100""")
-    notes = query("""SELECT n.*, u.nickname, u.role, u.display_name, s.name FROM room_notes n JOIN users u ON u.id = n.user_id
+    notes = query("""SELECT n.*, u.nickname, u.role, u.display_name, s.name,
+                            (SELECT COUNT(*) FROM room_reports r WHERE r.kind = 'note' AND r.item_id = n.id) AS n_reports
+                     FROM room_notes n JOIN users u ON u.id = n.user_id
                      LEFT JOIN students s ON s.id = u.student_id ORDER BY n.created_at DESC LIMIT 60""")
-    chat = query("""SELECT c.*, u.nickname, u.role, u.display_name, s.name FROM room_chat c JOIN users u ON u.id = c.user_id
+    chat = query("""SELECT c.*, u.nickname, u.role, u.display_name, s.name,
+                           (SELECT COUNT(*) FROM room_reports r WHERE r.kind = 'chat' AND r.item_id = c.id) AS n_reports
+                    FROM room_chat c JOIN users u ON u.id = c.user_id
                     LEFT JOIN students s ON s.id = u.student_id ORDER BY c.id DESC LIMIT 60""")
     return render_template("rooms/t_rooms.html", places=PLACES, now=now, week=week, notes=notes, chat=chat)
 

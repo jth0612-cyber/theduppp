@@ -17,7 +17,7 @@
       </tbody>
     </table></div>
     {% else %}
-    <p class="muted">응시자가 {{ min_for_cuts }}명이 되면 기준표를 열어요. 지금 {{ stats.n }}명</p>
+    <p class="muted">지금 {{ stats.n }}명 응시. {{ min_for_cuts }}명부터 등급 기준표가 나와요.</p>
     {% endif %}
   </section>
 
@@ -77,6 +77,6 @@
   </div>
   {% endif %}
   {% else %}
-  <p class="muted">모든 문항을 표시한 답안이 들어오면 문항 지도가 채워져요.</p>
+  <p class="muted">전 문항에 답한 답안이 있어야 문항별 오답률이 나와요.</p>
   {% endif %}
 </section>

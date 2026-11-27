@@ -155,3 +155,11 @@ main fieldset.pick-group { background: none; padding: 0; }
 .ar-more:has(input[value="다른 반"]:checked) > summary::after { content: ": 다른 반"; }
 .ar-more[open] { display: flex; flex-wrap: wrap; gap: 6px; }
 @media (max-width: 560px) { .att-rows li { align-items: flex-start; flex-direction: column; } .ar-pick { width: 100%; } .ar-opt { flex: 1 1 0; } .ar-opt span { width: 100%; min-width: 0; min-height: 44px; } .ar-more .ar-opt { flex: 0 0 auto; } }
+
+/* 첨삭: 사진 크게 보기를 켜면 붙어 있는 사진 줄이 화면 위쪽 절반을 넘게 커진다 */
+.ph-big-btn { justify-self: start; }
+.ph-big-toggle:checked + .ph-big-btn { background: var(--accent-soft); color: var(--accent-ink); }
+@media (max-width: 900px) { .work:has(.ph-big-toggle:checked) .work-photos img { height: min(58vh, 520px); max-width: none; } }
+@media (min-width: 901px) { .ph-big-btn { display: none; } }
+/* 조교 받은 일 화면(질문, 첨삭, 피드백): 휴대폰에서는 탭이 제목 노릇을 하므로 제목 줄을 감춘다 */
+@media (max-width: 720px) { .inbox-tabs ~ :is(header.ed-head, .page-head) h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .inbox-tabs ~ header.ed-head { margin: 0; } }

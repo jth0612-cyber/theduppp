@@ -23,14 +23,15 @@
     password: (v) => (v.length < 10 ? "비밀번호는 10자 이상이어야 해요." : kinds(v) < 2 ? "영문, 숫자, 특수문자 중 2종류 이상 섞어 주세요." : ""),
     confirm: (v) => (v && v === $("password").value ? "" : "비밀번호 두 칸이 서로 달라요."),
     consent: () => ($("consent").checked ? "" : "개인정보 수집 및 이용에 동의해야 가입할 수 있어요."),
+    consent_parent: () => ($("consent_parent").checked ? "" : "학부모에게 성적과 출결을 알리는 데 동의해야 가입할 수 있어요."),
   };
   const touched = new Set();
 
   // 칸을 벗어날 때 확인, 이미 틀렸던 칸은 고치는 즉시 다시 확인
   Object.keys(check).forEach((n) => {
     const input = $(n); if (!input) return;
-    input.addEventListener("blur", () => { if (input.value || n === "consent") { touched.add(n); show(n, check[n](input.value)); } });
-    input.addEventListener(n === "consent" ? "change" : "input", () => {
+    input.addEventListener("blur", () => { if (input.value || n.indexOf("consent") === 0) { touched.add(n); show(n, check[n](input.value)); } });
+    input.addEventListener(n.indexOf("consent") === 0 ? "change" : "input", () => {
       if (touched.has(n) || input.getAttribute("aria-invalid")) show(n, check[n](input.value));
       if (n === "password" && touched.has("confirm")) show("confirm", check.confirm($("confirm").value));
     });

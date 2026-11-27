@@ -115,9 +115,64 @@ def game_board(game, topic=None, pct=False):
             "rank": 1 + sum(1 for v in by.values() if v > mine) if mine is not None else None}
 
 
+DAILY_N = 5
+
+
+def daily_plan():
+    """홈 첫 카드의 취약 단원 복습. 오늘 풀 TOPIC 하나를 고른다.
+    1) 사흘 넘게 전에 복습했고 그 뒤로 다시 풀지 않은 TOPIC 이 있으면 그것부터 (다시 확인)
+    2) 없으면 최근 시험에서 점수가 가장 낮은 단원에 해당하는 TOPIC
+    3) 시험 기록이 없으면 아직 풀어 보지 않은 첫 TOPIC
+    오늘 이미 한 판을 끝냈으면 done 이 참이다."""
+    uid = g.user["id"]
+    done = query("""SELECT 1 FROM game_rounds WHERE user_id = ? AND game = 'daily' AND finished_at IS NOT NULL
+                    AND date(finished_at) = date('now', 'localtime')""", (uid,), one=True) is not None
+    due = query("""SELECT topic, MAX(finished_at) AS last FROM game_rounds WHERE user_id = ? AND game = 'daily' AND finished_at IS NOT NULL
+                   GROUP BY topic HAVING date(last) <= date('now', 'localtime', '-3 days') ORDER BY last LIMIT 1""", (uid,), one=True)
+    if due and due["topic"] in quiz.TOPICS:
+        return {"topic": due["topic"], "title": quiz.TOPICS[due["topic"]][0], "why": "사흘 전에 복습한 단원", "done": done}
+    from views.care import topic_for_unit, unit_scores
+    for u in unit_scores(g.user["student_id"]):
+        t = topic_for_unit(u["unit"])
+        if t and t["code"] in quiz.TOPICS:
+            return {"topic": t["code"], "title": t["title"], "why": "최근 시험에서 약한 단원", "done": done}
+    seen = {r["topic"] for r in query("SELECT DISTINCT topic FROM game_rounds WHERE user_id = ? AND game IN ('quiz', 'daily')", (uid,))}
+    code = next((c for c in quiz.TOPICS if c not in seen), next(iter(quiz.TOPICS)))
+    return {"topic": code, "title": quiz.TOPICS[code][0], "why": "아직 안 풀어 본 TOPIC", "done": done}
+
+
+@bp.route("/daily")
+@student_required
+def daily():
+    p = daily_plan()
+    return render_template("student/games/mc.html", game="daily", title="취약 단원 복습", parent="sci", topics=None,
+                           intro=f"TOPIC {p['topic']} {p['title']}에서 {DAILY_N}문제. {p['why']}이에요.")
+
+
+@bp.route("/daily/start", methods=["POST"])
+@student_required
+def daily_start():
+    topic = daily_plan()["topic"]
+    items = quiz.bank_quiz(topic, count=DAILY_N, history=_quiz_history(topic))
+    rid = _new_round("daily", _public(items), items, topic=topic)
+    return jsonify(round_id=rid, questions=_public(items))
+
+
+@bp.route("/daily/<int:rid>/check", methods=["POST"])
+@student_required
+def daily_check(rid):
+    return _check_mc(_open_round(rid, "daily"))
+
+
+@bp.route("/daily/<int:rid>/submit", methods=["POST"])
+@student_required
+def daily_submit(rid):
+    return _grade_mc(_open_round(rid, "daily"), "취약 단원 복습")
+
+
 def last_study():
     """홈 첫 카드: 마지막으로 하던 학습 (최근 14일). 없으면 None 이고 홈은 오늘의 20단어로 보낸다."""
-    r = query("""SELECT game, topic, score, total, finished_at, payload, picks FROM game_rounds WHERE user_id = ?
+    r = query("""SELECT game, topic, score, total, finished_at, payload, picks FROM game_rounds WHERE user_id = ? AND game != 'daily'
                  AND started_at >= datetime('now', 'localtime', '-14 days') ORDER BY id DESC LIMIT 1""", (g.user["id"],), one=True)
     if r is None:
         return None
@@ -149,7 +204,7 @@ def last_study():
 
 @bp.app_context_processor
 def _inject_board():
-    return {"game_board": game_board, "last_study": last_study}
+    return {"game_board": game_board, "last_study": last_study, "daily_plan": daily_plan}
 
 
 # ---------- 염기 짝 맞추기 ----------

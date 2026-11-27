@@ -33,7 +33,7 @@ class LegalTest(unittest.TestCase):
             execute("INSERT INTO student_codes (class_id, code) VALUES (?, 'JAECODE01')", (cid,))
         self.s = self.app.test_client()
         self.s.post("/signup", data={"track": "재종", "code": "JAECODE01", "name": "김민수", "student_no": "minsu01",
-                                     "password": "Signup!2026x", "confirm": "Signup!2026x", "consent": "1"})
+                                     "password": "Signup!2026x", "confirm": "Signup!2026x", "consent": "1", "consent_parent": "1"})
 
     def tearDown(self):
         with self.app.app_context():

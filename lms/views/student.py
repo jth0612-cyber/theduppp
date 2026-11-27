@@ -431,6 +431,8 @@ def question_report(qid):
     execute("INSERT OR IGNORE INTO question_reports (question_id, student_id, reason) VALUES (?, ?, ?)", (qid, me["id"], reason))
     execute("DELETE FROM question_scraps WHERE user_id = ? AND question_id = ?", (g.user["id"], qid))
     audit("question_report", f"question:{qid}")
+    from views.pwa import notify_staff
+    notify_staff("질문 신고", f"{reason}: {q['title']}", url_for("teacher.question_detail", qid=qid))
     flash("신고했어요. 선생님과 조교가 확인해요. 이 글은 이제 보이지 않아요.", "ok")
     return redirect(url_for("student.questions"))
 

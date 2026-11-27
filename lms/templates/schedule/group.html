@@ -87,7 +87,6 @@
       <b>{{ w.week_no }}주차</b> <span class="small muted">{{ w.starts|d }}~{{ w.ends|d }}</span>
       {% if w.off %}<div><span class="badge gray">휴강 주</span></div>{% else %}
       <div class="small">{{ w.topic or '' }}</div>
-      <div>{{ hchips(wh.get(w.id, [])) }}</div>
       {% if w.review_round or w.mock_round %}<div class="small muted">{% if w.review_round %}복테 {{ w.review_round }}회{% endif %}{% if w.mock_round %}<span class="sep" aria-hidden="true"></span>모의 {{ w.mock_round }}회{% endif %}</div>{% endif %}{% endif %}
       <details class="small"><summary>고치기</summary>
         <form method="post" action="{{ url_for('schedule.week_edit', wid=w.id) }}" class="stack week-form">{{ csrf() }}
@@ -116,7 +115,7 @@
         {% set extras = [] %}{% for h in s.handouts if h.extra is defined and h.extra %}{% set _ = extras.append(h) %}{% endfor %}{% if extras %}<div>{{ hchips(extras) }}</div>{% endif %}{% if s.dropped %}<div class="small muted">교재 {{ s.dropped|length }}권 뺌</div>{% endif %}{% endif %}
       </a>{% else %}<span class="small muted">–</span>{% endif %}
     </td>{% endfor %}
-    <td class="sched-tot small">{% for t in week_tot[w.id] %}<div>{{ t.h.title }}{% if t.given %} <b class="num">{{ t.given }}</b>{% endif %}{% if t.plan %} <span class="muted">예정 {{ t.plan }}</span>{% endif %}</div>{% endfor %}</td>
+    <td class="sched-tot small">{% if week_tot[w.id]|length > 5 %}<details><summary>교재 {{ week_tot[w.id]|length }}종</summary>{% for t in week_tot[w.id] %}<div>{{ t.h.title }}{% if t.given %} <b class="num">{{ t.given }}</b>{% endif %}{% if t.plan %} <span class="muted">예정 {{ t.plan }}</span>{% endif %}</div>{% endfor %}</details>{% else %}{% for t in week_tot[w.id] %}<div>{{ t.h.title }}{% if t.given %} <b class="num">{{ t.given }}</b>{% endif %}{% if t.plan %} <span class="muted">예정 {{ t.plan }}</span>{% endif %}</div>{% endfor %}{% endif %}</td>
   </tr>
   {% endfor %}
   </tbody>

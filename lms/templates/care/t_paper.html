@@ -7,6 +7,7 @@
 {% if p.note %}<p class="aside-note"><span>학생</span>{{ p.note }}</p>{% endif %}
 {% if fb %}<p class="small">같은 회차 Full 모의고사 피드백: <a href="{{ url_for('feedback.t_detail', tid=fb.id) }}">{{ '답변 완료' if fb.status == 'done' else '답변 대기' }}</a></p>{% endif %}
 <div class="work">
+  <input type="checkbox" id="ph-big" class="ph-big-toggle sr-only"><label for="ph-big" class="btn small ph-big-btn">사진 크게</label>
   <div class="work-ref"><div class="work-photos">{% for fid in files %}<a href="{{ url_for('student.file', fid=fid, inline=1) }}" target="_blank" rel="noopener"><img src="{{ url_for('student.file', fid=fid, inline=1) }}" alt="시험지 사진 {{ loop.index }}"></a>{% endfor %}</div></div>
   <form method="post" class="review-form-hw work-do">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

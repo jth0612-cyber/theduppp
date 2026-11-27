@@ -39,7 +39,7 @@ def _sheets(raw, filename):
             except UnicodeDecodeError:
                 continue
         else:
-            raise OmrError("CSV 글자를 읽지 못했어요. UTF-8 로 저장해 주세요.")
+            raise OmrError("파일을 읽을 수 없어요. 엑셀에서 'CSV UTF-8'로 다시 저장해 주세요.")
         return [list(r) for r in csv.reader(io.StringIO(text))], None
     if name.endswith((".xlsx", ".xlsm")):
         from openpyxl import load_workbook

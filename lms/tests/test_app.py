@@ -877,9 +877,9 @@ class FeatureTest(AppTest):
         self.assertEqual(conn.execute("PRAGMA foreign_key_check").fetchall(), [])
         conn.close()
 
-    def _signup(self, client, code, name="박지민", no="S100", pw="Signup!2026", consent="1"):
+    def _signup(self, client, code, name="박지민", no="S100", pw="Signup!2026", consent="1", parent="1"):
         return client.post("/signup", data={"track": "재종", "code": code, "name": name, "student_no": no,
-                                            "password": pw, "confirm": pw, "consent": consent})
+                                            "password": pw, "confirm": pw, "consent": consent, "consent_parent": parent})
 
     def _codes(self, cid, n=3):
         self.c.post(f"/t/classes/{cid}/codes", data={"action": "generate", "count": str(n)})
@@ -895,6 +895,7 @@ class FeatureTest(AppTest):
         # 틀린 코드, 동의 안 함 → 거부
         self.assertIn("학생코드가 맞지", self._signup(anon, "WRONGCODE1").data.decode())
         self._signup(anon, codes[0], consent="")
+        self.assertIn("학부모에게 성적과 출결을 알리는 데 동의해야", self._signup(anon, codes[0], parent="").data.decode())   # 학부모 안내 동의도 필수
         with self.app.app_context():
             self.assertEqual(query("SELECT COUNT(*) n FROM users WHERE role='student' AND username='S100'", one=True)["n"], 0)
         # 소문자·띄어쓰기·하이픈 섞어 입력해도 받아주고, 승인 없이 바로 가입 + 로그인
@@ -938,24 +939,23 @@ class FeatureTest(AppTest):
         # 조교는 코드를 볼 수 있지만 만들 수는 없다 (가입 화면 문구: 아이디)
         self.assertIn("영문과 숫자 3~30자", self.app.test_client().get("/signup?track=재종").data.decode())
 
-    def test_signup_requires_google_when_enabled(self):
+    def test_signup_google_is_optional(self):
+        """Google 확인 없이 코드와 비밀번호만으로 가입된다(앱 안에서는 Google 로그인이 막힌다). 먼저 Google 을 거치면 계정에 연결된다."""
         cid = self.setup_class_with_students()
-        code = self._codes(cid, 1)[0]
+        c1, c2 = self._codes(cid, 2)
         ident = {"sub": "g-777", "email": "jimin@example.com", "email_verified": True}
-        with mock.patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "sec"}), \
-                mock.patch("google_auth.fetch_identity", return_value=ident):
-            anon = self.app.test_client()
-            page = anon.get("/signup").data.decode()
-            self.assertIn("Google 계정으로 시작하기", page)
-            self.assertNotIn('name="student_no"', page)
-            self._signup(anon, code)
+        with mock.patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "sec"}),                 mock.patch("google_auth.fetch_identity", return_value=ident):
+            plain = self.app.test_client()
+            self.assertIn('name="student_no"', plain.get("/signup?track=재종").data.decode())
+            self.assertEqual(self._signup(plain, c1, no="S200").status_code, 302)          # Google 없이 바로 가입
             with self.app.app_context():
-                self.assertIsNone(query("SELECT 1 FROM users WHERE username='S100'", one=True))
+                self.assertIsNone(query("SELECT google_sub FROM users WHERE username='S200'", one=True)["google_sub"])
+            anon = self.app.test_client()
             r = anon.get("/auth/google/start?mode=signup")
             state = re.search(r"state=([^&]+)", r.headers["Location"]).group(1)
             self.assertTrue(anon.get(f"/auth/google/callback?state={state}&code=x").headers["Location"].endswith("/signup"))
             self.assertIn("jimin@example.com", anon.get("/signup?track=재종").data.decode())
-            self.assertEqual(self._signup(anon, code).status_code, 302)        # 바로 가입
+            self.assertEqual(self._signup(anon, c2).status_code, 302)
             with self.app.app_context():
                 u = query("SELECT * FROM users WHERE username='S100'", one=True)
                 self.assertEqual((u["google_sub"], u["google_email"]), ("g-777", "jimin@example.com"))

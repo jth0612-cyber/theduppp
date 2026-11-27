@@ -110,6 +110,12 @@ class Care(unittest.TestCase):
 
     def test_home_first_card_continues_last_study(self):
         """홈 첫 카드: 하던 학습이 없으면 오늘의 20단어, 있으면 그 학습으로. 웹 홈과 앱 홈이 같다."""
+        for u in ("/s/", "/s/?view=app"):                                # 오늘 복습을 안 했으면 취약 단원 복습이 첫 카드
+            self.assertIn('class="ah-go" href="/s/games/daily"', self.c1.get(u).data.decode())
+        with self.app.app_context():                                     # 오늘 복습을 끝낸 뒤의 첫 카드를 본다
+            me = query("SELECT id FROM users WHERE username = '270001'", one=True)["id"]
+            execute("""INSERT INTO game_rounds (user_id, game, topic, payload, answer, score, total, started_at, finished_at)
+                       VALUES (?, 'daily', '01', '[]', '[]', 5, 5, datetime('now', 'localtime', '-20 days'), datetime('now', 'localtime'))""", (me,))
         for u in ("/s/", "/s/?view=app"):
             page = self.c1.get(u).data.decode()
             self.assertIn('class="ah-go" href="/s/games/vocab"', page); self.assertNotIn("이어서 학습하기", page)
@@ -187,6 +193,36 @@ class Care(unittest.TestCase):
             self.assertIsNone(query("SELECT student_id FROM student_codes WHERE id = ?", (code,), one=True)["student_id"])
         self.assertNotEqual(self.c1.get("/s/").status_code, 200)                                # 로그인이 풀린다
         self.assertIn("탈퇴한 학생", self.c2.get(f"/s/questions/{q1}").data.decode())
+
+    def test_daily_review_card_and_round(self):
+        """홈 첫 카드는 오늘 안 풀었으면 취약 단원 복습 5문제. 한 판 끝내면 이어서 학습하기로 바뀐다."""
+        self._exam()                                                    # 산과 염기 문항을 틀렸다
+        home = self.c1.get("/s/").data.decode()
+        self.assertIn("취약 단원 복습 5문제", home); self.assertIn('href="/s/games/daily"', home)
+        r = self.c1.post("/s/games/daily/start", json={}).get_json()
+        self.assertEqual(len(r["questions"]), 5)
+        self.assertEqual(self.c1.post(f"/s/games/daily/{r['round_id']}/submit", json={"answers": [0] * 5}).status_code, 200)
+        home = self.c1.get("/s/").data.decode()
+        self.assertNotIn("취약 단원 복습 5문제", home); self.assertIn("오늘의 20단어", home)       # 끝내면 다른 학습으로 넘어간다
+        with self.app.app_context():
+            execute("UPDATE game_rounds SET finished_at = datetime('now', 'localtime', '-4 days') WHERE game = 'daily'")
+        self.assertIn("사흘 전에 복습한 단원", self.c1.get("/s/").data.decode())               # 사흘 뒤 같은 단원을 다시
+
+    def test_room_board_report_and_public_erase_request(self):
+        """칠판 글 신고: 신고한 학생에게는 안 보이고 조교 화면에 표시된다. 로그인 없이 낸 삭제 요청은 행정문의로 들어온다."""
+        with self.app.app_context():
+            u2 = query("SELECT id FROM users WHERE username = '270002'", one=True)["id"]
+            cid = execute("INSERT INTO room_chat (place, user_id, body) VALUES ('sento', ?, '이상한 말')", (u2,))
+        self.assertIn("이상한 말", self.c1.get("/s/rooms/sento/board").data.decode())
+        self.assertEqual(self.c2.post("/s/rooms/sento/report", data={"id": cid}).status_code, 400)      # 내 글은 신고할 수 없다
+        self.c1.post("/s/rooms/sento/report", data={"id": cid, "action": "report"})
+        self.assertNotIn("이상한 말", self.c1.get("/s/rooms/sento/board").data.decode())
+        self.assertIn("신고 1", self.ta.get("/t/rooms").data.decode())
+        anon = self.app.test_client()
+        anon.post("/account-deletion", data={"name": "김하나", "student_no": "270001"})
+        anon.post("/account-deletion", data={"name": "없는사람", "student_no": "999"})                   # 맞지 않아도 같은 답
+        with self.app.app_context():
+            self.assertEqual(query("SELECT COUNT(*) AS n FROM questions WHERE title = '개인정보 삭제 요청'", one=True)["n"], 1)
 
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()

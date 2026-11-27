@@ -66,7 +66,7 @@ class LinkTest(unittest.TestCase):
     def signup(self, code, no="minsu01"):
         c = self.app.test_client()
         c.post("/signup", data={"track": "재종", "code": code, "name": "김민수", "student_no": no, "password": "Signup!2026x",
-                                "confirm": "Signup!2026x", "consent": "1"})
+                                "confirm": "Signup!2026x", "consent": "1", "consent_parent": "1"})
         return c
 
     def test_token_required(self):

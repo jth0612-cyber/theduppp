@@ -128,9 +128,26 @@ def privacy():
     return render_template("legal/privacy.html", legal_date=LEGAL_DATE)
 
 
-@bp.route("/account-deletion")
+@bp.route("/account-deletion", methods=["GET", "POST"])
 def account_deletion():
-    """계정 삭제 방법 안내 (로그인 없이 열린다. 앱 스토어의 '계정 삭제 주소'에 적는 곳)."""
+    """계정 삭제 방법 안내 (로그인 없이 열린다. 앱 스토어의 '계정 삭제 주소'에 적는 곳).
+    계정을 이미 지워 로그인할 수 없는 학생도 여기서 남은 기록의 삭제를 요청한다. 본인인지는 선생님이 확인한 뒤 지운다."""
+    if request.method == "POST":
+        if _ip_limited(request.remote_addr or "", "signup"):
+            flash("요청이 너무 많아요. 1시간 뒤에 다시 해 주세요.", "error")
+            return redirect(url_for("auth.account_deletion"))
+        name, no = request.form.get("name", "").strip()[:20], request.form.get("student_no", "").strip()[:30]
+        st = query("SELECT id FROM students WHERE name = ? AND student_no = ?", (name, no), one=True) if name and no else None
+        if st:
+            from views.student import ERASE_TITLE
+            if not query("SELECT 1 FROM questions WHERE student_id = ? AND title = ? AND status = 'open'", (st["id"], ERASE_TITLE), one=True):
+                qid = execute("INSERT INTO questions (student_id, title, body, qtype) VALUES (?, ?, ?, '행정문의')",
+                              (st["id"], ERASE_TITLE, "로그인 없이 받은 요청이에요. 본인인지 확인한 뒤 남은 기록(성적, 출결, 질문, 사진)을 지워 주세요."))
+                audit("erase_request", f"student:{st['id']} question:{qid} public", username=no)
+                from views.pwa import notify_staff
+                notify_staff("개인정보 삭제 요청", name, url_for("teacher.question_detail", qid=qid))
+        flash("요청을 받았어요. 본인 확인 뒤 지워요.", "ok")           # 이름과 아이디가 맞는지는 화면에 알려 주지 않는다
+        return redirect(url_for("auth.account_deletion"))
     return render_template("legal/account_deletion.html")
 
 
@@ -159,12 +176,8 @@ def signup():
     track = track if track in TRACKS else ""
     if track == "단과":
         form["student_no"] = normalize_card(form["student_no"]) or form["student_no"]
-    need_google = google_enabled()
-    gid = signup_identity() if need_google else None
-    if need_google and gid is None:          # Google 계정 확인이 먼저
-        if request.method == "POST":
-            flash("먼저 Google 계정으로 본인 확인을 해 주세요.", "error")
-        return render_template("signup.html", form=form, step="google", track=track)
+    # Google 확인은 필수가 아니다(앱 안에서는 Google 로그인이 막힌다). 먼저 하고 온 학생은 계정에 연결만 한다
+    gid = signup_identity() if google_enabled() else None
     if request.method == "POST":
         if _ip_limited(request.remote_addr or "", "signup"):
             flash("가입을 너무 여러 번 시도했어요. 1시간 뒤에 다시 해 주세요.", "error")
@@ -195,6 +208,8 @@ def signup():
             error, field = "비밀번호 두 칸이 서로 달라요.", "confirm"
         elif request.form.get("consent") != "1":
             error, field = "개인정보 수집 및 이용에 동의해야 가입할 수 있어요.", "consent"
+        elif request.form.get("consent_parent") != "1":
+            error, field = "학부모에게 성적과 출결을 알리는 데 동의해야 가입할 수 있어요.", "consent_parent"
         elif query("SELECT 1 FROM users WHERE username = ?", (form["student_no"],), one=True):
             error, field = ("이미 등록된 카드예요. 카드를 잘못 받았다면 조교 선생님에게 알려 주세요." if track == "단과"
                             else "이미 있는 아이디예요. 다른 아이디로 정해 주세요."), "student_no"
@@ -223,7 +238,7 @@ def signup():
                        gid["sub"] if gid else None, gid["email"] if gid else None))
         execute("UPDATE student_codes SET student_id = ?, used_at = datetime('now', 'localtime') WHERE id = ?", (sid, sc["id"]))
         session.pop("g_signup", None)
-        audit("signup_code", f"student:{sid} class:{sc['class_id']} consent:{datetime.now().isoformat(timespec='seconds')}",
+        audit("signup_code", f"student:{sid} class:{sc['class_id']} consent:{datetime.now().isoformat(timespec='seconds')} parent_notice:1",
               username=form["student_no"])
         user = query("SELECT * FROM users WHERE id = ?", (uid,), one=True)
         login_user(user)

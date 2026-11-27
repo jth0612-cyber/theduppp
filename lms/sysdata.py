@@ -136,7 +136,7 @@ def parse_csv(raw):
         except UnicodeDecodeError:
             continue
     else:
-        raise ValueError("CSV 글자를 읽지 못했어요. 시트에서 'CSV(.csv)'로 다시 내려받아 주세요.")
+        raise ValueError("파일을 읽을 수 없어요. 시트에서 CSV로 다시 받아 주세요.")
     return [r for r in csv.reader(io.StringIO(text)) if any(c.strip() for c in r)]
 
 

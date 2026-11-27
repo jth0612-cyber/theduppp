@@ -179,6 +179,11 @@ def notify_users(user_ids, title, body, url="/"):
     fcm.dispatch([r["token"] for r in query(f"SELECT token FROM app_tokens WHERE user_id IN ({marks})", ids)], title, body, url)
 
 
+def notify_staff(title, body, url="/"):
+    """강사와 조교 모두에게 (신고, 삭제 요청처럼 24시간 안에 봐야 하는 일)."""
+    notify_users([r["id"] for r in query("SELECT id FROM users WHERE role IN ('teacher', 'assistant') AND disabled = 0")], title, body, url)
+
+
 def notify_student(student_id, title, body, url="/"):
     u = query("SELECT id FROM users WHERE student_id = ?", (student_id,), one=True)
     if u:

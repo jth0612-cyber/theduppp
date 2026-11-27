@@ -57,7 +57,7 @@
 </section>
 
 <section class="card" id="lesson">
-  <h2>수업 기록{% call help('수업 기록') %}<p>여기서 올리면 이 반 학생 화면의 수업 기록에 이 날짜로 쌓여요.</p>{% endcall %}</h2>
+  <h2>수업 기록{% call help('수업 기록') %}<p>이 날짜의 수업 기록으로 올라가요.</p>{% endcall %}</h2>
   {% if lessons %}<ul class="plain-list">{% for l in lessons %}<li><a href="{{ url_for('care.t_lesson', lid=l.id) }}">{{ l.title }}</a><span class="small muted">{{ ('노트 ' ~ l.n_files ~ '장') if l.n_files else '사진 없음' }}</span></li>{% endfor %}</ul>{% endif %}
   <details{{ '' if lessons else ' open' }}><summary>{{ '하나 더 올리기' if lessons else '올리기' }}</summary>
   <form method="post" action="{{ url_for('care.t_lessons') }}" enctype="multipart/form-data">{{ csrf() }}

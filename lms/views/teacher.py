@@ -291,7 +291,7 @@ def student_import(cid):
         except UnicodeDecodeError:
             continue
     else:
-        flash("파일 인코딩을 읽을 수 없어요. UTF-8이나 CP949(엑셀 기본)로 저장해 주세요.", "error")
+        flash("파일을 읽을 수 없어요. 엑셀에서 'CSV UTF-8'로 다시 저장해 주세요.", "error")
         return redirect(url_for("teacher.class_detail", cid=cid))
 
     reader = csv.DictReader(io.StringIO(text))
@@ -490,7 +490,7 @@ def _issue_account(student):
 def student_account(sid):
     s = _get_student(sid)
     if not s["active"]:
-        flash("비활성 학생에게는 계정을 발급할 수 없어요.", "error")
+        flash("퇴원한 학생은 계정을 만들 수 없어요.", "error")
         return redirect(url_for("teacher.student_detail", sid=sid))
     try:
         temp = _issue_account(s)

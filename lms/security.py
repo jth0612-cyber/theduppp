@@ -234,7 +234,7 @@ def save_upload(file_storage, allowed_exts):
         raise ValueError("빈 파일이에요.")
     mime, signatures = ALLOWED_UPLOADS[ext]
     if not any(data.startswith(sig) for sig in signatures):
-        raise ValueError("파일 내용이 확장자와 일치하지 않아요.")
+        raise ValueError("파일 형식이 달라요.")
 
     stored = secrets.token_hex(16)
     path = os.path.join(current_app.config["UPLOAD_DIR"], stored)

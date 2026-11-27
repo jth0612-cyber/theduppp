@@ -46,7 +46,7 @@ class TrackTest(unittest.TestCase):
     def signup(self, track, code, no, name="김민수"):
         c = self.app.test_client()
         r = c.post("/signup", data={"track": track, "code": code, "name": name, "student_no": no, "password": "Signup!2026x",
-                                    "confirm": "Signup!2026x", "consent": "1"})
+                                    "confirm": "Signup!2026x", "consent": "1", "consent_parent": "1"})
         return c, r
 
     def test_pick_track_first(self):
