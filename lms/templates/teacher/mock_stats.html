@@ -48,17 +48,17 @@
 {% elif tab == 'omr' %}
 {% if missing or absent or makeup %}
 <section class="card" id="missing" aria-labelledby="h-miss">
-  <h2 id="h-miss">누락 학생{% call help('누락 학생') %}<p>결과가 올라온 반의 재원생 중 이 회차 결과가 없는 학생이에요.</p><p>다른 반 수업에 와서 볼 학생은 보강 예정으로 두세요. 그 결과가 올라오면 목록에서 빠져요.</p>{% endcall %}</h2>
+  <h2 id="h-miss">누락 학생{% call help('누락 학생') %}<p>결과가 올라온 반의 재원생 중 이 회차 결과가 없는 학생이에요.</p><p>이름 옆은 시험 주 수업의 출석 체크예요. 결석인 학생만 미리 골라 두었어요.</p><p>다른 반 수업에 와서 볼 학생은 보강 예정으로 두세요. 그 결과가 올라오면 목록에서 빠져요.</p>{% endcall %}</h2>
   {% if missing %}
   <form method="post" action="{{ url_for('books.mock_absent', mid=mock.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for cls, grp in missing|groupby('cls') %}
     <fieldset class="pick-group" data-pick-group>
-      <legend><label><input type="checkbox" checked data-pick-all> <b>{{ cls }}</b> <span class="small muted">{{ grp|length }}명</span></label></legend>
-      <ul class="pick-list">{% for s in grp %}<li><label><input type="checkbox" name="sid" value="{{ s.id }}" checked> <b class="nowrap">{{ s.name }}</b> <span class="small muted">{{ s.student_no }}</span></label></li>{% endfor %}</ul>
+      <legend><label><input type="checkbox" data-pick-all{{ ' checked' if not grp|rejectattr('att', 'equalto', '결석')|list }}> <b>{{ cls }}</b> <span class="small muted">{{ grp|length }}명</span></label></legend>
+      <ul class="pick-list">{% for s in grp %}<li><label><input type="checkbox" name="sid" value="{{ s.id }}"{{ ' checked' if s.att == '결석' }}> <b class="nowrap">{{ s.name }}</b> <span class="small muted">{{ s.student_no }}</span>{% if s.att %} <span class="badge {{ 'danger' if s.att == '결석' else 'gray' }}">수업 {{ s.att }}</span>{% endif %}</label></li>{% endfor %}</ul>
     </fieldset>
     {% endfor %}
-    <div class="pick-bar" data-pick-bar><button class="btn{{ ' primary' if step == 'missing' }}"><span><span data-pick-n>{{ missing|length }}</span>명 결시로 확인</span></button><button class="btn" name="kind" value="makeup">보강 예정으로 두기</button></div>
+    <div class="pick-bar" data-pick-bar><button class="btn{{ ' primary' if step == 'missing' }}"><span><span data-pick-n>{{ missing|selectattr('att', 'equalto', '결석')|list|length }}</span>명 결시로 확인</span></button><button class="btn" name="kind" value="makeup">보강 예정으로 두기</button></div>
   </form>
   {% else %}<p class="muted">확인할 학생이 없어요.</p>{% endif %}
   {% if makeup %}<p class="small mt"><b>보강 예정 {{ makeup|length }}명</b> <span class="muted">{% for s in makeup %}{{ s.name }} ({{ s.cls }}){% if not loop.last %}, {% endif %}{% endfor %}</span></p>{% endif %}

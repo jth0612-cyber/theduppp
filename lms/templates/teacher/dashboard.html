@@ -18,6 +18,17 @@
 </div>
 <p class="dash-sum">반 <b>{{ stats.classes }}</b><span class="sep" aria-hidden="true"></span>재원 학생 <b>{{ stats.students }}</b>명<span class="sep" aria-hidden="true"></span>결과가 올라온 회차 <b>{{ stats.exams }}</b>개</p>
 
+{% set rows = today_sessions or last_sessions %}
+<section class="card" aria-labelledby="h-today">
+  <div class="sec-head"><h2 id="h-today">{{ '오늘 수업' if today_sessions else '최근 수업' }}</h2><a href="{{ url_for('schedule.groups') }}">수업 일정</a></div>
+  {% if not today_sessions %}<p class="small muted">오늘은 수업이 없어요.{% if rows %} 가장 최근 수업은 {{ rows[0].day|d }}이에요.{% endif %}</p>{% endif %}
+  {% if rows %}<ul class="list-rows">{% for x in rows %}
+    <li><a href="{{ url_for('schedule.session', sid=x.id) }}"><span class="lr-main"><b class="lr-title">{{ x.class_name }}</b>
+      <span class="lr-sub">{{ x.starts }}–{{ x.ends }}{% if x.hall or x.room %}<span class="sep" aria-hidden="true"></span>{{ x.hall }} {{ x.room }}{% endif %}</span></span>
+      <span class="lr-end">{% if x.status == '휴강' %}<span class="badge gray">휴강</span>{% elif x.checked %}출석 {{ x.present }}/{{ x.roster }}{% else %}<span class="badge open">출석 체크 전</span>{% endif %}</span></a></li>{% endfor %}
+  </ul>{% endif %}
+</section>
+
 <div class="grid grid-2">
   <div class="card">
     <div class="sec-head"><h2>답변 대기 질문</h2><a href="{{ url_for('teacher.questions') }}">전체</a></div>
@@ -37,7 +48,7 @@
       <tr><th>회차</th><th class="num">응시</th><th class="num">평균</th></tr>
       {% for e in recent_exams %}
       <tr>
-        <td><a href="{{ url_for('books.teacher_mock', mid=e.id) }}">{{ e.name }}</a><br><span class="small muted">{{ e.exam_date or '' }}</span></td>
+        <td><a href="{{ url_for('books.teacher_mock', mid=e.id) }}">{{ e.name }}</a><br><span class="small muted">{{ (e.exam_date or '')|d }}</span></td>
         <td class="num">{{ e.n }}</td>
         <td class="num">{{ e.avg if e.avg is not none else '-' }} / {{ '%g'|format(e.max_score) }}</td>
       </tr>

@@ -75,6 +75,7 @@ class Care(unittest.TestCase):
         self.assertIn("누락 학생 1명 확인", page); self.assertNotIn("학부모 문자 보기", page)
         omr = self.ta.get(f"/t/mocks/{mid}?tab=omr").data.decode()
         self.assertIn("박세나", omr); self.assertNotIn("이두리", omr)                      # 결과가 없는 B반 학생은 누락이 아니다
+        self.assertNotIn(f'name="sid" value="{s3}" checked', omr)                        # 수업 출석 기록이 결석이 아니면 미리 고르지 않는다
         self.ta.post(f"/t/mocks/{mid}/absent", data={"sid": [str(s3), str(self.s2)]})    # 누락이 아닌 학생은 무시한다
         with self.app.app_context():
             self.assertEqual([r["student_id"] for r in query("SELECT student_id FROM exam_absent WHERE mock_id = ?", (mid,))], [s3])

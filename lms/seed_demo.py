@@ -877,7 +877,9 @@ with app.app_context():
                 r = rng.random()
                 status = "결석" if r < miss else ("지각" if r < miss + 0.07 else "출석")
                 hh, mm = map(int, c["slots"][0][1].split(":"))
-                arrived = "" if status == "결석" else f"{hh if status == '출석' else hh:02d}:{(mm + (rng.randint(5, 25) if status == '지각' else -rng.randint(0, 10))) % 60:02d}"
+                # 등원 시각: 지각은 시작 5~25분 뒤, 출석은 0~10분 앞 (분만 빼고 시를 그대로 두면 10:00 수업에 10:58 출석이 된다)
+                at = hh * 60 + mm + (rng.randint(5, 25) if status == "지각" else -rng.randint(0, 10))
+                arrived = "" if status == "결석" else f"{at // 60:02d}:{at % 60:02d}"
                 db_.execute("INSERT INTO sys_rows (tbl, code, data) VALUES ('출결', ?, ?)",
                             (code["code"], _json.dumps({"학생코드": code["code"], "날짜": sess(c, k).isoformat(), "출결": status, "도착시각": arrived}, ensure_ascii=False)))
                 n_att += 1

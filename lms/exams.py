@@ -294,13 +294,19 @@ def missing_students(mid):
     """(누락, 결시 확인, 보강 예정) 학생 목록. 결과가 올라온 반의 재원생 가운데 이 회차 결과가 없는 학생.
     보강 예정은 다른 반 수업에서 시험을 보기로 한 학생: 그 결과가 올라오면(어느 반 파일이든 학생으로 찾는다) 목록에서 저절로 빠진다.
     결과가 하나도 없으면 셋 다 빈 목록."""
+    # att: 시험 날과 가장 가까운 그 반 수업의 출석 체크(없으면 빈칸). 화면에서 결석인 학생만 미리 고른다
     rows = [dict(r) for r in query("""SELECT s.id, s.name, s.student_no, c.name AS cls,
-                                         (SELECT a.kind FROM exam_absent a WHERE a.mock_id = ? AND a.student_id = s.id) AS absent
+                                         (SELECT a.kind FROM exam_absent a WHERE a.mock_id = ? AND a.student_id = s.id) AS absent,
+                                         (SELECT ss.state FROM session_students ss JOIN sessions x ON x.id = ss.session_id
+                                           JOIN mocks m ON m.id = ?
+                                          WHERE ss.student_id = s.id AND m.exam_date IS NOT NULL AND m.exam_date != ''
+                                            AND x.day BETWEEN date(m.exam_date, '-3 day') AND date(m.exam_date, '+6 day')
+                                          ORDER BY ABS(julianday(x.day) - julianday(m.exam_date)) LIMIT 1) AS att
                                   FROM students s JOIN classes c ON c.id = s.class_id
                                   WHERE s.active = 1
                                     AND s.class_id IN (SELECT s2.class_id FROM exam_results r JOIN students s2 ON s2.id = r.student_id WHERE r.mock_id = ?)
                                     AND NOT EXISTS (SELECT 1 FROM exam_results r WHERE r.mock_id = ? AND r.student_id = s.id)
-                                  ORDER BY c.name, s.name""", (mid, mid, mid))]
+                                  ORDER BY c.name, s.name""", (mid, mid, mid, mid))]
     return [r for r in rows if not r["absent"]], [r for r in rows if r["absent"] == "absent"], [r for r in rows if r["absent"] == "makeup"]
 
 

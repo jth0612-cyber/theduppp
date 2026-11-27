@@ -136,3 +136,22 @@ main fieldset.pick-group { background: none; padding: 0; }
 .pick-group .pick-list { margin-top: 0; padding-left: 26px; }
 .pick-bar { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px 0; background: var(--sheet); border-top: 1px solid var(--rule); z-index: 4; }
 @media (max-width: 900px) { .pick-bar { bottom: calc(64px + env(safe-area-inset-bottom)); } .pick-bar .btn { flex: 1 1 auto; min-height: 48px; } }
+
+/* 출석부 (4차 토론): 이름과 아이디 한 줄, 출석 지각 조퇴 결석은 바로 누르고 다른 반과 미체크는 기타 안 */
+.att-rows { list-style: none; margin: 12px 0; padding: 0; }
+.att-rows li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.ar-name { min-width: 0; }
+.ar-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ar-opt { position: relative; display: inline-flex; cursor: pointer; }
+.ar-opt input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.ar-opt span { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; min-height: 40px; padding: 0 10px; border-radius: 10px; background: var(--raised); color: var(--muted); font-weight: 600; font-size: 14px; }
+.ar-opt input:checked + span { background: var(--accent); color: var(--on-accent, #fff); }
+.ar-opt.ar-2 input:checked + span, .ar-opt.ar-3 input:checked + span, .ar-opt.ar-4 input:checked + span { background: var(--danger); }
+.ar-opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ar-more { position: relative; }
+.ar-more > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 10px; background: var(--raised); color: var(--muted); font-weight: 600; font-size: 14px; }
+.ar-more > summary::-webkit-details-marker { display: none; }
+.ar-more:has(input[value="다른 반"]:checked) > summary { background: var(--accent-soft); color: var(--accent-ink); }
+.ar-more:has(input[value="다른 반"]:checked) > summary::after { content: ": 다른 반"; }
+.ar-more[open] { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) { .att-rows li { align-items: flex-start; flex-direction: column; } .ar-pick { width: 100%; } .ar-opt { flex: 1 1 0; } .ar-opt span { width: 100%; min-width: 0; min-height: 44px; } .ar-more .ar-opt { flex: 0 0 auto; } }

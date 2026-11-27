@@ -75,13 +75,14 @@
   {% for w in weeks|reverse if w.ends < today %}{{ mweek(w, not ns.opened) }}{% set ns.opened = true %}{% endfor %}
   {% for w in weeks if w.starts > today %}{{ mweek(w, not ns.opened) }}{% set ns.opened = true %}{% endfor %}
 </div>
+{% set fx = namespace(no=0) %}{% for w in weeks %}{% if w.starts <= today %}{% set fx.no = w.week_no %}{% endif %}{% endfor %}
 <div class="table-wrap sched-wrap"><table class="sched">
   <thead><tr><th class="sched-week">주차</th>
     {% for t in slots %}<th class="sched-col"><b>{{ t.class_name }}</b><br><span class="small">{{ weekdays[t.weekday] }}{% if t.period %} {{ t.period }}{% endif %} {{ t.starts }}</span>{% if t.hall or t.room %}<br><span class="small muted">{{ t.hall }} {{ t.room }}</span>{% endif %}</th>{% endfor %}
     <th class="sched-tot">배부</th></tr></thead>
   <tbody>
   {% for w in weeks %}
-  <tr id="w{{ w.week_no }}" class="{{ 'is-off' if w.off }}{{ ' is-now' if w.starts <= today <= w.ends }}">
+  <tr id="w{{ w.week_no }}" class="{{ 'is-off' if w.off }}{{ ' is-now' if w.starts <= today <= w.ends }}"{% if w.week_no == fx.no %} data-sched-focus{% endif %}>
     <th class="sched-week">
       <b>{{ w.week_no }}주차</b> <span class="small muted">{{ w.starts|d }}~{{ w.ends|d }}</span>
       {% if w.off %}<div><span class="badge gray">휴강 주</span></div>{% else %}

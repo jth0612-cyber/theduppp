@@ -50,7 +50,8 @@
 
   {% if r.units %}
   <section class="pr-card"><h2>단원별 정답률 <small class="muted">최근 시험, 낮은 순</small></h2>
-    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct < 50 and loop.index <= 3 }}"><span>{{ u.unit }}<small class="muted"> {{ fmt(u.got) }}/{{ fmt(u.total) }}점</small></span>
+{% set wk = namespace(cut=-1, n=0, stop=false) %}{% for p, g in r.units|groupby('pct') %}{% if not wk.stop and p < 50 and (wk.n == 0 or wk.n + g|length <= 3) %}{% set wk.cut = p %}{% set wk.n = wk.n + g|length %}{% else %}{% set wk.stop = true %}{% endif %}{% endfor %}
+    <ul class="pr-units">{% for u in r.units %}<li class="{{ 'weak' if u.pct <= wk.cut }}"><span>{{ u.unit }}<small class="muted"> {{ fmt(u.got) }}/{{ fmt(u.total) }}점</small></span>
       <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" rx="4" class="pb-bg"></rect>{% if u.pct %}<line class="pb-fg" x1="2" y1="4" x2="{{ [u.pct, 3]|max }}" y2="4"></line>{% endif %}</svg>
       <b>{{ u.pct }}%</b></li>{% endfor %}</ul>
   </section>

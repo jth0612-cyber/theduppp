@@ -300,7 +300,10 @@ def weak_card(student_id):
         return us, None
     import exams
     wrongs = []
-    for r in query("""SELECT r.mock_id FROM exam_results r JOIN mocks m ON m.id = r.mock_id WHERE r.student_id = ? AND m.n_items > 0""", (student_id,)):
+    # 위 막대(unit_scores)와 같은 최근 6회만 본다 (전체 회차를 세면 "0/7.5점"과 문항 수가 어긋난다)
+    for r in query("""SELECT r.mock_id FROM exam_results r JOIN mocks m ON m.id = r.mock_id JOIN books b ON b.id = m.book_id
+                      WHERE r.student_id = ? AND m.n_items > 0 AND b.is_practice = 0
+                      ORDER BY m.exam_date DESC, r.updated_at DESC LIMIT 6""", (student_id,)):
         rep = exams.student_report(r["mock_id"], student_id)
         if rep:
             wrongs += [(exams.exam_title(rep["mock"]), a["no"]) for a in rep["wrongs"] if a["unit"] == weak["unit"]]

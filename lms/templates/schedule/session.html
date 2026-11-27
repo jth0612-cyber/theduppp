@@ -21,18 +21,22 @@
   <h2>출석{% call help('출석') %}<p>조교 시스템(시트) 출결이 들어오면 같은 날 이 반 수업 칸에 자동으로 채워요 <span class="badge gray">시트</span>. 손으로 고친 칸은 시트가 바꾸지 않아요.</p>{% endcall %}</h2>
   <div class="row">
     <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="all_present"><button class="btn small">체크 안 한 학생 모두 출석</button></form>
-    <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="sys"><button class="btn small">조교 시스템 출결 다시 가져오기</button></form>
+    <form method="post" class="inline-form">{{ csrf() }}<input type="hidden" name="action" value="sys"><button class="btn small">시트 출결 다시 가져오기</button></form>
   </div>
   <form method="post">{{ csrf() }}<input type="hidden" name="action" value="attend">
-    <div class="table-wrap"><table class="tl-2" data-rc-title="0">
-      <tr><th>이름</th><th>아이디</th>{% for v in states %}<th>{{ v }}</th>{% endfor %}<th>미체크</th><th></th></tr>
+    <ul class="att-rows">
       {% for r in roster %}
-      <tr><td>{{ r.name }}{% if r.guest %} <span class="badge open">{{ r.from_class }}</span>{% endif %}</td><td class="small">{{ r.student_no }}{% if r.src == '시트' %} <span class="badge gray">시트</span>{% endif %}</td>
-        {% for v in states %}<td class="num"><input type="radio" name="st_{{ r.id }}" value="{{ v }}" aria-label="{{ r.name }} {{ v }}" {{ 'checked' if r.state == v }}></td>{% endfor %}
-        <td class="num"><input type="radio" name="st_{{ r.id }}" value="" aria-label="{{ r.name }} 미체크" {{ 'checked' if not r.state }}></td>
-        <td class="num">{% if r.guest %}<button class="btn small" form="ug-{{ r.id }}">빼기</button>{% endif %}</td></tr>
+      <li><span class="ar-name"><b>{{ r.name }}</b>{% if r.guest %} <span class="badge open">{{ r.from_class }}</span>{% endif %} <span class="small muted">{{ r.student_no }}</span>{% if r.src == '시트' %} <span class="badge gray">시트</span>{% endif %}</span>
+        <span class="ar-pick" role="radiogroup" aria-label="{{ r.name }} 출석">
+          {% for v in states if v != '다른 반' %}<label class="ar-opt ar-{{ loop.index }}"><input type="radio" name="st_{{ r.id }}" value="{{ v }}" {{ 'checked' if r.state == v }}><span>{{ v }}</span></label>{% endfor %}
+          <details class="ar-more"><summary>기타</summary>
+            <label class="ar-opt"><input type="radio" name="st_{{ r.id }}" value="다른 반" {{ 'checked' if r.state == '다른 반' }}><span>다른 반</span></label>
+            <label class="ar-opt"><input type="radio" name="st_{{ r.id }}" value="" {{ 'checked' if not r.state }}><span>미체크</span></label>
+          </details>
+          {% if r.guest %}<button class="btn small" form="ug-{{ r.id }}">빼기</button>{% endif %}
+        </span></li>
       {% endfor %}
-    </table></div>
+    </ul>
     <button class="btn primary">출석 저장</button>
   </form>
   {% for r in roster if r.guest %}<form id="ug-{{ r.id }}" method="post">{{ csrf() }}<input type="hidden" name="action" value="unguest"><input type="hidden" name="student_id" value="{{ r.id }}"></form>{% endfor %}

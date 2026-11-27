@@ -116,7 +116,16 @@ def dashboard():
                               COUNT(r.id) AS n, ROUND(AVG(r.score), 1) AS avg
                             FROM mocks m JOIN books b ON b.id = m.book_id JOIN exam_results r ON r.mock_id = m.id
                             WHERE b.is_practice = 0 GROUP BY m.id ORDER BY m.exam_date DESC, m.id DESC LIMIT 8""")
-    return render_template("teacher/dashboard.html", stats=stats, classes=classes,
+    sess_sql = """SELECT s.id, s.day, s.status, c.name AS class_name, t.starts, t.ends, t.hall, t.room,
+                         (SELECT COUNT(*) FROM students x WHERE x.class_id = c.id AND x.active = 1) AS roster,
+                         (SELECT COUNT(*) FROM session_students ss WHERE ss.session_id = s.id AND ss.state != '') AS checked,
+                         (SELECT COUNT(*) FROM session_students ss WHERE ss.session_id = s.id AND ss.state IN ('출석', '지각', '조퇴')) AS present
+                  FROM sessions s JOIN classes c ON c.id = s.class_id JOIN timetable t ON t.id = s.slot_id """
+    today_sessions = query(sess_sql + "WHERE s.day = date('now', 'localtime') ORDER BY t.starts")
+    # 오늘 수업이 없으면 가장 최근 수업 날의 것을 보여 준다 (출석부로 바로 갈 수 있게)
+    last_sessions = [] if today_sessions else query(
+        sess_sql + "WHERE s.day = (SELECT MAX(day) FROM sessions WHERE day < date('now', 'localtime')) ORDER BY t.starts")
+    return render_template("teacher/dashboard.html", stats=stats, classes=classes, today_sessions=today_sessions, last_sessions=last_sessions,
                            open_questions=open_questions, recent_exams=recent_exams)
 
 

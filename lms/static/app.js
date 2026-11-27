@@ -539,3 +539,10 @@ document.querySelectorAll(".is-staff main table:not(.sched):not(.sched-cal):not(
     count();
   });
 })();
+// 진도 일정표(데스크톱): 열면 이번 주(없으면 가장 최근 주차)가 먼저 보이게 표 안에서만 스크롤
+(function () {
+  var r = document.querySelector(".sched tr[data-sched-focus]");
+  if (!r) return;
+  var w = r.closest(".sched-wrap"), h = w && w.querySelector("thead");
+  if (w && w.offsetParent) w.scrollTop = Math.max(0, r.offsetTop - (h ? h.offsetHeight : 0));
+})();
