@@ -9,7 +9,7 @@
     <li><a class="track-box" href="{{ url_for('auth.signup', track='단과') }}"><span class="lr-main"><b class="lr-title">단과</b><span class="lr-sub">출결 카드 번호로 가입해요</span></span></a></li>
     <li><a class="track-box" href="{{ url_for('auth.signup', track='재종') }}"><span class="lr-main"><b class="lr-title">재종</b><span class="lr-sub">원하는 아이디로 가입해요</span></span></a></li>
   </ul>
-  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요</a></p>
 </div>
 {% else %}
   <p class="track-now"><span class="badge type">{{ track }}</span> {{ '출결 카드 번호가 아이디예요.' if track == '단과' else '원하는 아이디로 가입해요.' }} <a class="small" href="{{ url_for('auth.signup') }}">바꾸기</a></p>
@@ -77,7 +77,7 @@
     <button class="btn primary" type="submit">가입하기</button>
   </form>
   <script src="{{ url_for('static', filename='signup.js') }}" defer></script>
-  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요 → 로그인</a></p>
+  <p class="small mt"><a href="{{ url_for('auth.login') }}">이미 계정이 있어요</a></p>
 </div>
 {% endif %}
 {% endblock %}
