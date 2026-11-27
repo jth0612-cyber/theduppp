@@ -40,7 +40,7 @@
     <h3 class="mt">로그인 계정</h3>
     {% if account %}
       <p class="small">아이디 <b>{{ account.username }}</b><span class="sep" aria-hidden="true"></span>닉네임 <b>{{ account.nickname or '-' }}</b><span class="sep" aria-hidden="true"></span>
-        {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '아직 접속 안 함' }}
+        {{ '최근 접속 ' ~ account.last_login_at if account.last_login_at else '접속 기록 없음' }}
         {% if account.must_change_pw %}<span class="sep" aria-hidden="true"></span><span class="badge open">임시 비밀번호 상태</span>{% endif %}</p>
       <div class="row">
         <form method="post" action="{{ url_for('teacher.student_account', sid=s.id) }}" data-confirm="비밀번호를 초기화하고 새 임시 비밀번호를 발급할까요?">

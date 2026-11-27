@@ -406,7 +406,7 @@
           res.results.forEach(function (r, i) {
             var item = game.questions[i];
             var box = el("div", "review-item " + (r.correct ? "ok" : "wrong"));
-            var q = (item.kind === "listen" ? item.say : item.question) + (item.sub ? " → " + item.sub : "") +
+            var q = (item.kind === "listen" ? item.say : item.question) + (item.sub ? ": " + item.sub : "") +
               (item.lines ? "  " + item.lines.map(function (t, n) { return "ㄱㄴㄷ".charAt(n) + ". " + t; }).join("  ") : "");
             box.appendChild(el("b", ""));
             box.firstChild.textContent = (r.correct ? "맞음 " : "틀림 ") + (i + 1) + ". " + q;
@@ -473,7 +473,7 @@
           if (res.missed.length) rv.appendChild(el("p", "small muted", "틀린 문제"));
           res.missed.forEach(function (x) {
             var b = el("div", "review-item wrong");
-            b.appendChild(el("b", "", x.q + (x.a ? " → " + x.a : "") + "  (" + (x.ok ? "O" : "X") + ")"));
+            b.appendChild(el("b", "", x.q + (x.a ? ": " + x.a : "") + "  (" + (x.ok ? "O" : "X") + ")"));
             b.appendChild(el("div", "small muted", x.exp));
             rv.appendChild(b);
           });

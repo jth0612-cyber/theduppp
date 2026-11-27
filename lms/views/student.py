@@ -46,7 +46,7 @@ def home():
     notices = query("SELECT * FROM notices WHERE class_id = ? ORDER BY created_at DESC LIMIT 5", (me["class_id"],))
     questions = query("SELECT * FROM questions WHERE student_id = ? ORDER BY created_at DESC LIMIT 5", (me["id"],))
     cast = query("SELECT id, title, created_at FROM casts ORDER BY created_at DESC LIMIT 1", one=True)
-    # 새로 온 것 (최근 7일): 1:1 첨삭 답변, 시험지 첨삭 완료, 내 질문의 답변, 새 수업 기록
+    # 알림 (최근 7일): 1:1 첨삭 답변, 시험지 첨삭 완료, 내 질문의 답변, 새 수업 기록
     week = "datetime('now', 'localtime', '-7 days')"
     news = query(f"""SELECT
         (SELECT COUNT(*) FROM feedback_threads WHERE user_id = ? AND unread = 1) AS feedback,

@@ -167,7 +167,7 @@ def _listen(w):                   # 발음을 듣고 뜻 고르기 (단어는 �
 def _ox(w):                       # 단어와 뜻이 맞는 짝인지 (O/X)
     right = _rng.random() < 0.5
     shown = MEANING[w] if right else MEANING[_others(w, 1)[0]]
-    return {"kind": "ox", "question": w, "sub": shown, "prompt": "이 뜻이 맞나요?", "choices": ["맞아요", "아니에요"],
+    return {"kind": "ox", "question": w, "sub": shown, "prompt": "이 뜻이 맞나요?", "choices": ["O", "X"],
             "answer_index": 0 if right else 1, "explanation": f"{w}: {MEANING[w]}", "word": w}
 
 
@@ -181,7 +181,7 @@ def _spell(w):                    # 뜻을 보고 글자 조각으로 철자 맞
 
 
 def quiz_items(words):
-    """섞어 풀기: 단어마다 형식을 달리한다 (뜻 고르기 · 단어 고르기 · 듣고 고르기 · O/X · 철자 맞추기)."""
+    """단어 퀴즈: 단어마다 형식을 달리한다 (뜻 고르기 · 단어 고르기 · 듣고 고르기 · O/X · 철자 맞추기)."""
     makers = [_mc, _rev, _listen, _ox, _spell, _rev, _listen, _spell, _mc, _ox]
     items = []
     for i, w in enumerate(words):

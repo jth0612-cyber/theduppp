@@ -97,7 +97,7 @@
 .prog-rest > summary::-webkit-details-marker { display: none; }
 .prog-rest > summary::after { content: " ›"; color: var(--faint); }
 .prog-rest[open] > summary::after { content: ""; }
-/* 시험: 세 탭, 회차 상세는 점수가 먼저이고 답안표는 접는다 */
+/* 시험: 세 탭, 회차 상세는 점수가 먼저이고 내 답안은 접는다 */
 .exam-tabs { margin: 0 0 14px; }
 .sheet-stack { display: grid; gap: 16px; margin-bottom: 30px; }
 .fold-sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 18px; border-radius: 16px; background: var(--sheet); font-weight: 700; }

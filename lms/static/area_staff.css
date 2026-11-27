@@ -148,12 +148,11 @@ main fieldset.pick-group { background: none; padding: 0; }
 .ar-opt input:checked + span { background: var(--accent); color: var(--on-accent, #fff); }
 .ar-opt.ar-2 input:checked + span, .ar-opt.ar-3 input:checked + span, .ar-opt.ar-4 input:checked + span { background: var(--danger); }
 .ar-opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-.ar-more { position: relative; }
+.ar-more { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ar-more > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 10px; background: var(--raised); color: var(--muted); font-weight: 600; font-size: 14px; }
 .ar-more > summary::-webkit-details-marker { display: none; }
 .ar-more:has(input[value="다른 반"]:checked) > summary { background: var(--accent-soft); color: var(--accent-ink); }
 .ar-more:has(input[value="다른 반"]:checked) > summary::after { content: ": 다른 반"; }
-.ar-more[open] { display: flex; flex-wrap: wrap; gap: 6px; }
 @media (max-width: 560px) { .att-rows li { align-items: flex-start; flex-direction: column; } .ar-pick { width: 100%; } .ar-opt { flex: 1 1 0; } .ar-opt span { width: 100%; min-width: 0; min-height: 44px; } .ar-more .ar-opt { flex: 0 0 auto; } }
 
 /* 첨삭: 사진 크게 보기를 켜면 붙어 있는 사진 줄이 화면 위쪽 절반을 넘게 커진다 */
@@ -163,3 +162,5 @@ main fieldset.pick-group { background: none; padding: 0; }
 @media (min-width: 901px) { .ph-big-btn { display: none; } }
 /* 조교 받은 일 화면(질문, 첨삭, 피드백): 휴대폰에서는 탭이 제목 노릇을 하므로 제목 줄을 감춘다 */
 @media (max-width: 720px) { .inbox-tabs ~ :is(header.ed-head, .page-head) h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .inbox-tabs ~ header.ed-head { margin: 0; } }
+@media (max-width: 560px) { .ar-more > summary { min-height: 44px; } }
+.att-rows .ar-opt, .att-rows .ar-more > summary { margin: 0; }

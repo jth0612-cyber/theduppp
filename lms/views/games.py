@@ -1,6 +1,6 @@
 """학생 Quiz 두 갈래.
-- 수능 영단어: 오늘의 20단어(카드 + 섞어 풀기: 뜻, 단어, 듣기·O/X·철자), 짝 맞추기, 스피드 O/X, 복습.
-- 통과 Quiz: 단원별 5문제, 섞어 풀기 10문제(4지선다, 분류, 순서, 빈칸, 계산), O/X 스피드, 샤가프 법칙, 염기 짝 맞추기(DNA·RNA).
+- 수능 영단어: 오늘의 20단어(카드 + 단어 퀴즈: 뜻, 단어, 듣기, O/X, 철자), 조합 맞추기, O/X 스피드, 복습.
+- 통과 Quiz: 단원별 5문제, 전 범위 퀴즈 10문제(4지선다, 분류, 순서, 빈칸, 계산), O/X 스피드, 샤가프 법칙, 염기 조합 맞추기(DNA, RNA).
 문제와 정답은 서버에서 만들어 game_rounds 에 저장하고, 채점도 서버에서만 한다."""
 import json
 from datetime import datetime, timedelta
@@ -281,21 +281,21 @@ def _labels(it, pick):
     kind = it.get("kind")
     if kind in _TEXT_KINDS:
         unit = (" " + it["unit"]) if kind == "num" and pick not in (None, -1, "") else ""
-        return ((pick + unit) if isinstance(pick, str) and pick else "(입력 안 함)"), it["answer_text"]
+        return ((pick + unit) if isinstance(pick, str) and pick else "(미입력)"), it["answer_text"]
     if kind == "sort":                                  # 틀린 항목만 적는다
         ans = it["answer_list"]
         if not isinstance(pick, list):
-            return "(안 함)", " / ".join(f"{x}→{it['bins'][b]}" for x, b in zip(it["items"], ans))
+            return "(미입력)", " / ".join(f"{x}: {it['bins'][b]}" for x, b in zip(it["items"], ans))
         bad = [k for k, b in enumerate(pick) if b != ans[k]]
         if not bad:
             return "모두 맞음", "모두 맞음"
-        return (" / ".join(f"{it['items'][k]}→{it['bins'][pick[k]]}" for k in bad),
-                " / ".join(f"{it['items'][k]}→{it['bins'][ans[k]]}" for k in bad))
+        return (" / ".join(f"{it['items'][k]}: {it['bins'][pick[k]]}" for k in bad),
+                " / ".join(f"{it['items'][k]}: {it['bins'][ans[k]]}" for k in bad))
     if kind == "order":
         def seq(p):
             return " → ".join(it["items"][k] for k in p)
-        return (seq(pick) if isinstance(pick, list) else "(안 함)"), it["answer_text"]
-    mine = it["choices"][pick] if isinstance(pick, int) and 0 <= pick < len(it["choices"]) else "(선택 안 함)"
+        return (seq(pick) if isinstance(pick, list) else "(미입력)"), it["answer_text"]
+    mine = it["choices"][pick] if isinstance(pick, int) and 0 <= pick < len(it["choices"]) else "(미선택)"
     return mine, it["choices"][it["answer_index"]]
 
 
@@ -531,7 +531,7 @@ def vocab_page():
 
 
 def _vocab_open_round(day):
-    """오늘 풀다 만 섞어 풀기 판."""
+    """오늘 풀다 만 전 범위 퀴즈 판."""
     return query("""SELECT * FROM game_rounds WHERE user_id = ? AND game = 'vocab' AND topic = ? AND finished_at IS NULL
                     AND date(started_at) = date('now', 'localtime') ORDER BY id DESC LIMIT 1""", (g.user["id"], day["day"]), one=True)
 

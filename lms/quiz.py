@@ -1,6 +1,6 @@
 """통과 Quiz 문제 생성. 범위: 2022 개정 통합과학 (퓨린·피리미딘, 수소 결합, 5'·3' 방향, 금속 결합은 다루지 않는다).
 
-- 염기 짝 맞추기(DNA 상보 가닥 · DNA→RNA 전사) / 샤가프 법칙: 서버에서 무작위로 만든다 (정답이 계산으로 정해짐).
+- 염기 조합 맞추기(DNA 상보 가닥 · DNA→RNA 전사) / 샤가프 법칙: 서버에서 무작위로 만든다 (정답이 계산으로 정해짐).
 - TOPIC 퀴즈: quiz_topics 의 문제은행(O/X·ㄱㄴㄷ·4지선다, 분류, 순서, 계산)에서 섞어 낸다.
 """
 import random
@@ -190,7 +190,7 @@ def make_best(code, stmts, want_true):
     ans = next(i for i, x in enumerate(picked) if x[1] == want_true)
     odd = picked[ans]
     exp = odd[2] or ("옳은 설명이에요." if want_true else "옳지 않은 설명이에요.")
-    others = [f"{x[0]} → {x[2]}" for x in picked if x is not odd and x[2] and not x[1]] if want_true else []
+    others = [f"'{x[0]}' {x[2]}" for x in picked if x is not odd and x[2] and not x[1]] if want_true else []
     if others:
         exp += " / 나머지 중 틀린 것: " + " / ".join(others[:2])
     return {"kind": "mc", "question": "옳은 것은?" if want_true else "옳지 않은 것은?", "choices": [x[0] for x in picked],

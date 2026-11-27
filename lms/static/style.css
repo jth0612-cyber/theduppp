@@ -2953,3 +2953,12 @@ li.weak line.pb-fg { stroke: var(--danger); }
 @media (max-width: 420px) { .tabs a { padding-inline: 10px; font-size: 14px; } }
 .g-board.is-solo { grid-template-columns: 1fr; }
 @media (max-width: 720px) { .sched-help { display: none; } }
+/* 색으로만 알리던 표시에 글을 붙인다: 문항 지도 범례, 새 글 표시 */
+.im-key { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+.im-key span { display: inline-flex; align-items: center; gap: 6px; }
+.im-key i { position: static; flex: none; }
+.im-key .im-mine { width: 14px; height: 2px; background: var(--danger); }
+.list-rows .is-new .lr-title::after { content: "N"; width: auto; height: auto; margin-left: 6px; border-radius: 0; background: none; color: var(--danger); font-size: 12px; font-weight: 700; }
+td.nowrap { white-space: nowrap; }
+/* 단어 퀴즈: 문제 형식이 바뀌어도 단어 크기는 그대로 */
+#mc-game[data-game^="vocab"] .mc-question .mc-main { font-size: 24px; letter-spacing: 0; }

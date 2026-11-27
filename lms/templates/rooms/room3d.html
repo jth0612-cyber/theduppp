@@ -71,7 +71,7 @@
       </div>
       {% if board_on %}<p class="small"><a href="{{ url_for('rooms.board_page', place=key) }}">판에 남은 글 보기, 신고</a></p>{% endif %}
       <div class="w3-rank">
-        <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위 →</a></div>
+        <div class="sec-head"><h3>이번 주 터줏대감</h3><a class="small" href="{{ url_for('rooms.rank', place=key) }}">전체 순위</a></div>
         {% if rank %}<ol class="rank-list rank-compact">{% for r in rank %}{{ rank_row(r, g.user.id) }}{% endfor %}</ol>
         {% else %}<p class="muted small">이번 주 기록 없음</p>{% endif %}
         <p class="small muted">내 순위: {% if my_rank.rank %}{{ my_rank.rank }}위<span class="sep" aria-hidden="true"></span>{{ my_rank.m|hm }}{% else %}아직 없음{% endif %}</p>
