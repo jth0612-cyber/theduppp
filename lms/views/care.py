@@ -336,7 +336,7 @@ def parent_report(student_id, limit=6):
             if k.get("reason") or k.get("memo") or a["type"]:
                 # 번호·유형은 앞에 따로 나오니 분석 문장의 '4번은 ○○ 오류입니다(…)' 머리는 떼고 고른 선지 설명만 남긴다
                 text = k.get("memo") or re.sub(r"^\d+번은 (?:\S+ )*?오류(?:입니다|로,)\s*\(?", "", a["analysis"] or "").rstrip(").")
-                whys.append({"no": a["no"], "type": a["type"], "text": "" if text == f"{a['no']}번" else text,
+                whys.append({"no": a["no"], "type": a["type"], "text": "" if text == f"{a['no']}번" or text.endswith("분류한 문항입니다") else text,
                              "unit": a.get("unit") or "", "mine": a.get("mine") or "", "key": a.get("key") or ""})
         full = rep["mock"]["full_score"]
         exams_out.append({"mock_id": r["mock_id"], "title": exams.exam_title(rep["mock"]), "kind": rep["mock"].get("kind") or "", "score": rep["r"]["score"], "full": full, "avg": rep["st"]["avg"],

@@ -408,6 +408,13 @@ def parse_distractors(s):
     return out
 
 
+def _trap_reason(tr):
+    """보기함정 칸의 이유에서, 어느 보기에나 붙던 꼬리말(', 옳은 진술을 틀렸다고 판단한 경우입니다.')을 뗀 것."""
+    if not tr or not tr[1]:
+        return ""
+    return re.sub(r"[,.]?\s*(?:옳은 진술을 틀렸다고|틀린 진술을 옳다고) 판단한 경우입니다\.?\s*$", "", tr[1]).rstrip(". ")
+
+
 def analyze_item(no, mine, k, info):
     """틀린 문항 하나: {evidence, type, analysis, diff, trap, confused}. 숫자는 쓰지 않는다."""
     info = info or {}
@@ -434,11 +441,16 @@ def analyze_item(no, mine, k, info):
                 first = labels[0]
                 tr = traps.get(first)
                 res["type"] = (tr[2] if tr and tr[2] else "")
-                how = f"옳은 진술인 보기 {first}{josa(first, '을', '를')} 틀렸다고" if first in missed else \
-                      f"틀린 진술인 보기 {first}{josa(first, '을', '를')} 옳다고"
-                res["analysis"] = f"{no}번은 " + (f"{res['type']} 오류로, " if res["type"] else "") + f"{how} 판단한 경우입니다."
-                if tr and tr[1]:
-                    res["trap"] = f"보기 {first}: {tr[1]}"
+                # 문항정보에 적어 둔 이유를 그대로 쓴다 (2026-11-27). 전에는 어느 문항이든 '보기 ㄴ을 틀렸다고 판단한 경우'만 나왔다.
+                # 헷갈린 보기가 둘이면 둘 다 적는다. 이유가 없는 보기는 옳고 그름을 어떻게 뒤집었는지만 적는다.
+                parts = []
+                for lab_ in labels[:2]:
+                    why = _trap_reason(traps.get(lab_))
+                    parts.append(f"보기 {lab_}({'옳은 진술' if lab_ in missed else '틀린 진술'}): {why}" if why else
+                                 f"보기 {lab_}: {'옳은 진술을 틀렸다고' if lab_ in missed else '틀린 진술을 옳다고'} 판단")
+                res["analysis"] = (f"{no}번은 {res['type']} 오류입니다" if res["type"] else f"{no}번") + f"({' / '.join(parts)})."
+                if _trap_reason(tr):
+                    res["trap"] = f"보기 {first}: {_trap_reason(tr)}"
                 return res
     if res["mine"] and not info.get("format", "").startswith("합답"):
         dis = parse_distractors(info.get("distractors"))
@@ -500,8 +512,9 @@ def student_report(mid, student_id, cs=None):
         a["points"] = m["pts"][i]
         a["auto_type"] = a["type"]
         a["type"] = pick_reason(mine_why.get(no, ""), ta_why.get(no, ""), a["auto_type"])
-        if a["auto_type"] and a["type"] != a["auto_type"]:
-            a["analysis"] = a["analysis"].replace(f"{a['auto_type']} 오류로, ", f"{a['type']} 오류로, ", 1)
+        if a["auto_type"] and a["type"] != a["auto_type"] and a["analysis"]:
+            # 학생이나 조교가 고른 이유가 자동 분석과 다르면, 자동 분석의 설명(다른 이유에 대한 글)을 붙이지 않는다
+            a["analysis"] = f"{no}번은 {a['type']}{josa(a['type'], '으로', '로')} 분류한 문항입니다."
         items.append(a)
     return {"mock": m, "r": r, "cls": r["cls"], "st": st, "all": cs["all"], "enough": enough, "all_enough": all_enough,
             "wrong": wrong, "wrongs": items, "full": m["full_score"], "has_choice": cs["has_choice"]}

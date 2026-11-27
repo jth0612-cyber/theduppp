@@ -64,9 +64,11 @@ class Pure(unittest.TestCase):
         self.assertEqual(a["evidence"], "보기 차이 근거")
         self.assertEqual(a["diff"], "3번과 5번의 차이는 보기 ㄴ입니다.")
         self.assertEqual(a["type"], "자료 해석")
-        self.assertIn("옳은 진술인 보기 ㄴ을 틀렸다고", a["analysis"])
+        self.assertEqual(a["analysis"], "16번은 자료 해석 오류입니다(보기 ㄴ(옳은 진술): 축의 의미를 바꿔 읽음).")   # 문항정보의 이유를 그대로
         b = exams.analyze_item(16, "5", 3, info)                       # 틀린 진술을 옳다고 고름
-        self.assertIn("틀린 진술인 보기 ㄴ을 옳다고", b["analysis"])
+        self.assertIn("보기 ㄴ(틀린 진술): 축의 의미를 바꿔 읽음", b["analysis"])
+        bare = exams.analyze_item(16, "3", 5, dict(info, traps="ㄴ(O): , 옳은 진술을 틀렸다고 판단한 경우입니다. [자료 해석]"))   # 이유 없이 꼬리말만
+        self.assertEqual(bare["analysis"], "16번은 자료 해석 오류입니다(보기 ㄴ: 옳은 진술을 틀렸다고 판단).")
         c = exams.analyze_item(4, "2", 3, {"format": "일반", "distractors": "2번: 단위를 바꾸지 않음(계산 실수) / 4번: x(조건 독해)"})
         self.assertEqual((c["evidence"], c["type"]), ("고른 선지 근거", "계산 실수"))
         self.assertEqual(exams.analyze_item(4, "0", 3, {"concept": "중화"})["evidence"], "문항 성격 추정")
@@ -277,7 +279,7 @@ class Upload(unittest.TestCase):
         self.assertTrue(text.startswith("[정태혁 통합과학] 학생00 학생 학습 안내\n복습 테스트 3회 "))
         self.assertIn("1번 오답 분석 · 반 오답률 50%, 학생 답 3 / 정답 5", text)
         self.assertIn("3번과 5번의 차이는 보기 ㄴ입니다.", text)
-        self.assertIn("1번은 자료 해석 오류로, 옳은 진술인 보기 ㄴ을 틀렸다고 판단한 경우입니다.", text)
+        self.assertIn("1번은 자료 해석 오류입니다(보기 ㄴ(옳은 진술): 축을 바꿔 읽음).", text)
         self.assertIn("반 학생 50%가 같은 3번을 골라, 많은 학생이 보기 ㄴ에서 헷갈린 문항입니다.", text)
         page = self.ta.get(f"/t/mocks/{self.mid}/sms").data.decode()
         self.assertIn("학생00", page); self.assertIn("010-1234-5600", page)
