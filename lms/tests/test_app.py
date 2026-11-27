@@ -614,10 +614,10 @@ class FeatureTest(AppTest):
     def test_quiz_hub_shows_categories(self):
         _, s1, _ = self._students()
         hub = s1.get("/s/games/").data.decode()
-        for t in ("수능 영단어", "오늘의 20단어", "짝 맞추기", "스피드 O/X"):
+        for t in ("수능 영단어", "오늘의 20단어", "조합 맞추기", "스피드 O/X"):
             self.assertIn(t, hub)
         sci = s1.get("/s/games/sci").data.decode()
-        for t in ("통과 Quiz", "운동과 충돌", "샤가프 법칙", "염기 짝 맞추기", "전사: DNA → RNA", "섞어 풀기", "O/X 스피드"):
+        for t in ("통과 Quiz", "운동과 충돌", "샤가프 법칙", "염기 조합 맞추기", "전사: DNA → RNA", "섞어 풀기", "O/X 스피드"):
             self.assertIn(t, sci)
         nav = s1.get("/s/games/sci").data.decode()
         self.assertIn(">수능 영단어<", nav)

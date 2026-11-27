@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}{{ title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="crumb">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
-    <h1>{{ title }}</h1>
+    <h1>{{ title }}{% call help(title) %}<p>{{ intro }}</p><p>키보드는 ←가 O, →가 X예요.</p>{% endcall %}</h1>
   </div>
 </div>
 <div class="card game sp-game" id="speed-game" data-start="{{ url_for('games.speed_start', kind=kind) }}" data-kind="{{ kind }}">
   <div data-role="start" class="sp-start g-start">
-    <p class="g-intro">{{ intro }}</p>
-    <p class="g-meta">키보드는 ←가 O, →가 X{% if best %}<span class="sep" aria-hidden="true"></span>최고 {{ best.top }}개{% endif %}</p>
+    {% with gb = game_board(kind), gb_unit = '개', gb_how = intro %}{% include "student/games/_board.html" %}{% endwith %}
+    <p class="g-meta">{{ seconds }}초</p>
     <button type="button" class="btn primary big" data-role="begin">시작</button>
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>

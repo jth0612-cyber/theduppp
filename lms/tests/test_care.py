@@ -92,6 +92,21 @@ class Care(unittest.TestCase):
             execute("INSERT INTO exam_results (mock_id, student_id, answers, score) VALUES (?, ?, '1234', 10)", (mid, s3))
             self.assertEqual(exams.missing_students(mid), ([], [], []))
 
+    def test_game_board_ranks_within_class(self):
+        """게임 시작 화면의 세 칸: 같은 반끼리만 견주고, 기록이 없으면 하는 법 한 줄이 나온다."""
+        with self.app.app_context():
+            s3 = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, '박세나', '270003')", (self.a,))
+            u = {r["username"]: r["id"] for r in query("SELECT id, username FROM users")}
+            u3 = execute("INSERT INTO users (role, username, password_hash, student_id) VALUES ('student', '270003', ?, ?)", (hash_password(PW), s3))
+            for uid, score in ((u["270001"], 7), (u["270001"], 4), (u3, 9), (u["270002"], 10)):      # 270002 는 B반
+                execute("""INSERT INTO game_rounds (user_id, game, topic, payload, answer, score, total, started_at, finished_at)
+                           VALUES (?, 'mixed', '', '[]', '[]', ?, 10, datetime('now'), datetime('now'))""", (uid, score))
+        page = self.c1.get("/s/games/mixed").data.decode()
+        flat = re.sub(r"<[^>]+>|\s+", "", page)
+        self.assertIn("내최고기록7/10", flat); self.assertIn("반1등9/10", flat); self.assertIn("내순위2위/2명", flat)
+        self.assertNotIn("g-board", self.c1.get("/s/games/chargaff").data.decode())          # 기록 없음: 하는 법 한 줄
+        self.assertIn("A=T, G=C 규칙으로", self.c1.get("/s/games/chargaff").data.decode())
+
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()
         self.assertEqual(self.c1.get("/s/homework").status_code, 404)                    # 숙제 사진 제출은 없앰

@@ -1,0 +1,8 @@
+{# 게임 시작 화면의 세 칸. 필요: gb(game_board 결과), gb_unit(값 뒤에 붙일 글: '개', '/10', '%'), gb_how(기록이 없을 때 보여 줄 하는 법 한 줄) #}
+{% if gb.mine is not none %}
+<dl class="g-board">
+  <div><dt>내 최고 기록</dt><dd>{{ gb.mine }}<small>{{ gb_unit }}</small></dd></div>
+  <div><dt>반 1등</dt><dd>{{ gb.top }}<small>{{ gb_unit }}</small></dd></div>
+  <div><dt>내 순위</dt><dd>{{ gb.rank }}위<small> / {{ gb.n }}명</small></dd></div>
+</dl>
+{% elif gb_how %}<p class="g-intro">{{ gb_how }}</p>{% endif %}

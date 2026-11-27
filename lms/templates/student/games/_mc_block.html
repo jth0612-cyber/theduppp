@@ -1,7 +1,8 @@
 {# 객관식 한 판 (통합과학 퀴즈 · 샤가프 · 영단어가 함께 쓴다). 한 문제씩 바로 채점: static/games.js #}
 <div class="card game" id="mc-game" data-game="{{ game }}" data-start="{{ url_for('games.' ~ game ~ '_start') }}">
   <div data-role="start" class="g-start">
-    {% if intro %}<p class="g-intro">{{ intro }}</p>{% endif %}
+    {% if board %}{% with gb = game_board(board[0], board[1]), gb_unit = board[2], gb_how = intro %}{% include "student/games/_board.html" %}{% endwith %}
+    {% elif intro %}<p class="g-intro">{{ intro }}</p>{% endif %}
     {% if topics %}
     <div class="field"><label for="mc-topic">{{ topic_label or "단원" }}</label>
       <select id="mc-topic" data-role="topic">{% for k, label in topics %}<option value="{{ k }}" {{ 'selected' if k == pick }}>{{ label }}</option>{% endfor %}</select></div>
@@ -9,7 +10,8 @@
     {% if resume %}
     <p class="mc-resume">풀던 문제가 있어요: {{ resume.done }} / {{ resume.total }}<span class="sep" aria-hidden="true"></span>맞힘 {{ resume.score }}</p>
     <div class="mc-resume-btns"><button type="button" class="btn primary" data-role="resume">이어서 풀기</button><button type="button" class="btn" data-role="begin">처음부터</button></div>
-    {% elif not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>{% endif %}
+    {% elif not empty %}<button type="button" class="btn primary" data-role="begin">{{ begin_label or '시작' }}</button>
+    {% elif game == 'vocab_review' %}<a class="btn primary" href="{{ url_for('games.vocab_page') }}">오늘의 20단어 시작</a>{% endif %}
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>
   <div class="hidden" data-role="play">

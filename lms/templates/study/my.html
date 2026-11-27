@@ -20,7 +20,9 @@
         {% else %}<button class="btn primary" name="action" value="start">측정 시작</button>{% endif %}
       </form>
     </div>
-    <dl class="my-parts">{% for label, s in m.sum.parts %}<div><dt>{{ label }}</dt>{% if s %}<dd>{{ dur(s) }}</dd>{% else %}<dd class="is-none">오늘은 기록이 없어요</dd>{% endif %}</div>{% endfor %}</dl>
+    {# 기록이 하나도 없으면 한 번만 적는다. 일부만 없으면 그 칸은 '없음' #}
+    {% if m.sum.parts|map('last')|select|list %}<dl class="my-parts">{% for label, s in m.sum.parts %}<div><dt>{{ label }}</dt>{% if s %}<dd>{{ dur(s) }}</dd>{% else %}<dd class="is-none">없음</dd>{% endif %}</div>{% endfor %}</dl>
+    {% else %}<p class="my-none">오늘은 기록이 없어요</p>{% endif %}
   </div>
   <dl class="my-stats my-stats-2">
     <div><dt><span class="my-ico ico-solve" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V6a2 2 0 0 1 2-2h7l5 5v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="m9 13 2 2 4-4"/></svg></span>오늘 푼 문제</dt>

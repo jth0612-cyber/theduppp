@@ -108,3 +108,4 @@
 .fold-sec > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ss-go { color: var(--ink); }
 .ss-go::after { content: " ›"; color: var(--faint); font-weight: 400; }
+.my-none { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }

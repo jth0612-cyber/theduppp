@@ -69,7 +69,7 @@ def _chargaff_question(kind):
         q = (f"DNA의 한 가닥(Ⅰ)에서 A={a}%, T={t}%, G={g}%, C={c}%입니다. "
              f"이와 상보적인 가닥(Ⅱ)에서 {target}의 비율은?")
         partner = "T" if target == "A" else "C"
-        exp = f"가닥 Ⅱ의 {target}는 가닥 Ⅰ의 {partner}와 짝을 이룹니다. 그래서 {partner}의 비율 {ans}%와 같습니다."
+        exp = f"가닥 Ⅱ의 {target}는 가닥 Ⅰ의 {partner}와 결합합니다. 그래서 {partner}의 비율 {ans}%와 같습니다."
         return q, [f"{x}%" for x in choices], idx, exp
     if kind == "rna":
         a, t, g = _rng.randrange(10, 35), _rng.randrange(10, 35), _rng.randrange(10, 30)
@@ -80,12 +80,12 @@ def _chargaff_question(kind):
         q = (f"DNA 주형 가닥에서 A={a}%, T={t}%, G={g}%, C={c}%입니다. "
              f"이 가닥으로부터 전사된 RNA에서 {target}의 비율은?")
         partner = {"U": "A", "A": "T", "G": "C"}[target]
-        exp = f"RNA의 {target}는 주형 가닥의 {partner}와 짝을 이룹니다(RNA에는 T 대신 U). 그래서 {partner}의 비율 {ans}%와 같습니다."
+        exp = f"RNA의 {target}는 주형 가닥의 {partner}와 결합합니다(RNA에는 T 대신 U). 그래서 {partner}의 비율 {ans}%와 같습니다."
         return q, [f"{x}%" for x in choices], idx, exp
     # pair: 이중 가닥 DNA에서 늘 성립하는 관계
     q = "이중 가닥 DNA에서 항상 성립하는 관계는?"
     opts = ["A의 양 = T의 양", "A의 양 = G의 양", "T의 양 = C의 양", "A+T의 양 = G+C의 양"]
-    exp = "A는 T와, G는 C와 짝을 이루므로 A와 T의 양이 같고 G와 C의 양이 같습니다. A+T와 G+C는 생물마다 달라요."
+    exp = "A는 T와, G는 C와 결합하므로 A와 T의 양이 같고 G와 C의 양이 같습니다. A+T와 G+C는 생물마다 달라요."
     return q, opts, 0, exp
 
 

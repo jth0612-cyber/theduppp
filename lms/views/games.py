@@ -94,10 +94,30 @@ def sci_hub():
     games = {"07": [], "10": [], "19": [], "23": [], "24": []}
     for key, info in sci_games.GAMES.items():
         games[info["topic"]].append((info["title"], url_for("games.play", game=key), "play_" + key + ":"))
-    games["10"] += [("샤가프 법칙", url_for("games.chargaff"), "chargaff:"), ("염기 짝 맞추기", url_for("games.dna"), "dna:dna")]
+    games["10"] += [("샤가프 법칙", url_for("games.chargaff"), "chargaff:"), ("염기 조합 맞추기", url_for("games.dna"), "dna:dna")]
     games["19"] += [("전사: DNA → RNA", url_for("games.dna", mode="rna"), "dna:rna")]
     topics = [(k, v[0], games.get(k, [])) for k, v in quiz.TOPICS.items()]
     return render_template("student/games/sci_hub.html", best=_best(), topics=topics)
+
+
+def game_board(game, topic=None, pct=False):
+    """시작 화면의 세 칸: 내 최고 기록, 반 1등, 내 순위. 같은 반 학생끼리, 끝낸 판만 센다.
+    pct 면 맞힌 비율(%)로 견준다(판마다 문항 수가 다른 게임). 내 기록이 없으면 mine 이 None."""
+    val = "MAX(r.score * 100 / r.total)" if pct else "MAX(r.score)"
+    rows = query(f"""SELECT r.user_id, {val} AS v FROM game_rounds r JOIN users u ON u.id = r.user_id
+                      JOIN students s ON s.id = u.student_id
+                      WHERE s.class_id = (SELECT class_id FROM students WHERE id = ?) AND r.game = ? AND (? IS NULL OR r.topic = ?)
+                        AND r.finished_at IS NOT NULL AND r.total > 0 GROUP BY r.user_id""",
+                 (g.user["student_id"], game, topic, topic))
+    by = {r["user_id"]: r["v"] for r in rows if r["v"] is not None}
+    mine = by.get(g.user["id"])
+    return {"mine": mine, "top": max(by.values()) if by else None, "n": len(by),
+            "rank": 1 + sum(1 for v in by.values() if v > mine) if mine is not None else None}
+
+
+@bp.app_context_processor
+def _inject_board():
+    return {"game_board": game_board}
 
 
 # ---------- 염기 짝 맞추기 ----------
@@ -106,7 +126,7 @@ def sci_hub():
 @student_required
 def dna():
     mode = "rna" if request.args.get("mode") == "rna" else "dna"
-    return render_template("student/games/dna.html", levels=DNA_LEVELS, time_limit=DNA_TIME_LIMIT, mode=mode)
+    return render_template("student/games/dna.html", levels=DNA_LEVELS, time_limit=DNA_TIME_LIMIT, mode=mode, gb=game_board("dna", mode, pct=True))
 
 
 @bp.route("/dna/start", methods=["POST"])
@@ -256,7 +276,8 @@ def _grade_mc(r, label, after=None):
 @student_required
 def chargaff():
     return render_template("student/games/mc.html", game="chargaff", title="샤가프 법칙", parent="sci",
-                           intro="A=T, G=C 규칙으로 염기 수를 구해요. 전사된 RNA 문제까지 5문제예요.", topics=None)
+                           intro="A=T, G=C 규칙으로 염기 수를 구해요. 전사된 RNA 문제까지 5문제예요.", topics=None,
+                           board=("chargaff", None, "/5"))
 
 
 @bp.route("/chargaff/start", methods=["POST"])
@@ -283,7 +304,7 @@ def chargaff_submit(rid):
 @student_required
 def mixed():
     return render_template("student/games/mc.html", game="mixed", title="섞어 풀기", parent="sci",
-                           intro="모든 TOPIC에서 10문제가 섞여 나와요.", topics=None)
+                           intro="모든 TOPIC에서 10문제가 섞여 나와요.", topics=None, board=("mixed", None, "/10"))
 
 
 @bp.route("/mixed/start", methods=["POST"])
@@ -365,6 +386,7 @@ def quiz_page():
     pick = request.args.get("topic", "")
     title = f"TOPIC {pick} {quiz.TOPICS[pick][0]}" if pick in quiz.TOPICS else "TOPIC 퀴즈"
     return render_template("student/games/mc.html", game="quiz", title=title, pick=pick, parent="sci",
+                           board=("quiz", pick, "/10") if pick in quiz.TOPICS else None,
                            intro="10문제를 풀어요. 처음 보는 문제와 전에 틀린 문제가 먼저 나와요.", topic_label="TOPIC",
                            topics=[(k, f"TOPIC {k} {v[0]}") for k, v in quiz.TOPICS.items()])
 
@@ -417,7 +439,8 @@ def quiz_submit(rid):
 def vocab_page():
     day, words = vocab.today_set(g.user["id"])
     return render_template("student/games/vocab.html", day=day, words=[(w, vocab.MEANING[w]) for w in words],
-                           v=vocab.stats(g.user["id"]), game="vocab", parent="vocab", resume=_vocab_progress(day))
+                           v=vocab.stats(g.user["id"]), game="vocab", parent="vocab", resume=_vocab_progress(day),
+                           board=("vocab", day["day"], "/20"))
 
 
 def _vocab_open_round(day):

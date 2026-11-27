@@ -1,20 +1,22 @@
 {% extends "base.html" %}
-{% block title %}{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }} | 정태혁 통합과학 lab{% endblock %}
+{% from "_macros.html" import help %}
+{% block title %}{{ '전사: DNA → RNA' if mode == 'rna' else '염기 조합 맞추기' }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="crumb"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> /</p>
-    <h1>{{ '전사: DNA → RNA' if mode == 'rna' else '염기 짝 맞추기' }}</h1>
-    <p class="muted small">{% if mode == 'rna' %}주형 가닥에서 전사될 RNA 염기를 차례로 눌러 주세요. A→U, T→A, G→C, C→G. 키보드 A, U, G, C.{% else %}위 가닥과 짝이 되는 염기를 차례로 눌러 주세요. A–T, G–C. 키보드 A, T, G, C.{% endif %}</p>
+    {% set how = '주형 가닥에서 전사될 RNA 염기를 차례로 눌러요. A는 U, T는 A, G는 C, C는 G.' if mode == 'rna' else '위 가닥의 염기와 결합하는 염기를 차례로 눌러요. A는 T와, G는 C와 결합해요.' %}
+    <h1>{{ '전사: DNA → RNA' if mode == 'rna' else '염기 조합 맞추기' }}{% call help('하는 법') %}<p>{{ how }}</p><p>키보드는 {{ 'A, U, G, C' if mode == 'rna' else 'A, T, G, C' }}.</p>{% endcall %}</h1>
   </div>
   <nav class="seg" aria-label="방식">
-    <a href="{{ url_for('games.dna') }}" class="{{ 'is-on' if mode == 'dna' }}">DNA 짝</a>
+    <a href="{{ url_for('games.dna') }}" class="{{ 'is-on' if mode == 'dna' }}">DNA 조합</a>
     <a href="{{ url_for('games.dna', mode='rna') }}" class="{{ 'is-on' if mode == 'rna' }}">RNA 전사</a>
   </nav>
 </div>
 <div class="card game" id="dna-game" data-start="{{ url_for('games.dna_start') }}" data-time-limit="{{ time_limit }}" data-mode="{{ mode }}">
   <div class="game-start" data-role="start">
-    <p>난이도</p>
+    {% with gb_unit = '%', gb_how = how %}{% include "student/games/_board.html" %}{% endwith %}
+    <p class="g-meta">난이도</p>
     <div class="row">
       {% for lv, n in levels.items() %}
       <button type="button" class="btn {{ 'primary' if lv == 1 }}" data-level="{{ lv }}">{{ ['', '쉬움', '보통', '어려움'][lv] }} ({{ n }}개)</button>
@@ -26,7 +28,7 @@
     <div class="strand-wrap">
       <p class="strand-label">{{ 'DNA 주형 가닥' if mode == 'rna' else 'DNA 가닥' }}</p>
       <div class="strand" data-role="template"></div>
-      <p class="strand-label">{{ 'RNA' if mode == 'rna' else '짝을 이루는 가닥' }}</p>
+      <p class="strand-label">{{ 'RNA' if mode == 'rna' else '결합하는 가닥' }}</p>
       <div class="strand" data-role="answer"></div>
     </div>
     <div class="base-pad">

@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}{{ info.title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="crumb"><a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a> / <a href="{{ url_for('games.quiz', topic=info.topic) }}">TOPIC {{ info.topic }} {{ topic_title }}</a> /</p>
-    <h1>{{ info.title }}</h1>
+    <h1>{{ info.title }}{% call help(info.title) %}<p>{{ info.intro }}</p>{% endcall %}</h1>
   </div>
 </div>
 <div class="card game pl-game" id="play-game" data-game="{{ game }}" data-start="{{ url_for('games.play_start', game=game) }}">
   <div data-role="start" class="g-start">
-    <p class="g-intro">{{ info.intro }}</p>
-    <p class="g-meta">{{ stages }}판{% if best %}<span class="sep" aria-hidden="true"></span>최고 {{ best.top }}/{{ stages }}{% endif %}</p>
+    {% with gb = game_board('play_' ~ game), gb_unit = '/' ~ stages, gb_how = info.intro %}{% include "student/games/_board.html" %}{% endwith %}
+    <p class="g-meta">{{ stages }}판</p>
     <button type="button" class="btn primary big" data-role="begin">시작</button>
   </div>
   <div class="hidden" data-role="loading"><p class="muted">준비 중…</p></div>

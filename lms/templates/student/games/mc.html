@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% from "_macros.html" import help %}
 {% block title %}{{ title }} | 정태혁 통합과학 lab{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
     <p class="crumb">{% if parent == 'vocab' %}<a href="{{ url_for('games.hub') }}">수능 영단어</a>{% else %}<a href="{{ url_for('games.sci_hub') }}">통과 Quiz</a>{% endif %} /</p>
-    <h1>{{ title }}</h1>
+    <h1>{{ title }}{% if board and intro %}{% call help(title) %}<p>{{ intro }}</p>{% endcall %}{% endif %}</h1>
   </div>
 </div>
 {% include "student/games/_mc_block.html" %}
