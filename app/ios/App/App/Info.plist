@@ -43,6 +43,12 @@
       </array>
     </dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>질문과 시험지 첨삭에 올릴 사진을 찍을 때 카메라를 써요.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>질문과 시험지 첨삭에 올릴 사진을 고를 때 사진 보관함을 써요.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
