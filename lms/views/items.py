@@ -67,7 +67,7 @@ def upload(mid):
         flash(f"문항 그림 {len(done)}장을 올렸어요 ({', '.join(str(n) for n in sorted(done))}번).", "ok")
     if bad:
         flash("파일 이름에서 문항 번호를 읽지 못했거나 그림이 아니에요: " + ", ".join(bad[:5]), "error")
-    return redirect(url_for("books.teacher_mock", mid=mid) + "#items")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="eval") + "#items")
 
 
 @bp.route("/t/mocks/<int:mid>/items/<int:no>/delete", methods=["POST"])
@@ -76,7 +76,7 @@ def remove(mid, no):
     r = query("SELECT file_id FROM mock_item_images WHERE mock_id = ? AND item_no = ?", (mid, no), one=True) or abort(404)
     execute("DELETE FROM mock_item_images WHERE mock_id = ? AND item_no = ?", (mid, no))
     delete_file(r["file_id"])
-    return redirect(url_for("books.teacher_mock", mid=mid) + "#items")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="eval") + "#items")
 
 
 # ---------------------------------------------------------------- 그림 (학생: 워터마크)

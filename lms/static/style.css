@@ -2900,7 +2900,7 @@ main table.tl-2 td:nth-child(2), main table.tl-3 td:nth-child(3), main table.tl-
 main table.tl-5 td:nth-child(5), main table.tl-6 td:nth-child(6), main table.tl-7 td:nth-child(7) { text-align: left !important; }
 /* 머리행은 어느 표든 가운데 (2026-11-27 토론 결론). 왼쪽(글, 이름, 반, 아이디)과 오른쪽(견주는 수)은 칸에만 건다.
    견주는 수 열은 내용 폭으로 좁혀 머리와 값이 멀어지지 않게 한다. */
-main table.cmp :is(th, td).num { width: 1%; white-space: nowrap; }
+@media (min-width: 721px) { main table.cmp :is(th, td).num { width: 1%; white-space: nowrap; } }
 /* 열 구분 (2026-11-27 사용자 지시): 데스크톱 표는 칸 좌우 여백을 넓히고 열 사이에 옅은 세로줄을 둔다. 휴대폰 줄 묶음에는 걸지 않는다. */
 @media (min-width: 721px) {
   main table:not(.sched, .sched-cal, .mark-table) :is(th, td) { padding-inline: 18px; }

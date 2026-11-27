@@ -180,6 +180,15 @@ CREATE TABLE IF NOT EXISTS exam_results (
     updated_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     UNIQUE (mock_id, student_id)
 );
+-- 채점 파일에 없던 학생을 결시로 확인한 기록 (확인하면 '누락 학생'에서 빠진다)
+CREATE TABLE IF NOT EXISTS exam_absent (
+    mock_id     INTEGER NOT NULL REFERENCES mocks(id) ON DELETE CASCADE,
+    student_id  INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    kind        TEXT NOT NULL DEFAULT 'absent',      -- absent 결시 / makeup 보강 예정(다른 반 수업에서 본 뒤 결과가 올라오면 끝)
+    by_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (mock_id, student_id)
+);
 -- OMR 엑셀 올린 기록: 줄마다 처리 결과를 남겨 고친 뒤 다시 올릴 수 있게
 CREATE TABLE IF NOT EXISTS omr_uploads (
     id          INTEGER PRIMARY KEY,
@@ -844,6 +853,7 @@ def init_db(path):
     _add_column(conn, "mocks", "eval_killer", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "mocks", "eval_video", "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, "exam_results", "ta_note", "TEXT NOT NULL DEFAULT ''")
+    _add_column(conn, "exam_absent", "kind", "TEXT NOT NULL DEFAULT 'absent'")
     # 학습상담: 학생이 조교를 지정(없으면 누구나), 답변 뒤 학생이 1~5점 평가. 조교 소개 한 줄
     _add_column(conn, "questions", "assignee_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL")
     _add_column(conn, "questions", "rating", "INTEGER")

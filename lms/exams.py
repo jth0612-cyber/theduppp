@@ -290,6 +290,20 @@ def results(mid):
                                       JOIN classes c ON c.id = s.class_id WHERE r.mock_id = ? ORDER BY c.name, s.name""", (mid,))]
 
 
+def missing_students(mid):
+    """(누락, 결시 확인, 보강 예정) 학생 목록. 결과가 올라온 반의 재원생 가운데 이 회차 결과가 없는 학생.
+    보강 예정은 다른 반 수업에서 시험을 보기로 한 학생: 그 결과가 올라오면(어느 반 파일이든 학생으로 찾는다) 목록에서 저절로 빠진다.
+    결과가 하나도 없으면 셋 다 빈 목록."""
+    rows = [dict(r) for r in query("""SELECT s.id, s.name, s.student_no, c.name AS cls,
+                                         (SELECT a.kind FROM exam_absent a WHERE a.mock_id = ? AND a.student_id = s.id) AS absent
+                                  FROM students s JOIN classes c ON c.id = s.class_id
+                                  WHERE s.active = 1
+                                    AND s.class_id IN (SELECT s2.class_id FROM exam_results r JOIN students s2 ON s2.id = r.student_id WHERE r.mock_id = ?)
+                                    AND NOT EXISTS (SELECT 1 FROM exam_results r WHERE r.mock_id = ? AND r.student_id = s.id)
+                                  ORDER BY c.name, s.name""", (mid, mid, mid))]
+    return [r for r in rows if not r["absent"]], [r for r in rows if r["absent"] == "absent"], [r for r in rows if r["absent"] == "makeup"]
+
+
 def group_stats(rows, key):
     """한 묶음(반 또는 전체) 통계: 인원, 평균(소수 한 자리), 문항별 오답률(%), 선지 수."""
     n = len(rows)
@@ -517,7 +531,7 @@ def _block(a, rep):
     elif rep["all_enough"]:
         bits.append(f"전체 오답률 {pct1(a['rate_all'])}%")
     if a["mine"]:
-        bits.append(f"내 답 {a['mine']} → 정답 {a['key']}")
+        bits.append(f"학생 답 {a['mine']} / 정답 {a['key']}")
     else:
         bits.append(f"정답 {a['key']}")
     lines = [head + " · " + ", ".join(bits)]   # 학부모 문자: 선생님이 쓰던 문자 형식 그대로 (tests 의 기준 문자와 줄마다 맞춤)

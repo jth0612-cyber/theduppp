@@ -90,7 +90,7 @@ class Pure(unittest.TestCase):
 
 오답은 단순 개념 부족, 자료 해석, 조건 독해 누락, 계산 실수 등의 항목으로 나눠 기록합니다.
 
-16번 오답 분석 · 반 오답률 42.5%, 내 답 3 → 정답 5
+16번 오답 분석 · 반 오답률 42.5%, 학생 답 3 / 정답 5
 반 선택 비율: ①1.5% ②4% ③31% ④6% ⑤57.5%
 3번과 5번의 차이는 보기 ㄴ입니다.
 16번은 자료 해석 오류로, 보기 ㄴ에서 그래프의 x축과 y축의 의미를 오독하여 기울기의 의미를 반댓값으로 해석한 경우입니다.
@@ -275,7 +275,7 @@ class Upload(unittest.TestCase):
             self.assertEqual(m["full_score"], 7)
             text = exams.sms_for(self.mid, self.sid["학생00"])
         self.assertTrue(text.startswith("[정태혁 통합과학] 학생00 학생 학습 안내\n복습 테스트 3회 "))
-        self.assertIn("1번 오답 분석 · 반 오답률 50%, 내 답 3 → 정답 5", text)
+        self.assertIn("1번 오답 분석 · 반 오답률 50%, 학생 답 3 / 정답 5", text)
         self.assertIn("3번과 5번의 차이는 보기 ㄴ입니다.", text)
         self.assertIn("1번은 자료 해석 오류로, 옳은 진술인 보기 ㄴ을 틀렸다고 판단한 경우입니다.", text)
         self.assertIn("반 학생 50%가 같은 3번을 골라, 많은 학생이 보기 ㄴ에서 헷갈린 문항입니다.", text)

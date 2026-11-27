@@ -66,6 +66,32 @@ class Care(unittest.TestCase):
         self.ta.post(f"/t/mocks/{mid}/omr", data={"file": (io.BytesIO(buf.getvalue()), "o.xlsx")}, content_type="multipart/form-data")
         return mid
 
+    def test_missing_students_confirmed_absent(self):
+        """결과가 올라온 반의 재원생 중 결과가 없는 학생이 누락으로 뜨고, 결시로 확인하면 빠진다. 다음 행동 버튼도 따라 바뀐다."""
+        mid = self._exam()
+        with self.app.app_context():
+            s3 = execute("INSERT INTO students (class_id, name, student_no) VALUES (?, '박세나', '270003')", (self.a,))
+        page = self.ta.get(f"/t/mocks/{mid}").data.decode()
+        self.assertIn("누락 학생 확인", page); self.assertNotIn("학부모 문자 보기", page)
+        omr = self.ta.get(f"/t/mocks/{mid}?tab=omr").data.decode()
+        self.assertIn("박세나", omr); self.assertNotIn("이두리", omr)                      # 결과가 없는 B반 학생은 누락이 아니다
+        self.ta.post(f"/t/mocks/{mid}/absent", data={"sid": [str(s3), str(self.s2)]})    # 누락이 아닌 학생은 무시한다
+        with self.app.app_context():
+            self.assertEqual([r["student_id"] for r in query("SELECT student_id FROM exam_absent WHERE mock_id = ?", (mid,))], [s3])
+        page = self.ta.get(f"/t/mocks/{mid}").data.decode()
+        self.assertIn("학부모 문자 보기", page); self.assertNotIn("누락 학생 확인", page)
+        self.ta.post(f"/t/mocks/{mid}/absent", data={"undo": "1"})
+        self.assertIn("누락 학생 확인", self.ta.get(f"/t/mocks/{mid}").data.decode())
+        self.assertNotEqual(self.c1.post(f"/t/mocks/{mid}/absent", data={"sid": str(s3)}).status_code, 302)   # 학생은 못 한다
+        # 보강 예정: 다른 반 수업에서 보기로 한 학생. 누락에서 빠지고, 결과가 올라오면 보강 예정에서도 사라진다
+        self.ta.post(f"/t/mocks/{mid}/absent", data={"sid": str(s3), "kind": "makeup"})
+        omr = self.ta.get(f"/t/mocks/{mid}?tab=omr").data.decode()
+        self.assertIn("보강 예정 1명", omr); self.assertIn("학부모 문자 보기", omr)
+        with self.app.app_context():
+            import exams
+            execute("INSERT INTO exam_results (mock_id, student_id, answers, score) VALUES (?, ?, '1234', 10)", (mid, s3))
+            self.assertEqual(exams.missing_students(mid), ([], [], []))
+
     def test_exam_paper_photo_and_item_review(self):
         mid = self._exam()
         self.assertEqual(self.c1.get("/s/homework").status_code, 404)                    # 숙제 사진 제출은 없앰

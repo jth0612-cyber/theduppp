@@ -355,7 +355,7 @@ def mock_review(mid):
     video = request.form.get("video", "").strip()[:500]
     if video and not youtube_id(video):
         flash("해설 영상은 유튜브 주소만 넣을 수 있어요.", "error")
-        return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
+        return redirect(url_for("books.teacher_mock", mid=mid, tab="eval") + "#eval")
     filled = bool(text or level or tm or killer or video)
     who = (g.user["display_name"] or g.user["username"]) if g.user["role"] == "assistant" else "정태혁 선생님"
     execute("""UPDATE mocks SET review = ?, eval_level = ?, eval_time = ?, eval_killer = ?, eval_video = ?,
@@ -363,7 +363,7 @@ def mock_review(mid):
             (text, level, tm, killer, video, who if filled else "", mid))
     audit("mock_review", f"mock:{mid}")
     flash("시험 분석을 저장했어요. 학생 화면에 바로 보여요." if filled else "시험 분석을 삭제했어요.", "ok")
-    return redirect(url_for("books.teacher_mock", mid=mid) + "#eval")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="eval") + "#eval")
 
 
 @bp.route("/t/mocks/<int:mid>")
@@ -376,7 +376,15 @@ def teacher_mock(mid):
     up = query("SELECT u.*, x.display_name, x.username, x.role FROM omr_uploads u LEFT JOIN users x ON x.id = u.by_id "
                "WHERE u.mock_id = ? ORDER BY u.id DESC LIMIT 1", (mid,), one=True)
     up_rows = json.loads(up["rows"]) if up else []
-    ctx = {"mock": mock, "m": m, "up": up, "up_rows": up_rows, "fmt": analysis._fmt, "pct1": exams.pct1,
+    missing, absent, makeup = exams.missing_students(mid)
+    n_res = query("SELECT COUNT(*) AS n FROM exam_results WHERE mock_id = ?", (mid,), one=True)["n"]
+    # 파란 버튼은 지금 단계의 다음 행동 하나: 채점 전이면 올리기, 빠진 학생이 있으면 확인, 그다음 학부모 문자
+    step = "upload" if not (m["n_items"] and n_res) else ("missing" if missing else "sms")
+    tab = request.args.get("tab")
+    if tab not in ("result", "omr", "eval") or (tab == "result" and not m["n_items"]):
+        tab = "result" if m["n_items"] and n_res else "omr"
+    ctx = {"missing": missing, "absent": absent, "makeup": makeup, "step": step, "tab": tab,
+           "mock": mock, "m": m, "up": up, "up_rows": up_rows, "fmt": analysis._fmt, "pct1": exams.pct1,
            "levels": EVAL_LEVELS, "times": EVAL_TIMES,
            "key_label": analysis.key_label, "min_n": exams.SET["min_n"], "item_nos": sorted(item_nos(mid))}
     if m["n_items"]:
@@ -386,6 +394,27 @@ def teacher_mock(mid):
             dict(r, wrong=len(analysis.wrong_items(r["answers"], m["key"]))) for r in cs["rows"]],
             my_wrong=set(), my_score=None, my_grade=None, my_bucket=None, mock_param=None, min_for_cuts=analysis.MIN_FOR_CUTS)
     return render_template("teacher/mock_stats.html", **ctx)
+
+
+@bp.route("/t/mocks/<int:mid>/absent", methods=["POST"])
+@staff_required
+def mock_absent(mid):
+    """채점 파일에 없던 학생을 결시로 확인하거나 보강 예정(kind=makeup: 다른 반 수업에서 보고 결과를 나중에 올림)으로 둔다.
+    어느 쪽이든 누락 목록에서 빠진다. undo=1 이면 모두 되돌린다."""
+    import exams
+    _mock_or_404(mid)
+    if request.form.get("undo") == "1":
+        execute("DELETE FROM exam_absent WHERE mock_id = ?", (mid,))
+        flash("결시와 보강 예정 표시를 되돌렸어요.", "ok")
+    else:
+        kind = "makeup" if request.form.get("kind") == "makeup" else "absent"
+        can = {r["id"] for r in exams.missing_students(mid)[0]}
+        ids = [int(x) for x in request.form.getlist("sid") if x.isdigit() and int(x) in can]
+        for sid in ids:
+            execute("INSERT OR IGNORE INTO exam_absent (mock_id, student_id, kind, by_id) VALUES (?, ?, ?, ?)", (mid, sid, kind, g.user["id"]))
+        audit("mock_absent", f"mock:{mid}")
+        flash(f"{len(ids)}명을 {'보강 예정으로 뒀어요' if kind == 'makeup' else '결시로 확인했어요'}." if ids else "확인할 학생을 골라 주세요.", "ok" if ids else "error")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#missing")
 
 
 @bp.route("/t/mocks/<int:mid>/omr/<int:sid>")
@@ -413,20 +442,20 @@ def omr_upload(mid):
     f = request.files.get("file")
     if not f or not f.filename:
         flash("엑셀 파일을 골라 주세요.", "error")
-        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+        return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#omr")
     data = f.read(10 * 1024 * 1024 + 1)
     if len(data) > 10 * 1024 * 1024:
         flash("파일이 10MB를 넘어요.", "error")
-        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+        return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#omr")
     try:
         res = exams.apply_upload(mid, data, f.filename, g.user["id"])
     except omr.OmrError as e:
         flash(str(e), "error")
-        return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+        return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#omr")
     audit("omr_upload", f"mock:{mid} rows:{res['ok']}")
     flash(f"{res['summary']}. 학생 화면에 바로 보여요." if res["ok"] else "반영된 학생이 없어요. 아래 줄별 결과를 확인해 주세요.",
           "ok" if res["ok"] else "error")
-    return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#omr")
 
 
 @bp.route("/t/mocks/<int:mid>/omr-form.xlsx")
@@ -455,7 +484,7 @@ def omr_clear(mid):
     analysis.invalidate(mid)
     audit("omr_clear", f"mock:{mid}")
     flash("이 회차의 학생 결과를 모두 삭제했어요.", "ok")
-    return redirect(url_for("books.teacher_mock", mid=mid) + "#omr")
+    return redirect(url_for("books.teacher_mock", mid=mid, tab="omr") + "#omr")
 
 
 @bp.route("/t/mocks/<int:mid>/sms")

@@ -34,6 +34,33 @@
 </nav>
 
 {% if tab == 'students' %}
+<div class="card">
+  <div class="page-head">
+    <h2>학생 {{ total }}명</h2>
+    <form method="get" class="row">
+      <input type="hidden" name="tab" value="students">
+      <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디">
+      <button class="btn">검색</button>
+    </form>
+  </div>
+  {% if students %}
+  <div class="table-wrap"><table class="tl-2" data-rc-title="0">
+    <tr><th>이름</th><th>아이디</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
+    {% for s in students %}
+    <tr class="{{ 'inactive' if not s.active }}">
+      <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>
+      <td>{{ s.student_no }}</td>
+      <td class="muted">{{ s.target }}</td>
+      <td class="num">{{ s.avg_pct ~ '%' if s.avg_pct is not none else '-' }}</td>
+      <td>{% if s.open_q %}<span class="badge open">대기 {{ s.open_q }}</span>{% endif %}</td>
+      <td class="small muted">{% if s.account_id %}{{ '최근 ' ~ s.last_login_at|dt if s.last_login_at else '미접속' }}{% else %}없음{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {{ pagination(page, pages, 'teacher.class_detail', cid=cls.id, tab='students', q=q) }}
+  {% else %}<p class="muted">{{ '검색 결과가 없어요.' if q else '등록된 학생이 없어요.' }}</p>{% endif %}
+</div>
+
 <section class="card" id="codes" aria-labelledby="h-codes">
   <div class="page-head">
     <div>
@@ -46,7 +73,7 @@
       {{ csrf() }}<input type="hidden" name="action" value="paste">
       <div class="field"><label for="codes-paste">행정 시스템 코드 붙여넣기</label>
         <textarea id="codes-paste" name="codes" rows="5" placeholder="한 줄에 하나씩&#10;메모를 붙이려면: 코드, 메모 (예: 271234, 3번)"></textarea></div>
-      <button class="btn primary">등록</button>
+      <button class="btn">등록</button>
     </form>
     <form method="post" action="{{ url_for('teacher.class_codes', cid=cls.id) }}">
       {{ csrf() }}<input type="hidden" name="action" value="generate">
@@ -90,7 +117,7 @@
         <div class="field"><label>학부모 연락처</label><input type="text" name="parent_phone" maxlength="30" inputmode="tel"></div>
       </div>
       <div class="field"><label>메모 (선택, 암호화 저장)</label><textarea name="memo" maxlength="1000"></textarea></div>
-      <button class="btn primary">등록</button>
+      <button class="btn">등록</button>
     </form>
   </details>
   <details class="card">
@@ -100,7 +127,7 @@
       <div class="help-inline">CSV 형식{% call help('CSV 형식') %}<p>첫 줄: <code>이름,아이디,연락처,학부모연락처,목표,메모</code> (연락처부터는 선택). 엑셀에서 "CSV"로 저장한 파일을 그대로 올리면 돼요.</p>{% endcall %}</div>
       <div class="row">
         <div class="field"><input type="file" name="csv" accept=".csv" required aria-label="CSV 파일"></div>
-        <div class="field shrink"><button class="btn primary">가져오기</button></div>
+        <div class="field shrink"><button class="btn">가져오기</button></div>
       </div>
     </form>
     <hr>
@@ -110,33 +137,6 @@
       <div class="row nowrap"><button class="btn">학생 계정 일괄 발급</button>{% call help('학생 계정 일괄 발급') %}<p>계정이 없는 학생 모두에게 로그인 계정을 만들어요. 임시 비밀번호 목록(CSV)은 한 번만 내려받을 수 있어요.</p><p>학생은 처음 로그인할 때 비밀번호를 바꿔야 해요.</p>{% endcall %}</div>
     </form>
   </details>
-</div>
-
-<div class="card">
-  <div class="page-head">
-    <h2>학생 {{ total }}명</h2>
-    <form method="get" class="row">
-      <input type="hidden" name="tab" value="students">
-      <input type="search" name="q" value="{{ q }}" placeholder="이름 또는 아이디">
-      <button class="btn">검색</button>
-    </form>
-  </div>
-  {% if students %}
-  <div class="table-wrap"><table class="tl-2" data-rc-title="0">
-    <tr><th>이름</th><th>아이디</th><th>목표</th><th class="num">평균 득점률</th><th>질문</th><th>계정</th></tr>
-    {% for s in students %}
-    <tr class="{{ 'inactive' if not s.active }}">
-      <td><a href="{{ url_for('teacher.student_detail', sid=s.id) }}">{{ s.name }}</a>{% if not s.active %} <span class="badge gray">퇴원</span>{% endif %}</td>
-      <td>{{ s.student_no }}</td>
-      <td class="muted">{{ s.target }}</td>
-      <td class="num">{{ s.avg_pct ~ '%' if s.avg_pct is not none else '-' }}</td>
-      <td>{% if s.open_q %}<span class="badge open">대기 {{ s.open_q }}</span>{% endif %}</td>
-      <td class="small muted">{% if s.account_id %}{{ '최근 ' ~ s.last_login_at|dt if s.last_login_at else '미접속' }}{% else %}없음{% endif %}</td>
-    </tr>
-    {% endfor %}
-  </table></div>
-  {{ pagination(page, pages, 'teacher.class_detail', cid=cls.id, tab='students', q=q) }}
-  {% else %}<p class="muted">{{ '검색 결과가 없어요.' if q else '등록된 학생이 없어요.' }}</p>{% endif %}
 </div>
 
 {% elif tab == 'notices' %}

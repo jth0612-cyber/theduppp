@@ -90,3 +90,9 @@ main .row.nowrap > input.num-in { width: 6.5em; min-width: 0; flex: 0 0 6.5em; t
   .work .mark-table :is(input[type=text], select) { font-size: 16px; min-height: 44px; }
 }
 .work .mark-table select { min-width: 112px; }
+
+/* 회차 화면: 탭의 숫자(확인할 누락 학생 수), 고르는 목록 */
+.chip-links .tag-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--warn); color: #fff; font-size: 11px; font-weight: 700; }
+.pick-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 0 16px; }
+.pick-list label { display: flex; align-items: center; gap: 8px; min-height: 44px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.pick-list input { width: 18px; height: 18px; flex: none; }

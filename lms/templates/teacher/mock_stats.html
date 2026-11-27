@@ -7,9 +7,16 @@
 <div class="page-head">
   <div><h1>{{ '[연습] ' if m.is_practice }}{{ m.kind }} {{ mock.round_no }}회{% if mock.title %}<span class="sep" aria-hidden="true"></span>{{ mock.title }}{% endif %}</h1>
     <p class="muted small">{% if m.n_items %}{{ m.n_items }}문항<span class="sep" aria-hidden="true"></span>{{ fmt(m.full_score) }}점<span class="sep" aria-hidden="true"></span>응시 {{ cs.all.n }}명{% if cs.all.avg is not none %}<span class="sep" aria-hidden="true"></span>평균 {{ fmt(cs.all.avg) }}{% endif %}{% if m.exam_date %}<span class="sep" aria-hidden="true"></span>{{ m.exam_date|d }}{% endif %}{% else %}결과 없음<span class="sep" aria-hidden="true"></span>엑셀을 올리면 문항 수, 정답, 배점이 정해져요{% endif %}</p></div>
-  {% if m.n_items %}<a class="btn primary" href="{{ url_for('books.mock_sms', mid=mock.id) }}">학부모 문자</a>{% endif %}
+  {% if step == 'missing' and tab == 'omr' %}{% elif step == 'missing' %}<a class="btn primary" href="{{ url_for('books.teacher_mock', mid=mock.id, tab='omr') }}#missing">누락 학생 확인</a>
+  {% elif step == 'sms' %}<a class="btn primary" href="{{ url_for('books.mock_sms', mid=mock.id) }}">학부모 문자 보기</a>
+  {% elif tab != 'omr' %}<a class="btn primary" href="{{ url_for('books.teacher_mock', mid=mock.id, tab='omr') }}#omr">채점 파일 올리기</a>{% endif %}
 </div>
+<nav class="chip-links" aria-label="회차">
+  {% for k, label in (('result', '결과'), ('omr', '채점'), ('eval', '시험 분석')) %}{% if k != 'result' or m.n_items %}<a href="{{ url_for('books.teacher_mock', mid=mock.id, tab=k) }}" class="{{ 'is-on' if tab == k }}"{% if tab == k %} aria-current="page"{% endif %}>{{ label }}{% if k == 'omr' and missing %} <span class="tag-n">{{ missing|length }}</span>{% endif %}</a>{% endif %}{% endfor %}
+</nav>
 
+
+{% if tab == 'eval' %}
 <form method="post" action="{{ url_for('books.mock_review', mid=mock.id) }}" class="card review-form" id="eval">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="sec-head"><h2>시험 분석{% call help('시험 분석') %}<p>학생 화면 맨 위에 난이도와 주요 문항이 보여요. 총평과 해설 영상은 접혀 있어요.</p>{% endcall %}</h2>{% if mock.review_at and mock.review_by %}<span>{{ mock.review_by }}<span class="sep" aria-hidden="true"></span>{{ mock.review_at|dt }}</span>{% endif %}</div>
@@ -21,7 +28,7 @@
   <div class="field"><label for="mk-review">총평</label>
     <textarea id="mk-review" name="review" rows="5" maxlength="4000" placeholder="출제 범위, 체감 난이도, 시간 배분, 다음 회차까지 볼 것">{{ mock.review }}</textarea></div>
   <div class="field"><label for="ev-video">해설 영상 <span class="muted">(유튜브 주소, 선택)</span></label><input type="text" id="ev-video" name="video" value="{{ mock.eval_video }}" placeholder="https://youtu.be/..."></div>
-  <button class="btn primary small">저장</button>
+  <button class="btn">저장</button>
 </form>
 
 {% if config.ITEMS_ENABLED %}
@@ -31,10 +38,31 @@
   <form method="post" action="{{ url_for('items.upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="file" name="image" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
-    <button class="btn primary">올리기</button>
+    <button class="btn">올리기</button>
   </form>
   {% if item_nos %}<ul class="item-grid">{% for n in item_nos %}<li><a href="{{ url_for('items.image', mid=mock.id, no=n) }}" target="_blank" rel="noopener"><img src="{{ url_for('items.image', mid=mock.id, no=n) }}" alt="{{ n }}번 문항" loading="lazy"></a>
     <form method="post" action="{{ url_for('items.remove', mid=mock.id, no=n) }}">{{ '' }}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><span>{{ n }}번</span><button class="btn small danger" data-confirm="{{ n }}번 문항 그림을 삭제할까요?">삭제</button></form></li>{% endfor %}</ul>{% endif %}
+</section>
+{% endif %}
+
+{% elif tab == 'omr' %}
+{% if missing or absent or makeup %}
+<section class="card" id="missing" aria-labelledby="h-miss">
+  <h2 id="h-miss">누락 학생{% call help('누락 학생') %}<p>결과가 올라온 반의 재원생 중 이 회차 결과가 없는 학생이에요.</p><p>다른 반 수업에 와서 볼 학생은 보강 예정으로 두세요. 그 결과가 올라오면 목록에서 빠져요.</p>{% endcall %}</h2>
+  {% if missing %}
+  <form method="post" action="{{ url_for('books.mock_absent', mid=mock.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <ul class="pick-list">{% for s in missing %}<li><label><input type="checkbox" name="sid" value="{{ s.id }}" checked> <b class="nowrap">{{ s.name }}</b> <span class="small muted">{{ s.cls }}<span class="sep" aria-hidden="true"></span>{{ s.student_no }}</span></label></li>{% endfor %}</ul>
+    <div class="row mt"><button class="btn{{ ' primary' if step == 'missing' }}">결시로 확인</button><button class="btn" name="kind" value="makeup">보강 예정으로 두기</button></div>
+  </form>
+  {% else %}<p class="muted">확인할 학생이 없어요.</p>{% endif %}
+  {% if makeup %}<p class="small mt"><b>보강 예정 {{ makeup|length }}명</b> <span class="muted">{% for s in makeup %}{{ s.name }} ({{ s.cls }}){% if not loop.last %}, {% endif %}{% endfor %}</span></p>{% endif %}
+  {% if absent or makeup %}
+  <details class="mt"><summary class="small">{% if absent %}결시 확인 {{ absent|length }}명{% else %}표시 되돌리기{% endif %}</summary>
+    {% if absent %}<p class="small muted mt">{% for s in absent %}{{ s.name }} ({{ s.cls }}){% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    <form method="post" action="{{ url_for('books.mock_absent', mid=mock.id) }}" class="mt"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="undo" value="1"><button class="btn small">결시와 보강 예정 모두 되돌리기</button></form>
+  </details>
+  {% endif %}
 </section>
 {% endif %}
 
@@ -43,7 +71,7 @@
   <form method="post" action="{{ url_for('books.omr_upload', mid=mock.id) }}" enctype="multipart/form-data" class="row mt">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="file" name="file" accept=".xlsx,.csv" required aria-label="채점기 엑셀 파일">
-    <button class="btn primary">올리기</button>
+    <button class="btn{{ ' primary' if step == 'upload' }}">올리기</button>
   </form>
   <form method="get" action="{{ url_for('books.omr_template', mid=mock.id) }}" class="row nowrap mt">
     {% if not m.n_items %}<label class="small muted" for="tn">문항 수</label><input type="number" id="tn" name="n" min="1" max="60" value="{{ 20 if m.kind == '복습 테스트' else 25 }}" class="num-in">{% endif %}
@@ -62,6 +90,17 @@
 </section>
 
 {% if m.n_items %}
+<details class="card" id="iteminfo">
+  <summary><b>문항정보</b> <span class="small muted">정답<span class="sep" aria-hidden="true"></span>배점<span class="sep" aria-hidden="true"></span>단원<span class="sep" aria-hidden="true"></span>형식 (엑셀 '문항정보' 시트로 바꿔요)</span></summary>
+  <div class="table-wrap mt"><table class="small tl-4 tl-5 tl-7" data-rc-title="0">
+    <thead><tr><th class="num">번</th><th>정답</th><th class="num">배점</th><th>단원</th><th>핵심개념</th><th>형식</th><th>보기 함정/선지 분석</th></tr></thead>
+    <tbody>{% for i in range(1, m.n_items + 1) %}{% set d = m.info.get(i, {}) %}<tr><td class="num">{{ i }}</td><td>{{ key_label(m.key[i - 1]) or '-' }}</td><td class="num">{{ fmt(m.pts[i - 1]) }}</td>
+      <td>{{ d.unit or '' }}</td><td>{{ d.concept or '' }}</td><td>{{ d.format or '' }}</td><td class="muted">{{ (d.traps or d.distractors or '')[:60] }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</details>
+
+{% endif %}
+{% else %}
 <section class="card" aria-labelledby="h-cls">
   <h2 id="h-cls">반별 결과</h2>
   <div class="table-wrap"><table class="cmp tl-4" data-rc-title="0">
@@ -70,15 +109,6 @@
       <td class="small">{% if st.n >= min_n %}{% set hi = [] %}{% for w in st.wrong %}{% if w >= 30 %}{% set _ = hi.append((w, loop.index)) %}{% endif %}{% endfor %}{% for w, i in (hi|sort(reverse=true))[:5] %}{{ i }}번({{ pct1(w) }}%) {% else %}<span class="muted">없음</span>{% endfor %}{% else %}<span class="muted">{{ min_n }}명 미만이라 문자에 오답률을 쓰지 않음</span>{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
 </section>
-
-<details class="card" id="items">
-  <summary><b>문항정보</b> <span class="small muted">정답<span class="sep" aria-hidden="true"></span>배점<span class="sep" aria-hidden="true"></span>단원<span class="sep" aria-hidden="true"></span>형식 (엑셀 '문항정보' 시트로 바꿔요)</span></summary>
-  <div class="table-wrap mt"><table class="small tl-4 tl-5 tl-7" data-rc-title="0">
-    <thead><tr><th class="num">번</th><th>정답</th><th class="num">배점</th><th>단원</th><th>핵심개념</th><th>형식</th><th>보기 함정/선지 분석</th></tr></thead>
-    <tbody>{% for i in range(1, m.n_items + 1) %}{% set d = m.info.get(i, {}) %}<tr><td class="num">{{ i }}</td><td>{{ key_label(m.key[i - 1]) or '-' }}</td><td class="num">{{ fmt(m.pts[i - 1]) }}</td>
-      <td>{{ d.unit or '' }}</td><td>{{ d.concept or '' }}</td><td>{{ d.format or '' }}</td><td class="muted">{{ (d.traps or d.distractors or '')[:60] }}</td></tr>{% endfor %}</tbody>
-  </table></div>
-</details>
 
 {% include "_analysis_stats.html" %}
 
